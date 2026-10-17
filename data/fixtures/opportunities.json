@@ -1,0 +1,532 @@
+{
+  "_fixture": "MOCK — datos inventados para desarrollar el frontend. No son resultados reales. Generado contra app/schemas/opportunity.py.",
+  "opportunities": {
+    "items": [
+      {
+        "id": "opp_001",
+        "topic": "[MOCK] Agentes de IA en operaciones empresariales",
+        "description": "Agentes que automatizan procesos internos (finanzas, soporte, compras) en empresas medianas.",
+        "lifecycle": "accelerating",
+        "lifecycle_reason": "Aceleración ≥ 0.5 y ≥ 3 fuentes independientes (5).",
+        "growth_status": "observed",
+        "velocity": 4.33,
+        "acceleration": 0.86,
+        "momentum_score": 78.8,
+        "outlier_count": 2,
+        "top_outlier_ratio": 6.1,
+        "audience_mix": {
+          "tech": 0.55,
+          "business": 0.4,
+          "latam_es": 0.05
+        },
+        "audience_fit_score": 82,
+        "cross_source_score": 70,
+        "saturation_score": 45,
+        "actionability_score": 78,
+        "opportunity_score": 74.2,
+        "confidence": "high",
+        "source_count": 5,
+        "evidence_strength": 74,
+        "latam_gap": true,
+        "recommendation": "publish_now",
+        "why_it_matters": "Crece en fuentes técnicas y de negocio a la vez, pero casi no hay cobertura en español: hueco para explicarlo a directivos de LATAM.",
+        "limitations": [
+          "El monitoreo empezó el 16/10: la tendencia cubre pocos días.",
+          "No sabemos cuántas empresas lo usan de verdad en LATAM."
+        ],
+        "last_updated": "2026-10-17T09:00:00Z"
+      },
+      {
+        "id": "opp_002",
+        "topic": "[MOCK] Modelos pequeños en el dispositivo",
+        "description": "Modelos de lenguaje que corren en el portátil o el móvil sin enviar datos a la nube.",
+        "lifecycle": "emerging",
+        "lifecycle_reason": "Aceleración > 0, ≤ 3 fuentes independientes (2) y saturación < 40.",
+        "growth_status": "estimated",
+        "velocity": 1.33,
+        "acceleration": 0.67,
+        "momentum_score": 64.1,
+        "outlier_count": 0,
+        "top_outlier_ratio": 2.2,
+        "audience_mix": {
+          "tech": 0.85,
+          "business": 0.15,
+          "latam_es": 0.0
+        },
+        "audience_fit_score": 58,
+        "cross_source_score": 35,
+        "saturation_score": 25,
+        "actionability_score": 55,
+        "opportunity_score": 57.5,
+        "confidence": "medium",
+        "source_count": 2,
+        "evidence_strength": 38,
+        "latam_gap": null,
+        "recommendation": "find_angle",
+        "why_it_matters": "Conversación casi solo técnica: todavía no llegó a ejecutivos. El ángulo es privacidad y coste para negocio.",
+        "limitations": [
+          "Solo una medición por pieza: el crecimiento es estimado.",
+          "Sin presencia de negocio no se puede evaluar el hueco LATAM."
+        ],
+        "last_updated": "2026-10-17T09:00:00Z"
+      },
+      {
+        "id": "opp_003",
+        "topic": "[MOCK] IA en atención al cliente",
+        "description": "Asistentes de IA que responden a clientes en canales de mensajería y voz.",
+        "lifecycle": "peaking",
+        "lifecycle_reason": "Saturación ≥ 60 y |aceleración| < 0.2.",
+        "growth_status": "observed",
+        "velocity": 5.67,
+        "acceleration": 0.06,
+        "momentum_score": 58.8,
+        "outlier_count": 0,
+        "top_outlier_ratio": 1.8,
+        "audience_mix": {
+          "tech": 0.3,
+          "business": 0.25,
+          "latam_es": 0.45
+        },
+        "audience_fit_score": 75,
+        "cross_source_score": 80,
+        "saturation_score": 65,
+        "actionability_score": 70,
+        "opportunity_score": 64.6,
+        "confidence": "high",
+        "source_count": 6,
+        "evidence_strength": 81,
+        "latam_gap": false,
+        "recommendation": "find_angle",
+        "why_it_matters": "Tema maduro y ya cubierto en la región; solo vale la pena con un caso concreto o un ángulo de métricas.",
+        "limitations": [
+          "La saturación se mide solo dentro de las fuentes monitoreadas."
+        ],
+        "last_updated": "2026-10-17T09:00:00Z"
+      },
+      {
+        "id": "opp_004",
+        "topic": "[MOCK] Generadores de imágenes para marketing",
+        "description": "Herramientas de generación de imágenes para campañas y redes sociales.",
+        "lifecycle": "saturated",
+        "lifecycle_reason": "Saturación ≥ 75 y aceleración < 0.",
+        "growth_status": "observed",
+        "velocity": 5.33,
+        "acceleration": -0.3,
+        "momentum_score": 47.0,
+        "outlier_count": 0,
+        "top_outlier_ratio": 0.6,
+        "audience_mix": {
+          "tech": 0.35,
+          "business": 0.3,
+          "latam_es": 0.35
+        },
+        "audience_fit_score": 40,
+        "cross_source_score": 85,
+        "saturation_score": 82,
+        "actionability_score": 45,
+        "opportunity_score": 48.3,
+        "confidence": "medium",
+        "source_count": 7,
+        "evidence_strength": 66,
+        "latam_gap": false,
+        "recommendation": "discard",
+        "why_it_matters": "Mucho contenido similar y en descenso; poco encaje con los pilares de 30X.",
+        "limitations": [
+          "No medimos rendimiento en Instagram ni TikTok, donde este tema es más visual."
+        ],
+        "last_updated": "2026-10-17T09:00:00Z"
+      },
+      {
+        "id": "opp_005",
+        "topic": "[MOCK] Regulación de IA en Colombia",
+        "description": "Proyecto de ley sobre uso de IA en el sector público colombiano.",
+        "lifecycle": "unknown",
+        "lifecycle_reason": "Datos insuficientes: 3 piezas de una sola fuente.",
+        "growth_status": "preliminary",
+        "velocity": 1.0,
+        "acceleration": 1.0,
+        "momentum_score": 20.0,
+        "outlier_count": 0,
+        "top_outlier_ratio": null,
+        "audience_mix": {
+          "tech": 0.0,
+          "business": 0.0,
+          "latam_es": 1.0
+        },
+        "audience_fit_score": null,
+        "cross_source_score": 10,
+        "saturation_score": 10,
+        "actionability_score": null,
+        "opportunity_score": null,
+        "confidence": "low",
+        "source_count": 1,
+        "evidence_strength": 12,
+        "latam_gap": null,
+        "recommendation": "wait_for_case",
+        "why_it_matters": "Hoy solo hay una fuente; esperar confirmación. Audience fit todavía sin evaluar.",
+        "limitations": [
+          "Una sola fuente: no hay validación cruzada.",
+          "Sin aceleración demostrada."
+        ],
+        "last_updated": "2026-10-17T09:00:00Z"
+      }
+    ],
+    "period": "7d",
+    "generated_at": "2026-10-17T09:00:00Z",
+    "monitoring_started_at": "2026-10-16T00:00:00Z"
+  },
+  "evidence": {
+    "opp_001": [
+      {
+        "url": "https://example.com/mock/1",
+        "source": "Fuente mock youtube business",
+        "platform": "youtube",
+        "segment": "business",
+        "title": "[MOCK] Cómo un CFO automatizó el cierre mensual con agentes",
+        "published_at": "2026-10-16T14:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "es",
+        "metrics": {
+          "views": 48000,
+          "likes": 2100,
+          "comments": 180
+        },
+        "velocity": {
+          "value": 950.0,
+          "unit": "views/h"
+        },
+        "outlier_ratio": 6.1,
+        "is_outlier": true
+      },
+      {
+        "url": "https://example.com/mock/2",
+        "source": "Fuente mock hackernews tech",
+        "platform": "hackernews",
+        "segment": "tech",
+        "title": "[MOCK] Show HN: open-source agent for procurement workflows",
+        "published_at": "2026-10-16T08:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "en",
+        "metrics": {
+          "points": 312,
+          "comments": 140
+        },
+        "velocity": {
+          "value": 11.5,
+          "unit": "points/h"
+        },
+        "outlier_ratio": 3.4,
+        "is_outlier": true
+      },
+      {
+        "url": "https://example.com/mock/3",
+        "source": "Fuente mock rss tech",
+        "platform": "rss",
+        "segment": "tech",
+        "title": "[MOCK] Enterprises move AI agents from pilots to production",
+        "published_at": "2026-10-15T10:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "en",
+        "metrics": {},
+        "velocity": null,
+        "outlier_ratio": null,
+        "is_outlier": null
+      }
+    ],
+    "opp_002": [
+      {
+        "url": "https://example.com/mock/4",
+        "source": "Fuente mock hackernews tech",
+        "platform": "hackernews",
+        "segment": "tech",
+        "title": "[MOCK] Running a 3B model on a phone at 20 tok/s",
+        "published_at": "2026-10-16T19:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "en",
+        "metrics": {
+          "points": 154,
+          "comments": 61
+        },
+        "velocity": null,
+        "outlier_ratio": 2.2,
+        "is_outlier": false
+      },
+      {
+        "url": "https://example.com/mock/5",
+        "source": "Fuente mock youtube tech",
+        "platform": "youtube",
+        "segment": "tech",
+        "title": "[MOCK] Local LLMs benchmark on laptops",
+        "published_at": "2026-10-15T12:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "en",
+        "metrics": {
+          "views": 9100,
+          "likes": null,
+          "comments": 75
+        },
+        "velocity": null,
+        "outlier_ratio": null,
+        "is_outlier": null
+      }
+    ],
+    "opp_003": [
+      {
+        "url": "https://example.com/mock/6",
+        "source": "Fuente mock youtube latam_es",
+        "platform": "youtube",
+        "segment": "latam_es",
+        "title": "[MOCK] Así responde un banco con IA en WhatsApp",
+        "published_at": "2026-10-16T16:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "es",
+        "metrics": {
+          "views": 22000,
+          "likes": 800,
+          "comments": 95
+        },
+        "velocity": {
+          "value": 410.0,
+          "unit": "views/h"
+        },
+        "outlier_ratio": 1.8,
+        "is_outlier": false
+      },
+      {
+        "url": "https://example.com/mock/7",
+        "source": "Fuente mock rss latam_es",
+        "platform": "rss",
+        "segment": "latam_es",
+        "title": "[MOCK] Empresas latinoamericanas adoptan bots de atención",
+        "published_at": "2026-10-15T09:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "es",
+        "metrics": {},
+        "velocity": null,
+        "outlier_ratio": null,
+        "is_outlier": null
+      }
+    ],
+    "opp_004": [
+      {
+        "url": "https://example.com/mock/8",
+        "source": "Fuente mock youtube business",
+        "platform": "youtube",
+        "segment": "business",
+        "title": "[MOCK] 10 prompts de imágenes para tu marca",
+        "published_at": "2026-10-15T18:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "es",
+        "metrics": {
+          "views": 5200,
+          "likes": 140,
+          "comments": 12
+        },
+        "velocity": {
+          "value": 35.0,
+          "unit": "views/h"
+        },
+        "outlier_ratio": 0.6,
+        "is_outlier": false
+      }
+    ],
+    "opp_005": [
+      {
+        "url": "https://example.com/mock/9",
+        "source": "Fuente mock rss latam_es",
+        "platform": "rss",
+        "segment": "latam_es",
+        "title": "[MOCK] Radican proyecto de ley de IA en el Congreso",
+        "published_at": "2026-10-17T07:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "es",
+        "metrics": {},
+        "velocity": null,
+        "outlier_ratio": null,
+        "is_outlier": null
+      }
+    ]
+  },
+  "timeline": {
+    "opp_001": {
+      "opportunity_id": "opp_001",
+      "window_days": 3,
+      "points": [
+        {
+          "date": "2026-10-12",
+          "count": 2,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-13",
+          "count": 3,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-14",
+          "count": 2,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-15",
+          "count": 3,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-16",
+          "count": 4,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-17",
+          "count": 6,
+          "window": "current"
+        }
+      ]
+    },
+    "opp_002": {
+      "opportunity_id": "opp_002",
+      "window_days": 3,
+      "points": [
+        {
+          "date": "2026-10-12",
+          "count": 0,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-13",
+          "count": 1,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-14",
+          "count": 1,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-15",
+          "count": 1,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-16",
+          "count": 1,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-17",
+          "count": 2,
+          "window": "current"
+        }
+      ]
+    },
+    "opp_003": {
+      "opportunity_id": "opp_003",
+      "window_days": 3,
+      "points": [
+        {
+          "date": "2026-10-12",
+          "count": 5,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-13",
+          "count": 6,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-14",
+          "count": 5,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-15",
+          "count": 6,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-16",
+          "count": 5,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-17",
+          "count": 6,
+          "window": "current"
+        }
+      ]
+    },
+    "opp_004": {
+      "opportunity_id": "opp_004",
+      "window_days": 3,
+      "points": [
+        {
+          "date": "2026-10-12",
+          "count": 8,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-13",
+          "count": 7,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-14",
+          "count": 8,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-15",
+          "count": 5,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-16",
+          "count": 6,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-17",
+          "count": 5,
+          "window": "current"
+        }
+      ]
+    },
+    "opp_005": {
+      "opportunity_id": "opp_005",
+      "window_days": 3,
+      "points": [
+        {
+          "date": "2026-10-12",
+          "count": 0,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-13",
+          "count": 0,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-14",
+          "count": 0,
+          "window": "previous"
+        },
+        {
+          "date": "2026-10-15",
+          "count": 1,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-16",
+          "count": 1,
+          "window": "current"
+        },
+        {
+          "date": "2026-10-17",
+          "count": 1,
+          "window": "current"
+        }
+      ]
+    }
+  }
+}

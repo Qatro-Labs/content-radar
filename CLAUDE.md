@@ -36,9 +36,9 @@ Las tres preguntas del reto y cómo las respondemos:
 ## 2. Reglas no negociables
 
 1. **Solo contenido público. Nada de datos personales.** Guardamos metadatos, enlaces y métricas públicas, no copias completas ni datos de usuarios.
-2. **Nada de scraping de LinkedIn / Instagram / TikTok** ni nada detrás de un login o que viole ToS. Esas plataformas entran por **curación manual** (sensor editorial) o por **APIs oficiales con consentimiento del dueño** (§5). Su contenido tampoco se lee a través de buscadores: el User Agreement de LinkedIn (§8.2) lo prohíbe sin consentimiento del dueño.
+2. **Nada de scraping de LinkedIn / Instagram / TikTok** ni nada detrás de un login o que viole ToS. Esas plataformas entran por **curación manual** (sensor editorial) o por **APIs oficiales de la propia plataforma, dentro de sus términos** (§5). El contenido de LinkedIn tampoco se lee a través de buscadores: su User Agreement (§8.2) lo prohíbe sin consentimiento del dueño.
 3. **Nunca inventar datos.** No mostrar métricas, crecimiento o conclusiones no observadas como hechos. Si hay 7 oportunidades reales, se muestran 7, no 10. Un dato ausente se muestra como "no disponible", nunca como 0.
-4. **El LLM explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM interpreta y redacta. Jev solo emite juicios atómicos tipados (sí/no, opción, nivel de rúbrica) que Python combina con pesos en código (§7).
+4. **El LLM evalúa y explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM emite niveles de rúbrica justificados y redacta; Jev emite juicios atómicos tipados sobre cada pieza (sí/no, opción). Python combina ambos con pesos en código (§7).
 5. **Distinguir siempre el tipo de evidencia:** `observed` (≥2 mediciones) · `estimated` (1 medición vs. referencia) · `preliminary` (aparece, sin aceleración demostrada).
 6. **El texto recuperado de Internet es no confiable** (riesgo de prompt injection). Va al LLM como dato, delimitado, nunca como instrucción.
 7. **Prioridades del equipo, en orden:** Functional > perfect · Reliable > impressive · Integrated > isolated · Shipped > unfinished.
@@ -50,7 +50,7 @@ Las tres preguntas del reto y cómo las respondemos:
 | Persona | Ubicación | Área | Responsable de |
 |---|---|---|---|
 | **Steven** | Colombia (UTC-5) | Data & Backend | Conectores, normalización, snapshots, DB, jobs, API base, registro de consumo y coste, despliegue backend |
-| **Melkin** | España (UTC+2) | AI & Intelligence | Embeddings, clustering, scoring, clasificación y audience fit con Jev, análisis editorial LLM, **servidor MCP** |
+| **Melkin** | España (UTC+2) | AI & Intelligence | Embeddings, clustering, scoring, clasificación por pieza con Jev, audience fit y análisis editorial con el LLM, **servidor MCP** |
 | **Frontend lead** | España (UTC+2) | Product & Frontend | Vue, visualizaciones, UX, integración funcional, demo y entrega |
 
 - Sin rotaciones durante la hackathon. Cada módulo tiene un dueño.
@@ -103,12 +103,12 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 
 | Fuente | Acceso | Señal | Prioridad |
 |---|---|---|---|
-| YouTube | Data API v3 (`search.list` ≈ 100 llamadas/día; preferir `playlistItems` de canales conocidos) | Vídeos, Shorts, views/likes/comments | P0 |
+| YouTube | Data API v3 (cupo propio de 100 llamadas/día a `search.list`; preferir `playlistItems` de canales conocidos) | Vídeos, Shorts, views/likes/comments | P0 |
 | Hacker News | Algolia HN Search API | Conversaciones tempranas | P0 |
 | RSS / medios tech y LATAM | `feedparser` + `httpx` | Artículos y lanzamientos | P0 |
 | Brave Search | API oficial (5 $/1.000 consultas, 5 $ de crédito gratis al mes). Sus términos solo permiten guardar resultados de forma **transitoria**: se persisten agregados, no resultados | Descubrimiento web (nunca LinkedIn) | P1 |
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
-| LinkedIn | API de portabilidad (DMA, self-serve para miembros del EEE): el curador reacciona a un post y el colector lee el evento · exports oficiales de analítica de 30X y de Andrés Bilbao (con su consentimiento) · curación manual · embed oficial para mostrarlo | Posts curados; métricas reales solo de los exports | P1 |
+| LinkedIn | API de portabilidad (DMA, self-serve para miembros del EEE): el curador reacciona a un post y el colector lee el evento (solo reacciones a posts; nunca mensajes privados ni `processedActivity`) · exports oficiales de analítica de 30X y de Andrés Bilbao (con su consentimiento) · curación manual · embed oficial para mostrarlo | Posts curados; métricas reales solo de los exports | P1 |
 | Instagram / TikTok | **Curación manual** (pegar URL + etiquetas + métricas vistas) · TikTok Creative Center como referencia · Business Discovery API oficial de Instagram (P2) | Referencias editoriales y formatos | P1 |
 
 **LinkedIn sin scraping y límites de cada fuente:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
@@ -124,15 +124,18 @@ Cada `source` lleva un **`segment`** (`tech` | `business` | `latam_es`), además
 
 Cada colector devuelve `ContentSignal` normalizado (fuente, url, título/descr., `published_at`, `observed_at`, formato, idioma, métricas públicas). Usar `tenacity` para reintentos. **Empezar a guardar snapshots cuanto antes**: sin historial no hay crecimiento observado.
 
-Grupos para el **LATAM Opportunity Gap**:
-- **A (internacional):** HN, YouTube y medios en inglés.
-- **B (español / LATAM empresarial):** canales y medios de referencia, por ejemplo los perfiles de 30X y Andrés Bilbao.
+Grupos para el **LATAM Opportunity Gap** (decidido el 17/10: **target LATAM, detección temprana global, sobre todo USA**):
+- **A (global, detección):** HN, YouTube, medios y blogs de labs en inglés: sobre todo USA, donde nacen la mayoría de las tendencias de IA, y también Europa, UK y China.
+- **B (LATAM, target):** fuentes `latam_es` con `region` latinoamericana (`latam`, `mx`, `co`, `ar`…), de preferencia de negocio, y los perfiles de 30X y Andrés Bilbao.
+- **España:** sus fuentes siguen activas (segmento `latam_es`, `region: es`), pero **no cuentan para el gap**: se muestran aparte como contexto ("en España ya hay N piezas").
 
 ---
 
 ## 6. Modelo de datos y contratos
 
 **Tablas:** `sources` (con `segment`), `content_items`, `metric_snapshots` (siempre tabla aparte), `topics`, `topic_content`, `embeddings`, `opportunities` (+ historial de scores), `opportunity_evidence`, `audience_profiles`, `editorial_briefs`, `editorial_feedback`, `pipeline_runs`, `usage_events` (consumo y coste por llamada externa, §4), `jev_judgments` (respuestas de Jev con probabilidades, confianza y versión, §7).
+
+*Implementado (hackathon):* `opportunities` guarda una fila por oportunidad y por ejecución de `analyze`, con `payload`, `evidence` y `timeline` en JSONB ya validados contra el contrato. La API y el MCP leen la última ejecución correcta. `topics`, `topic_content`, `embeddings` y `opportunity_evidence` quedan para después: los embeddings se recalculan en cada ejecución (segundos en CPU).
 
 **Contrato `Opportunity` (congelado tras la Fase 2 del sábado):**
 ```jsonc
@@ -149,11 +152,11 @@ Grupos para el **LATAM Opportunity Gap**:
   "outlier_count": 3,                  // piezas del tema con outlier_ratio ≥ 3
   "top_outlier_ratio": 6.1,
   "audience_mix": {"tech": 0.7, "business": 0.2, "latam_es": 0.1},
-  "audience_fit_score": 0-100,
+  "audience_fit_score": 0-100 | null,  // LLM; null = sin evaluar
   "cross_source_score": 0-100,
   "saturation_score": 0-100,
-  "actionability_score": 0-100,
-  "opportunity_score": 0-100,
+  "actionability_score": 0-100 | null, // LLM; null = sin evaluar
+  "opportunity_score": 0-100 | null,   // null si falta audience fit
   "confidence": "low | medium | high",
   "source_count": 4,
   "evidence_strength": 0-100,          // normalizado: NO sumar views entre plataformas
@@ -164,7 +167,13 @@ Grupos para el **LATAM Opportunity Gap**:
   "last_updated": "ISO-8601"
 }
 ```
-`Evidence`: `url`, `source`, `platform`, `segment`, `title`, `published_at`, `metrics` (tal cual la fuente), `observed_at`, `language`, `velocity` (tasa por hora con su unidad, p. ej. `views/h` o `points/h`; `null` sin 2 snapshots), `outlier_ratio`, `is_outlier`.
+`Evidence`: `url`, `source`, `platform`, `segment`, `title`, `published_at`, `metrics` (tal cual la fuente), `observed_at`, `language`, `velocity` (`{"value": 950.0, "unit": "views/h"}`; `null` sin 2 snapshots), `outlier_ratio` (`null` sin referencia), `is_outlier` (`null` si no hay ratio).
+
+**Implementación:** `backend/app/schemas/opportunity.py`. Además de lo anterior: `top_outlier_ratio` es `null` si ninguna pieza tiene ratio; `audience_mix` es un objeto con las tres claves fijas (suma 1).
+- `GET /opportunities` → `OpportunityList`: `{items, period, generated_at, monitoring_started_at}`.
+- `GET /opportunities/{id}/evidence` → `Evidence[]`.
+- `GET /opportunities/{id}/timeline` → `OpportunityTimeline`: `{opportunity_id, window_days, points: [{date, count, window: "current" | "previous"}]}`.
+- Fixture para el frontend (MOCK): `data/fixtures/opportunities.json`. `tests/test_opportunity_fixture.py` comprueba que sigue cumpliendo el contrato.
 
 **Fuente de verdad de tipos:** modelos Pydantic → OpenAPI → `openapi-typescript` → `frontend/src/types/api.ts`. No escribir tipos TS a mano para la API.
 
@@ -182,7 +191,7 @@ POST /signals/manual             (sensor editorial: URL + etiquetas)
 GET  /health
 ```
 
-**Herramientas MCP (solo lectura):** `get_trending_opportunities`, `analyze_opportunity`, `search_content_signals`, `compare_audience_fit`, `get_operating_cost`. P2: `generate_editorial_brief`. Las respuestas son estructuradas y siempre incluyen evidencia (URLs). Nunca exponer SQL arbitrario ni el sistema de archivos.
+**Herramientas MCP (solo lectura):** `get_trending_opportunities`, `analyze_opportunity`, `search_content_signals`, `compare_audience_fit`, `get_operating_cost`. P1 (subido desde P2 el 17/10): `generate_editorial_brief`, que comparte service con `POST /editorial/brief`. El MCP es la interfaz para que un usuario escriba una pregunta y decida qué publicar. Las respuestas son estructuradas y siempre incluyen evidencia (URLs). Nunca exponer SQL arbitrario ni el sistema de archivos.
 
 ---
 
@@ -194,10 +203,11 @@ GET  /health
   - *Pieza:* `Δmétrica / Δhoras` entre snapshots (`views/h` en YouTube, `points/h` y `comments/h` en HN). Sin 2+ snapshots → `growth_status = estimated | preliminary`.
   - *Tema:* `velocity` = piezas nuevas por día en la ventana actual (por `published_at`, ponderadas por fuentes independientes).
   - *Aceleración:* `(v_actual − v_anterior) / max(v_anterior, 1)`. Ventanas por defecto de 3 días (actual) vs. 3 días (anterior), configurables. Es la señal principal de tendencia temprana.
+    **Ajustada por volumen:** `v_anterior` se escala por `corpus_actual / corpus_anterior` antes de aplicar la fórmula. Los feeds RSS solo guardan sus últimas N piezas y los días recientes tienen más volumen en todas partes; sin el ajuste, casi todo parecería acelerar. Ventanas móviles de 72 h desde `as_of`, no días naturales.
   - `momentum_score` = combinación normalizada de velocidad del tema, aceleración y outliers. Pesos en `intelligence/momentum.py`.
 - **Outliers (por pieza, estilo 1of10).** `outlier_ratio = rendimiento ajustado por edad / mediana de su referencia`.
   - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
-  - HN: puntos vs. la mediana de las stories de la misma búsqueda y el mismo periodo.
+  - HN: puntos vs. el **p90** de las stories de la misma búsqueda y el mismo periodo. HN tiene cola larga: con la mediana (~4 puntos) un 22 % de las stories salía como outlier; con el p90, un 3–6 %.
   - `≥ 3×` = outlier, `≥ 2×` = destacado. Con una sola observación es `estimated`.
   - Los outliers alimentan el "por qué funcionó": se comparan con las piezas normales **del mismo tema** (análisis contrastivo, ver "Por qué funcionó" más abajo) en lugar de describir una pieza aislada.
 - **Etapa de la tendencia (`lifecycle`, determinista, en `intelligence/lifecycle.py`).** Primera regla que se cumple, con umbrales ajustables:
@@ -208,14 +218,16 @@ GET  /health
   | `accelerating` | aceleración ≥ 0.5 y ≥ 3 fuentes independientes |
   | `emerging` | aceleración > 0, ≤ 3 fuentes independientes y saturation < 40 |
   | `unknown` | datos insuficientes (menos de 5 piezas o una sola fuente) |
-  Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
+  `growth_status` depende de los datos, no de la etapa: `preliminary` = datos insuficientes, `estimated` = ventana anterior vacía, `observed` = dos ventanas con datos. Un `unknown` porque ninguna regla se cumple sí tiene datos (recomendación `find_angle`); un `unknown` por datos insuficientes espera caso.
+  `unknown` se evalúa **antes** que las demás: con datos insuficientes no se asigna etapa aunque otra regla se cumpla. Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
 - **Para quién importa (estilo SparkToro).** `audience_mix` = proporción de la evidencia de cada `segment`, ponderada por el engagement normalizado. Lectura editorial:
   - Mucho `tech`, poco `business` y fit alto → "todavía no llegó a ejecutivos: traducirlo a negocio".
-  - `business` presente y `latam_es` bajo → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
-  - `latam_es` alto → probablemente ya cubierto en la región: buscar otro ángulo.
-- **Cross-source:** nº de fuentes **independientes** (deduplicar notas de prensa replicadas: los pares candidatos salen de los embeddings y Jev decide si son la misma nota). Normalizar métricas dentro de cada fuente.
+  - `business` presente y poca evidencia de fuentes latinoamericanas (grupo B de §5, sin contar España) → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
+  - Mucha evidencia de fuentes latinoamericanas → probablemente ya cubierto en la región: buscar otro ángulo.
+  - `latam_gap` calcula la proporción LATAM solo con piezas de `region` latinoamericana. El `latam_es` del `audience_mix` mezcla España y Latinoamérica, así que en la UI se rotula "en español".
+- **Cross-source:** nº de fuentes **independientes**: un medio o canal cuenta una vez (todas las búsquedas de HN cuentan como una sola fuente). Normalizar métricas dentro de cada fuente. Pendiente: deduplicar notas de prensa replicadas (pares candidatos por embeddings y Jev decide si son la misma nota; mientras tanto, regla de similitud coseno ≥ umbral y fuente distinta).
 - **Saturation:** volumen de contenido similar en la ventana reciente **dentro de las fuentes monitoreadas** (decirlo así en la UI).
-- **Audience Fit (Jev, patrón *composite scoring*):** 6 preguntas `score`, una por criterio, cada una con 6 niveles descriptivos (0–5). Python normaliza (`score / 5`) y combina con pesos en código. La justificación de cada criterio es la descripción del nivel elegido (`legend`). Criterios:
+- **Audience Fit (LLM, salida Pydantic):** el LLM evalúa el tema completo en 6 criterios. Para cada uno devuelve primero la justificación, citando ids de evidencia, y después un nivel entero de 0 a 5 (en ese orden, para que razone antes de puntuar). Recibe como pistas los conteos de las etiquetas de Jev por pieza (p. ej. "8 de 20 piezas muestran un caso real"), que la UI muestra como apoyo. Python combina los 6 niveles con pesos en código → `audience_fit_score`; la UI lo muestra como banda (bajo · medio · alto) junto a los 6 niveles, no como precisión al punto. `actionability_score` sale del criterio 6. Criterios:
   impacto en decisiones empresariales · aplicación real en organizaciones · comprensible para directivos no técnicos · relevancia LATAM · encaje con pilares 30X · convertible en contenido accionable.
 - **Opportunity Score (heurística inicial, ajustable):**
   ```
@@ -223,17 +235,26 @@ GET  /health
   − penalizaciones (datos pobres, fuentes duplicadas, muestra pequeña)
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
-- **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita. Jev clasifica el gancho y el formato de cada pieza, y Python calcula el *lift* de cada rasgo entre los outliers y el resto del tema (lift ≥ 2 en ≥ 2 outliers = "patrón observado"; si no, "anecdótico"). El LLM redacta la hipótesis a partir de esa tabla.
-- **Embeddings agrupan, Jev decide, Python calcula, el LLM redacta y Jev verifica lo que el LLM escribe.** Cada modelo usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Resultados cacheados en Postgres.
-- **Jev (TypeSafe; lo sugiere el reto).** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel de rúbrica) con probabilidades y `confidence`. Las preguntas de una llamada corren en paralelo y el `state` se paga una vez, así que cada entidad se evalúa en **una llamada con todas sus preguntas** (una *batería*):
-  - **Pieza:** relevancia, formato, gancho, pilar de 30X, legibilidad para directivos, caso real, contexto LATAM, anuncio puntual e inyección de instrucciones. Formato y gancho van repetidos con las opciones en orden inverso para detectar el sesgo hacia la primera opción.
+- **`recommendation` (implementada en `intelligence/ranking.py`, PR #7).** Primera regla que se cumple:
+  | Etiqueta | Regla |
+  |---|---|
+  | `discard` | `lifecycle` es `saturated` |
+  | `wait_for_case` | datos insuficientes o `confidence` baja |
+  | `find_angle` | `lifecycle` es `peaking`, o `unknown` porque ninguna regla se cumple |
+  | `publish_now` | `emerging` o `accelerating`, y `audience_fit_score` ≥ 60 |
+  | `find_angle` | cualquier otro caso (también mientras no haya audience fit) |
+  **Propuestas pendientes de revisión de Melkin** (17/10): descartar también si `audience_fit_score` < 40; esperar caso también si el criterio "aplicación real en organizaciones" ≤ 1 (no hay caso real en la evidencia); buscar ángulo también si ya hay mucha cobertura en LATAM (`latam_gap = false`); y guardar la regla cumplida en un campo `recommendation_reason` del contrato (avisando en el canal), para que la UI y el MCP puedan explicarla.
+- **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita. Jev clasifica el gancho y el formato de cada pieza, y Python calcula el *lift* de cada rasgo entre los outliers y el resto del tema (lift ≥ 2 en ≥ 2 outliers = "patrón observado"; si no, "anecdótico"). El LLM redacta la hipótesis a partir de esa tabla. Con pocos outliers por tema casi todo saldrá "anecdótico", y se dice así.
+- **Los embeddings agrupan, Jev clasifica cada pieza, Python calcula, el LLM evalúa cada tema y redacta, y Jev verifica lo que escribe el LLM.** Cada modelo usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Resultados cacheados en Postgres.
+- **Jev (TypeSafe; lo sugiere el reto): decisiones atómicas sobre piezas.** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel) con probabilidades y, en `choice` y `score`, `confidence`. Las preguntas de una llamada corren en paralelo y el `state` se paga una vez, así que cada entidad se evalúa en **una llamada con todas sus preguntas** (una *batería*):
+  - **Pieza:** relevancia, formato, gancho, anuncio puntual e inyección de instrucciones, más pistas para el LLM (caso real, legibilidad para directivos, contexto LATAM, pilar de 30X). Formato y gancho van repetidos con las opciones en orden inverso para detectar el sesgo hacia la primera opción.
   - **Par:** ¿es la misma nota replicada? → fuentes independientes y saturación.
-  - **Tema:** los 6 criterios del audience fit y la accionabilidad.
-  - **Verificación:** cada afirmación del LLM generativo contra la evidencia que cita; lo que no está respaldado no se publica (regla 3).
+  - **Verificación:** cada afirmación del LLM contra la evidencia que cita; solo se publica lo respaldado con `confidence` ≥ 0,8 (regla 3). Como la evidencia es título y descripción, el LLM debe ceñirse a lo que dicen.
+  - El juicio de conjunto sobre un tema (audience fit) no es de Jev: lee de forma literal, sus niveles de `score` no están calibrados como números y pierde precisión con contextos grandes.
   - Python convierte probabilidades en decisiones con umbrales, y lo incierto se muestra como tal. El texto externo va en `state` y nuestras instrucciones en `questions` (regla 6).
-  - SDK `typesafe-sdk` (`AsyncTypeSafeClient`, concurrencia acotada), `JEV_MODEL=jev-1.13.0` fijado, y caché por hash del `state` + versión de la batería + versión del modelo en `jev_judgments`. Cuesta menos de 2 $ al mes. Antes de confiar en Jev, validarlo con 30–50 piezas etiquetadas a mano en `data/evaluations/`. **Acceso:** confirmar hoy la clave, porque el registro directo se ha pausado a veces.
+  - SDK `typesafe-sdk` (`AsyncTypeSafeClient`, concurrencia acotada), `JEV_MODEL=jev-1.13.0` fijado, y caché por hash del `state` + versión de la batería + versión del modelo en `jev_judgments`. Cuesta alrededor de 1 $ al mes. En cuanto haya clave, validarlo con 30–50 piezas etiquetadas a mano en `data/evaluations/`. **Acceso:** confirmar hoy la clave; si no la hay antes de las 19:00 ESP, el LLM hace la batería de pieza en lote con el mismo modelo Pydantic, y Jev la sustituye cuando llegue.
   - Preguntas, umbrales, paralelismo, validación y coste: [`docs/jev.md`](docs/jev.md).
-- **LLM generativo (solo redacta):** salidas estructuradas (Pydantic). Funciones: `name_cluster`, `explain_opportunity` (`why_it_matters`, `limitations`), `recommend_content_angles` y briefs. Devuelve afirmaciones con el id de la evidencia que las respalda, para que Jev las verifique. Recibe como datos los resultados de Python y Jev. Modelo con `LLM_MODEL`; proveedor y modelo: pendiente (Melkin).
+- **LLM (evalúa cada tema y redacta):** salidas estructuradas validadas con Pydantic. Funciones: `evaluate_topic` (los 6 criterios del audience fit), `name_cluster`, `explain_opportunity` (`why_it_matters`, `limitations` y la hipótesis de "por qué funcionó"), `recommend_content_angles` y briefs. Devuelve afirmaciones con el id de la evidencia que las respalda: Python comprueba que cada id pertenece al tema y Jev verifica el contenido. Recibe como datos los resultados de Python y Jev. Antes de leer la respuesta hay que comprobar `stop_reason` (rechazo o `max_tokens`). Modelo con `LLM_MODEL`; finalistas: Claude Haiku 5.5 y GPT-6 Luna (mismo precio), con Claude Sonnet 5.5 como techo de calidad para los briefs. Lo decide Melkin probando 3–5 temas reales.
 - **Perfil editorial de 30X:** en `data/audiences/30x.yaml` (audiencia, pilares, tono, formatos, qué no encaja). Se define en la Fase 2 revisando a mano los Instagram que compartió 30X: @crece30x y @andresbilbao.
 
 ---
@@ -244,7 +265,7 @@ GET  /health
 |---|---|
 | Backend | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 + Alembic + asyncpg, httpx, tenacity |
 | Datos / ML | Polars, NumPy, scikit-learn · sentence-transformers solo en el job `analyze` (grupo `ml`, torch CPU) |
-| IA | **Jev** de TypeSafe (`typesafe-sdk`, versión fijada) para clasificar y puntuar · LLM generativo económico vía SDK oficial del proveedor, solo para redactar |
+| IA | **Jev** de TypeSafe (`typesafe-sdk`, versión fijada) para clasificar piezas y verificar · LLM económico vía SDK oficial del proveedor para evaluar temas y redactar |
 | Coste | `usage_events` + `data/pricing.yaml` → `GET /costs` (§4) |
 | MCP | MCP Python SDK oficial, Streamable HTTP, montado en FastAPI |
 | DB | PostgreSQL + pgvector (Supabase en la demo, Docker en local). Se migra con `pg_dump`/`pg_restore` desde la DB local para conservar el historial de snapshots (no repetir el backfill). Supabase y Railway en la misma región |
@@ -319,11 +340,15 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 3. **¿Se sostiene con datos reales y evidencia enlazada?** Si solo luce con datos de ejemplo, no aporta a la demo.
 4. **¿Cabe antes del próximo checkpoint (§13)?** Si no, se recorta a la versión mínima que aporta, o se avisa.
 
-- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · audience fit y clasificación con Jev · evidencias verificables · coste de operación medido (registro de consumo, `GET /costs` y panel) · dashboard Vue con Radar y detalle · despliegue.
+- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · clasificación por pieza con Jev · audience fit con el LLM · evidencias verificables · coste de operación medido (registro de consumo, `GET /costs` y panel) · dashboard Vue con Radar y detalle · despliegue.
 - **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LinkedIn vía API de portabilidad, exports de analítica y embed oficial · LATAM Opportunity Gap · comparación de oportunidades.
 - **P2:** Topic Network · animaciones avanzadas · más fuentes · varias audiencias.
 
 **Ningún P2 puede poner en riesgo un P0.**
+
+**Orden de construcción.** No se recorta nada; se decide qué va primero para que la demo funcione aunque un extra no llegue a tiempo:
+1. **Núcleo, para el MVP de las 00:30:** datos → embeddings y clustering → scores en Python → clasificación por pieza (Jev, o el LLM en lote) → audience fit y textos con el LLM → API → Radar y detalle en Vue → coste.
+2. **Después del núcleo:** verificación de afirmaciones con Jev, *lift* del "por qué funcionó", batería de pares (mientras tanto, la regla de similitud), MCP, briefs, LinkedIn por la API de portabilidad y Brave.
 
 **Fuera de alcance:** scraping de redes cerradas · entrenar modelos · auto-publicación · editor de contenido · multi-tenant · auth avanzada · facturación · causalidad o viralidad presentadas como certeza · igualar la cobertura de las herramientas de referencia (1of10, SparkToro, Exploding Topics…) · una base propia de comportamiento de audiencias · monitorizar todas las redes o todo el mercado LATAM · predicciones con poco historial.
 
@@ -350,6 +375,8 @@ Las ideas sin prioridad asignada están en `docs/brief.md` §9.
 **Criterios de aceptación:** la lista de verificación de la entrega está en `docs/brief.md` §8. Se repasa en la revisión del domingo a las 12:30 y antes del code freeze.
 
 **Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1) → el impacto: coste real medido de operar el radar (sin cifras de ahorro que no hayamos medido).
+
+**La demo usa una ejecución de `analyze` congelada:** los clusters cambian entre ejecuciones, así que el ranking que se enseña es el de una ejecución fijada y revisada a mano.
 
 **Entregables:** repo · app desplegada · MCP accesible (o demo local verificada con la limitación documentada) · README · arquitectura · fuentes y limitaciones · algoritmo de priorización · coste de operación medido · presentación · vídeo de respaldo.
 
