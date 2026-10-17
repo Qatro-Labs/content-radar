@@ -1,22 +1,26 @@
 """Batería de pieza de Jev y su conversión a decisiones. Sin red."""
 
 import asyncio
+import hashlib
 import json
 from dataclasses import replace
 from datetime import UTC, datetime
 
 import httpx2
 import pytest
-from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul
+from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul, Score
 
 from app.core.config import Settings
 from app.intelligence.jev import (
     PieceJudgment,
     TypeSafeJudge,
+    battery_cache_key,
     build_judge,
     cache_key,
     excluded_from_llm,
     keep_about_ai,
+    pair_battery,
+    pair_state,
     piece_battery,
     piece_state,
     to_piece_judgment,
@@ -136,6 +140,51 @@ def test_state_omits_missing_description(description):
 
 def test_state_never_carries_source_segment_or_region():
     assert {"segment", "region"}.isdisjoint(piece_state(make_piece(description="x")))
+
+
+def test_piece_cache_key_is_unchanged():
+    # Las filas de pieza ya guardadas se leen por esta clave: el payload no puede cambiar.
+    state = piece_state(make_piece(description="x"))
+    payload = {"state": state, "battery": "piece", "battery_version": 3, "model": "jev-1.13.0"}
+    expected = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+    assert cache_key(state, "jev-1.13.0") == expected
+
+
+def test_pair_battery_loads_same_story_score():
+    battery = pair_battery()
+    assert battery.name == "pair"
+    assert list(battery.questions) == ["same_story"]
+    question = battery.questions["same_story"]
+    assert isinstance(question, Score)
+    assert len(question.criteria) == 4
+
+
+def pair_piece(item_id: int, title: str, description: str | None = None) -> Piece:
+    return replace(make_piece(title, description), item_id=item_id, source_name=f"Medio {item_id}")
+
+
+def test_pair_state_is_canonical():
+    a, b = pair_piece(2, "WIRED: agentes"), pair_piece(1, "WIRED en Español: agentes")
+    assert pair_state(a, b) == pair_state(b, a)
+    assert pair_state(a, b)["a"]["title"] == "WIRED en Español: agentes"  # item_id menor
+    key = battery_cache_key(pair_battery(), pair_state(a, b), "jev-1.13.0")
+    assert key == battery_cache_key(pair_battery(), pair_state(b, a), "jev-1.13.0")
+    assert key != cache_key(pair_state(a, b), "jev-1.13.0")  # otra batería, otra clave
+
+
+def test_pair_state_trims_and_omits_description():
+    state = pair_state(pair_piece(1, "A", "x" * 900), pair_piece(2, "B"))
+    assert state["a"] == {"title": "A", "source": "Medio 1", "description": "x" * 500}
+    assert state["b"] == {"title": "B", "source": "Medio 2"}
+
+
+def test_pair_state_never_carries_url_segment_or_region():
+    a = replace(pair_piece(1, "A", "x"), region="co", target_url="https://example.com/t")
+    state = pair_state(a, pair_piece(2, "B", "y"))
+    for side in state.values():
+        assert {"url", "target_url", "segment", "region", "metrics"}.isdisjoint(side)
 
 
 async def test_typesafe_judge_parses_response():

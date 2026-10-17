@@ -642,7 +642,7 @@ comandos de backend se corren desde `backend/`.
   (repite el import en el paso 4, cuando `opportunities.py` ya importa de `replicas.py`)
 - **Commit:** `Add pure replica detection and story grouping`
 
-### Paso 3 — Batería de pares de Jev
+### Paso 3 — Batería de pares de Jev [HECHO]
 
 - **Archivos:** `backend/app/editorial/prompts/jev/pair.v1.yaml` (nuevo),
   `backend/app/intelligence/jev.py`, `backend/tests/test_jev.py`
