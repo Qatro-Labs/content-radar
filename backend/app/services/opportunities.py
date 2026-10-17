@@ -269,7 +269,7 @@ async def list_served(
     confidence: Confidence | None = None,
     topic: str | None = None,
 ) -> ServedRun | None:
-    """Como `list_opportunities`, con la evidencia y el timeline de cada una (una sola query)."""
+    """Como `list_opportunities`, con la evidencia y el timeline de cada una (sin una query por oportunidad)."""
     run = await _served_run(session)
     if run is None or run.finished_at is None:
         return None

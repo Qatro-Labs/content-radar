@@ -326,7 +326,10 @@ async def test_brief_limit_is_an_error_without_calling_the_llm(session):
 
     async with Client(server) as c:
         first = await c.call_tool("generate_editorial_brief", brief_args(opportunity_id))
-        second = await c.call_tool("generate_editorial_brief", brief_args(opportunity_id))
+        # Otro formato: no hay acierto de caché, así que solo el límite evita la llamada al LLM.
+        second = await c.call_tool(
+            "generate_editorial_brief", {**brief_args(opportunity_id), "format": "post"}
+        )
 
     assert not first.is_error, text_of(first)
     assert second.is_error

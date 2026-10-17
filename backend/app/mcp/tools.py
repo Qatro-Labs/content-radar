@@ -278,9 +278,9 @@ class RadarTools:
         async with slots:
             now = datetime.now(UTC)
             # Cuenta también un acierto de caché, como en la ruta: el cupo no depende de la caché.
-            limit = self._deps.brief_limiter.check(MCP_CLIENT_KEY, now)
-            if limit is not LimitResult.OK:
-                raise ToolError(MCP_BRIEF_LIMITS[limit])
+            quota = self._deps.brief_limiter.check(MCP_CLIENT_KEY, now)
+            if quota is not LimitResult.OK:
+                raise ToolError(MCP_BRIEF_LIMITS[quota])
             brief = await self._metered_brief(request, now)
         return _sanitized(brief)
 
