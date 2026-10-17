@@ -125,7 +125,7 @@ verificación de cada afirmación con Jev que describe CLAUDE.md §7 no está im
 
 Cada `analyze` correcto es una ejecución con su propio ranking; los clusters cambian entre
 ejecuciones. La API, el MCP y el agente leen siempre la misma, elegida en
-`backend/app/services/opportunities.py:171`:
+`backend/app/services/opportunities.py:174`:
 
 - Con `DEMO_RUN_ID` fijado en Railway, esa ejecución. Si no existe o no terminó bien, **no se sirve
   nada**: una demo fijada a una ejecución inexistente tiene que notarse.

@@ -97,27 +97,22 @@ views en YouTube, TikTok e Instagram; puntos en HN y Reddit; RSS no tiene
 ## 5. Outliers
 
 `outlier_ratio = rendimiento de la pieza / cuantil de su referencia`
-(`backend/app/intelligence/outliers.py:39`).
+(`backend/app/intelligence/outliers.py:52`).
 
 | Qué | Valor | Dónde |
 |---|---|---|
-| Rendimiento | Views por día de vida (mínimo 1 día) en YouTube, TikTok e Instagram; puntos brutos en HN y Reddit | `backend/app/intelligence/outliers.py:33`, `backend/app/intelligence/opportunities.py:61` |
-| Referencia | Las **otras** piezas de la misma fuente (`source_id`: un canal, un feed, una búsqueda de HN) que están en el corpus analizado | `backend/app/intelligence/opportunities.py:124` |
-| Cuantil | Mediana; **p90 en HN** (con la mediana, ~4 puntos, un 22 % salía outlier; con el p90, un 3–6 %) | `backend/app/intelligence/outliers.py:20`, `:21`, `backend/app/intelligence/opportunities.py:141` |
-| Tamaño mínimo de la referencia | 5 piezas; con menos, ratio `null` | `backend/app/intelligence/outliers.py:19` |
-| Edad mínima para entrar en la referencia | 2 días en YouTube, TikTok e Instagram; 6 h en HN y Reddit. Lo recién publicado sí se puntúa, pero no hunde la referencia | `backend/app/intelligence/outliers.py:24` |
-| Referencia 0 | Ratio `null` | `backend/app/intelligence/outliers.py:46` |
-| Outlier | ratio ≥ 3 | `backend/app/intelligence/outliers.py:17` |
+| Rendimiento | Views por día de vida (mínimo 1 día) en YouTube, TikTok e Instagram; puntos brutos en HN y Reddit | `backend/app/intelligence/outliers.py:46`, `backend/app/intelligence/opportunities.py:61` |
+| Referencia | Las **otras** piezas de la misma fuente (`source_id`: un canal, un perfil, un feed, una búsqueda de HN o TikTok, un subreddit) entre **todas las cargadas**, también las que el filtro de Jev quita por fuera de tema. Esas solo sirven de referencia: no reciben ratio, no son evidencia y no entran en el clustering | `backend/app/intelligence/opportunities.py:124`, `backend/app/services/opportunities.py:155` |
+| Cuantil | Mediana; **p90 en HN y TikTok**, que se leen por búsqueda y mezclan muchos autores. HN: con la mediana, ~4 puntos, un 22 % salía outlier; con el p90, un 3–6 %. TikTok (n = 72, 17/10): con la mediana un 33 %, con el p75 un 17 %, con el p90 un 6 % ([análisis](../data/evaluations/outlier_reference_scrapecreators.md)) | `backend/app/intelligence/outliers.py:21`, `:22`, `:26`, `:42`, `backend/app/intelligence/opportunities.py:142` |
+| Tamaño mínimo de la referencia | 5 piezas; con menos, ratio `null` | `backend/app/intelligence/outliers.py:20` |
+| Edad mínima para entrar en la referencia | 2 días en YouTube, TikTok e Instagram; 6 h en HN y Reddit. Lo recién publicado sí se puntúa, pero no hunde la referencia | `backend/app/intelligence/outliers.py:33` |
+| Referencia 0 | Ratio `null` | `backend/app/intelligence/outliers.py:59` |
+| Outlier | ratio ≥ 3 | `backend/app/intelligence/outliers.py:18` |
 
 `outlier_count` cuenta las piezas del tema con ratio ≥ 3 y `top_outlier_ratio` es el máximo, `null`
 si ninguna tiene ratio (`backend/app/intelligence/opportunities.py:307`). La evidencia guarda hasta 25
 piezas, outliers primero y después las más recientes (`backend/app/intelligence/opportunities.py:64`,
 `:425`).
-
-> **Pendiente:** el PR #48 (`intel/outlier-reference-all-pieces`) cambia la referencia para que use
-> todas las piezas cargadas de la fuente, también las que quita el filtro de Jev. Hoy la referencia
-> sale del corpus ya filtrado, así que una fuente con muchas piezas fuera de tema puede quedarse sin
-> las 5 de referencia.
 
 ## 6. Saturación
 
@@ -127,7 +122,7 @@ saturation_score = percentil (0–100) de las piezas del tema en las dos ventana
 ```
 
 Es la proporción de temas activos con menos piezas que este; con un solo tema, 50
-(`backend/app/intelligence/cross_source.py:33`, `backend/app/intelligence/opportunities.py:457`). Es
+(`backend/app/intelligence/cross_source.py:33`, `backend/app/intelligence/opportunities.py:458`). Es
 relativa a la muestra: "en las fuentes que monitoreamos". Un 75 significa que el tema tiene más
 volumen que el 75 % de los demás, no un volumen absoluto.
 
@@ -198,7 +193,7 @@ momentum_score   = 0,4 × percentil_velocidad + 0,4 × aceleración_norm + 0,2 �
 | `POINTS_PER_OUTLIER` | 25 (4 outliers = 100) | `backend/app/intelligence/ranking.py:23` |
 
 `percentil_velocidad` es el percentil de las piezas de la ventana actual del tema frente a los demás
-temas activos, con la misma función que la saturación (`backend/app/intelligence/opportunities.py:458`).
+temas activos, con la misma función que la saturación (`backend/app/intelligence/opportunities.py:459`).
 
 ## 11. Para quién importa: audience mix y LATAM gap
 
@@ -306,7 +301,7 @@ Un fit bajo no descarta: da `find_angle` y la UI muestra la banda.
 
 ## 15. Orden del ranking
 
-`backend/app/intelligence/opportunities.py:484`, aplicado en `analyze` después del audience fit
+`backend/app/intelligence/opportunities.py:485`, aplicado en `analyze` después del audience fit
 (`backend/app/jobs/analyze.py:71`). De mayor a menor:
 
 1. Temas con Opportunity Score antes que los que no lo tienen.
@@ -350,8 +345,8 @@ código; CLAUDE.md no se ha tocado.
 | # | Tema | CLAUDE.md dice | El código hace |
 |---|---|---|---|
 | 1 | Velocidad del tema (§7) | Piezas nuevas por día "ponderadas por fuentes independientes" | Conteo bruto entre 3 días, sin ponderar (`backend/app/intelligence/velocity.py:54`) |
-| 2 | Referencia de YouTube (§7) | Mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`) | Mediana de las otras piezas del mismo canal que están en el corpus de 14 días, ya filtrado por Jev, con ≥ 2 días de edad y un mínimo de 5 (`backend/app/intelligence/opportunities.py:124`). El PR #48 lo cambiaría en parte |
-| 3 | "Destacado" ≥ 2× (§7) | Banda de piezas destacadas | `NOTABLE_RATIO = 2.0` existe pero no se usa en ningún sitio (`backend/app/intelligence/outliers.py:18`) |
+| 2 | Referencia de YouTube (§7) | Mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`) | Mediana de las otras piezas del mismo canal cargadas en los 14 días del corpus (incluidas las que Jev quita), con ≥ 2 días de edad y un mínimo de 5 (`backend/app/intelligence/opportunities.py:124`). No son necesariamente los últimos 20 vídeos |
+| 3 | "Destacado" ≥ 2× (§7) | Banda de piezas destacadas | `NOTABLE_RATIO = 2.0` existe pero no se usa en ningún sitio (`backend/app/intelligence/outliers.py:19`) |
 | 4 | Ubicación de los módulos (§7, §10) | `intelligence/momentum.py`, `saturation.py`, `relevance.py` | Momentum, score y recomendación en `ranking.py`; saturación y fuentes independientes en `cross_source.py`; audience fit en `audience_fit.py`. No hay `momentum.py`, `saturation.py` ni `relevance.py` |
 | 5 | Saturación (§7) | Volumen de contenido similar en la ventana reciente | Percentil del volumen del tema frente a los demás temas activos (`backend/app/intelligence/cross_source.py:33`). Los umbrales de etapa (75, 60, 40) se aplican a ese percentil |
 | 6 | Notas replicadas (§7) | Regla provisional de similitud coseno ≥ umbral y fuente distinta; después, la batería de pares de Jev | No implementado: ni la regla ni la batería. Cada medio cuenta como fuente independiente |
