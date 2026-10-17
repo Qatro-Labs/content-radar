@@ -36,6 +36,7 @@ SCORE_MIN_CONFIDENCE = 0.5
 INJECTION_EXCLUDE = 0.5
 
 REV_SUFFIX = "_rev"
+INJECTION_QUESTION = "injection"
 # El cookbook de TypeSafe usa 6 workers: el endpoint limita por encima de ese ritmo (docs/jev.md).
 JEV_CONCURRENCY = 6
 
@@ -179,7 +180,7 @@ def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:
     return PieceJudgment(
         item_id=item_id,
         relevant=_noul(answers, "relevant"),
-        injection=_noul(answers, "injection"),
+        injection=_noul(answers, INJECTION_QUESTION),
         format=_choice(answers, "format"),
         hook=_choice(answers, "hook"),
         announcement=_noul(answers, "announcement"),
@@ -190,4 +191,4 @@ def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:
 
 
 def excluded_from_llm(answers: dict[str, Any]) -> bool:
-    return answers["injection"]["noul"] > INJECTION_EXCLUDE
+    return answers[INJECTION_QUESTION]["noul"] > INJECTION_EXCLUDE
