@@ -1,64 +1,147 @@
-# content-radar · 30X Signal
+# 30X Signal
 
-Radar de inteligencia editorial para 30X: detecta qué temas de IA están acelerando, por qué funcionan y si encajan con su audiencia de líderes y equipos de Latinoamérica. Convierte señales públicas (YouTube, Hacker News, medios y RSS) en oportunidades editoriales con evidencia verificable, consultables desde un dashboard o desde asistentes de IA vía MCP.
+Radar de inteligencia editorial para el reto **30X · Media**. Responde a una pregunta:
+
+> ¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?
+
+Convierte señales públicas de Internet (YouTube, Hacker News, medios y blogs por RSS, TikTok, Reddit e Instagram) en oportunidades editoriales con evidencia enlazada. Se consultan desde un dashboard en Vue o desde un asistente de IA (Claude, ChatGPT, Grok) vía MCP. Si hay menos de 10 temas con datos suficientes, enseña los que hay: no inventa ninguno.
 
 - **Por qué y para quién:** [docs/brief.md](docs/brief.md)
-- **Plan, reglas y contratos:** [CLAUDE.md](CLAUDE.md)
+- **Decisiones, reglas y contratos:** [CLAUDE.md](CLAUDE.md)
 - **Arquitectura y coste de operación medido:** [docs/architecture.md](docs/architecture.md) · [docs/costs.md](docs/costs.md)
 - **Algoritmo de priorización:** [docs/scoring.md](docs/scoring.md)
 
-## Cómo trabajamos
+## En vivo
 
-1. **Al empezar un bloque:** `git pull` y leer el último handoff del canal.
-2. **Antes de coger una tarea:** pasarla por el filtro de valor (`CLAUDE.md` §12). Si no mejora ningún paso del recorrido de demo, se aparca.
-3. **Una rama por tarea** (`data/…`, `intel/…`, `fe/…`), PRs pequeños y mergeados pronto. `main` siempre desplegable.
-4. **Elegir el modo de trabajo:**
-   - Tarea de 1 h o más con un contrato claro (scoring, endpoints, tools MCP, migraciones): `/spec` para planearla y `/build` para implementarla. `/spec <slug>` retoma un plan bloqueado o a medias.
-   - Todo lo demás (UI, arreglos, ajustes): directo con Claude, sin plan.
-5. **Contratos** (`Opportunity`, `Evidence`, `ContentSignal`, OpenAPI): se avisan en el canal antes de cambiarlos. Los tipos del frontend se generan desde la API, nunca a mano.
-6. **Decisiones:** se hablan en el canal y se escriben en `CLAUDE.md` con un PR. Si no está ahí, Claude no la conoce.
-7. **Merge:** cualquiera puede mergear a `main` (mismo poder de decisión) con los tests en verde. Claude nunca mergea.
-8. **Al cerrar un bloque:** handoff en el canal con el formato de `CLAUDE.md` §3.
-9. **Estado:** pregunta a Claude "¿cómo vamos?"; lo calcula a partir de los planes, los PRs y `git log`.
-10. **Bloqueado más de 30 min:** avisa, propón una alternativa y cambia de tarea.
+| Qué | URL |
+|---|---|
+| Dashboard (Vercel) | <!-- TODO Melkin: URL de Vercel --> _pendiente_ |
+| API REST | https://content-radar-production-9453.up.railway.app/api/v1/opportunities |
+| Documentación de la API (OpenAPI) | https://content-radar-production-9453.up.railway.app/docs |
+| Servidor MCP | https://content-radar-production-9453.up.railway.app/mcp |
+| Estado de las fuentes (piezas por fuente) | https://content-radar-production-9453.up.railway.app/api/v1/sources/status |
 
-Estándares de código: [`.claude/rules/engineering-standards.md`](.claude/rules/engineering-standards.md).
+## Cómo funciona
 
-## Requisitos
+```
+Colectores (YouTube, HN, RSS, ScrapeCreators) → normalizar, deduplicar y guardar snapshots → PostgreSQL + pgvector
+analyze: Jev clasifica cada pieza → embeddings → clustering → scores en Python → audience fit y textos con el LLM
+Servicios de dominio (Python) → API REST /api/v1 (dashboard Vue) y servidor MCP /mcp (asistentes), con el mismo ranking
+```
 
-- Docker
-- [uv](https://docs.astral.sh/uv/) (instala Python 3.12 automáticamente)
-- Node 20+ y pnpm (frontend)
+- `collect` corre cada 2 h en GitHub Actions y `analyze` corre después de cada recolección correcta. La API y el MCP sirven la última ejecución correcta, o la fijada con `DEMO_RUN_ID`.
+- Los scores se calculan en Python, de forma determinista. El LLM evalúa y redacta; no calcula. Jev (TypeSafe) responde preguntas tipadas sobre cada pieza.
+- Detalle: [docs/architecture.md](docs/architecture.md) (arquitectura) y [docs/scoring.md](docs/scoring.md) (motor).
 
-## Backend: puesta en marcha
+## Fuentes
+
+| Fuente | Acceso |
+|---|---|
+| YouTube | Data API v3 oficial |
+| Hacker News | API de Algolia |
+| Medios y blogs (tech, negocio, LATAM) | RSS |
+| TikTok · Reddit | ScrapeCreators, un proveedor de datos públicos: búsquedas por palabra clave y subreddits |
+| Instagram | ScrapeCreators, solo los reels de perfiles elegidos a mano (no descubre temas) |
+| LinkedIn · X | **Fuera del MVP.** Sin login no se puede buscar su contenido, y por Google llega poco y tarde. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS) |
+
+Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales. Límites, costes y vías oficiales del roadmap: [docs/sources.md](docs/sources.md). Fuentes dadas de alta: [`data/sources.yaml`](data/sources.yaml).
+
+## Cómo se prioriza
+
+- **Velocidad y aceleración, no popularidad.** Cuenta cuántas piezas nuevas salen al día en los últimos 3 días frente a los 3 anteriores, con un ajuste por volumen. El total de views nunca entra en un score.
+- **Outliers.** Una pieza es outlier si rinde 3× o más sobre la referencia de su canal o fuente. El "por qué funcionó" que se deriva de los outliers es una hipótesis, no una causa.
+- **Etapa del tema** (emerging → saturated), validación entre fuentes independientes, saturación, **para quién importa** (tech, negocio, español) y **LATAM Opportunity Gap**.
+- **Opportunity Score** = 0,30·momentum + 0,25·audience fit + 0,20·cross-source + 0,15·(100 − saturación) + 0,10·accionabilidad. La confianza se muestra aparte. Cada oportunidad trae una recomendación (`publish_now`, `find_angle`, `wait_for_case` o `discard`) junto con la regla que la produjo.
+
+Fórmulas, umbrales y reglas, tal como están en el código: [docs/scoring.md](docs/scoring.md). Jev: [docs/jev.md](docs/jev.md).
+
+## Conectar el MCP
+
+Solo lectura, sin autenticación y con datos públicos. Tiene seis tools: oportunidades en tendencia, análisis de una oportunidad, búsqueda de señales, comparación de audience fit, coste de operación y brief editorial.
+
+```bash
+claude mcp add --transport http 30x-signal https://content-radar-production-9453.up.railway.app/mcp
+```
+
+Claude web, MCP Inspector y otros clientes, qué clientes se han probado y sus limitaciones: [docs/mcp.md](docs/mcp.md).
+
+## Coste de operación
+
+Cada llamada a una API externa (YouTube, ScrapeCreators, Jev, LLM) queda registrada en `usage_events`, con su coste calculado a partir de [`data/pricing.yaml`](data/pricing.yaml). Ahí está cada precio con su fuente y su fecha. `GET /api/v1/costs` y la tool MCP `get_operating_cost` dan el coste medido y la proyección mensual por separado. La proyección es una estimación. Coste medido y su lectura: [docs/costs.md](docs/costs.md).
+
+## Limitaciones y pendiente
+
+- **En curso:** deduplicación de notas de prensa replicadas (de momento, una regla de similitud) y verificación con Jev de las afirmaciones del LLM.
+- La saturación y el LATAM Gap son relativos a las fuentes que monitoreamos, no a todo Internet ni a todo el mercado LATAM.
+- El audience fit es una evaluación editorial asistida por IA, no una medición.
+- La velocidad de una pieza necesita dos snapshots o más. Sin ellos, la evidencia se marca `estimated` o `preliminary`. El historial empieza el 17/10.
+- TikTok y Reddit solo traen el top de la semana en curso, y una pieza solo se vuelve a medir si sigue saliendo en la búsqueda.
+- El MCP no tiene autenticación, y su cupo de briefs es compartido por todos los clientes.
+
+## Equipo
+
+| Persona | Área |
+|---|---|
+| Steven | Data & Backend: conectores, DB, jobs, API, despliegue |
+| Melkin | AI & Intelligence: clustering, scoring, Jev, LLM, MCP |
+| <!-- TODO Melkin: nombre del frontend lead --> Frontend lead | Product & Frontend: Vue, visualizaciones, UX, demo |
+
+---
+
+## Puesta en marcha
+
+**Requisitos:** Docker · [uv](https://docs.astral.sh/uv/) (instala Python ≥ 3.12 si hace falta) · Node ≥ 20.19 y pnpm 11 (frontend).
+
+### Backend
 
 ```bash
 docker compose up -d --wait          # Postgres 17 + pgvector en localhost:5433
-cp .env.example backend/.env         # completar YOUTUBE_API_KEY, etc.
+cp .env.example backend/.env         # completar las claves (tabla de abajo)
 cd backend
-uv sync
+uv sync                              # todo, incluido torch (grupo ml) para analyze
 uv run alembic upgrade head
-uv run python -m app.jobs.seed_sources   # carga data/sources.yaml (idempotente)
-uv run python -m app.jobs.collect        # backfill 14 días; --days 7 para refrescar métricas
-uv run uvicorn app.main:app --reload # http://localhost:8000/health · docs en /docs
+uv run python -m app.jobs.seed_sources   # carga data/sources.yaml (idempotente; --dry-run para revisar)
+uv run python -m app.jobs.collect        # backfill de 14 días; --days 7 para refrescar, --platform youtube para una sola
+uv run python -m app.jobs.analyze        # Jev → embeddings → clustering → scores → LLM
+uv run uvicorn app.main:app --reload     # http://localhost:8000/health · /docs · /mcp
 ```
+
+- Sin `YOUTUBE_API_KEY`, `seed_sources` y `collect` se saltan YouTube. Sin `SCRAPECREATORS_API_KEY`, se saltan TikTok, Reddit e Instagram.
+- Sin `TYPESAFE_API_KEY`, `LLM_API_KEY` o `LLM_MODEL`, `analyze` corre igual, pero sin filtro de Jev y con el audience fit y el Opportunity Score en `null`.
+- La primera ejecución de `analyze` descarga el modelo de embeddings de Hugging Face.
+- Solo API y MCP, sin torch: `uv sync --no-group ml` (es lo que instala la imagen de Docker).
 
 Tests y lint:
 
 ```bash
 cd backend
-uv run pytest        # usa una DB aparte (radar_test) en el mismo servidor
+uv run pytest        # crea y usa radar_test en el mismo servidor (cambiar con TEST_DATABASE_URL)
 uv run ruff check . && uv run ruff format .
+uv run pyright <archivos>
 ```
 
-Nueva migración tras cambiar modelos:
+Nueva migración tras cambiar modelos: `uv run alembic revision --autogenerate -m "descripcion"` y `uv run alembic upgrade head`.
 
-```bash
-uv run alembic revision --autogenerate -m "descripcion"
-uv run alembic upgrade head
-```
+### Variables de entorno
 
-## Frontend: puesta en marcha
+Solo en el backend (`backend/.env`; plantilla en [`.env.example`](.env.example)). Ninguna clave va al frontend ni al repo.
+
+| Variable | Para qué | ¿Obligatoria? |
+|---|---|---|
+| `DATABASE_URL` | Postgres con el driver asyncpg | Sí (por defecto, el Docker local) |
+| `YOUTUBE_API_KEY` | Colector de YouTube | Para YouTube |
+| `SCRAPECREATORS_API_KEY` | TikTok, Reddit e Instagram (se paga por llamada) | Para esas fuentes |
+| `TYPESAFE_API_KEY` · `JEV_MODEL` | Jev: clasificación por pieza (versión fijada, `jev-1.13.0`) | Para `analyze` completo |
+| `LLM_API_KEY` · `LLM_MODEL` | Clave de Anthropic y modelo (`claude-haiku-5-5`, con precio en `pricing.yaml`) | Para `analyze` completo, briefs y agente |
+| `CORS_ALLOWED_ORIGINS` | Orígenes del frontend, separados por coma | En producción |
+| `MCP_PUBLIC_URL` | URL pública exacta del MCP; con otro `Host`, responde 421 | En producción |
+| `APP_ENV` | `local`, `ci` o `production` | No |
+| `DEMO_RUN_ID` | Ejecución de `analyze` fijada para la demo; vacía = la última correcta | No |
+| `BRAVE_API_KEY` | Reservada: Brave aún no tiene colector | No |
+
+Tests: `TEST_DATABASE_URL` (opcional). Frontend: `VITE_API_BASE_URL` y `VITE_USE_FIXTURES` (ver abajo).
+
+### Frontend
 
 ```bash
 cd frontend
@@ -66,76 +149,37 @@ pnpm install
 pnpm dev                 # http://localhost:5173 · proxy de /api a http://localhost:8000
 ```
 
-- Sin backend, con datos de ejemplo: `VITE_USE_FIXTURES=true pnpm dev`. Las oportunidades salen de
-  `data/fixtures/opportunities.json` (marcado MOCK) y la cabecera muestra el chip "Datos de ejemplo".
-  Sin el flag, los datos salen solo de la API: si falla, se ve el error, nunca los fixtures.
-- Si la API corre en otro puerto: `API_DEV_TARGET=http://localhost:8001 pnpm dev`.
-- Tipos de la API (nunca a mano): con la API levantada, `pnpm gen:api` regenera `src/types/api.ts`.
-  Sin API, desde un JSON: `OPENAPI_URL=ruta/openapi.json pnpm gen:api`.
-- Antes de un PR: `pnpm lint && pnpm type-check && pnpm test && pnpm build`.
-- Producción: `VITE_API_BASE_URL` con la URL pública de la API (ver `frontend/.env.example`).
-- pnpm no instala versiones publicadas hace menos de 7 días (`frontend/pnpm-workspace.yaml`).
+- **Con datos de ejemplo, sin backend:** `VITE_USE_FIXTURES=true pnpm dev`. Los datos salen de `data/fixtures/opportunities.json` (marcado MOCK), y la cabecera muestra el chip "Datos de ejemplo". Sin el flag, los datos salen solo de la API, y si la API falla se ve el error, nunca los fixtures.
+- **API en otro puerto:** `API_DEV_TARGET=http://localhost:8001 pnpm dev`.
+- **Tipos de la API (nunca a mano):** con la API levantada, `pnpm gen:api` regenera `src/types/api.ts`. Sin la API, desde un JSON: `OPENAPI_URL=ruta/openapi.json pnpm gen:api`.
+- **Antes de un PR:** `pnpm lint && pnpm type-check && pnpm test && pnpm build`.
+- **En Vercel:** `frontend/vercel.json` reenvía `/api` a Railway. Para llamar a otra API, se pone su URL en `VITE_API_BASE_URL` (ver `frontend/.env.example`).
 
-## Recolección periódica
+## Recolección periódica y despliegue
 
-Cada ejecución de `collect` es un snapshot de métricas; el historial de velocidad depende de que corra cada 2 h.
-
-```bash
-scripts/schedule-local.sh install    # launchd en macOS, cada 2 h (status / uninstall)
-tail -f backend/logs/collect.log
-```
-
-- **Compartido (activo):** `.github/workflows/collect.yml` corre cada 2 h contra Supabase con los secrets `DATABASE_URL` (session pooler, puerto 5432) y `YOUTUBE_API_KEY`. Es la única recolección que alimenta la DB compartida.
-- **Local (solo desarrollo):** el launchd recolecta en el Docker de cada uno. Requiere el Mac encendido; si duerme, ese hueco no se recupera.
-
-Después de cada recolección correcta, `.github/workflows/analyze.yml` recalcula las oportunidades (Jev → embeddings → clustering → scores → audience fit con el LLM), y la API sirve la última ejecución correcta. Necesita también los secrets `TYPESAFE_API_KEY` y `LLM_API_KEY`; sin alguno de ellos no se ejecuta, para no publicar oportunidades sin filtro ni score. Las respuestas de Jev y del LLM se cachean en la DB, así que cada ejecución solo paga lo nuevo.
-
-## Despliegue (Railway + Supabase)
-
-La API y el MCP van en una sola imagen (`backend/Dockerfile`, sin torch). `railway.json` la construye desde la raíz del repo, migra al arrancar y usa `/health` como healthcheck.
-
-El MCP queda en `<API>/mcp` y necesita `MCP_PUBLIC_URL` con el dominio público exacto (sin ella responde 421). Cómo conectar Claude Code, Claude y MCP Inspector: [`docs/mcp.md`](docs/mcp.md).
-
-1. **Supabase:** crear el proyecto en la misma región que Railway y activar `vector` (Database → Extensions). Copiar la URL del *session pooler* (puerto 5432) con el driver asyncpg: `postgresql+asyncpg://postgres.<ref>:<password>@<host>:5432/postgres`.
-2. **Llevar los datos locales** (conserva el historial de snapshots; no repetir el backfill):
-   ```bash
-   docker exec content-radar-db pg_dump -U radar -d radar -Fc --no-owner --no-acl > radar.dump
-   pg_restore --no-owner --no-acl -d "postgresql://postgres.<ref>:<password>@<host>:5432/postgres" radar.dump
-   ```
-3. **Railway:** New Project → Deploy from GitHub repo → este repo, rama `main`. Variables: `DATABASE_URL` (la de Supabase), `APP_ENV=production`, `CORS_ALLOWED_ORIGINS` (URL de Vercel), `MCP_PUBLIC_URL` y las claves de API. Railway inyecta `PORT`.
-4. **Recolección:** configurar los secrets del workflow `collect` (sección anterior) y desinstalar el launchd local.
-
-Imagen en local: `docker build -f backend/Dockerfile -t radar-api . && docker run -p 8000:8000 --env-file backend/.env radar-api` (dentro de Docker, la DB local es `host.docker.internal:5433`).
+- **Recolección:** `.github/workflows/collect.yml` corre cada 2 h contra Supabase, con los secrets `DATABASE_URL` (session pooler, puerto 5432), `YOUTUBE_API_KEY` y `SCRAPECREATORS_API_KEY`. ScrapeCreators solo se consulta a las 00 y a las 12 UTC. En local, `scripts/schedule-local.sh install` programa la recolección con launchd (macOS) contra el Docker local.
+- **Análisis:** `.github/workflows/analyze.yml` corre después de cada recolección correcta. Necesita además `TYPESAFE_API_KEY` y `LLM_API_KEY`; si falta alguna, no se ejecuta, para no publicar oportunidades sin filtro ni score. Las respuestas de Jev y del LLM se cachean en la DB.
+- **API y MCP (Railway):** una sola imagen sin torch (`backend/Dockerfile`, configurada en `railway.json`). Migra al arrancar y usa `/health` como healthcheck. Variables: `DATABASE_URL`, `APP_ENV=production`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `LLM_API_KEY` y `LLM_MODEL` (briefs y agente) y, si se fija, `DEMO_RUN_ID`. Jev solo corre en `analyze`. Railway inyecta `PORT`.
+- **DB (Supabase):** activar la extensión `vector` y usar la URL del session pooler con `postgresql+asyncpg://`. Los datos locales se migran con `pg_dump -Fc` / `pg_restore --no-owner --no-acl`, que conserva el historial de snapshots.
+- **Imagen en local:** `docker build -f backend/Dockerfile -t radar-api . && docker run -p 8000:8000 --env-file backend/.env radar-api`. Dentro de Docker, la DB local está en `host.docker.internal:5433`.
 
 ## Estructura
 
 ```
 backend/app/
-  collectors/    conectores (YouTube, HN, RSS…) → ContentSignal
-  schemas/       contratos Pydantic (signal.py = contrato del Signal Engine)
-  models/        tablas SQLAlchemy
-  services/      lógica de negocio compartida por API y MCP
-  intelligence/  embeddings, clustering, scoring
-  editorial/     análisis y briefs con LLM
-  mcp/           servidor MCP
-  api/routes/    FastAPI (delgado)
-  jobs/          pipelines ejecutables por cron
-frontend/        Vue 3 + Vite: Radar; Explorar y Crear, en construcción
-data/            fixtures, evaluaciones y perfiles de audiencia
-docs/            brief de producto y documentación de la entrega
+  collectors/    YouTube, HN, RSS, ScrapeCreators → ContentSignal
+  intelligence/  embeddings, clustering, velocidad, outliers, lifecycle, ranking, Jev
+  editorial/     audience fit, explicaciones y briefs con el LLM (prompts versionados)
+  services/      lógica de negocio compartida por la API y el MCP
+  api/routes/    FastAPI (delgado)  ·  mcp/  servidor MCP  ·  agent/  agente del Radar
+  schemas/ models/ db/ jobs/
+frontend/src/    Vue 3 + Vite: Radar, Explorar, expediente del tema y Crear
+data/            sources.yaml, pricing.yaml, audiences/, evaluations/, fixtures/ (MOCK)
+docs/            brief, fuentes, Jev, MCP
 ```
 
-## Estado
+## Cómo trabajamos
 
-Cifras de Supabase del 17/10, ~18:15 UTC.
-
-| Área | Estado |
-|---|---|
-| Fuentes (`data/sources.yaml`): 38 canales de YouTube · 7 búsquedas de HN · 45 feeds RSS | ✅ |
-| Datos reales: 760 HN · 431 RSS · 418 YouTube · 7.187 snapshots desde el 17/10 02:48 UTC | ✅ |
-| Recolección cada 2 h en GitHub Actions contra Supabase | ✅ |
-| `analyze` (Jev → embeddings → clustering → scores → audience fit con el LLM) después de cada recolección | ✅ |
-| API en Railway: `/opportunities` (+ detalle, evidencia, timeline), `/sources/status`, `/costs` | ✅ |
-| Coste medido de Jev y del LLM en `usage_events` (`GET /costs`) | ✅ |
-| Agente del Radar: `POST /api/v1/agent` (SSE con pasos, acciones de vista y respuesta con citas validadas; ámbito cerrado, límites de pasos, tiempo, frecuencia y concurrencia). Probado en local contra Supabase; falta la barra en el frontend | ✅ backend |
-| LinkedIn, Instagram y TikTok | Fuera del MVP (decidido el 17/10; `CLAUDE.md` §5) |
+- Una rama por tarea (`data/…`, `intel/…`, `fe/…`), con PRs pequeños. `main` siempre desplegable. Cualquiera del equipo mergea con los tests en verde; Claude nunca mergea.
+- Antes de coger una tarea, pasa el filtro de valor ([CLAUDE.md §12](CLAUDE.md#12-prioridades)). Los cambios de contrato (`Opportunity`, `Evidence`, OpenAPI) se avisan antes, y las decisiones se escriben en `CLAUDE.md`.
+- Para tareas de 1 h o más con un contrato claro: `/spec` y después `/build`. Estándares de código: [`.claude/rules/engineering-standards.md`](.claude/rules/engineering-standards.md).
