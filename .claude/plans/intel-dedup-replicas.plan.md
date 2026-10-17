@@ -774,7 +774,7 @@ comandos de backend se corren desde `backend/`.
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint && pnpm test && pnpm build`
 - **Commit:** `Regenerate API types with Evidence replica fields`
 
-### Paso 8 — Documentación
+### Paso 8 — Documentación [HECHO]
 
 - **Archivos:** `docs/jev.md`, `CLAUDE.md`
 - **Cambio:**

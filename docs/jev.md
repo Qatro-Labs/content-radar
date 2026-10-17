@@ -21,7 +21,7 @@
 |---|---|
 | Agrupar piezas en temas | Embeddings + scikit-learn |
 | Clasificar cada pieza: relevancia, formato, gancho… | **Jev** |
-| Detectar notas replicadas | **Jev** (mientras no esté: regla de similitud coseno + fuente distinta) |
+| Detectar notas replicadas | Enlace compartido en Python; **Jev** en la franja dudosa; regla de respaldo si Jev no decide |
 | Calcular: velocidad, outliers, lifecycle, *lift*, scores y `recommendation` | Python |
 | Evaluar cada tema (los 6 criterios del audience fit) | LLM |
 | Redactar: nombres de tema, `why_it_matters`, `limitations`, ángulos, briefs | LLM |
@@ -82,18 +82,39 @@ así que no añaden latencia y apenas coste.
 
 ### 2. Par: una llamada por par candidato
 
-Los candidatos son pares de piezas del mismo tema, de fuentes distintas y con embeddings muy
-parecidos.
+Implementada en `backend/app/editorial/prompts/jev/pair.v1.yaml`, con la lógica pura en
+`intelligence/replicas.py` y la caché en `services/replicas.py`. Corre en `analyze` entre el
+clustering y los scores.
 
-`state`: `{a: {title, description, source}, b: {title, description, source}}`.
+Solo se comparan piezas del mismo tema y de medios distintos (`outlet_key`: todas las queries de HN
+son un medio). Para cada par:
+
+1. **Enlace compartido** (la misma `url`, o el `target_url` de HN o Reddit apuntando a la otra, o
+   los dos `target_url` iguales): es republicación y no se pregunta a Jev.
+2. **Candidato a Jev** si la similitud coseno es ≥ 0,70 o tienen el mismo título normalizado (≥ 5
+   palabras). Se juzgan de mayor a menor similitud, con un tope de 250 llamadas nuevas por
+   ejecución.
+3. Un veredicto seguro de Jev manda en las dos direcciones: el nivel 3 es republicación y los
+   niveles 0–2 son independientes, aunque la regla diga otra cosa.
+4. **Regla de respaldo** (sin clave, fallo de Jev, veredicto incierto o fuera del tope): mismo
+   título normalizado o similitud ≥ 0,90. Lo que decide la regla se marca en `limitations` como
+   no verificado con Jev.
+
+`state`: `{a: {title, description, source}, b: {title, description, source}}`, ordenado por
+`item_id` para que (A, B) y (B, A) compartan caché. La descripción se recorta a 500 caracteres; sin
+URL, segmento, región ni métricas.
 
 | Pregunta | Tipo y criterio | Para qué |
 |---|---|---|
 | `same_story` | `score`: temas distintos · mismo tema, hechos distintos · mismo acontecimiento contado por separado · la misma nota replicada | Fuentes independientes (`cross_source_score`) y saturación |
 
-Es el patrón *entity alignment* del cookbook. Se redondea `score` al nivel más cercano, y los
-niveles intermedios se marcan como inciertos. Mientras esta batería no esté, un par con similitud
-coseno ≥ umbral y fuente distinta cuenta como nota replicada.
+Es el patrón *entity alignment* del cookbook. Se redondea `score` al nivel más cercano. El nivel 2
+("mismo acontecimiento contado por separado") no es incierto: es cobertura independiente, que es
+justo la validación cruzada que mide `cross_source_score`. La incertidumbre la da `confidence`.
+
+Las piezas unidas por republicaciones forman una nota; su representante es la publicada antes. Las
+filas van a `jev_judgments` con `battery = "pair"` y `content_item_id` nulo: la clave es el hash del
+`state` canónico, la batería, su versión y el modelo.
 
 ### 3. Verificación: después del LLM
 
@@ -116,7 +137,7 @@ afirmaciones verificables" en vez de mostrar un texto vacío.
 |---|---|---|
 | `choice` | La probabilidad máxima es ≥ 0,6 y coincide con su `_rev` | "Incierto" |
 | `noul` | ≥ 0,7 cuenta como sí; ≤ 0,3, como no. `noul` no devuelve `confidence`: si hace falta una, se usa \|2p − 1\| | "Incierto" |
-| `score` | `confidence` ≥ 0,5. `score` es una **media ponderada** por probabilidad, no un nivel: para leer la `legend` se redondea al nivel más cercano, y nunca se interpreta como magnitud precisa | "Incierto" |
+| `score` | `confidence` ≥ 0,5; por debajo es incierto. `score` es una **media ponderada** por probabilidad, no un nivel: se redondea al nivel más cercano y nunca se interpreta como magnitud precisa. En el par, el nivel redondeado decide (3 = republicación, 0–2 = independientes) | "Incierto" |
 
 Lo incierto no entra en los conteos y la UI lo muestra como tal. Son umbrales iniciales; se ajustan
 con la validación.
@@ -194,7 +215,7 @@ Es una estimación con los precios oficiales; el coste real lo mide `usage_event
 | Batería | Volumen | Tokens por llamada (aprox.) | Coste |
 |---|---|---|---|
 | Pieza (v3) | ~1.500 de backfill + ~200 al día | ~2.260 (medido) | ~0,14 $ el backfill; ~0,57 $/mes |
-| Par | ~500 al día | ~800 | ~0,50 $/mes |
+| Par | ~220 pares en la primera ejecución; después, solo los nuevos | ~800 | ~0,01 $ la primera ejecución |
 | Verificación | ~100 afirmaciones al día | ~800 | ~0,10 $/mes |
 
 Total: alrededor de 1 $ al mes.
