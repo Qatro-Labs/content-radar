@@ -1,6 +1,6 @@
 # content-radar · 30X Signal
 
-Radar de inteligencia editorial para 30X: detecta qué temas de IA están acelerando, por qué funcionan y si encajan con su audiencia de líderes y equipos de Latinoamérica. Convierte señales públicas (YouTube, Hacker News, medios y RSS, más enlaces de LinkedIn, Instagram o TikTok curados a mano) en oportunidades editoriales con evidencia verificable, consultables desde un dashboard o desde asistentes de IA vía MCP.
+Radar de inteligencia editorial para 30X: detecta qué temas de IA están acelerando, por qué funcionan y si encajan con su audiencia de líderes y equipos de Latinoamérica. Convierte señales públicas (YouTube, Hacker News, medios y RSS) en oportunidades editoriales con evidencia verificable, consultables desde un dashboard o desde asistentes de IA vía MCP.
 
 - **Por qué y para quién:** [docs/brief.md](docs/brief.md)
 - **Plan, reglas y contratos:** [CLAUDE.md](CLAUDE.md)
@@ -120,11 +120,14 @@ docs/            brief de producto y documentación de la entrega
 
 ## Estado
 
+Cifras de Supabase del 17/10, ~18:15 UTC.
+
 | Área | Estado |
 |---|---|
-| Esqueleto backend, DB y migración inicial | ✅ |
-| Tablas `sources`, `content_items`, `metric_snapshots`, `pipeline_runs` | ✅ |
-| `store_signals` (dedupe + historial de snapshots) y `GET /api/v1/sources/status` | ✅ |
-| Lista inicial de fuentes (`data/sources.yaml`: 38 YouTube · 7 HN · 34 RSS) + loader `app.jobs.seed_sources` | ✅ |
-| Collectors HN / RSS / YouTube + backfill 14 días (`app.jobs.collect`) | ✅ datos reales: 737 HN · 346 RSS · 405 YouTube (38 canales) |
-| Job periódico de snapshots: launchd local cada 2 h (`scripts/schedule-local.sh`) · GitHub Actions listo para Supabase | ✅ |
+| Fuentes (`data/sources.yaml`): 38 canales de YouTube · 7 búsquedas de HN · 45 feeds RSS | ✅ |
+| Datos reales: 760 HN · 431 RSS · 418 YouTube · 7.187 snapshots desde el 17/10 02:48 UTC | ✅ |
+| Recolección cada 2 h en GitHub Actions contra Supabase | ✅ |
+| `analyze` (Jev → embeddings → clustering → scores → audience fit con el LLM) después de cada recolección | ✅ |
+| API en Railway: `/opportunities` (+ detalle, evidencia, timeline), `/sources/status`, `/costs` | ✅ |
+| Coste medido de Jev y del LLM en `usage_events` (`GET /costs`) | ✅ |
+| LinkedIn, Instagram y TikTok | Fuera del MVP (decidido el 17/10; `CLAUDE.md` §5) |

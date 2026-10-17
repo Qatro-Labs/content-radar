@@ -15,7 +15,7 @@
 |---|---|---|
 | Detección | Velocidad y aceleración ajustadas por volumen + test de Poisson + tope por outlet. Fuentes globales (sobre todo USA) | $0 |
 | Target | LATAM (España fuera). LATAM Gap = acelera en las fuentes globales y todavía es bajo en LATAM | $0 |
-| Redes sociales | YouTube (con Shorts) automático; LinkedIn, Instagram y TikTok por sensor editorial manual (CSV). Grok Bot fuera; X en el roadmap | $0 |
+| Redes sociales | YouTube (con Shorts) automático. LinkedIn, Instagram y TikTok fuera del MVP: el sensor editorial manual se descartó el 17/10 (ver §7). Grok Bot fuera; X en el roadmap | $0 |
 | Medios LATAM | RSS → news sitemap → Firecrawl (free tier) solo como respaldo | $0 |
 | Clasificación y fit | Jev (TypeSafe): batería de pieza (formato, gancho, pilar…) y de tema (6 criterios del fit); Python combina con umbrales y pesos (`docs/jev.md`) | < 2 $ al mes |
 | Explicación | Lift de los rasgos de Jev + timing, autor y difusión (Python), con n; el LLM generativo solo redacta y Jev verifica cada afirmación | Céntimos por ejecución |
@@ -188,7 +188,10 @@ Producto de agentes de xAI, en beta desde el 11/08/2026. Cada bot tiene un orden
 
 ---
 
-## 7. Redes sociales: sensor editorial (decidido el 17/10)
+## 7. Redes sociales: sensor editorial (descartado)
+
+> **Descartado el 17/10 por la tarde:** LinkedIn, Instagram y TikTok no entran en el MVP y no hay
+> curación manual (CLAUDE.md §5). Esta sección se conserva como contexto de la decisión.
 
 LinkedIn, Instagram y TikTok no sirven para *detectar* tendencias tempranas: las tendencias de IA nacen antes en las capas globales. Sirven para *explicarlas*: formato, gancho y si el tema ya llegó a redes. El reto pide "qué temas **y formatos**", así que tienen que estar.
 
