@@ -1,6 +1,6 @@
 // Clases que comparten las tarjetas del expediente (DESIGN.md §3 y §4): tarjeta blanca de radio
 // 20px sin borde ni sombra, título Bricolage 22px y botones con objetivo táctil ≥ 44px.
-export const CARD_CLASS = 'flex min-w-0 flex-col rounded-card bg-card p-6'
+export const CARD_CLASS = 'flex min-w-0 rounded-card bg-card p-6'
 export const CARD_TITLE_CLASS =
   'font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]'
 

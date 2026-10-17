@@ -31,7 +31,7 @@ const subline = computed(() => {
   <section
     data-agent="dossier-score"
     aria-label="Cómo se compone la oportunidad"
-    :class="[CARD_CLASS, 'flex-[1_1_440px] gap-[18px]']"
+    :class="[CARD_CLASS, 'flex-col flex-[1_1_440px] gap-[18px]']"
   >
     <div class="flex items-center gap-5">
       <ScoreRing :score="opportunity.opportunity_score ?? null" />
