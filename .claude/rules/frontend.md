@@ -18,6 +18,12 @@ Antes de tocar UI, lee `DESIGN.md`.
      métrica falta, la UI lo dice; no la rellena.
    - Avisar de forma visible desde cuándo se monitorea (primer snapshot: 17/10 ~02:50 UTC) para que
      nadie lea los periodos largos como historial medido.
+   - **Agente del Radar** (artboard E, aprobado el 17/10): una barra de pregunta fija abajo. El agente
+     responde moviendo la página: pulsa los mismos filtros, resalta, selecciona y cita la evidencia,
+     con una presencia que viaja hasta cada objetivo antes de actuar. Sus acciones de UI cambian el
+     estado de la URL (`useRadarQuery`), igual que los controles, así que una vista del agente se puede
+     compartir y repetir. El frontend no llama al LLM ni al MCP: consume el stream de eventos del
+     backend. Componentes y movimiento en `DESIGN.md` §4 y §7.
 2. **Explore (Evidencia):** timeline de velocidad del tema (barras por día, ventana actual vs.
    anterior) con su confianza · **barra apilada de `audience_mix`** (para quién importa) · Evidence
    Explorer por plataforma (enlaces originales, fechas, métricas, velocidad y **badge de outlier
@@ -38,8 +44,9 @@ Ningún gráfico decorativo. El coste de operación no se muestra en la UI.
 
 **Regla de efectos:** como mucho un efecto llamativo por vista. En el Radar es el escaneo (barrido al
 cargar y ping al seleccionar). El latido de las burbujas codifica la aceleración: solo late lo que
-crece. Lo demás son microinteracciones que siguen a la selección. Ningún efecto puede tapar los datos
-ni bajar el rendimiento. Detalle en `DESIGN.md` §7.
+crece. Lo demás son microinteracciones que siguen a la selección. Mientras el agente actúa, el efecto
+es su presencia, y el barrido solo vuelve a pasar cuando el agente lee datos. Ningún efecto puede tapar
+los datos ni bajar el rendimiento. Detalle en `DESIGN.md` §7.
 
 ## Librerías y recursos de UI
 
