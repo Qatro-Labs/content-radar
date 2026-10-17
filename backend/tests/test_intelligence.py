@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.intelligence.audience_mix import audience_mix, latam_gap
+from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
 from app.intelligence.lifecycle import classify
 from app.intelligence.outliers import age_adjusted, is_outlier, outlier_ratio
@@ -125,16 +125,29 @@ def test_audience_mix_weighted_and_sums_to_one():
 
 def test_audience_mix_empty():
     assert audience_mix([]) is None
-    assert latam_gap(None) is None
+    assert latam_share([]) is None
+    assert latam_gap(None, None) is None
+
+
+def test_latam_share_counts_only_latin_american_regions():
+    # España (es) y global no cuentan; mx y latam sí: 1 + 3 de un peso total de 9.
+    share = latam_share([("es", 2), ("mx", 1), ("global", 3), (None, 0), ("latam", 3)])
+    assert share == pytest.approx(4 / 9, abs=0.001)
 
 
 def test_latam_gap():
     gap = audience_mix([(Segment.BUSINESS, 1), (Segment.TECH, 3)])
-    covered = audience_mix([(Segment.LATAM_ES, 1), (Segment.TECH, 1)])
     tech_only = audience_mix([(Segment.TECH, 1)])
-    assert latam_gap(gap) is True
-    assert latam_gap(covered) is False
-    assert latam_gap(tech_only) is None
+    assert latam_gap(gap, 0.0) is True
+    assert latam_gap(gap, 0.5) is False  # ya cubierto en la región
+    assert latam_gap(tech_only, 0.0) is None
+
+
+def test_spanish_coverage_does_not_close_the_latam_gap():
+    # Mucho latam_es, pero todo de España: el gap sigue abierto.
+    mix = audience_mix([(Segment.BUSINESS, 1), (Segment.LATAM_ES, 1)])
+    share = latam_share([("global", 1), ("es", 1)])
+    assert latam_gap(mix, share) is True
 
 
 # --- cross source / saturation ---

@@ -66,6 +66,7 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
                 observed_at=item.last_observed_at,
                 metrics=snapshots[-1][1] if snapshots else Metrics(),
                 snapshots=snapshots,
+                region=source.region,
             )
         )
     return pieces
