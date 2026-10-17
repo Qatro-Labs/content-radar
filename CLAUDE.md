@@ -278,7 +278,7 @@ GET  /health
 **Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, LiteLLM, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
 
 **Variables de entorno** (solo en el backend; ver `.env.example`):
-`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`.
+`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
 
 ---
 
@@ -378,7 +378,7 @@ Las ideas sin prioridad asignada están en `docs/brief.md` §9.
 
 **Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1). El coste medido de operar el radar no es un paso del guion: se responde si alguien lo pregunta, por MCP o con `GET /costs` (sin cifras de ahorro que no hayamos medido).
 
-**La demo usa una ejecución de `analyze` congelada:** los clusters cambian entre ejecuciones, así que el ranking que se enseña es el de una ejecución fijada y revisada a mano.
+**La demo usa una ejecución de `analyze` congelada:** los clusters cambian entre ejecuciones, así que el ranking que se enseña es el de una ejecución fijada y revisada a mano. Se fija con `DEMO_RUN_ID` en Railway: la API y el MCP sirven esa ejecución (listado y detalle) aunque el cron siga corriendo `analyze`. Sin valor, sirven la última correcta.
 
 **Entregables:** repo · app desplegada · MCP accesible (o demo local verificada con la limitación documentada) · README · arquitectura · fuentes y limitaciones · algoritmo de priorización · coste de operación medido · presentación · vídeo de respaldo.
 
