@@ -21,9 +21,14 @@ from app.intelligence.audience_fit import EDITORIAL_PENDING_NOTE
 from app.intelligence.explanation import (
     EXPLANATION_FAILED_NOTE,
     NO_VALID_CLAIM_NOTE,
+    UNVERIFIED_NOTE,
     ClaimDraft,
     apply_explanation,
+    compose_explanation,
+    jev_drop_note,
     known_numbers,
+    python_checked,
+    python_drop_note,
 )
 from app.models import LlmEvaluation
 from app.services.audience_fit import evaluate_topics
@@ -99,6 +104,70 @@ async def test_without_any_valid_claim_the_measured_template_stays(session):
 
     assert o.why_it_matters == template
     assert NO_VALID_CLAIM_NOTE in o.limitations
+
+
+# --- tras el veredicto de Jev -------------------------------------------------------------
+
+
+OTHER = "Ninguna pieza muestra resultados medidos."
+
+
+async def test_jev_rejected_claims_are_not_published_and_counted(session):
+    [result, _], _ = await fitted_topics(session)
+    checked = python_checked(
+        [ClaimDraft(WHY, [URL]), ClaimDraft(OTHER, [URL])], sent_urls={URL}, numbers=set()
+    )
+
+    o = compose_explanation(
+        result, checked[:1], [], numbers=set(), notes=[jev_drop_note(len(checked) - 1)]
+    ).opportunity
+
+    assert o.why_it_matters == WHY
+    assert (
+        "Jev no encontró respaldo en la evidencia citada para 1 afirmación del LLM: no se publica."
+        in o.limitations
+    )
+
+
+async def test_all_claims_rejected_by_jev_keep_the_measured_template(session):
+    [result, _], _ = await fitted_topics(session)
+    template = result.opportunity.why_it_matters
+
+    o = compose_explanation(result, [], [], numbers=set(), notes=[jev_drop_note(2)]).opportunity
+
+    assert o.why_it_matters == template
+    assert o.limitations[-1:] == [NO_VALID_CLAIM_NOTE]
+    assert EDITORIAL_PENDING_NOTE not in o.limitations
+    assert not any("Jev" in n for n in o.limitations)
+
+
+async def test_unverified_explanation_publishes_python_checked_claims_with_a_note(session):
+    [result, _], _ = await fitted_topics(session)
+    checked = python_checked(
+        [ClaimDraft(WHY, [URL]), ClaimDraft(OTHER, [])], sent_urls={URL}, numbers=set()
+    )
+
+    o = compose_explanation(
+        result,
+        checked,
+        [],
+        numbers=set(),
+        notes=[python_drop_note(1), None, UNVERIFIED_NOTE],
+    ).opportunity
+
+    assert o.why_it_matters == WHY
+    assert o.limitations[-2:] == [
+        "Se descartaron 1 afirmación del LLM sin evidencia o con cifras no observadas.",
+        UNVERIFIED_NOTE,
+    ]
+
+
+def test_jev_drop_note_plural_and_none():
+    assert jev_drop_note(0) is None
+    assert jev_drop_note(3) == (
+        "Jev no encontró respaldo en la evidencia citada para 3 afirmaciones del LLM: "
+        "no se publican."
+    )
 
 
 # --- prompt -------------------------------------------------------------------------------

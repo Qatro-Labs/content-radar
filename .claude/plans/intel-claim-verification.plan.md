@@ -628,7 +628,7 @@ Se informa también por posición (1, 2, 3) y la variante sin `measured_facts`.
 - **Verificación:** `cd backend && uv run pytest tests/test_jev.py -q`
 - **Commit:** `Add the Jev claim battery and its support verdict`
 
-### Paso 2 — Partir `apply_explanation` en dos etapas puras
+### Paso 2 — Partir `apply_explanation` en dos etapas puras [HECHO]
 
 - **Archivos:** `backend/app/intelligence/explanation.py`, `backend/tests/test_explanation.py`
 - **Cambio:**
