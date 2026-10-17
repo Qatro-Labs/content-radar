@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://content-radar-production-9453.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://content-radar-production-9453.up.railway.app/health"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

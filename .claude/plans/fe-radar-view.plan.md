@@ -567,6 +567,7 @@ VITE_USE_FIXTURES=true pnpm dev   # revisión manual del paso 11; pega lo compro
 
 | Fecha | Qué bloqueó | Qué se decidió | Commits que quedaron |
 | --- | --- | --- | --- |
+| 2026-10-17 ~20:00 ESP | Railway (`content-radar-production-9453.up.railway.app`) ya sirve `/opportunities` con un contrato más nuevo que la rama de #9 (`audience_fit_criteria`, `score_breakdown`, `/costs`) | `api.ts` se regenera desde el `/openapi.json` desplegado (sigue siendo generado; cambios solo aditivos). `frontend/vercel.json` hace de proxy de `/api` y `/health` a Railway (mismo origen, sin CORS) y aplica el fallback de SPA | commit de este cambio |
 
 ## Preguntas abiertas
 
