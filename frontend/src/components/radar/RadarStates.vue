@@ -11,6 +11,7 @@ export type RadarPlaceholder = (typeof RadarPlaceholder)[keyof typeof RadarPlace
 </script>
 
 <script setup lang="ts">
+import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import { PLOT_ASPECT } from '@/lib/radarChart'
 
 const { state } = defineProps<{ state: RadarPlaceholder }>()
@@ -25,7 +26,6 @@ const ERROR_MESSAGE = 'No se pudieron cargar las oportunidades.'
 
 const CARD = 'flex min-w-0 flex-col rounded-card bg-card'
 const CARD_TITLE = 'font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]'
-const BONE = 'radar-bone block'
 // Cinco filas dan la forma de la tabla sin alargar la página mientras carga.
 const SKELETON_ROWS = 5
 // Los cuatro contadores-filtro de la cabecera y los tres temas que «Esta semana» enseña como
@@ -49,8 +49,8 @@ const RETRY_ON_CARD = 'bg-secondary'
   >
     <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-5 pb-1">
       <div class="flex w-full max-w-[600px] flex-col gap-3">
-        <span :class="[BONE, 'h-14 w-4/5 rounded-xl']" />
-        <span :class="[BONE, 'h-5 w-full rounded-full']" />
+        <SkeletonBone class="h-14 w-4/5 rounded-xl" />
+        <SkeletonBone class="h-5 w-full rounded-full" />
       </div>
       <div class="flex flex-wrap gap-2">
         <div
@@ -58,8 +58,8 @@ const RETRY_ON_CARD = 'bg-secondary'
           :key="counter"
           class="flex h-20 w-32 flex-col justify-center gap-2.5 rounded-2xl bg-card px-4"
         >
-          <span :class="[BONE, 'h-8 w-12 rounded-lg']" />
-          <span :class="[BONE, 'h-3.5 w-20 rounded-full']" />
+          <SkeletonBone class="h-8 w-12 rounded-lg" />
+          <SkeletonBone class="h-3.5 w-20 rounded-full" />
         </div>
       </div>
     </div>
@@ -67,28 +67,28 @@ const RETRY_ON_CARD = 'bg-secondary'
     <div class="flex flex-wrap items-start gap-4">
       <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-4">
         <div :class="[CARD, 'gap-3.5 px-6 pt-5 pb-[22px]']">
-          <span :class="[BONE, 'h-7 w-24 rounded-lg']" />
+          <SkeletonBone class="h-7 w-24 rounded-lg" />
           <div class="pt-1 pb-[30px] pl-[30px]">
-            <span
-              :class="[BONE, 'min-h-[300px] max-w-full rounded-tile']"
+            <SkeletonBone
+              class="min-h-[300px] max-w-full rounded-tile"
               :style="{ aspectRatio: PLOT_ASPECT }"
             />
           </div>
         </div>
         <div :class="[CARD, 'gap-1.5 px-5 pt-5 pb-3']">
-          <span :class="[BONE, 'mx-1 mb-3 h-7 w-28 rounded-lg']" />
-          <span v-for="row in SKELETON_ROWS" :key="row" :class="[BONE, 'h-14 rounded-lg']" />
+          <SkeletonBone class="mx-1 mb-3 h-7 w-28 rounded-lg" />
+          <SkeletonBone v-for="row in SKELETON_ROWS" :key="row" class="h-14 rounded-lg" />
         </div>
       </div>
 
       <div :class="[CARD, 'flex-[1_1_360px] gap-[18px] p-[22px]']">
         <div class="flex flex-col gap-2">
-          <span :class="[BONE, 'h-7 w-36 rounded-lg']" />
-          <span :class="[BONE, 'h-4 w-4/5 rounded-full']" />
+          <SkeletonBone class="h-7 w-36 rounded-lg" />
+          <SkeletonBone class="h-4 w-4/5 rounded-full" />
         </div>
-        <span v-for="pick in SKELETON_PICKS" :key="pick" :class="[BONE, 'h-[68px] rounded-tile']" />
-        <span :class="[BONE, 'h-12 rounded-tile']" />
-        <span :class="[BONE, 'h-16 rounded-tile']" />
+        <SkeletonBone v-for="pick in SKELETON_PICKS" :key="pick" class="h-[68px] rounded-tile" />
+        <SkeletonBone class="h-12 rounded-tile" />
+        <SkeletonBone class="h-16 rounded-tile" />
       </div>
     </div>
   </div>
@@ -121,24 +121,3 @@ const RETRY_ON_CARD = 'bg-secondary'
     <p class="text-[17px] leading-[1.55] text-ink-soft">{{ EMPTY_MESSAGE[state] }}</p>
   </section>
 </template>
-
-<style scoped>
-/* DESIGN.md §4: los skeletons van de Pista a Lienzo en 1,6 s, sin spinners. Con movimiento
-   reducido se quedan quietos (§7). */
-.radar-bone {
-  background-color: var(--track);
-  animation: radar-bone 1.6s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .radar-bone {
-    animation: none;
-  }
-}
-
-@keyframes radar-bone {
-  50% {
-    background-color: var(--background);
-  }
-}
-</style>

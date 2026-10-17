@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
+import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import { splitTimeline, type TimelineBar } from '@/lib/dossierView'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
 import {
@@ -13,7 +14,6 @@ import {
 import type { components } from '@/types/api'
 
 import { CARD_CLASS, CARD_TITLE_CLASS } from './dossierClasses'
-import SkeletonBone from './SkeletonBone.vue'
 
 type Schemas = components['schemas']
 

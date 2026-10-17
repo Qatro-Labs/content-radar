@@ -9,10 +9,10 @@ export type DossierPlaceholder = (typeof DossierPlaceholder)[keyof typeof Dossie
 </script>
 
 <script setup lang="ts">
+import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import { RouteName } from '@/router'
 
 import { CARD_CLASS, CARD_TITLE_CLASS, SECONDARY_BUTTON_CLASS } from './dossierClasses'
-import SkeletonBone from './SkeletonBone.vue'
 
 const { state } = defineProps<{ state: DossierPlaceholder }>()
 

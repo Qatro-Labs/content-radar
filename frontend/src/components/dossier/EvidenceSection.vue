@@ -3,6 +3,7 @@ import { usePreferredReducedMotion } from '@vueuse/core'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
+import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import {
   ALL_PLATFORMS,
   filterByPlatform,
@@ -16,7 +17,6 @@ import type { components } from '@/types/api'
 import AudienceMixBar from './AudienceMixBar.vue'
 import { CARD_CLASS, CARD_TITLE_CLASS, SECONDARY_BUTTON_CLASS } from './dossierClasses'
 import EvidenceRow from './EvidenceRow.vue'
-import SkeletonBone from './SkeletonBone.vue'
 
 type Schemas = components['schemas']
 
