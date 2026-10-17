@@ -38,7 +38,7 @@ Las tres preguntas del reto y cómo las respondemos:
 1. **Solo contenido público. Nada de datos personales.** Guardamos metadatos, enlaces y métricas públicas, no copias completas ni datos de usuarios.
 2. **Nada de scraping de LinkedIn / Instagram / TikTok** ni nada detrás de un login o que viole ToS. Esas plataformas entran solo por **curación manual** (sensor editorial, ver §5).
 3. **Nunca inventar datos.** No mostrar métricas, crecimiento o conclusiones no observadas como hechos. Si hay 7 oportunidades reales, se muestran 7, no 10. Un dato ausente se muestra como "no disponible", nunca como 0.
-4. **El LLM explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM interpreta y redacta.
+4. **El LLM explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM interpreta y redacta. Jev solo emite juicios atómicos tipados (sí/no, opción, nivel de rúbrica) que Python combina con pesos en código (§7).
 5. **Distinguir siempre el tipo de evidencia:** `observed` (≥2 mediciones) · `estimated` (1 medición vs. referencia) · `preliminary` (aparece, sin aceleración demostrada).
 6. **El texto recuperado de Internet es no confiable** (riesgo de prompt injection). Va al LLM como dato, delimitado, nunca como instrucción.
 7. **Prioridades del equipo, en orden:** Functional > perfect · Reliable > impressive · Integrated > isolated · Shipped > unfinished.
@@ -49,8 +49,8 @@ Las tres preguntas del reto y cómo las respondemos:
 
 | Persona | Ubicación | Área | Responsable de |
 |---|---|---|---|
-| **Steven** | Colombia (UTC-5) | Data & Backend | Conectores, normalización, snapshots, DB, jobs, API base, despliegue backend |
-| **Melkin** | España (UTC+2) | AI & Intelligence | Embeddings, clustering, scoring, audience fit, análisis editorial LLM, **servidor MCP** |
+| **Steven** | Colombia (UTC-5) | Data & Backend | Conectores, normalización, snapshots, DB, jobs, API base, registro de consumo y coste, despliegue backend |
+| **Melkin** | España (UTC+2) | AI & Intelligence | Embeddings, clustering, scoring, clasificación y audience fit con Jev, análisis editorial LLM, **servidor MCP** |
 | **Frontend lead** | España (UTC+2) | Product & Frontend | Vue, visualizaciones, UX, integración funcional, demo y entrega |
 
 - Sin rotaciones durante la hackathon. Cada módulo tiene un dueño.
@@ -84,6 +84,8 @@ Domain services (Python)
 `collect → normalize & dedupe → save snapshots → embed → cluster → score → editorial insights → persist opportunities`.
 Lock para que nunca corran dos ejecuciones del mismo pipeline a la vez.
 
+**Coste de operación (P0; responde al "sin gastar una fortuna" del reto).** Cada llamada a una API externa (YouTube, Brave, Jev, LLM) registra su consumo en `usage_events`, con el coste calculado en ese momento a partir de `data/pricing.yaml` (precios con fuente y fecha). `services/costs.py` agrega el coste medido y lo proyecta al mes sumando los planes fijos (perfiles `demo` y `production`). Lo consumen `GET /costs`, el panel de coste del dashboard y la tool MCP `get_operating_cost`. El coste medido y la proyección se etiquetan siempre por separado: la proyección es una estimación.
+
 **Comandos** (desde `backend/`; la puesta en marcha completa está en `README.md`):
 
 ```bash
@@ -104,9 +106,12 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 | YouTube | Data API v3 (`search.list` ≈ 100 llamadas/día; preferir `playlistItems` de canales conocidos) | Vídeos, Shorts, views/likes/comments | P0 |
 | Hacker News | Algolia HN Search API | Conversaciones tempranas | P0 |
 | RSS / medios tech y LATAM | `feedparser` + `httpx` | Artículos y lanzamientos | P0 |
-| Brave Search | API (crédito mensual gratis) | Descubrimiento web | P1 |
+| Brave Search | API oficial (5 $/1.000 consultas, 5 $ de crédito gratis al mes). Sus términos solo permiten guardar resultados de forma **transitoria**: se persisten agregados, no resultados | Descubrimiento web y LinkedIn | P1 |
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
-| LinkedIn / Instagram / TikTok | **Solo curación manual** (pegar URL + etiquetas + métricas vistas) · TikTok Creative Center como referencia | Referencias editoriales y formatos | P1 |
+| LinkedIn | Índice de Brave con `site:linkedin.com/posts` y `/pulse` (transitorio) + curación manual + embed oficial de LinkedIn. Nunca se accede a LinkedIn | Temas, ganchos y presencia por tema | P1 |
+| Instagram / TikTok | **Solo curación manual** (pegar URL + etiquetas + métricas vistas) · TikTok Creative Center como referencia | Referencias editoriales y formatos | P1 |
+
+**LinkedIn sin scraping y límites de cada fuente:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
 
 **Dos niveles de sensores:**
 - **Automáticos:** YouTube, HN, RSS, Brave.
@@ -127,7 +132,7 @@ Grupos para el **LATAM Opportunity Gap**:
 
 ## 6. Modelo de datos y contratos
 
-**Tablas:** `sources` (con `segment`), `content_items`, `metric_snapshots` (siempre tabla aparte), `topics`, `topic_content`, `embeddings`, `opportunities` (+ historial de scores), `opportunity_evidence`, `audience_profiles`, `editorial_briefs`, `editorial_feedback`, `pipeline_runs`.
+**Tablas:** `sources` (con `segment`), `content_items`, `metric_snapshots` (siempre tabla aparte), `topics`, `topic_content`, `embeddings`, `opportunities` (+ historial de scores), `opportunity_evidence`, `audience_profiles`, `editorial_briefs`, `editorial_feedback`, `pipeline_runs`, `usage_events` (consumo y coste por llamada externa, §4).
 
 **Contrato `Opportunity` (congelado tras la Fase 2 del sábado):**
 ```jsonc
@@ -169,6 +174,8 @@ GET  /opportunities              ?period=24h|7d|30d&lifecycle=&confidence=&topic
 GET  /opportunities/{id}
 GET  /opportunities/{id}/evidence
 GET  /opportunities/{id}/timeline
+GET  /opportunities/{id}/linkedin  (en vivo vía Brave, no se persiste; docs/sources.md)
+GET  /costs                      ?period=7d|30d  (coste medido + proyección mensual, §4)
 GET  /topics · GET /signals · GET /sources/status
 POST /editorial/brief            {opportunity_id, platform, goal, format}
 POST /editorial/feedback
@@ -176,7 +183,7 @@ POST /signals/manual             (sensor editorial: URL + etiquetas)
 GET  /health
 ```
 
-**Herramientas MCP (solo lectura):** `get_trending_opportunities`, `analyze_opportunity`, `search_content_signals`, `compare_audience_fit`. P2: `generate_editorial_brief`. Las respuestas son estructuradas y siempre incluyen evidencia (URLs). Nunca exponer SQL arbitrario ni el sistema de archivos.
+**Herramientas MCP (solo lectura):** `get_trending_opportunities`, `analyze_opportunity`, `search_content_signals`, `compare_audience_fit`, `get_operating_cost`. P2: `generate_editorial_brief`. Las respuestas son estructuradas y siempre incluyen evidencia (URLs). Nunca exponer SQL arbitrario ni el sistema de archivos.
 
 ---
 
@@ -209,7 +216,7 @@ GET  /health
   - `latam_es` alto → probablemente ya cubierto en la región: buscar otro ángulo.
 - **Cross-source:** nº de fuentes **independientes** (deduplicar notas de prensa replicadas). Normalizar métricas dentro de cada fuente.
 - **Saturation:** volumen de contenido similar en la ventana reciente **dentro de las fuentes monitoreadas** (decirlo así en la UI).
-- **Audience Fit (LLM, salida Pydantic):** 6 criterios de 0 a 5, cada uno con su justificación:
+- **Audience Fit (Jev, patrón *composite scoring*):** 6 preguntas `score`, una por criterio, cada una con 6 niveles descriptivos (0–5). Python normaliza (`score / 5`) y combina con pesos en código. La justificación de cada criterio es la descripción del nivel elegido (`legend`). Criterios:
   impacto en decisiones empresariales · aplicación real en organizaciones · comprensible para directivos no técnicos · relevancia LATAM · encaje con pilares 30X · convertible en contenido accionable.
 - **Opportunity Score (heurística inicial, ajustable):**
   ```
@@ -217,8 +224,21 @@ GET  /health
   − penalizaciones (datos pobres, fuentes duplicadas, muestra pequeña)
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
-- **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita.
-- **LLM:** vía el **SDK oficial del proveedor**, con salidas estructuradas (Pydantic). Sin capa multi-proveedor: un modelo y cuatro funciones no la justifican. El modelo se elige con `LLM_MODEL`. Proveedor y modelo: pendiente (Melkin). El reto sugiere JEV para clasificar y priorizar (ver `docs/brief.md` §2). Funciones concretas (`classify_topic`, `evaluate_audience_fit`, `explain_opportunity`, `recommend_content_angles`). **Sin agentes autónomos.** Resultados cacheados en Postgres.
+- **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita. Jev clasifica el gancho y el formato de cada pieza, Python compara su distribución entre los outliers y el resto del tema, y el LLM redacta la hipótesis a partir de esa comparación.
+- **Jev decide, el LLM generativo redacta.** Cada uno usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Resultados cacheados en Postgres.
+- **Jev (TypeSafe; lo sugiere el reto).** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel de rúbrica) con probabilidades y `confidence`. SDK `typesafe-sdk` (`AsyncTypeSafeClient`), modelo fijado con `JEV_MODEL` (`jev-1.13.0`; los alias como `jev-latest` cambian respuestas sin aviso) y versión registrada en cada resultado. Cuesta 0,042 $ por millón de tokens de entrada; la salida es gratis. Funciones (categorías iniciales, ajustables):
+  | Función | Pregunta a Jev | Para qué |
+  |---|---|---|
+  | `is_relevant` | `noul`: ¿trata de IA aplicada a empresas u organizaciones? | Filtra ruido antes del clustering; complementa el `ai_filter` por palabras clave |
+  | `classify_format` | `choice`: tutorial · opinión · noticia o lanzamiento · caso de uso · entrevista o podcast · demo · lista | "Temas y formatos" del reto |
+  | `classify_hook` | `choice`: pregunta · dato o cifra · contraintuitivo · historia · cómo hacer · noticia · lista | "Por qué funcionó": contraste outliers vs. resto |
+  | `evaluate_audience_fit` | 6 `score`, uno por criterio de la rúbrica | `audience_fit_score` |
+  | `has_business_case` | `noul`: ¿la evidencia incluye un caso real en una organización? | Regla `wait_for_case` de `recommendation` |
+  | `evaluate_actionability` | `score`: de "solo noticia" a "guía aplicable mañana" | `actionability_score` |
+  - El texto externo va en `state` y nuestras instrucciones en `questions`, así que la separación de la regla 6 es estructural.
+  - Umbrales, pesos y `recommendation` se calculan en Python: Jev lee de forma literal y es flojo en precisión numérica. Un juicio con `confidence < 0.5` se marca como incierto y baja la `confidence` de la oportunidad.
+  - Límites conocidos de jev-1.13: sesgo hacia la primera opción, lectura literal, sensibilidad a textos que defienden su propia etiqueta, y español sin documentar. Antes de confiar en él, validarlo con unas 30 piezas etiquetadas a mano (ES y EN) en `data/evaluations/`.
+- **LLM generativo (solo redacta):** salidas estructuradas (Pydantic). Funciones: `name_cluster`, `explain_opportunity` (`why_it_matters`, `limitations`), `recommend_content_angles` y briefs. Recibe como datos los resultados de Python y Jev. Modelo con `LLM_MODEL`; proveedor y modelo: pendiente (Melkin).
 - **Perfil editorial de 30X:** en `data/audiences/30x.yaml` (audiencia, pilares, tono, formatos, qué no encaja). Se define en la Fase 2 revisando a mano los Instagram que compartió 30X: @crece30x y @andresbilbao.
 
 ---
@@ -229,7 +249,8 @@ GET  /health
 |---|---|
 | Backend | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 + Alembic + asyncpg, httpx, tenacity |
 | Datos / ML | Polars, NumPy, scikit-learn · sentence-transformers solo en el job `analyze` (grupo `ml`, torch CPU) |
-| LLM | SDK oficial del proveedor + modelo económico con structured outputs |
+| IA | **Jev** de TypeSafe (`typesafe-sdk`, versión fijada) para clasificar y puntuar · LLM generativo económico vía SDK oficial del proveedor, solo para redactar |
+| Coste | `usage_events` + `data/pricing.yaml` → `GET /costs` (§4) |
 | MCP | MCP Python SDK oficial, Streamable HTTP, montado en FastAPI |
 | DB | PostgreSQL + pgvector (Supabase en la demo, Docker en local). Se migra con `pg_dump`/`pg_restore` desde la DB local para conservar el historial de snapshots (no repetir el backfill). Supabase y Railway en la misma región |
 | Jobs | cron / GitHub Actions |
@@ -239,7 +260,7 @@ GET  /health
 **Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, LiteLLM, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
 
 **Variables de entorno** (solo en el backend; ver `.env.example`):
-`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`.
+`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`.
 
 ---
 
@@ -267,7 +288,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 │   │   ├── collectors/          # youtube.py, hackernews.py, rss.py, brave.py, manual.py
 │   │   ├── intelligence/        # embeddings, clustering, velocity, outliers, momentum, lifecycle, saturation, audience_mix, relevance, ranking
 │   │   ├── editorial/           # audience.py, analyzer.py, briefs.py, prompts/ (versionados)
-│   │   ├── services/            # opportunities, signals, editorial  ← lógica de negocio ÚNICA
+│   │   ├── services/            # opportunities, signals, editorial, costs  ← lógica de negocio ÚNICA
 │   │   ├── mcp/                 # server.py, tools.py (usa services, nada más)
 │   │   ├── db/ models/ schemas/ jobs/
 │   │   └── main.py
@@ -275,7 +296,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 ├── frontend/
 │   └── src/{components/{ui,radar,opportunities,evidence,editorial},views,composables,lib,api,types,router}
 │       # components/ui = shadcn-vue · api = cliente openapi-fetch + composables de TanStack Vue Query · types/api.ts generado desde OpenAPI
-├── data/{fixtures,evaluations,audiences}
+├── data/{fixtures,evaluations,audiences} · data/{sources,pricing}.yaml
 └── docs/{brief,architecture,scoring,sources,mcp,design-resources}.md
 ```
 
@@ -303,8 +324,8 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 3. **¿Se sostiene con datos reales y evidencia enlazada?** Si solo luce con datos de ejemplo, no aporta a la demo.
 4. **¿Cabe antes del próximo checkpoint (§13)?** Si no, se recorta a la versión mínima que aporta, o se avisa.
 
-- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · audience fit · evidencias verificables · dashboard Vue con Radar y detalle · despliegue.
-- **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LATAM Opportunity Gap · comparación de oportunidades.
+- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · audience fit y clasificación con Jev · evidencias verificables · coste de operación medido (registro de consumo, `GET /costs` y panel) · dashboard Vue con Radar y detalle · despliegue.
+- **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LinkedIn vía índice de Brave y embed oficial · LATAM Opportunity Gap · comparación de oportunidades.
 - **P2:** Topic Network · animaciones avanzadas · más fuentes · varias audiencias.
 
 **Ningún P2 puede poner en riesgo un P0.**

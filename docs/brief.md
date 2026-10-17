@@ -61,14 +61,14 @@ y dónde la respondemos.
 | El reto dice | Qué implica para nosotros | Dónde lo respondemos |
 |---|---|---|
 | "de forma confiable" | Cada afirmación lleva su evidencia y dice si es dato observado, estimado o preliminar | CLAUDE.md §2 (reglas 3 y 5) · §7 de este brief |
-| "sin gastar una fortuna" (hoy pagan miles de USD al año) | Solo fuentes gratuitas o con API oficial y un LLM económico. El coste real de operar el radar se mide y se enseña | CLAUDE.md §5 y §8 · §8 de este brief |
+| "sin gastar una fortuna" (hoy pagan miles de USD al año) | Solo fuentes gratuitas o con API oficial, y modelos baratos. El coste real de operar el radar se mide en cada llamada y se enseña en el dashboard y por MCP | CLAUDE.md §4 (coste de operación) · `data/pricing.yaml` · [`sources.md`](sources.md) |
 | "temas **y formatos**" | El formato es una dimensión más: se analiza qué formato funciona y se recomienda formato por plataforma | `ContentSignal.format` · "por qué funcionó" · `recommendation` |
 | "si es una tendencia que recién empieza o una que ya todos copiaron" | Etapa del ciclo de vida y saturación, no solo volumen | `lifecycle` (`emerging` … `saturated`), `saturation_score` |
 | "por qué funcionó: gancho, formato, tema, momento, quién" | Outliers frente a su referencia y contraste con el resto del tema, presentado como hipótesis | CLAUDE.md §7 (outliers y "por qué funcionó") |
 | "ejecutivos y equipos de Latinoamérica aprendiendo IA" | Encaje con la audiencia evaluado contra el perfil de 30X | `audience_fit_score`, `audience_mix`, `latam_gap` |
-| "en redes" y el ejemplo "en LinkedIn" | LinkedIn, Instagram y TikTok no tienen acceso sin login, y el reto prohíbe saltárselo. YouTube entra por API oficial, las fuentes abiertas (HN, medios) muestran las tendencias de IA antes de que lleguen a LinkedIn, y el resto entra por curación de la comunidad. El pitch lo explica de frente: es la respuesta legítima a la restricción | CLAUDE.md §2 (regla 2) y §5 |
+| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. LinkedIn entra por vías legítimas: el índice público de Brave (`site:linkedin.com/posts`, uso transitorio), la curación de la comunidad, el embed oficial de LinkedIn y los canales abiertos de sus referentes. Instagram y TikTok entran por curación. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
 | "la propia comunidad como sensor" | Sensor editorial: el equipo o la comunidad pega enlaces y los etiqueta | `POST /signals/manual` (P1) |
-| "modelos que clasifican y priorizan (JEV)" | [Jev](https://openrouter.ai/typesafe) (TypeSafe) es un modelo de decisión: devuelve elecciones, scores y probabilidades tipados en lugar de texto, con API compatible con OpenAI. Es candidato para `classify_topic`, la rúbrica de audience fit y `recommendation` | Decisión de LLM pendiente (CLAUDE.md §7) |
+| "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe).** Clasifica relevancia, formato y gancho, y puntúa audience fit y accionabilidad con preguntas tipadas. Python combina sus juicios y el LLM generativo solo redacta | CLAUDE.md §7 (Jev) |
 | "el mismo problema que tiene cualquier marca, medio o creador" | El perfil de audiencia es un archivo: cambiarlo adapta el radar a otra marca. En la demo basta con contarlo | `data/audiences/30x.yaml` · "varias audiencias" es P2 |
 | "un prototipo funcional que responda una pregunta concreta" | Una pregunta, respondida con datos reales y evidencia enlazada | La pregunta de CLAUDE.md §1 |
 
@@ -134,14 +134,16 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Outlier Detection | Detecta piezas que rinden ≥3× la mediana de su canal o fuente, indicando la referencia | 1of10 / vidIQ | `intelligence/outliers` | P0 |
 | Cross-Source Validation | Cuenta fuentes independientes; una republicación no cuenta como confirmación | BuzzSumo | `intelligence/ranking` (`cross_source_score`) | P0 |
 | Saturation Detection | Mide la cobertura parecida dentro de la muestra y avisa cuando conviene otro ángulo | Exploding Topics / BuzzSumo | `intelligence/saturation` | P0 |
-| Audience Fit Score | Rúbrica 0–5 × 6 criterios contra el perfil de 30X, con justificación por criterio | SparkToro | `editorial/audience`, `intelligence/relevance` | P0 |
+| Audience Fit Score | Rúbrica 0–5 × 6 criterios contra el perfil de 30X: 6 preguntas `score` de Jev combinadas en Python | SparkToro | `editorial/audience`, `intelligence/relevance` | P0 |
 | Opportunity Score | Ordena oportunidades por señal, relevancia, evidencia y saturación | Propia | `intelligence/ranking` | P0 |
 | Explainable Insights | Une cada interpretación con su evidencia, su hipótesis y sus limitaciones | Feedly AI | `editorial/analyzer` (`why_it_matters`, `limitations`) | P0 |
-| Content Pattern Analysis | Compara los outliers con el resto del tema: gancho, formato, estructura, momento y autor | vidIQ / 1of10 | `editorial/analyzer` | P0 |
+| Content Pattern Analysis | Jev clasifica gancho y formato; Python compara outliers con el resto del tema (también momento y autor) | vidIQ / 1of10 | `editorial/analyzer` | P0 |
+| Operating Cost | Registra el consumo de cada API y muestra el coste medido y la proyección mensual | Reto (§1) | `services/costs`, `GET /costs`, panel de coste | P0 |
 | Interactive Radar | Permite explorar, filtrar, seleccionar y abrir evidencias | Propia | `frontend/`: vistas Discover y Explore | P0 |
 | Historical Tracking | Guarda observaciones y muestra la evolución cuando hay historial | Exploding Topics | `metric_snapshots` (P0) · timeline (P1) | P0 / P1 |
 | Content Recommendations | Propone tema, ángulo y formato por plataforma | SparkToro / vidIQ | `recommendation` (P0) · `editorial/briefs` y vista Create (P1) | P0 / P1 |
 | Community Sensor | El equipo o la comunidad pega enlaces de redes cerradas y los etiqueta | Reto (§1) | `collectors/manual`, `POST /signals/manual` | P1 |
+| LinkedIn Sensor | Posts públicos de LinkedIn desde el índice de Brave (transitorio), mostrados con el embed oficial | Propia | `GET /opportunities/{id}/linkedin`, agregados en `analyze` | P1 |
 | LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en español | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
 | MCP Integration | Permite consultar oportunidades, temas y evidencias desde asistentes de IA | Propia | `mcp/` | P1 |
 
@@ -161,7 +163,9 @@ respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
 | Por qué funcionó | Se comparó el outlier con el resto del tema | Como hipótesis, con su limitación al lado |
 | Gancho o estructura | Depende de lo que se haya podido leer | Distinguir "inferido del título" de "revisado en el contenido" |
 | Fuentes independientes | Tras quitar las republicaciones | Medios distintos, no copias de la misma nota |
-| Coste | Se midió nuestro gasto real (APIs, LLM, hosting) | Con la cifra medida. El coste de los servicios pagos se cita como dato de 30X ("miles de dólares al año"); no calculamos ahorros |
+| Presencia en LinkedIn | Brave devolvió posts públicos indexados | "N posts públicos indexados esta semana": es lo que indexa el buscador, no todo LinkedIn |
+| Juicio de Jev | Hay respuesta con `confidence` | Con su nivel de confianza; con `confidence < 0.5`, "incierto" |
+| Coste | Se midió nuestro gasto real (APIs, Jev, LLM, hosting) | Con la cifra medida y la proyección mensual etiquetada como estimación. El coste de los servicios pagos se cita como dato de 30X ("miles de dólares al año"); no calculamos ahorros |
 | Clientes MCP | Se probó la conexión | Solo los clientes que se probaron de verdad |
 | Dato ausente | No hay dato | "No disponible" (CLAUDE.md §2) |
 
@@ -198,9 +202,12 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
 
 **Respuesta al reto**
 - El prototipo responde la pregunta de CLAUDE.md §1 con datos reales.
-- Están documentados el coste real de operación y su desglose (APIs, LLM, hosting).
-- El pitch explica cómo entran LinkedIn, Instagram y TikTok (curación de la comunidad) y por qué
-  así (§2).
+- El panel de coste (y `get_operating_cost` por MCP) muestra el coste medido y la proyección
+  mensual por separado, con el desglose por proveedor y la fuente de cada precio.
+- Cada juicio de Jev guarda la versión del modelo y su `confidence`. Jev se validó con piezas
+  etiquetadas a mano en `data/evaluations/`.
+- El pitch explica cómo entra LinkedIn (índice de Brave, curación y embed oficial), cómo entran
+  Instagram y TikTok (curación), y por qué así (§2).
 
 **Entrega**
 - La app está desplegada y funciona desde una sesión limpia, no solo en local.
