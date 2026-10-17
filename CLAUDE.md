@@ -108,7 +108,7 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 | RSS / medios tech y LATAM | `feedparser` + `httpx` | Artículos y lanzamientos | P0 |
 | Brave Search | API oficial (5 $/1.000 consultas, 5 $ de crédito gratis al mes). Sus términos solo permiten guardar resultados de forma **transitoria**: se persisten agregados, no resultados | Descubrimiento web (nunca LinkedIn) | P1 |
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
-| TikTok · Reddit | **ScrapeCreators** (pago por crédito: 1 crédito por fuente y ejecución, ~1,9 $/1.000). TikTok: búsqueda por palabra clave de la semana, por región. Reddit: top de la semana por subreddit | Vídeos cortos (views, likes, comentarios, shares) y conversación (score, comentarios) | P1 (17/10) |
+| TikTok · Reddit | **ScrapeCreators** (pago por crédito: 1 crédito por fuente y ejecución, ~1,9 $/1.000; el cron solo lo consulta dos veces al día). TikTok: búsqueda por palabra clave de la semana, por región. Reddit: top de la semana por subreddit | Vídeos cortos (views, likes, comentarios, shares) y conversación (score, comentarios) | P1 (17/10) |
 | LinkedIn · Instagram · X | **Fuera del MVP.** ScrapeCreators los cubre, pero su búsqueda depende de lo que indexa Google (incompleta y con poco de lo reciente). Roadmap: vías oficiales (API de portabilidad DMA, Business Discovery API de Instagram, API de X) | — | Roadmap |
 
 **Límites de cada fuente y vías oficiales para el roadmap:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
