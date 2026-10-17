@@ -11,7 +11,7 @@ from app.intelligence.audience_fit import (
     mark_fit_failed,
 )
 from app.intelligence.lifecycle import Stage
-from app.intelligence.opportunities import LLM_PENDING_NOTE, TopicResult
+from app.intelligence.opportunities import LLM_PENDING_NOTE, TopicResult, rank
 from app.schemas.opportunity import Confidence, FitCriterion, Lifecycle, Recommendation
 from app.schemas.signal import Platform, Segment
 from tests.test_build_opportunities import build_one, piece
@@ -136,3 +136,27 @@ def test_failed_fit_stays_null_with_limitation():
     assert o.opportunity_score is None
     assert FIT_FAILED_NOTE in o.limitations
     assert LLM_PENDING_NOTE not in o.limitations
+
+
+def with_scores(score: float | None, momentum: float, name: str) -> TopicResult:
+    topic = emerging_topic()
+    update = {"opportunity_score": score, "momentum_score": momentum, "id": name}
+    return replace(topic, opportunity=topic.opportunity.model_copy(update=update))
+
+
+def test_rank_puts_opportunity_score_first_and_unscored_last():
+    results = [
+        with_scores(None, 95, "unscored-high-momentum"),
+        with_scores(58.8, 85, "lower-score-more-momentum"),
+        with_scores(74.6, 62, "best-score"),
+        with_scores(58.8, 90, "tie-broken-by-momentum"),
+    ]
+
+    ranked = [r.opportunity.id for r in rank(results)]
+
+    assert ranked == [
+        "best-score",
+        "tie-broken-by-momentum",
+        "lower-score-more-momentum",
+        "unscored-high-momentum",
+    ]

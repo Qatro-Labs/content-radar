@@ -466,7 +466,15 @@ def build_opportunities(
             TopicResult(opportunity, evidence, timeline, stage, pieces=[p for p, _ in ranked])
         )
 
-    results.sort(
-        key=lambda r: (r.opportunity.momentum_score, r.opportunity.acceleration), reverse=True
-    )
-    return results
+    return rank(results)
+
+
+# Lo que conviene publicar va primero; sin score (falta el audience fit) van al final, sin
+# inventar dónde irían. Momentum y aceleración desempatan.
+def rank(results: Sequence[TopicResult]) -> list[TopicResult]:
+    def key(r: TopicResult) -> tuple[bool, float, float, float]:
+        o = r.opportunity
+        scored = o.opportunity_score is not None
+        return (scored, o.opportunity_score or 0.0, o.momentum_score, o.acceleration)
+
+    return sorted(results, key=key, reverse=True)

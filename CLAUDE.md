@@ -235,6 +235,7 @@ GET  /health
   − penalizaciones (datos pobres, fuentes duplicadas, muestra pequeña)
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
+  El ranking (API y MCP) ordena por `opportunity_score`; los temas sin score van al final y momentum desempata.
 - **`recommendation` (implementada en `intelligence/ranking.py`).** Primera regla que se cumple; `recommendation_reason` guarda en texto la regla cumplida, para que la UI y el MCP la expliquen:
   | Etiqueta | Regla |
   |---|---|
