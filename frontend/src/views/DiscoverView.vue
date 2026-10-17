@@ -70,7 +70,6 @@ function hover(id: string | null) {
 
     <OpportunityRanking
       :rows="view.visible"
-      :total="view.total"
       :is-filtered="view.isFiltered"
       :selected-id="view.selected.id"
       :hovered-id="hovered"
