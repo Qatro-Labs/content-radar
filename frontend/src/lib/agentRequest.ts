@@ -106,8 +106,17 @@ const EXPLORE_SUGGESTIONS = [
   PUBLISH_NOW_QUESTION,
 ]
 
+function hasTopic(view: AgentViewContext | null): boolean {
+  return view?.screen === 'dossier' || Boolean(view?.opportunity_id)
+}
+
+// Con la conversación en marcha la barra ya es alta: solo quedan las que siguen hablando del tema.
+export function followUpSuggestions(view: AgentViewContext | null): string[] {
+  return view?.screen !== 'explore' && hasTopic(view) ? TOPIC_SUGGESTIONS : []
+}
+
 export function suggestionsFor(view: AgentViewContext | null): string[] {
   if (view?.screen === 'explore') return EXPLORE_SUGGESTIONS
-  if (view?.screen === 'dossier' || view?.opportunity_id) return TOPIC_SUGGESTIONS
+  if (hasTopic(view)) return TOPIC_SUGGESTIONS
   return GENERAL_SUGGESTIONS
 }

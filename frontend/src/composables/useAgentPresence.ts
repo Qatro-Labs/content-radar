@@ -1,5 +1,10 @@
-import { promiseTimeout, useEventListener, usePreferredReducedMotion } from '@vueuse/core'
-import { computed, ref } from 'vue'
+import {
+  promiseTimeout,
+  useEventListener,
+  usePreferredReducedMotion,
+  useResizeObserver,
+} from '@vueuse/core'
+import { computed, ref, shallowRef } from 'vue'
 
 import {
   AGENT_TIMING,
@@ -17,6 +22,8 @@ const DOCK_SELECTOR = '[data-agent-dock]'
 const ANCHOR_SELECTOR = '[data-agent]'
 // Por encima de esta línea la cabecera tapa el objetivo; por debajo, hasta la barra del agente.
 const VISIBLE_TOP_PX = 72
+// De una sección más alta que el hueco basta con ver su parte de arriba, donde se posa la presencia.
+const TALL_TARGET_VISIBLE_PX = 160
 
 interface Box {
   left: number
@@ -79,10 +86,17 @@ function measure(target: AgentTarget, element: HTMLElement, root: HTMLElement): 
 }
 
 // La barra del agente es sticky: lo que queda debajo no se ve aunque esté dentro de la ventana.
+// Lo que está dentro de la propia barra siempre se ve: no hace falta mover la página.
 function scrollIntoGap(element: HTMLElement, behavior: ScrollBehavior) {
+  if (element.closest(DOCK_SELECTOR) !== null) return
   const rect = element.getBoundingClientRect()
   const gapBottom = document.querySelector(DOCK_SELECTOR)?.getBoundingClientRect().top
   const bottom = gapBottom ?? window.innerHeight
+  if (rect.height > bottom - VISIBLE_TOP_PX) {
+    if (rect.top >= VISIBLE_TOP_PX && rect.top <= bottom - TALL_TARGET_VISIBLE_PX) return
+    window.scrollTo({ top: window.scrollY + rect.top - VISIBLE_TOP_PX, behavior })
+    return
+  }
   if (rect.top >= VISIBLE_TOP_PX && rect.bottom <= bottom) return
   const gapCenter = (VISIBLE_TOP_PX + bottom) / 2
   window.scrollTo({ top: window.scrollY + rect.top + rect.height / 2 - gapCenter, behavior })
@@ -94,6 +108,7 @@ export function useAgentPresence() {
   const isReducedMotion = computed(() => motionPreference.value === 'reduce')
   let current: AgentTarget | null = null
   let frame = 0
+  const root = shallowRef<HTMLElement | null>(null)
 
   function hasAnchor(anchor: string): boolean {
     return findAnchor(anchor) !== null
@@ -103,12 +118,16 @@ export function useAgentPresence() {
   // objetivo. Salta sin viajar la primera vez y con movimiento reducido.
   async function moveTo(target: AgentTarget, label: string): Promise<void> {
     const element = findAnchor(target.anchor)
-    const root = document.querySelector<HTMLElement>(ROOT_SELECTOR)
-    if (element === null || root === null) return hide()
+    root.value = document.querySelector<HTMLElement>(ROOT_SELECTOR)
+    if (element === null || root.value === null) return hide()
     const instant = isReducedMotion.value || !presence.value.visible
     scrollIntoGap(element, isReducedMotion.value ? 'auto' : 'smooth')
     current = target
-    Object.assign(presence.value, measure(target, element, root), { visible: true, label, instant })
+    Object.assign(presence.value, measure(target, element, root.value), {
+      visible: true,
+      label,
+      instant,
+    })
     if (!instant) await promiseTimeout(AGENT_TIMING.travelMs)
   }
 
@@ -147,14 +166,16 @@ export function useAgentPresence() {
     cancelAnimationFrame(frame)
     frame = requestAnimationFrame(() => {
       const element = current === null ? null : findAnchor(current.anchor)
-      const root = document.querySelector<HTMLElement>(ROOT_SELECTOR)
-      if (current === null || element === null || root === null) return
-      Object.assign(presence.value, measure(current, element, root))
+      if (current === null || element === null || root.value === null) return
+      Object.assign(presence.value, measure(current, element, root.value))
     })
   }
 
   useEventListener(window, 'scroll', remeasure, { passive: true })
   useEventListener(window, 'resize', remeasure, { passive: true })
+  // La transcripción crece dentro de la barra y la página cambia al cargar datos: el objetivo se
+  // mueve sin scroll ni resize de la ventana.
+  useResizeObserver(root, remeasure)
 
   return { presence, isReducedMotion, hasAnchor, moveTo, waitForAnchor, tap, hide }
 }

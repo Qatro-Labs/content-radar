@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildAgentQuestion, suggestionsFor, viewContext } from '../agentRequest'
+import {
+  buildAgentQuestion,
+  followUpSuggestions,
+  suggestionsFor,
+  viewContext,
+} from '../agentRequest'
 import type { AgentTurnView, AgentViewContext, CitedOpportunity, TurnStatus } from '../agentTypes'
 import { parseRadarQuery } from '../radarQuery'
 
@@ -136,5 +141,20 @@ describe('suggestionsFor', () => {
     { case: 'explore', view: { screen: 'explore' }, suggestions: IN_EXPLORE },
   ])('$case', ({ view, suggestions }) => {
     expect(suggestionsFor(view)).toEqual(suggestions)
+  })
+})
+
+// Con la conversación en marcha la barra ya es alta: solo quedan las que siguen hablando del tema.
+describe('followUpSuggestions', () => {
+  it.each<{ case: string; view: AgentViewContext | null; suggestions: string[] }>([
+    { case: 'radar without a topic', view: { screen: 'radar' }, suggestions: [] },
+    {
+      case: 'radar with a selected topic',
+      view: { screen: 'radar', opportunity_id: 'opp_1' },
+      suggestions: ON_TOPIC,
+    },
+    { case: 'explore', view: { screen: 'explore' }, suggestions: [] },
+  ])('$case', ({ view, suggestions }) => {
+    expect(followUpSuggestions(view)).toEqual(suggestions)
   })
 })

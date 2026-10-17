@@ -6,7 +6,13 @@ import { AgentRequestError, askAgent } from '@/api/agent'
 import { USING_FIXTURES } from '@/api/opportunities'
 import { AGENT_TIMING } from '@/lib/agentMotion'
 import type { PlayableStep } from '@/lib/agentPlayer'
-import { buildAgentQuestion, MCP_DOCS_URL, suggestionsFor, viewContext } from '@/lib/agentRequest'
+import {
+  buildAgentQuestion,
+  followUpSuggestions,
+  MCP_DOCS_URL,
+  suggestionsFor,
+  viewContext,
+} from '@/lib/agentRequest'
 import {
   AGENT_ANCHOR,
   dataStepTarget,
@@ -101,7 +107,9 @@ export const useRadarAgent = createSharedComposable(() => {
       radarQuery: radar.query.value,
     }),
   )
-  const suggestions = computed(() => suggestionsFor(view.value))
+  const suggestions = computed(() =>
+    turns.value.length === 0 ? suggestionsFor(view.value) : followUpSuggestions(view.value),
+  )
 
   async function navigateAsAgent(to: RouteLocationRaw) {
     agentNavigations += 1
