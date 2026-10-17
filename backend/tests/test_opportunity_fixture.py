@@ -70,6 +70,11 @@ def test_fit_criteria_match_fit_score(raw):
         assert len(o.audience_fit_criteria) == len(FitCriterion)
         mean_level = sum(c.level for c in o.audience_fit_criteria) / len(o.audience_fit_criteria)
         assert mean_level / 5 * 100 == pytest.approx(o.audience_fit_score, abs=0.5)
+        # La accionabilidad sale del criterio 6 (CLAUDE.md §7).
+        [actionable] = [
+            c for c in o.audience_fit_criteria if c.criterion is FitCriterion.ACTIONABLE_CONTENT
+        ]
+        assert o.actionability_score == pytest.approx(actionable.level / 5 * 100)
         urls = {e["url"] for e in raw["evidence"][o.id]}
         assert all(str(u) in urls for c in o.audience_fit_criteria for u in c.evidence_urls)
 
