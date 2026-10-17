@@ -68,10 +68,8 @@ def _criteria(
 def _limitations(notes: list[str], replacement: str, *, dropped_citations: int) -> list[str]:
     kept = [replacement if n == LLM_PENDING_NOTE else n for n in notes]
     if dropped_citations:
-        kept.append(
-            f"Se descartaron {dropped_citations} citas del LLM a evidencias que no son de este "
-            "tema."
-        )
+        citations = "1 cita" if dropped_citations == 1 else f"{dropped_citations} citas"
+        kept.append(f"Se descartaron {citations} del LLM a evidencias que no son de este tema.")
     return kept
 
 
