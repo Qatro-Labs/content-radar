@@ -124,9 +124,9 @@ Cada `source` lleva un **`segment`** (`tech` | `business` | `latam_es`), además
 
 Cada colector devuelve `ContentSignal` normalizado (fuente, url, título/descr., `published_at`, `observed_at`, formato, idioma, métricas públicas). Usar `tenacity` para reintentos. **Empezar a guardar snapshots cuanto antes**: sin historial no hay crecimiento observado.
 
-Grupos para el **LATAM Opportunity Gap**:
-- **A (internacional):** HN, YouTube y medios en inglés.
-- **B (español / LATAM empresarial):** canales y medios de referencia, por ejemplo los perfiles de 30X y Andrés Bilbao.
+Grupos para el **LATAM Opportunity Gap** (decidido el 17/10: **target LATAM, detección temprana global (sobre todo USA), España fuera**):
+- **A (global, detección):** HN, YouTube, medios y blogs de labs en inglés: sobre todo USA, donde nacen la mayoría de las tendencias de IA, y también Europa, UK y China. España no entra: es un mercado seguidor, no un origen.
+- **B (LATAM, target):** medios y canales de LATAM, de preferencia de negocio, y los perfiles de 30X y Andrés Bilbao. Las fuentes de España se desactivan (`active: false`). El segment `latam_es` conserva su nombre en el contrato, pero significa "LATAM".
 
 ---
 
@@ -190,7 +190,7 @@ POST /signals/manual             (sensor editorial: URL + etiquetas)
 GET  /health
 ```
 
-**Herramientas MCP (solo lectura):** `get_trending_opportunities`, `analyze_opportunity`, `search_content_signals`, `compare_audience_fit`, `get_operating_cost`. P2: `generate_editorial_brief`. Las respuestas son estructuradas y siempre incluyen evidencia (URLs). Nunca exponer SQL arbitrario ni el sistema de archivos.
+**Herramientas MCP (solo lectura):** `get_trending_opportunities`, `analyze_opportunity`, `search_content_signals`, `compare_audience_fit`, `get_operating_cost`. P1 (subido desde P2 el 17/10): `generate_editorial_brief`, que comparte service con `POST /editorial/brief`. El MCP es la interfaz para que un usuario escriba una pregunta y decida qué publicar. Las respuestas son estructuradas y siempre incluyen evidencia (URLs). Nunca exponer SQL arbitrario ni el sistema de archivos.
 
 ---
 
