@@ -563,6 +563,7 @@ Más la tasa de outliers HN antes/después y el top 10 del paso 9.
 | 2026-10-17 | Paso 12: la partición de D10 se dispara en 22 de 39 clusters (solo 3 por tamaño > 25; 19 solo por cohesión < 0.6) y los de 5–8 piezas no dan subclusters ≥ 5 a 0.4, así que desaparecen. Piezas en clusters: 381 → 195; oportunidades: 28 → 17. | Pendiente de Melkin (ver Preguntas abiertas). No se tocan umbrales. | Ídem |
 | 2026-10-17 18:10 | — | DB de tests: `radar_test_a` (87 passed, incluye pasos 6 y 8). D10 corregido con D13 (`and` + conservar) y paso 13 | — |
 | 2026-10-17 | — | Tasa de outliers HN (evidencia guardada, HN con ratio no nulo): 5,3 % (run 6, 9 de 171, antes del cambio) → 5,6 % (run 9, 8 de 144, tras D13). En rango 3–6 %. Pasos 1 y 12 hechos. | Pasos 2–13 y correcciones de la auditoría |
+| 2026-10-17 19:45 | — | Deuda saldada: `_opportunity` partida en `_topic_facts`, `_trend_fields`, `_score_fields` y `_description` (≈30 líneas; salida idéntica byte a byte con `as_of` fijo); fuera el `run_id` sin uso de `compute_opportunities`; el conftest borra el esquema entero (con guarda contra la DB de trabajo) y ya pasa contra `radar_test`; el límite de `as_of` (`Source.active` y textos sin historial) queda documentado en `load_pieces`. 89 passed. | Commit de deuda |
 
 ## Preguntas abiertas
 

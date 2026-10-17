@@ -45,7 +45,8 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
         select(ContentItem, Source)
         .join(Source)
         # Solo lo publicado, recolectado y observado hasta `as_of`: el mismo `as_of` tiene que
-        # dar el mismo resultado.
+        # dar el mismo resultado. `Source.active` y los textos de cada pieza no tienen historial
+        # y se leen como están hoy; por eso la demo usa una ejecución guardada (CLAUDE.md §13).
         .where(
             Source.active.is_(True),
             ContentItem.published_at > as_of - LOOKBACK,
@@ -85,7 +86,7 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
 
 
 async def compute_opportunities(
-    session: AsyncSession, run_id: int, as_of: datetime
+    session: AsyncSession, as_of: datetime
 ) -> tuple[int, list[TopicResult]]:
     """Devuelve (piezas analizadas, oportunidades). No escribe nada."""
     pieces = await load_pieces(session, as_of)

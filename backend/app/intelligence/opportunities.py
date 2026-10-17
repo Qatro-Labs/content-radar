@@ -8,6 +8,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import TypedDict
 
 from app.intelligence import outliers as out
 from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
@@ -35,9 +36,11 @@ from app.schemas.opportunity import (
     Confidence,
     Evidence,
     GrowthStatus,
+    Lifecycle,
     Opportunity,
     OpportunityTimeline,
     Rate,
+    Recommendation,
     ScoreBreakdown,
     TimelinePoint,
     TimelineWindow,
@@ -278,6 +281,91 @@ def _score_topic(
     return _TopicScores(stage, growth, conf, momentum, cross, breakdown)
 
 
+@dataclass
+class _TopicFacts:
+    outlets: set[str]
+    platforms: set[Platform]
+    ratios: list[float | None]
+    outlier_count: int
+    top_outlier_ratio: float | None
+
+
+def _topic_facts(group: Sequence[Piece], ratios: list[float | None]) -> _TopicFacts:
+    flagged = [r for r in ratios if r is not None]
+    return _TopicFacts(
+        outlets={outlet_key(p.platform.value, p.source_name) for p in group},
+        platforms={p.platform for p in group},
+        ratios=ratios,
+        outlier_count=sum(r >= out.OUTLIER_RATIO for r in flagged),
+        top_outlier_ratio=max(flagged) if flagged else None,
+    )
+
+
+# Los dos TypedDict reparten los campos de `Opportunity` por tema; pyright comprueba los nombres
+# y los tipos al desempaquetarlos en el constructor.
+class _TrendFields(TypedDict):
+    lifecycle: Lifecycle
+    lifecycle_reason: str
+    growth_status: GrowthStatus
+    velocity: float
+    acceleration: float
+    momentum_score: float
+    outlier_count: int
+    top_outlier_ratio: float | None
+
+
+class _ScoreFields(TypedDict):
+    audience_mix: AudienceMix
+    latam_gap: bool | None
+    cross_source_score: float
+    saturation_score: float
+    opportunity_score: float | None
+    score_breakdown: ScoreBreakdown | None
+    confidence: Confidence
+    source_count: int
+    evidence_strength: float
+    recommendation: Recommendation
+
+
+def _trend_fields(topic: _ActiveTopic, facts: _TopicFacts, scores: _TopicScores) -> _TrendFields:
+    return {
+        "lifecycle": scores.stage.lifecycle,
+        "lifecycle_reason": scores.stage.reason,
+        "growth_status": scores.growth,
+        "velocity": topic.velocity.velocity,
+        "acceleration": topic.velocity.acceleration,
+        "momentum_score": scores.momentum,
+        "outlier_count": facts.outlier_count,
+        "top_outlier_ratio": facts.top_outlier_ratio,
+    }
+
+
+def _score_fields(
+    topic: _ActiveTopic, facts: _TopicFacts, scores: _TopicScores, *, saturation: float
+) -> _ScoreFields:
+    mix, gap = _audience(topic.group, facts.ratios)
+    return {
+        "audience_mix": mix,
+        "latam_gap": gap,
+        "cross_source_score": scores.cross_source,
+        "saturation_score": saturation,
+        "opportunity_score": None if scores.breakdown is None else scores.breakdown.total,
+        "score_breakdown": scores.breakdown,
+        "confidence": scores.confidence,
+        "source_count": len(facts.outlets),
+        "evidence_strength": evidence_strength(len(topic.group), len(facts.outlets)),
+        "recommendation": recommendation(scores.stage, scores.confidence, None),
+    }
+
+
+def _description(group: Sequence[Piece], facts: _TopicFacts) -> str:
+    platforms = ", ".join(sorted(p.value for p in facts.platforms))
+    return (
+        f"Tema agrupado automáticamente: {len(group)} piezas de {len(facts.outlets)} fuentes "
+        f"independientes ({platforms})."
+    )
+
+
 def _opportunity(
     topic: _ActiveTopic,
     ratios: list[float | None],
@@ -287,52 +375,25 @@ def _opportunity(
     as_of: datetime,
     monitoring_started_at: datetime,
 ) -> Opportunity:
-    group, vel = topic.group, topic.velocity
-    outlets = {outlet_key(p.platform.value, p.source_name) for p in group}
-    platforms = {p.platform for p in group}
-    flagged = [r for r in ratios if r is not None]
-    outlier_count = sum(r >= out.OUTLIER_RATIO for r in flagged)
-    mix, gap = _audience(group, ratios)
+    facts = _topic_facts(topic.group, ratios)
     scores = _score_topic(
         topic,
-        outlets=outlets,
-        platforms=platforms,
-        outlier_count=outlier_count,
+        outlets=facts.outlets,
+        platforms=facts.platforms,
+        outlier_count=facts.outlier_count,
         saturation=saturation,
         velocity_percentile=velocity_percentile,
     )
-    # Correspondencia 1:1 con los campos del contrato: partirlo más no lo haría más legible.
     return Opportunity(
-        id=_stable_id(group),
+        id=_stable_id(topic.group),
         topic=topic.rep.title,
-        description=(
-            f"Tema agrupado automáticamente: {len(group)} piezas de {len(outlets)} fuentes "
-            f"independientes ({', '.join(sorted(p.value for p in platforms))})."
-        ),
-        lifecycle=scores.stage.lifecycle,
-        lifecycle_reason=scores.stage.reason,
-        growth_status=scores.growth,
-        velocity=vel.velocity,
-        acceleration=vel.acceleration,
-        momentum_score=scores.momentum,
-        outlier_count=outlier_count,
-        top_outlier_ratio=max(flagged) if flagged else None,
-        audience_mix=mix,
-        audience_fit_score=None,
-        cross_source_score=scores.cross_source,
-        saturation_score=saturation,
-        actionability_score=None,
-        opportunity_score=None if scores.breakdown is None else scores.breakdown.total,
-        score_breakdown=scores.breakdown,
-        confidence=scores.confidence,
-        source_count=len(outlets),
-        evidence_strength=evidence_strength(len(group), len(outlets)),
-        latam_gap=gap,
-        recommendation=recommendation(scores.stage, scores.confidence, None),
-        why_it_matters=_why_it_matters(topic, len(outlets), outlier_count),
+        description=_description(topic.group, facts),
+        **_trend_fields(topic, facts, scores),
+        **_score_fields(topic, facts, scores, saturation=saturation),
+        why_it_matters=_why_it_matters(topic, len(facts.outlets), facts.outlier_count),
         limitations=_limitations(
             scores.growth,
-            platforms=platforms,
+            platforms=facts.platforms,
             ratios=ratios,
             since=monitoring_started_at,
             broad=topic.broad,

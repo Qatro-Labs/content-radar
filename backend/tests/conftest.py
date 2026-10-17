@@ -25,9 +25,14 @@ async def engine():
             await conn.execute(text(f'create database "{TEST_URL.database}"'))
     await admin.dispose()
 
+    # El esquema se borra entero: nunca contra la DB de trabajo.
+    assert TEST_URL.database != BASE_URL.database, "TEST_DATABASE_URL apunta a la DB de trabajo"
     eng = create_async_engine(TEST_URL)
     async with eng.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        # drop_all solo conoce las tablas de esta rama; las de otras ramas (p. ej. usage_events
+        # con FK a pipeline_runs) bloquean el borrado.
+        await conn.execute(text("drop schema public cascade"))
+        await conn.execute(text("create schema public"))
         await conn.run_sync(Base.metadata.create_all)
     yield eng
     await eng.dispose()
