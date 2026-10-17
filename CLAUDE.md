@@ -124,9 +124,9 @@ Cada `source` lleva un **`segment`** (`tech` | `business` | `latam_es`), además
 
 Cada colector devuelve `ContentSignal` normalizado (fuente, url, título/descr., `published_at`, `observed_at`, formato, idioma, métricas públicas). Usar `tenacity` para reintentos. **Empezar a guardar snapshots cuanto antes**: sin historial no hay crecimiento observado.
 
-Grupos para el **LATAM Opportunity Gap**:
-- **A (internacional):** HN, YouTube y medios en inglés.
-- **B (Latinoamérica):** fuentes `latam_es` con `region` latinoamericana (`latam`, `mx`, `co`, `ar`…), por ejemplo los perfiles de 30X y Andrés Bilbao. Las fuentes de España (`region: es`) no cuentan para el gap: se muestran aparte como contexto ("en España ya hay N piezas").
+Grupos para el **LATAM Opportunity Gap** (decidido el 17/10: **target LATAM, detección temprana global (sobre todo USA), España fuera**):
+- **A (global, detección):** HN, YouTube, medios y blogs de labs en inglés: sobre todo USA, donde nacen la mayoría de las tendencias de IA, y también Europa, UK y China. España no entra: es un mercado seguidor, no un origen.
+- **B (LATAM, target):** medios y canales de LATAM, de preferencia de negocio, y los perfiles de 30X y Andrés Bilbao. Las fuentes de España se desactivan (`active: false`). El segment `latam_es` conserva su nombre en el contrato, pero significa "LATAM".
 
 ---
 
@@ -208,13 +208,13 @@ GET  /health
   | `accelerating` | aceleración ≥ 0.5 y ≥ 3 fuentes independientes |
   | `emerging` | aceleración > 0, ≤ 3 fuentes independientes y saturation < 40 |
   | `unknown` | datos insuficientes (menos de 5 piezas o una sola fuente) |
+  `growth_status` depende de los datos, no de la etapa: `preliminary` = datos insuficientes, `estimated` = ventana anterior vacía, `observed` = dos ventanas con datos. Un `unknown` porque ninguna regla se cumple sí tiene datos (recomendación `find_angle`); un `unknown` por datos insuficientes espera caso.
   `unknown` se evalúa **antes** que las demás: con datos insuficientes no se asigna etapa aunque otra regla se cumpla. Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
 - **Para quién importa (estilo SparkToro).** `audience_mix` = proporción de la evidencia de cada `segment`, ponderada por el engagement normalizado. Lectura editorial:
   - Mucho `tech`, poco `business` y fit alto → "todavía no llegó a ejecutivos: traducirlo a negocio".
-  - `business` presente y poca evidencia de fuentes latinoamericanas (grupo B de §5, sin contar España) → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
-  - Mucha evidencia de fuentes latinoamericanas → probablemente ya cubierto en la región: buscar otro ángulo.
-  - El `latam_es` del `audience_mix` mezcla España y Latinoamérica: en la UI se rotula "en español".
-- **Cross-source:** nº de fuentes **independientes** (deduplicar notas de prensa replicadas: los pares candidatos salen de los embeddings y Jev decide si son la misma nota; mientras la batería de pares no esté, cuenta como replicado un par con similitud coseno ≥ umbral y fuente distinta). Normalizar métricas dentro de cada fuente.
+  - `business` presente y `latam_es` bajo → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
+  - `latam_es` alto → probablemente ya cubierto en la región: buscar otro ángulo.
+- **Cross-source:** nº de fuentes **independientes**: un medio o canal cuenta una vez (todas las búsquedas de HN cuentan como una sola fuente). Normalizar métricas dentro de cada fuente. Pendiente: deduplicar notas de prensa replicadas (pares candidatos por embeddings y Jev decide si son la misma nota; mientras tanto, regla de similitud coseno ≥ umbral y fuente distinta).
 - **Saturation:** volumen de contenido similar en la ventana reciente **dentro de las fuentes monitoreadas** (decirlo así en la UI).
 - **Audience Fit (LLM, salida Pydantic):** el LLM evalúa el tema completo en 6 criterios. Para cada uno devuelve primero la justificación, citando ids de evidencia, y después un nivel entero de 0 a 5 (en ese orden, para que razone antes de puntuar). Recibe como pistas los conteos de las etiquetas de Jev por pieza (p. ej. "8 de 20 piezas muestran un caso real"), que la UI muestra como apoyo. Python combina los 6 niveles con pesos en código → `audience_fit_score`; la UI lo muestra como banda (bajo · medio · alto) junto a los 6 niveles, no como precisión al punto. `actionability_score` sale del criterio 6. Criterios:
   impacto en decisiones empresariales · aplicación real en organizaciones · comprensible para directivos no técnicos · relevancia LATAM · encaje con pilares 30X · convertible en contenido accionable.
@@ -224,15 +224,15 @@ GET  /health
   − penalizaciones (datos pobres, fuentes duplicadas, muestra pequeña)
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
-- **`recommendation` (reglas iniciales en `intelligence/ranking.py`, pendientes de revisión de Melkin).** Primera regla que se cumple, con umbrales como constantes con nombre:
-  | Etiqueta | Regla inicial |
+- **`recommendation` (implementada en `intelligence/ranking.py`, PR #7).** Primera regla que se cumple:
+  | Etiqueta | Regla |
   |---|---|
-  | `discard` | `audience_fit_score` < 40 |
-  | `wait_for_case` | criterio "aplicación real en organizaciones" ≤ 1: no hay caso real en la evidencia |
-  | `find_angle` | `lifecycle` es `peaking` o `saturated`, o ya hay mucha cobertura en fuentes latinoamericanas (`latam_gap = false`) |
-  | `publish_now` | `audience_fit_score` ≥ 60 y `lifecycle` es `emerging` o `accelerating` |
-  | `find_angle` | cualquier otro caso |
-  Guardar qué regla se cumplió (se propone el campo `recommendation_reason` para el contrato de PR #2, avisando en el canal), para que la UI y el MCP puedan explicarlo.
+  | `discard` | `lifecycle` es `saturated` |
+  | `wait_for_case` | datos insuficientes o `confidence` baja |
+  | `find_angle` | `lifecycle` es `peaking`, o `unknown` porque ninguna regla se cumple |
+  | `publish_now` | `emerging` o `accelerating`, y `audience_fit_score` ≥ 60 |
+  | `find_angle` | cualquier otro caso (también mientras no haya audience fit) |
+  **Propuestas pendientes de revisión de Melkin** (17/10): descartar también si `audience_fit_score` < 40; esperar caso también si el criterio "aplicación real en organizaciones" ≤ 1 (no hay caso real en la evidencia); buscar ángulo también si ya hay mucha cobertura en LATAM (`latam_gap = false`); y guardar la regla cumplida en un campo `recommendation_reason` del contrato (avisando en el canal), para que la UI y el MCP puedan explicarla.
 - **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita. Jev clasifica el gancho y el formato de cada pieza, y Python calcula el *lift* de cada rasgo entre los outliers y el resto del tema (lift ≥ 2 en ≥ 2 outliers = "patrón observado"; si no, "anecdótico"). El LLM redacta la hipótesis a partir de esa tabla. Con pocos outliers por tema casi todo saldrá "anecdótico", y se dice así.
 - **Los embeddings agrupan, Jev clasifica cada pieza, Python calcula, el LLM evalúa cada tema y redacta, y Jev verifica lo que escribe el LLM.** Cada modelo usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Resultados cacheados en Postgres.
 - **Jev (TypeSafe; lo sugiere el reto): decisiones atómicas sobre piezas.** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel) con probabilidades y, en `choice` y `score`, `confidence`. Las preguntas de una llamada corren en paralelo y el `state` se paga una vez, así que cada entidad se evalúa en **una llamada con todas sus preguntas** (una *batería*):
