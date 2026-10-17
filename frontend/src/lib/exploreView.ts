@@ -2,6 +2,7 @@ import type { LocationQuery } from 'vue-router'
 
 import type { components } from '@/types/api'
 
+import { formatCount } from './evidenceFormat'
 import { formatUtcDay } from './format'
 
 type Schemas = components['schemas']
@@ -186,4 +187,33 @@ export function buildExploreView(input: ExploreInput): ExploreViewModel {
     topTopics: topicsWithMostOutliers(input.opportunities),
     topSources: sourcesWithMostOutliers(pieces),
   }
+}
+
+export type ExploreSummaryInput = Pick<
+  ExploreViewModel,
+  'counts' | 'topicCount' | 'publishedRange' | 'isCapped'
+>
+
+function plural(count: number, one: string, many: string): string {
+  return count === 1 ? one : many
+}
+
+function describePublished(range: PublishedRange | null, total: number): string {
+  if (range === null) return ''
+  const published = plural(total, 'publicada', 'publicadas')
+  if (range.from === range.to) return `, ${published} el ${range.from}`
+  return `, ${published} entre el ${range.from} y el ${range.to}`
+}
+
+// Las cifras salen de lo cargado: si la evidencia de algún tema falló, la frase no lo cuenta.
+export function exploreSummary(input: ExploreSummaryInput): string {
+  const { counts, topicCount, publishedRange, isCapped } = input
+  const pieces = `${formatCount(counts.total)} ${plural(counts.total, 'pieza', 'piezas')}`
+  const topics = topicCount === 1 ? '1 tema' : `los ${formatCount(topicCount)} temas`
+  const outliers = `${formatCount(counts.outliers)} ${plural(counts.outliers, 'rinde', 'rinden')}`
+  const cap = isCapped ? ` Hasta ${EVIDENCE_LIMIT} piezas por tema.` : ''
+  return (
+    `${pieces} de ${topics}${describePublished(publishedRange, counts.total)}. ` +
+    `${outliers} 3× o más que su canal.${cap}`
+  )
 }

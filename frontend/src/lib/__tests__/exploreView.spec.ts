@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest'
 import fixture from '@fixtures/opportunities.json'
 import type { components } from '@/types/api'
 
-import { buildExploreView, parseExploreFilter, type ExploreFilter } from '../exploreView'
+import {
+  buildExploreView,
+  exploreSummary,
+  parseExploreFilter,
+  type ExploreFilter,
+} from '../exploreView'
 
 type Schemas = components['schemas']
 type Evidence = Schemas['Evidence']
@@ -222,5 +227,43 @@ describe('parseExploreFilter', () => {
     ['a repeated param', { filter: ['outliers', 'youtube'] }, 'outliers'],
   ])('reads %s', (_, query, expected) => {
     expect(parseExploreFilter(query)).toBe(expected)
+  })
+})
+
+describe('exploreSummary', () => {
+  it('describes the served pieces with the real figures', () => {
+    const summary = exploreSummary({
+      counts: { total: 356, outliers: 27, youtube: 96, hackernews: 145, rss: 115 },
+      topicCount: 38,
+      publishedRange: { from: '04/10', to: '17/10' },
+      isCapped: true,
+    })
+
+    expect(summary).toBe(
+      '356 piezas de los 38 temas, publicadas entre el 04/10 y el 17/10. ' +
+        '27 rinden 3× o más que su canal. Hasta 25 piezas por tema.',
+    )
+  })
+
+  it('uses the singular for one piece, one topic and one day', () => {
+    const summary = exploreSummary({
+      counts: { total: 1, outliers: 1, youtube: 1, hackernews: 0, rss: 0 },
+      topicCount: 1,
+      publishedRange: { from: '07/10', to: '07/10' },
+      isCapped: false,
+    })
+
+    expect(summary).toBe('1 pieza de 1 tema, publicada el 07/10. 1 rinde 3× o más que su canal.')
+  })
+
+  it('groups thousands', () => {
+    const summary = exploreSummary({
+      counts: { total: 1363, outliers: 0, youtube: 0, hackernews: 1363, rss: 0 },
+      topicCount: 60,
+      publishedRange: { from: '01/10', to: '17/10' },
+      isCapped: false,
+    })
+
+    expect(summary).toMatch(/^1\.363 piezas de los 60 temas/)
   })
 })
