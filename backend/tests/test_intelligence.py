@@ -67,6 +67,11 @@ def test_outlier_ratio_against_median():
     assert is_outlier(2.9) is False
 
 
+def test_outlier_ratio_with_quantile_reference():
+    # p90 de [1..10] = 9.1
+    assert outlier_ratio(91, list(range(1, 11)), quantile=0.9) == 10.0
+
+
 def test_outlier_ratio_without_reference():
     assert outlier_ratio(30, [10, 10]) is None
     assert outlier_ratio(30, [0] * 5) is None
@@ -87,8 +92,10 @@ def stage(acc=0.0, sat=50.0, sources=4, items=20):
 
 def test_unknown_goes_first():
     # Cumpliría `emerging`, pero con una sola fuente no hay datos suficientes.
-    assert stage(acc=1.0, sat=10, sources=1).lifecycle is Lifecycle.UNKNOWN
+    assert stage(acc=1.0, sat=10, sources=1).insufficient
     assert stage(acc=1.0, sat=10, sources=2, items=4).lifecycle is Lifecycle.UNKNOWN
+    no_rule = stage(acc=0.3, sat=50)
+    assert no_rule.lifecycle is Lifecycle.UNKNOWN and not no_rule.insufficient
 
 
 @pytest.mark.parametrize(
@@ -181,18 +188,21 @@ def test_evidence_strength():
 
 
 def test_growth_confidence_and_recommendation():
-    assert growth_status(Lifecycle.UNKNOWN, 5) is GrowthStatus.PRELIMINARY
-    assert growth_status(Lifecycle.EMERGING, 0) is GrowthStatus.ESTIMATED
-    assert growth_status(Lifecycle.ACCELERATING, 3) is GrowthStatus.OBSERVED
+    assert growth_status(True, 5) is GrowthStatus.PRELIMINARY
+    assert growth_status(False, 0) is GrowthStatus.ESTIMATED
+    assert growth_status(False, 3) is GrowthStatus.OBSERVED
 
     assert confidence(GrowthStatus.OBSERVED, 3, 10) is Confidence.HIGH
     assert confidence(GrowthStatus.ESTIMATED, 3, 10) is Confidence.MEDIUM
     assert confidence(GrowthStatus.OBSERVED, 1, 50) is Confidence.LOW
 
-    assert recommendation(Lifecycle.SATURATED, Confidence.HIGH, 90) is Recommendation.DISCARD
-    assert recommendation(Lifecycle.EMERGING, Confidence.LOW, 90) is Recommendation.WAIT_FOR_CASE
-    assert recommendation(Lifecycle.ACCELERATING, Confidence.HIGH, 70) is Recommendation.PUBLISH_NOW
+    saturated, accelerating = stage(acc=-0.3, sat=80), stage(acc=0.6, sources=3)
+    no_rule, no_data = stage(acc=0.3, sat=50), stage(sources=1)
+    assert recommendation(saturated, Confidence.HIGH, 90) is Recommendation.DISCARD
+    assert recommendation(accelerating, Confidence.LOW, 90) is Recommendation.WAIT_FOR_CASE
+    assert recommendation(accelerating, Confidence.HIGH, 70) is Recommendation.PUBLISH_NOW
     # Sin audience fit no se recomienda publicar.
-    assert (
-        recommendation(Lifecycle.ACCELERATING, Confidence.HIGH, None) is Recommendation.FIND_ANGLE
-    )
+    assert recommendation(accelerating, Confidence.HIGH, None) is Recommendation.FIND_ANGLE
+    # unknown sin regla tiene datos: buscar ángulo. Unknown por falta de datos: esperar.
+    assert recommendation(no_rule, Confidence.MEDIUM, None) is Recommendation.FIND_ANGLE
+    assert recommendation(no_data, Confidence.MEDIUM, None) is Recommendation.WAIT_FOR_CASE

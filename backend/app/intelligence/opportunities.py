@@ -75,7 +75,7 @@ def _performance(p: Piece) -> float | None:
 
 
 def outlier_ratios(pieces: Sequence[Piece]) -> dict[int, float | None]:
-    """Ratio de cada pieza frente a la mediana de su misma fuente (canal o query)."""
+    """Ratio de cada pieza frente a su misma fuente (canal o query): mediana, o p90 en HN."""
     by_source: dict[int, list[float]] = defaultdict(list)
     perf = {p.item_id: _performance(p) for p in pieces}
     for p in pieces:
@@ -84,7 +84,11 @@ def outlier_ratios(pieces: Sequence[Piece]) -> dict[int, float | None]:
     return {
         p.item_id: None
         if perf[p.item_id] is None
-        else out.outlier_ratio(perf[p.item_id], by_source[p.source_id])  # type: ignore[arg-type]
+        else out.outlier_ratio(
+            perf[p.item_id],  # type: ignore[arg-type]
+            by_source[p.source_id],
+            out.HN_REFERENCE_QUANTILE if p.platform is Platform.HACKERNEWS else out.MEDIAN,
+        )
         for p in pieces
     }
 
@@ -189,7 +193,7 @@ def build_opportunities(
             source_count=len(outlets),
             item_count=len(group),
         )
-        growth = growth_status(stage.lifecycle, counts.previous)
+        growth = growth_status(stage.insufficient, counts.previous)
         conf = confidence(growth, len(outlets), len(group))
         momentum = momentum_score(velocity_pct[n - 1], vel.acceleration, outlier_count)
         cross = cross_source_score(outlets, {p.value for p in platforms})
@@ -227,7 +231,7 @@ def build_opportunities(
             source_count=len(outlets),
             evidence_strength=evidence_strength(len(group), len(outlets)),
             latam_gap=latam_gap(mix),
-            recommendation=recommendation(stage.lifecycle, conf, None),
+            recommendation=recommendation(stage, conf, None),
             why_it_matters=(
                 f"Pendiente de análisis editorial. Señales medidas: {counts.current} piezas en "
                 f"los últimos 3 días frente a {counts.previous} en los 3 anteriores "

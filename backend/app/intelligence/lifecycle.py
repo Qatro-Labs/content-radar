@@ -18,16 +18,23 @@ EMERGING_MAX_SATURATION = 40
 class Stage:
     lifecycle: Lifecycle
     reason: str
+    # unknown por falta de datos (no por no cumplir ninguna regla)
+    insufficient: bool = False
+
+
+def is_insufficient(source_count: int, item_count: int) -> bool:
+    return item_count < MIN_ITEMS or source_count < 2
 
 
 def classify(
     *, acceleration: float, saturation: float, source_count: int, item_count: int
 ) -> Stage:
-    if item_count < MIN_ITEMS or source_count < 2:
+    if is_insufficient(source_count, item_count):
         return Stage(
             Lifecycle.UNKNOWN,
             f"Datos insuficientes: {item_count} piezas de {source_count} "
             "fuente(s) independiente(s).",
+            insufficient=True,
         )
     if saturation >= SATURATED_MIN and acceleration < 0:
         return Stage(

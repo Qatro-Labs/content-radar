@@ -1,5 +1,6 @@
 """Momentum, Opportunity Score, confianza y recomendación (CLAUDE.md §7). Heurísticas ajustables."""
 
+from app.intelligence.lifecycle import Stage
 from app.schemas.opportunity import Confidence, GrowthStatus, Lifecycle, Recommendation
 
 # Momentum: velocidad (percentil entre temas), aceleración y outliers.
@@ -68,9 +69,11 @@ def opportunity_score(
     return round(max(0.0, min(100.0, score)), 1)
 
 
-def growth_status(lifecycle: Lifecycle, previous_count: int) -> GrowthStatus:
-    """observed = dos ventanas medidas · estimated = solo la actual · preliminary = sin etapa."""
-    if lifecycle is Lifecycle.UNKNOWN:
+def growth_status(insufficient: bool, previous_count: int) -> GrowthStatus:
+    """Según los datos, no según la etapa: preliminary = datos insuficientes ·
+    estimated = solo la ventana actual · observed = dos ventanas medidas.
+    """
+    if insufficient:
         return GrowthStatus.PRELIMINARY
     if previous_count == 0:
         return GrowthStatus.ESTIMATED
@@ -86,13 +89,14 @@ def confidence(growth: GrowthStatus, source_count: int, item_count: int) -> Conf
 
 
 def recommendation(
-    lifecycle: Lifecycle, confidence: Confidence, audience_fit: float | None
+    stage: Stage, confidence: Confidence, audience_fit: float | None
 ) -> Recommendation:
-    if lifecycle is Lifecycle.SATURATED:
+    if stage.lifecycle is Lifecycle.SATURATED:
         return Recommendation.DISCARD
-    if lifecycle is Lifecycle.UNKNOWN or confidence is Confidence.LOW:
+    if stage.insufficient or confidence is Confidence.LOW:
         return Recommendation.WAIT_FOR_CASE
-    if lifecycle is Lifecycle.PEAKING:
+    # peaking, o unknown porque ninguna regla se cumple: hay datos, falta ángulo.
+    if stage.lifecycle in (Lifecycle.PEAKING, Lifecycle.UNKNOWN):
         return Recommendation.FIND_ANGLE
     # emerging / accelerating: publicar solo si sabemos que encaja con 30X.
     if audience_fit is not None and audience_fit >= PUBLISH_MIN_FIT:

@@ -31,12 +31,14 @@ def piece(i, *, hours_ago, platform=Platform.HACKERNEWS, source="HN · LLM", poi
     )
 
 
-def test_outlier_ratios_use_same_source_median():
-    pieces = [piece(i, hours_ago=10, points=10) for i in range(5)]
-    pieces.append(piece(99, hours_ago=10, points=60))
+def test_hn_outlier_ratios_use_p90_of_same_query():
+    pieces = [piece(i, hours_ago=10, points=10) for i in range(10)]
+    pieces.append(piece(99, hours_ago=10, points=100))
     ratios = outlier_ratios(pieces)
-    assert ratios[99] == 6.0
+    assert ratios[99] == 10.0  # p90 de la query = 10 puntos
     assert ratios[0] == 1.0
+    other = piece(50, hours_ago=10, source="HN · OpenAI", points=100)
+    assert outlier_ratios([*pieces, other])[50] is None  # su query no tiene referencia
 
 
 def test_rss_has_no_metrics_and_no_ratio():
