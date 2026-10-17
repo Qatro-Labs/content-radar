@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useElementSize, usePreferredReducedMotion } from '@vueuse/core'
+import { useElementSize, usePreferredReducedMotion, useTimeoutFn } from '@vueuse/core'
 import type { ECElementEvent } from 'echarts/core'
-import { computed, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import { VChart } from '@/lib/echarts'
 import { resolveLifecyclePalette } from '@/lib/lifecycle'
-import { buildRadarOption, RADAR_ASPECT } from '@/lib/radarChart'
+import { buildRadarOption, RADAR_ASPECT, SWEEP } from '@/lib/radarChart'
 import type { RadarView } from '@/lib/radarView'
 
 import RadarSelectionLayer from './RadarSelectionLayer.vue'
@@ -32,6 +32,8 @@ const PLOT_ASPECT = `${RADAR_ASPECT.width} / ${RADAR_ASPECT.height}`
 // Capas del área: nombres de cuadrante y mira (z-1) quedan bajo las burbujas; anillos, ping y
 // tarjeta flotante (z-3 y z-4, RadarSelectionLayer) van encima.
 const CHART_LAYER = 'relative z-[2]'
+// D13: anillos y etiquetas esperan a que el haz termine de pasar.
+const SWEEP_END_MS = SWEEP.delayMs + SWEEP.durationMs
 
 const plot = useTemplateRef('plot')
 const { width, height } = useElementSize(plot)
@@ -41,12 +43,24 @@ const plotSize = computed(() => ({ width: width.value, height: height.value }))
 const isMeasured = computed(() => width.value > 0)
 const showLabels = computed(() => width.value >= LABELS_MIN_WIDTH_PX)
 const motionPreference = usePreferredReducedMotion()
+const reducedMotion = computed(() => motionPreference.value === 'reduce')
 // Los colores de etapa viven en main.css (DESIGN.md §11) y el canvas no lee `var()`: se leen una vez.
 const palette = resolveLifecyclePalette(getComputedStyle(document.documentElement))
 
 const hovered = computed(
   () => view.plotted.find((opportunity) => opportunity.id === hoveredId) ?? null,
 )
+
+// El gráfico se remonta al medir el área y con cada `sweepKey`, y cada montaje repite el barrido.
+const isSweeping = ref(false)
+const { start: startSweepTimer } = useTimeoutFn(() => (isSweeping.value = false), SWEEP_END_MS, {
+  immediate: false,
+})
+watch([isMeasured, () => sweepKey], ([measured]) => {
+  if (!measured) return
+  isSweeping.value = true
+  startSweepTimer()
+})
 
 const option = computed(() =>
   buildRadarOption({
@@ -55,8 +69,9 @@ const option = computed(() =>
     selectedId: view.selected?.id ?? null,
     hoveredId,
     palette,
-    reducedMotion: motionPreference.value === 'reduce',
+    reducedMotion: reducedMotion.value,
     showLabels: showLabels.value,
+    entering: isSweeping.value && !reducedMotion.value,
   }),
 )
 

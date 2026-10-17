@@ -11,13 +11,15 @@ export interface RankedOpportunity extends Opportunity {
   rank: number
 }
 
+export type PlottedOpportunity = RankedOpportunity & { audience_fit_score: number }
+
 // Lo que la vista pinta, ya filtrado, ordenado y contado: los componentes solo lo leen.
 export interface RadarView {
   total: number
   ranked: RankedOpportunity[]
   visible: RankedOpportunity[]
   isFiltered: boolean
-  plotted: RankedOpportunity[]
+  plotted: PlottedOpportunity[]
   unevaluatedCount: number
   dimmedIds: Set<string>
   selected: RankedOpportunity | null
@@ -54,12 +56,12 @@ function matchesFilters(opportunity: Opportunity, query: RadarQuery): boolean {
 }
 
 // Sin encaje no hay posición en X: dibujarla en 0 se leería "encaje 0".
-function hasAudienceFit(opportunity: Opportunity): boolean {
+export function hasAudienceFit(opportunity: RankedOpportunity): opportunity is PlottedOpportunity {
   return opportunity.audience_fit_score != null
 }
 
 function collectDimmedIds(
-  plotted: RankedOpportunity[],
+  plotted: PlottedOpportunity[],
   visible: RankedOpportunity[],
   { highlight, selectedId }: { highlight: string[]; selectedId: string | undefined },
 ): Set<string> {
