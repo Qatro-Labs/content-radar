@@ -21,6 +21,7 @@ dependencies = [
     "polars>=2.0.0",
     "mcp>=2.3.0",
     "typesafe-sdk==0.7.4",
+    "anthropic==1.13.0",
 ]
 
 [dependency-groups]

@@ -9,7 +9,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collectors.usage import UsageMeter
-from app.core.pricing import Pricing, get_pricing
+from app.core.config import get_settings
+from app.core.pricing import Pricing, VariablePrice, get_pricing
 from app.models import UsageEvent
 from app.schemas.cost import (
     CostPeriod,
@@ -28,11 +29,18 @@ SECONDS_PER_DAY = 86400
 USD_DECIMALS = 6
 
 
+def _priced_for(provider: Provider, price: VariablePrice) -> bool:
+    # El precio de llm_text es el de un modelo concreto: con otro LLM_MODEL, el coste "medido"
+    # saldría con precios de otro modelo.
+    return provider is not Provider.LLM_TEXT or price.model == get_settings().llm_model
+
+
 def _new_event(
     provider: Provider,
     operation: str,
     units: int | float | Decimal,
     *,
+    output_units: int | None = None,
     calls: int = 1,
     pipeline_run_id: int | None = None,
     details: dict[str, Any] | None = None,
@@ -40,14 +48,18 @@ def _new_event(
 ) -> UsageEvent:
     price = get_pricing().variable[provider]
     amount = Decimal(str(units))
+    output = None if output_units is None else Decimal(output_units)
+    if output_units:
+        # `units` guarda el total de tokens; el reparto queda en details para auditar el coste.
+        details = {**(details or {}), "input_tokens": units, "output_tokens": output_units}
     return UsageEvent(
         occurred_at=occurred_at or datetime.now(UTC),
         provider=provider.value,
         operation=operation,
         calls=calls,
-        units=amount,
+        units=amount + (output or 0),
         unit=price.unit,
-        cost_usd=price.cost(amount),
+        cost_usd=price.cost(amount, output_units=output) if _priced_for(provider, price) else None,
         pipeline_run_id=pipeline_run_id,
         details=details,
     )
@@ -84,7 +96,14 @@ async def record_meter(
 ) -> int:
     """Persiste lo contado por los collectors: una fila por proveedor y operación."""
     events = [
-        _new_event(provider, operation, c.units, calls=c.calls, pipeline_run_id=pipeline_run_id)
+        _new_event(
+            provider,
+            operation,
+            c.units,
+            output_units=c.output_units,
+            calls=c.calls,
+            pipeline_run_id=pipeline_run_id,
+        )
         for (provider, operation), c in meter.counts.items()
     ]
     session.add_all(events)

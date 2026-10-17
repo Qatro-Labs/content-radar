@@ -8,6 +8,7 @@ from app.schemas.cost import Provider
 class UsageCount:
     calls: int = 0
     units: int = 0
+    output_units: int = 0  # tokens de salida de un LLM, con su propio precio
 
 
 class UsageMeter:
@@ -19,7 +20,10 @@ class UsageMeter:
     def __init__(self) -> None:
         self.counts: defaultdict[tuple[Provider, str], UsageCount] = defaultdict(UsageCount)
 
-    def add(self, provider: Provider, operation: str, units: int = 1) -> None:
+    def add(
+        self, provider: Provider, operation: str, units: int = 1, *, output_units: int = 0
+    ) -> None:
         count = self.counts[(provider, operation)]
         count.calls += 1
         count.units += units
+        count.output_units += output_units

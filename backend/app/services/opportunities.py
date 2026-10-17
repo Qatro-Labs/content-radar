@@ -3,6 +3,8 @@
 La lectura siempre sirve la última ejecución correcta de `analyze`; nunca recalcula.
 """
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
@@ -11,6 +13,7 @@ from sqlalchemy.orm import selectinload
 
 from app.intelligence.clustering import cluster, is_broad, representative
 from app.intelligence.embeddings import embed, embedding_text
+from app.intelligence.jev import PieceJudgment, keep_about_ai
 from app.intelligence.opportunities import Piece, TopicResult, build_opportunities
 from app.models import ContentItem, MetricSnapshot, OpportunityRecord, PipelineRun, Source
 from app.schemas.opportunity import (
@@ -85,14 +88,28 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
     return pieces
 
 
+@dataclass
+class ComputedOpportunities:
+    analyzed: int  # piezas que entran al clustering
+    off_topic_removed: int  # piezas que Jev dice con seguridad que no tratan de IA
+    results: list[TopicResult]
+
+
 async def compute_opportunities(
-    session: AsyncSession, as_of: datetime, pieces: list[Piece] | None = None
-) -> tuple[int, list[TopicResult]]:
-    """Devuelve (piezas analizadas, oportunidades). No escribe nada."""
+    session: AsyncSession,
+    as_of: datetime,
+    *,
+    pieces: list[Piece] | None = None,
+    judgments: Mapping[int, PieceJudgment] | None = None,
+) -> ComputedOpportunities:
+    """No escribe nada."""
     if pieces is None:
         pieces = await load_pieces(session, as_of)
+    loaded = len(pieces)
+    pieces = keep_about_ai(pieces, judgments or {})
+    removed = loaded - len(pieces)
     if not pieces:
-        return 0, []
+        return ComputedOpportunities(0, removed, [])
     vectors = embed([embedding_text(p.title, p.description) for p in pieces])
     clusters = cluster(vectors)
     reps = [representative(vectors, c) for c in clusters]
@@ -104,7 +121,7 @@ async def compute_opportunities(
         monitoring_started_at=MONITORING_STARTED_AT,
         broad=[is_broad(vectors, c) for c in clusters],
     )
-    return len(pieces), results
+    return ComputedOpportunities(len(pieces), removed, results)
 
 
 async def save_opportunities(session: AsyncSession, run_id: int, results: list[TopicResult]):

@@ -1,0 +1,120 @@
+# Perfil editorial de 30X (CLAUDE.md §7). Lo lee el LLM al evaluar el audience fit de cada tema.
+#
+# Fuentes:
+#   - Web pública de 30X (consultada el 2026-10-17): https://30x.com, /programas,
+#     /ai-for-executives, /operacionesconai
+#   - Revisión manual de Instagram sin sesión (2026-10-17): @crece30x y @andresbilbao, 12 publicaciones
+#     de la cuadrícula de cada cuenta con su descripción y las portadas de sus reels.
+# Lo que más pesa de Instagram: 30X publica sobre todo crecimiento de empresas (ventas, growth,
+# operación, liderazgo, mentalidad de fundador) y la IA aparece como una palanca más (1 de 12
+# publicaciones de @crece30x). Cuando habla de IA, la cuenta como "qué cambia para tu negocio y qué
+# preparar". Los pilares de IA se mantienen por la web aunque en Instagram casi no aparezcan.
+status: revisado_instagram
+reviewed_by: "Claude (revisión manual en navegador, 2026-10-17)"
+
+audience:
+  summary: >-
+    Dueños, fundadores, CEOs y líderes de empresas de Latinoamérica que quieren hacer crecer su
+    negocio y aplicar IA con criterio y resultados, sin depender de ellos mismos para todo y sin
+    necesidad de saber programar.
+  roles:
+    - dueños y fundadores de pymes y empresas en crecimiento
+    - CEOs y C-level
+    - directivos y líderes de equipo
+    - líderes de operación
+    - líderes comerciales y de growth
+  region: >-
+    Latinoamérica (en Instagram aparecen sobre todo Colombia, Venezuela y México; en la web también
+    Perú, Chile y Argentina) y latinos en EE. UU. (Miami).
+  needs:
+    - escalar la empresa sin que dependa del dueño
+    - vender más y crecer (ventas, marketing, growth)
+    - pasar de acumular herramientas a dirigir una estrategia de IA
+    - evaluar si una iniciativa de IA crea valor y presentar su business case
+    - dirigir y comunicarse mejor con su equipo
+  not_for: >-
+    Quien quiere aprender IA solo a nivel personal, programar o construir agentes a fondo, o
+    buscar una habilidad técnica puntual (web, AI for Executives). En Instagram tampoco aparece
+    contenido técnico.
+
+# Pilares: los temas en los que 30X enseña y publica. `source`: web, Instagram o ambos.
+pillars:
+  - id: ai_strategy
+    name: Estrategia y adopción de la IA en el negocio
+    description: >-
+      Convertir la IA en estrategia, adopción y resultados: ROI, business case, roadmap, qué
+      delegar, exigir y controlar. En Instagram se cuenta como "qué cambia para tu negocio" ante
+      un movimiento de una gran tecnológica y qué preparar (p. ej. agentes de IA que compran por el
+      cliente).
+    source: "ambos (Instagram débil: 1 de 12 publicaciones de @crece30x) · web: ai-for-executives"
+  - id: ai_productivity
+    name: Productividad ejecutiva y organizacional con IA
+    description: >-
+      Usar la IA en el trabajo diario del directivo y del equipo, configurar herramientas y crear
+      agentes sin depender de equipos técnicos.
+    source: "web (ai-for-executives semanas 1–4 · programas: Second Brain); no observado en Instagram"
+  - id: ai_risk
+    name: Riesgo, control y fallos de la IA
+    description: >-
+      Por qué fallan los proyectos de IA, riesgos (deepfakes, modelos sin control), escalar con
+      control.
+    source: "web (ai-for-executives); no observado en Instagram"
+  - id: sales_growth
+    name: Ventas, marketing y growth
+    description: >-
+      Ventas B2B y por redes, gestión y motivación de equipos comerciales, modelo de ingresos,
+      diferencias entre marketing, branding, PR y growth, inversiones de growth; con IA cuando
+      aplica.
+    source: "ambos · web: AI Sales, LinkedIn Sales, Growth Rockstar · Instagram: carruseles y reels de ventas y growth"
+  - id: operations
+    name: Operación y escala sin depender del dueño
+    description: >-
+      Que la empresa funcione sin que el dueño esté en todo: delegar, playbooks, decisiones con
+      datos, cuellos de botella, planear escenarios de la empresa a varios años.
+    source: "ambos · web: operacionesconai · Instagram: CTA recurrente a escalar sin depender del dueño, ejercicio de escenarios a 5 años"
+  - id: founder_mindset
+    name: Construir y escalar empresas desde LATAM
+    description: >-
+      Historias de fundadores y empresas conocidas como lección de negocio, ejecución y
+      disciplina, errores de inversión, levantar capital, ecosistema de fundadores e inversión en
+      la región.
+    source: "ambos · web: «Los líderes que construyen son quienes enseñan» · Instagram: el tema más frecuente en ambas cuentas"
+  - id: leadership_communication
+    name: Liderazgo y comunicación del directivo
+    description: >-
+      Cómo comunica y dirige un líder: comunicar avances, comunicación top-down, persuasión,
+      responder con precisión, motivar al equipo.
+    source: "Instagram (sobre todo @andresbilbao, series de reels sobre aprender a trabajar)"
+
+tone:
+  - "directo y de operador: criterio y ejecución por encima de la teoría"
+  - "segunda persona, habla al dueño o líder de su empresa y su negocio"
+  - "historias de empresas y fundadores conocidos como lección, con un dato o giro sorprendente"
+  - "opinión fuerte y en primera persona en los vídeos de Andrés Bilbao, a veces contraria a lo esperado"
+  - "ambicioso y orientado a resultados de negocio; motivacional ligero, sin tecnicismos"
+  - "español de Latinoamérica, coloquial y sin jerga técnica"
+  - "cierra con una pregunta a la audiencia o con una oferta de recurso (checklist, guía) por mensaje"
+
+# Formatos observados en Instagram (no hay datos de cuál rinde más).
+formats:
+  - "carrusel de texto: portada con gancho, una idea por diapositiva, cierre con CTA"
+  - "carrusel noticia → qué cambia para tu negocio → checklist → recurso por DM"
+  - "framework o ejercicio paso a paso para aplicar en la empresa"
+  - "glosario comparativo (X vs Y vs Z)"
+  - "historia de empresa o fundador en pocas imágenes (antes y después)"
+  - "tarjeta de cita de una figura conocida con foto"
+  - "frase corta (manuscrita o estilo tweet)"
+  - "reel talking head en primera persona con el gancho en la portada"
+  - "serie de reels con nombre fijo"
+  - "clip de entrevista, charla o podcast"
+  - "promoción de programa o evento presencial"
+
+# Qué no encaja con la línea editorial. En Instagram no se observó nada de esto.
+does_not_fit:
+  - detalles técnicos para desarrolladores sin implicación de negocio (librerías, benchmarks, código)
+  - tutoriales de cómo construir o programar con IA
+  - lanzamientos de modelos o productos de IA sin consecuencia para ventas, operación, estrategia o liderazgo
+  - investigación académica sin aplicación en organizaciones
+  - sucesos, polémicas o cotilleo de personas o empresas de IA sin lección para un directivo
+  - gadgets y productos de consumo sin uso empresarial
+  - noticias que solo afectan a un mercado fuera de LATAM, sin traducción a la región
