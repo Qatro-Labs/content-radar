@@ -4,6 +4,22 @@ content-radar ayuda a líderes y equipos en Latinoamérica a producir contenido 
 
 Radar de inteligencia editorial: detecta qué temas de IA están acelerando, por qué funcionan y si encajan con la audiencia de 30X, usando solo fuentes públicas. Plan, reglas y contratos en [CLAUDE.md](CLAUDE.md).
 
+## Cómo trabajamos
+
+1. **Al empezar un bloque:** `git pull` y leer el último handoff del canal.
+2. **Una rama por tarea** (`data/…`, `intel/…`, `fe/…`), PRs pequeños y mergeados pronto. `main` siempre desplegable.
+3. **Elegir el modo de trabajo:**
+   - Tarea de 1 h o más con un contrato claro (scoring, endpoints, tools MCP, migraciones): `/spec` para planearla y `/build` para implementarla. `/spec <slug>` retoma un plan bloqueado o a medias.
+   - Todo lo demás (UI, arreglos, ajustes): directo con Claude, sin plan.
+4. **Contratos** (`Opportunity`, `Evidence`, `ContentSignal`, OpenAPI): se avisan en el canal antes de cambiarlos. Los tipos del frontend se generan desde la API, nunca a mano.
+5. **Decisiones:** se hablan en el canal y se escriben en `CLAUDE.md` con un PR. Si no está ahí, Claude no la conoce.
+6. **Merge:** cualquiera puede mergear a `main` (mismo poder de decisión) con los tests en verde. Claude nunca mergea.
+7. **Al cerrar un bloque:** handoff en el canal con el formato de `CLAUDE.md` §3.
+8. **Estado:** pregunta a Claude "¿cómo vamos?"; lo calcula a partir de los planes, los PRs y `git log`.
+9. **Bloqueado más de 30 min:** avisa, propón una alternativa y cambia de tarea.
+
+Estándares de código: [`docs/engineering-standards.md`](docs/engineering-standards.md).
+
 ## Requisitos
 
 - Docker
