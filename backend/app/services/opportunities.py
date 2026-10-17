@@ -150,7 +150,7 @@ async def compute_opportunities(
         monitoring_started_at=MONITORING_STARTED_AT,
         broad=[is_broad(vectors, c) for c in clusters],
         # La referencia de outliers es cómo rinde la cuenta, no cómo rinde en IA (CLAUDE.md §7):
-        # en cuentas amplias Jev quita la mitad de las piezas y no se llegaba a MIN_REFERENCE.
+        # también cuentan las piezas que Jev quita por fuera de tema.
         reference=loaded,
     )
     return ComputedOpportunities(len(pieces), removed, results)
