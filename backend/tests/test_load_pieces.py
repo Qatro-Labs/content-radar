@@ -52,3 +52,17 @@ async def test_load_pieces_ignores_the_future(session):
     assert third.metrics == Metrics()
     assert third.snapshots == []
     assert third.observed_at == AS_OF
+
+
+async def test_load_pieces_ignores_pieces_first_observed_after_as_of(session):
+    src = Source(
+        platform="hackernews", kind="query", external_id="llm", name="HN · LLM", segment="tech"
+    )
+    late = item(
+        src, 1, published_at=AS_OF - timedelta(hours=5), last_observed_at=AS_OF + timedelta(hours=3)
+    )
+    late.first_observed_at = AS_OF + timedelta(hours=2)  # recolectada después de as_of
+    session.add_all([src, late])
+    await session.commit()
+
+    assert await load_pieces(session, AS_OF) == []

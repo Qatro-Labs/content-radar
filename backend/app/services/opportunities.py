@@ -44,12 +44,14 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
     stmt = (
         select(ContentItem, Source)
         .join(Source)
+        # Solo lo publicado, recolectado y observado hasta `as_of`: el mismo `as_of` tiene que
+        # dar el mismo resultado.
         .where(
             Source.active.is_(True),
             ContentItem.published_at > as_of - LOOKBACK,
             ContentItem.published_at <= as_of,
+            ContentItem.first_observed_at <= as_of,
         )
-        # Solo lo observado hasta `as_of`: el mismo `as_of` tiene que dar el mismo resultado.
         .options(selectinload(ContentItem.snapshots.and_(MetricSnapshot.observed_at <= as_of)))
         .order_by(ContentItem.id)
     )
