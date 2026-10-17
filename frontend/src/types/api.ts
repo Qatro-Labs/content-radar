@@ -462,6 +462,17 @@ export interface components {
        * @default automatic
        */
       collection: components['schemas']['Collection']
+      /**
+       * Replica Of
+       * @description URL de la pieza original si esta republica la misma nota; None = original o sin republicaciones
+       */
+      replica_of?: string | null
+      /**
+       * Replica Count
+       * @description En la pieza original: medios distintos del suyo que republican la misma nota en este tema
+       * @default 0
+       */
+      replica_count: number
     }
     /**
      * FitCriterion
@@ -628,7 +639,7 @@ export interface components {
       confidence: components['schemas']['Confidence']
       /**
        * Source Count
-       * @description Fuentes independientes
+       * @description Fuentes independientes, sin contar republicaciones de la misma nota
        */
       source_count: number
       /**
@@ -939,6 +950,17 @@ export interface components {
        * @default automatic
        */
       collection: components['schemas']['Collection']
+      /**
+       * Replica Of
+       * @description URL de la pieza original si esta republica la misma nota; None = original o sin republicaciones
+       */
+      replica_of?: string | null
+      /**
+       * Replica Count
+       * @description En la pieza original: medios distintos del suyo que republican la misma nota en este tema
+       * @default 0
+       */
+      replica_count: number
       /**
        * Opportunity Id
        * @description Oportunidad a la que pertenece la pieza

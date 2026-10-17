@@ -15,6 +15,7 @@ from app.intelligence.audience_fit import (
 )
 from app.intelligence.lifecycle import Stage
 from app.intelligence.opportunities import LLM_PENDING_NOTE, TopicResult, rank
+from app.intelligence.ranking import PENALTY_SMALL_SAMPLE
 from app.schemas.opportunity import Confidence, FitCriterion, Lifecycle, Recommendation
 from app.schemas.signal import Platform, Segment
 from tests.test_build_opportunities import build_one, piece
@@ -89,6 +90,16 @@ def test_apply_fit_fills_scores_breakdown_and_publish_now():
     assert o.audience_fit_criteria is not None
     assert [c.criterion for c in o.audience_fit_criteria] == list(FitCriterion)
     assert LLM_PENDING_NOTE not in o.limitations
+
+
+def test_breakdown_item_count_uses_stories():
+    # 9 piezas, pero 2 son republicaciones: 7 notas < 8 → penalización por muestra pequeña.
+    topic = replace(emerging_topic(), replica_ids=frozenset({11, 12}))
+    cited = assessments(LEVELS, ["https://example.com/0"])
+    o = apply_fit(topic, cited, sent_urls=sent(topic)).opportunity
+    assert o.score_breakdown is not None
+    assert [p.points for p in o.score_breakdown.penalties] == [PENALTY_SMALL_SAMPLE]
+    assert o.opportunity_score == 54.8  # 64,825 − 10
 
 
 def test_low_fit_does_not_publish():

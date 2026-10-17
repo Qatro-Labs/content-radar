@@ -1,0 +1,22 @@
+# Batería de par de Jev, v1 (docs/jev.md, "2. Par"). Una llamada por par candidato en `analyze`:
+# dos piezas del mismo tema y de medios distintos con similitud coseno ≥ 0.70 o el mismo título.
+# Decide si una pieza republica a la otra, para que las copias no cuenten como fuentes
+# independientes ni inflen la saturación. El nivel 2 existe para separar la cobertura
+# independiente del mismo hecho (que sí es validación cruzada) de la copia: en la calibración del
+# 18/10, el coseno solo no los distinguía (The Verge ↔ TechCrunch frente a HN ↔ Ars Technica).
+# Python lee el nivel redondeado: 3 = republicación, 0–2 = independientes (`same_story_verdict`).
+version: 1
+questions:
+  - id: same_story
+    type: score
+    instructions: ¿Las piezas `a` y `b` son la misma nota?
+    criteria:
+      - tratan temas distintos
+      - mismo tema, pero cuentan hechos distintos
+      - >-
+        el mismo acontecimiento, contado por separado por cada medio con su propio texto, fuentes o
+        enfoque
+      - >-
+        la misma nota replicada: una es copia, traducción o reenvío de la otra (un enlace al mismo
+        artículo, la versión en otro idioma del mismo medio o el mismo autor publicándola en otro
+        canal)

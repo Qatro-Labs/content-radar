@@ -91,6 +91,17 @@ class Evidence(BaseModel):
     collection: Collection = Field(
         default=Collection.AUTOMATIC, description="Sensor automático o curación manual"
     )
+    replica_of: HttpUrl | None = Field(
+        default=None,
+        description="URL de la pieza original si esta republica la misma nota; "
+        "None = original o sin republicaciones",
+    )
+    replica_count: int = Field(
+        default=0,
+        ge=0,
+        description="En la pieza original: medios distintos del suyo que republican la misma "
+        "nota en este tema",
+    )
 
 
 class TopicEvidence(Evidence):
@@ -178,7 +189,9 @@ class Opportunity(BaseModel):
         default=None, description="None si opportunity_score es None"
     )
     confidence: Confidence
-    source_count: int = Field(ge=0, description="Fuentes independientes")
+    source_count: int = Field(
+        ge=0, description="Fuentes independientes, sin contar republicaciones de la misma nota"
+    )
     evidence_strength: float = Field(
         ge=0, le=100, description="Normalizado por fuente; no suma views entre plataformas"
     )

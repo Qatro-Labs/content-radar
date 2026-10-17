@@ -181,6 +181,7 @@ async def test_all_evidence_strongest_outlier_first_and_nulls_last(seeded, clien
         ("opp_004", 0.6),
         ("opp_005", None),  # 17/10 07:00
         ("opp_002", None),  # 15/10 12:00
+        ("opp_003", None),  # 15/10 11:00, la republicación MOCK
         ("opp_001", None),  # 15/10 10:00
         ("opp_003", None),  # 15/10 09:00
     ]

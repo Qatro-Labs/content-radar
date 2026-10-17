@@ -39,6 +39,7 @@ function piece(url: string, overrides: Partial<Evidence> = {}): Evidence {
     outlier_ratio: null,
     is_outlier: null,
     collection: 'automatic',
+    replica_count: 0,
     ...overrides,
   }
 }
