@@ -1,6 +1,6 @@
 """Brief editorial de una oportunidad servida, cacheado en `llm_evaluations` (CLAUDE.md §6).
 
-Lo usa `POST /editorial/brief` y lo usará la tool MCP `generate_editorial_brief`. Lee la
+Lo usan `POST /editorial/brief` y la tool MCP `generate_editorial_brief`. Lee la
 oportunidad de la ejecución servida (DEMO_RUN_ID o la última correcta) y solo manda al LLM texto de
 piezas que Jev marcó como seguras, igual que el audience fit (regla 6).
 """
@@ -39,6 +39,7 @@ from app.schemas.cost import Provider
 from app.schemas.editorial import BriefPoint, BriefRequest, EditorialBrief
 from app.schemas.opportunity import Evidence
 from app.services.classification import load_judgments
+from app.services.costs import record_meter
 from app.services.llm_cache import load_cached, save_results
 from app.services.opportunities import ServedOpportunity, get_served, load_evidence_pieces
 
@@ -206,3 +207,20 @@ async def generate_brief(
             opportunity_ids={key: prepared.served.opportunity.id},
         )
     return _to_brief(request, prepared, checked)
+
+
+async def generate_metered_brief(
+    session: AsyncSession,
+    request: BriefRequest,
+    *,
+    briefer: Briefer | None,
+    now: datetime,
+) -> EditorialBrief:
+    """`generate_brief` con su consumo del LLM registrado en `usage_events`, falle o no."""
+    meter = UsageMeter()
+    try:
+        return await generate_brief(session, request, briefer=briefer, meter=meter, now=now)
+    finally:
+        # El LLM cobra aunque el brief no supere la comprobación.
+        if meter.counts:
+            await record_meter(session, meter)

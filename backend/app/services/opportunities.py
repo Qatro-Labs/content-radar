@@ -33,6 +33,8 @@ ANALYZE_JOB = "analyze"
 LOOKBACK = timedelta(days=14)
 # Día en que empezó el monitoreo con snapshots (CLAUDE.md §9): lo anterior es backfill.
 MONITORING_STARTED_AT = datetime(2026, 10, 16, tzinfo=UTC)
+# Lo que cubren las ventanas de 3 + 3 días de `analyze`: es el único periodo que se calcula.
+SERVED_PERIOD = Period.D7
 
 
 def _metrics(snapshot) -> Metrics:
@@ -176,6 +178,29 @@ async def _served_run(session: AsyncSession) -> PipelineRun | None:
     return await session.scalar(successful.order_by(PipelineRun.finished_at.desc()).limit(1))
 
 
+def _matches(
+    o: Opportunity,
+    *,
+    lifecycle: Lifecycle | None,
+    confidence: Confidence | None,
+    topic: str | None,
+) -> bool:
+    return (
+        (lifecycle is None or o.lifecycle is lifecycle)
+        and (confidence is None or o.confidence is confidence)
+        and (not topic or topic.lower() in o.topic.lower())
+    )
+
+
+async def _ranked_records(session: AsyncSession, run: PipelineRun) -> list[OpportunityRecord]:
+    rows = await session.scalars(
+        select(OpportunityRecord)
+        .where(OpportunityRecord.run_id == run.id)
+        .order_by(OpportunityRecord.rank)
+    )
+    return list(rows)
+
+
 async def list_opportunities(
     session: AsyncSession,
     *,
@@ -187,21 +212,12 @@ async def list_opportunities(
     run = await _served_run(session)
     if run is None or run.finished_at is None:
         return None
-    rows = await session.scalars(
-        select(OpportunityRecord)
-        .where(OpportunityRecord.run_id == run.id)
-        .order_by(OpportunityRecord.rank)
-    )
-    items = [Opportunity.model_validate(r.payload) for r in rows]
-    if lifecycle:
-        items = [o for o in items if o.lifecycle is lifecycle]
-    if confidence:
-        items = [o for o in items if o.confidence is confidence]
-    if topic:
-        items = [o for o in items if topic.lower() in o.topic.lower()]
+    items = [Opportunity.model_validate(r.payload) for r in await _ranked_records(session, run)]
     return OpportunityList(
-        items=items,
-        period=Period.D7,  # ventanas de 3 + 3 días
+        items=[
+            o for o in items if _matches(o, lifecycle=lifecycle, confidence=confidence, topic=topic)
+        ],
+        period=SERVED_PERIOD,
         generated_at=run.finished_at,
         monitoring_started_at=MONITORING_STARTED_AT,
     )
@@ -227,14 +243,44 @@ class ServedOpportunity:
     timeline: OpportunityTimeline
 
 
-async def get_served(session: AsyncSession, opportunity_id: str) -> ServedOpportunity | None:
-    r = await _record(session, opportunity_id)
-    if r is None:
-        return None
+@dataclass(frozen=True)
+class ServedRun:
+    generated_at: datetime
+    items: list[ServedOpportunity]
+
+
+def _served(r: OpportunityRecord) -> ServedOpportunity:
     return ServedOpportunity(
         opportunity=Opportunity.model_validate(r.payload),
         evidence=[Evidence.model_validate(e) for e in r.evidence],
         timeline=OpportunityTimeline.model_validate(r.timeline),
+    )
+
+
+async def get_served(session: AsyncSession, opportunity_id: str) -> ServedOpportunity | None:
+    r = await _record(session, opportunity_id)
+    return None if r is None else _served(r)
+
+
+async def list_served(
+    session: AsyncSession,
+    *,
+    lifecycle: Lifecycle | None = None,
+    confidence: Confidence | None = None,
+    topic: str | None = None,
+) -> ServedRun | None:
+    """Como `list_opportunities`, con evidencia y timeline (sin una query por oportunidad)."""
+    run = await _served_run(session)
+    if run is None or run.finished_at is None:
+        return None
+    served = [_served(r) for r in await _ranked_records(session, run)]
+    return ServedRun(
+        generated_at=run.finished_at,
+        items=[
+            s
+            for s in served
+            if _matches(s.opportunity, lifecycle=lifecycle, confidence=confidence, topic=topic)
+        ],
     )
 
 

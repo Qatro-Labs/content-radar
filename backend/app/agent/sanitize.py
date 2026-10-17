@@ -71,12 +71,12 @@ def wrap_question(question: str) -> str:
     return f"{QUESTION_PREAMBLE}\n<pregunta>{clean_external(question)}</pregunta>"
 
 
-def _clean_tree(value: object, field: str | None = None) -> object:
+def clean_tree(value: object, field: str | None = None) -> object:
     if isinstance(value, dict):
-        return {k: _clean_tree(v, k) for k, v in value.items()}
+        return {k: clean_tree(v, k) for k, v in value.items()}
     if isinstance(value, list):
         # Los elementos heredan el campo: cada `limitations` se trunca por separado.
-        return [_clean_tree(v, field) for v in value]
+        return [clean_tree(v, field) for v in value]
     if isinstance(value, str):
         cleaned = clean_external(value)
         max_chars = TRUNCATED_FIELDS.get(field) if field else None
@@ -85,7 +85,7 @@ def _clean_tree(value: object, field: str | None = None) -> object:
 
 
 def wrap_data(payload: object) -> str:
-    text = json.dumps(_clean_tree(payload), ensure_ascii=False)
+    text = json.dumps(clean_tree(payload), ensure_ascii=False)
     return f"<datos>{text}</datos>"
 
 
