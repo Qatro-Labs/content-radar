@@ -326,7 +326,7 @@
 
 ## Plan de implementación
 
-### Paso 1 — Medir la tasa de outliers de HN antes del cambio
+### Paso 1 — Medir la tasa de outliers de HN antes del cambio [HECHO]
 
 - **Archivos:** ninguno (script en el scratchpad o `uv run python -c`).
 - **Cambio:** con la DB local, correr `uv run python -m app.jobs.analyze` y calcular, sobre la
@@ -481,7 +481,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_intelligence.py -q`
 - **Commit:** `Explain declining topics in lifecycle_reason`
 
-### Paso 12 — Verificación con datos reales
+### Paso 12 — Verificación con datos reales [HECHO]
 
 - **Archivos:** ninguno.
 - **Cambio:** correr `analyze` en local, repetir la medición del paso 1 (tasa HN después) e
@@ -562,6 +562,7 @@ Más la tasa de outliers HN antes/después y el top 10 del paso 9.
 | 2026-10-17 | Tests de DB sin ejecutar: `radar_test` tiene una tabla `usage_events` de otra rama con FK a `pipeline_runs`, y el `drop_all` del conftest falla (`DependentObjectsStillExistError`) en los 20 tests de DB. El paso 6 (`test_load_pieces.py`) y el 8 (`test_opportunity_routes.py`) no se han visto ni en rojo ni en verde. El paso 6 queda sin `[HECHO]` hasta verlo en verde. | Arreglo para un humano: `DROP TABLE usage_events CASCADE;` en `radar_test` (o `TEST_DATABASE_URL` a una DB nueva) y `uv run pytest tests/test_load_pieces.py tests/test_opportunity_routes.py -q`. Comprobado a mano contra la DB local (solo lectura) que `load_pieces` no devuelve nada posterior a `as_of`; con colecciones ya cargadas en la sesión el filtro del loader no se aplicaba (555 snapshots posteriores) y se añadió el filtro en Python (Riesgos). | Pasos 2–11 commiteados en `intel/phase1-real-opportunities` |
 | 2026-10-17 | Paso 12: la partición de D10 se dispara en 22 de 39 clusters (solo 3 por tamaño > 25; 19 solo por cohesión < 0.6) y los de 5–8 piezas no dan subclusters ≥ 5 a 0.4, así que desaparecen. Piezas en clusters: 381 → 195; oportunidades: 28 → 17. | Pendiente de Melkin (ver Preguntas abiertas). No se tocan umbrales. | Ídem |
 | 2026-10-17 18:10 | — | DB de tests: `radar_test_a` (87 passed, incluye pasos 6 y 8). D10 corregido con D13 (`and` + conservar) y paso 13 | — |
+| 2026-10-17 | — | Tasa de outliers HN (evidencia guardada, HN con ratio no nulo): 5,3 % (run 6, 9 de 171, antes del cambio) → 5,6 % (run 9, 8 de 144, tras D13). En rango 3–6 %. Pasos 1 y 12 hechos. | Pasos 2–13 y correcciones de la auditoría |
 
 ## Preguntas abiertas
 
