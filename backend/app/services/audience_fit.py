@@ -107,6 +107,26 @@ def _pending_by_key(
     return pending
 
 
+async def _evaluate_pending(
+    session: AsyncSession,
+    evaluator: TopicEvaluator,
+    pending: dict[str, _Pending],
+    *,
+    meter: UsageMeter,
+) -> dict[str, EvaluationResult]:
+    outcomes = await asyncio.gather(*(_evaluate_one(evaluator, p) for p in pending.values()))
+    evaluated = {key: r for key, r in zip(pending, outcomes, strict=True) if r is not None}
+    await _save(session, evaluated, pending)
+    for r in evaluated.values():
+        meter.add(
+            Provider.LLM_TEXT,
+            EVALUATE_TOPIC_OPERATION,
+            units=r.input_tokens,
+            output_units=r.output_tokens,
+        )
+    return evaluated
+
+
 async def evaluate_topics(
     session: AsyncSession,
     results: Sequence[TopicResult],
@@ -122,16 +142,7 @@ async def evaluate_topics(
     keys = [evaluation_cache_key(t, model) for t in inputs]
     cached = await _cached_outputs(session, keys)
     pending = _pending_by_key(results, inputs, keys, cached)
-    outcomes = await asyncio.gather(*(_evaluate_one(evaluator, p) for p in pending.values()))
-    evaluated = {key: r for key, r in zip(pending, outcomes, strict=True) if r is not None}
-    await _save(session, evaluated, pending)
-    for r in evaluated.values():
-        meter.add(
-            Provider.LLM_TEXT,
-            EVALUATE_TOPIC_OPERATION,
-            units=r.input_tokens,
-            output_units=r.output_tokens,
-        )
+    evaluated = await _evaluate_pending(session, evaluator, pending, meter=meter)
 
     outputs = {**cached, **{key: r.output for key, r in evaluated.items()}}
     fitted = [

@@ -93,7 +93,20 @@ El plan no traía pasos: `plan-implementer` los deriva de D1–D12, sin decision
 ### Paso 4 — Evaluador con el SDK de Anthropic y prompt v1 (D1, D2, D3, D10) [HECHO]
 ### Paso 5 — Caché `llm_evaluations` y servicio de evaluación (D7, D9, D11) [HECHO]
 ### Paso 6 — Integración en `analyze` y textos que dejan de ser ciertos [HECHO]
-### Paso 7 — Verificación real contra la DB local (D12)
+### Paso 7 — Verificación real contra la DB local (D12) [HECHO]
+
+Runs #22 (LLM real) y #23 (caché) con `TYPESAFE_API_KEY` vacío, contra `localhost:5433/radar`:
+904 piezas tras quitar 165 fuera de tema · 26 temas · 26 evaluados, 0 fallidos, 0 sin piezas
+seguras · segunda ejecución 26 de caché y 0 llamadas · 173.936 tokens de entrada y 30.603 de
+salida = 0,0327 $ · recomendaciones `find_angle` 19, `wait_for_case` 5, `discard` 2, ningún
+`publish_now` (fit máximo de un tema emerging/accelerating: 53,3; máximo global 60,0) · 1 cita
+ajena al tema descartada.
+
+## Historial de intentos
+
+| Fecha | Qué pasó | Commits en la rama |
+|---|---|---|
+| 2026-10-17 | `plan-implementer` completa los pasos 1–7 | 89b03ef … (ver `git log`) |
 
 ## Preguntas abiertas
 
