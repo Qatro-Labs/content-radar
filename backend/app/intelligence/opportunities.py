@@ -1,7 +1,8 @@
 """De piezas agrupadas a oportunidades del contrato. Determinista: sin DB ni LLM.
 
-Mientras no haya LLM, `topic` es el título de la pieza más representativa y los textos
-(`description`, `why_it_matters`, `limitations`) son plantillas con los datos medidos.
+Sale sin audience fit: lo añade después `intelligence.audience_fit` con los niveles del LLM.
+`topic` es el título de la pieza más representativa y los textos (`description`,
+`why_it_matters`, `limitations`) son plantillas con los datos medidos.
 """
 
 from collections import defaultdict
@@ -52,6 +53,7 @@ PERFORMANCE_METRIC = {Platform.YOUTUBE: "views", Platform.HACKERNEWS: "points"}
 MIN_RECENT_ITEMS = 3  # piezas en las dos últimas ventanas para considerar el tema activo
 MIX_WEIGHT_MIN, MIX_WEIGHT_MAX = 0.5, 3.0
 MAX_EVIDENCE = 25
+LLM_PENDING_NOTE = "Audience fit y análisis editorial pendientes (sin LLM todavía)."
 BROAD_TOPIC_NOTE = (
     "Tema amplio: las piezas comparten poco más que el término de búsqueda; tómalo como "
     "categoría, no como historia concreta."
@@ -91,6 +93,9 @@ class TopicResult:
     opportunity: Opportunity
     evidence: list[Evidence]
     timeline: OpportunityTimeline
+    # Para añadir el audience fit después sin reconstruir la etapa ni el grupo desde el contrato.
+    stage: Stage
+    pieces: list[Piece]
 
 
 def _performance(p: Piece) -> float | None:
@@ -180,7 +185,7 @@ def _limitations(
 ) -> list[str]:
     notes = [
         f"El monitoreo comenzó el {since:%d/%m}: los periodos anteriores no son históricos.",
-        "Audience fit y análisis editorial pendientes (sin LLM todavía).",
+        LLM_PENDING_NOTE,
     ]
     if growth is not GrowthStatus.OBSERVED:
         notes.append("Crecimiento no observado en dos ventanas: es estimado o preliminar.")
@@ -374,7 +379,7 @@ def _opportunity(
     velocity_percentile: float,
     as_of: datetime,
     monitoring_started_at: datetime,
-) -> Opportunity:
+) -> tuple[Opportunity, Stage]:
     facts = _topic_facts(topic.group, ratios)
     scores = _score_topic(
         topic,
@@ -384,7 +389,7 @@ def _opportunity(
         saturation=saturation,
         velocity_percentile=velocity_percentile,
     )
-    return Opportunity(
+    opportunity = Opportunity(
         id=_stable_id(topic.group),
         topic=topic.rep.title,
         description=_description(topic.group, facts),
@@ -400,17 +405,23 @@ def _opportunity(
         ),
         last_updated=as_of,
     )
+    return opportunity, scores.stage
 
 
-def _ranked_evidence(group: Sequence[Piece], ratios: Sequence[float | None]) -> list[Evidence]:
+def _ranked(
+    group: Sequence[Piece], ratios: Sequence[float | None]
+) -> list[tuple[Piece, float | None]]:
+    # Outliers primero y después lo más reciente; `item_id` desempata para que el orden (y lo
+    # que se envía al LLM) no cambie entre ejecuciones.
     return sorted(
-        (_evidence(p, r) for p, r in zip(group, ratios, strict=True)),
-        key=lambda e: (
-            e.outlier_ratio is None,
-            -(e.outlier_ratio or 0),
-            -e.published_at.timestamp(),
+        zip(group, ratios, strict=True),
+        key=lambda pair: (
+            pair[1] is None,
+            -(pair[1] or 0),
+            -pair[0].published_at.timestamp(),
+            pair[0].item_id,
         ),
-    )[:MAX_EVIDENCE]
+    )
 
 
 def build_opportunities(
@@ -435,7 +446,7 @@ def build_opportunities(
     results = []
     for topic, sat, vel_pct in zip(topics, saturation, velocity_pct, strict=True):
         group_ratios = [ratios[p.item_id] for p in topic.group]
-        opportunity = _opportunity(
+        opportunity, stage = _opportunity(
             topic,
             group_ratios,
             saturation=sat,
@@ -443,9 +454,12 @@ def build_opportunities(
             as_of=as_of,
             monitoring_started_at=monitoring_started_at,
         )
-        evidence = _ranked_evidence(topic.group, group_ratios)
+        ranked = _ranked(topic.group, group_ratios)
+        evidence = [_evidence(p, r) for p, r in ranked[:MAX_EVIDENCE]]
         timeline = _timeline(opportunity.id, [p.published_at for p in topic.group], as_of)
-        results.append(TopicResult(opportunity, evidence, timeline))
+        results.append(
+            TopicResult(opportunity, evidence, timeline, stage, pieces=[p for p, _ in ranked])
+        )
 
     results.sort(
         key=lambda r: (r.opportunity.momentum_score, r.opportunity.acceleration), reverse=True

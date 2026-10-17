@@ -8,10 +8,11 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from app.db.session import get_session
+from app.intelligence.lifecycle import Stage
 from app.intelligence.opportunities import TopicResult
 from app.main import app
 from app.models import PipelineRun
-from app.schemas.opportunity import Evidence, Opportunity, OpportunityTimeline
+from app.schemas.opportunity import Evidence, Lifecycle, Opportunity, OpportunityTimeline
 from app.services.opportunities import ANALYZE_JOB, save_opportunities
 
 FIXTURE = Path(__file__).resolve().parents[2] / "data" / "fixtures" / "opportunities.json"
@@ -25,6 +26,8 @@ def fixture_results() -> list[TopicResult]:
             opportunity=Opportunity.model_validate(o),
             evidence=[Evidence.model_validate(e) for e in raw["evidence"][o["id"]]],
             timeline=OpportunityTimeline.model_validate(raw["timeline"][o["id"]]),
+            stage=Stage(Lifecycle(o["lifecycle"]), o["lifecycle_reason"]),
+            pieces=[],
         )
         for o in raw["opportunities"]["items"]
     ]
