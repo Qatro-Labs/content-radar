@@ -6,12 +6,21 @@
 > [30X Signal — Direcciones visuales](https://claude.ai/artifact/BVjFhXdfVVXrpB2yucQmsT) (privado: pedir acceso).
 > El agente del Radar se aprobó el mismo día en el artboard **E · Agente sobre el radar** (D + agente).
 > Los datos y las ejecuciones del canvas son de ejemplo.
+> La arquitectura de vistas se revisó el 17/10 por la noche en el canvas
+> [30X Signal — Arquitectura de vistas](https://claude.ai/artifact/76g911QRiq6PabeLYhyLPp) (privado), con datos
+> reales del run #29: **D2 · Radar** (sin selección por defecto, panel lateral «Esta semana»), **Explorar sin tema**
+> («Lo que está funcionando») y **Expediente del tema** (el artboard I del primer canvas). Donde este documento y D
+> no coinciden, manda D2.
 
 ## 1. Atmósfera
 
 Instrumento de precisión sobre papel claro. Una sala de control de datos editoriales, pero luminosa: tinta casi negra
 sobre gris muy pálido, tarjetas blancas y un único color de señal, un lima de rotulador, que marca lo que merece
 publicarse. El radar es el protagonista; todo lo demás explica lo que el radar muestra.
+
+**Ninguna vista pide «elige algo».** El Radar arranca sin tema seleccionado y cada estado inicial ya responde una
+pregunta: el Radar, qué conviene publicar esta semana; Explorar, qué piezas están funcionando. Elegir un tema abre una
+vista previa en el panel lateral, sin salir del radar; el detalle completo vive en el expediente del tema.
 
 - **Densidad 6 · "Daily App Balanced".** Denso donde hay datos (ranking, panel de detalle), aireado alrededor.
 - **Variación 4 · "Offset Asymmetric".** Rejilla estable de producto, con bloques de ancho desigual (radar 2:1 panel).
@@ -111,7 +120,10 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **Segmented control** (periodo, orden): pista #E6E8EB (o #F2F3F5 dentro de una tarjeta), radio 12px, padding 4px;
   segmento activo blanco, peso 600; inactivo transparente, Etiqueta. Alto del segmento ≥ 36px dentro de una pista de 44px.
 - **Navegación:** barra plana, sin cristal ni píldora flotante: marca a la izquierda, tres vistas (Radar · Explorar
-  · Crear), periodo y estado de datos a la derecha. Vista activa: fondo blanco, radio 10px.
+  · Crear) con icono Lucide de 16px y texto, el buscador ⌘K y, a la derecha, el estado de datos ("Actualizado 17/10,
+  19:09 UTC · 90 fuentes") y el periodo. Vista activa: fondo blanco, radio 10px.
+- **Buscador ⌘K:** botón blanco (radio 12px, alto 44px) con lupa, "Buscar tema o pieza" en Apagado y la tecla ⌘K en
+  una baldosa #F2F3F5. Abre una paleta de comandos (temas, piezas y fuentes).
 - **Chip de etapa:** píldora, fondo y texto según §2, punto de 8px con el relleno (o trazo discontinuo en "Sin
   etapa"). Siempre con texto, nunca solo color.
 - **Chip de recomendación:** radio 8–10px, peso 600. "Publicar ya" en Lima señal; "Buscar ángulo" y "Esperar caso" en
@@ -124,11 +136,29 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **Barra apilada "Para quién importa":** alto 12px, radio completo, 3px entre segmentos; debajo, tres cifras
   grandes con su leyenda y una frase de lectura.
 - **"Qué no sabemos":** bloque Aviso con título en negrita y la limitación. Obligatorio en todo detalle.
-- **Contador (KPI):** baldosa blanca radio 16px, cifra Bricolage 36px y etiqueta en frase ("acelerando").
+- **Contador-filtro:** baldosa blanca radio 16px, cifra Bricolage 32px y debajo la etiqueta con su muestra de color
+  ("Publicar ya", "Acelerando", "Emergentes", "Sin etapa"). Es un botón (`aria-pressed`) que escribe el mismo estado
+  de la URL que el resto de filtros; activo, anillo de Tinta de 2px. Sin textos de ayuda debajo.
 - **Tooltip / tarjeta flotante del radar:** blanca, radio 14px, la única con sombra (§5). Chip de etapa, tema,
   "Oportunidad 79 · ↑ +80 %".
-- **Tabla de ranking:** filas de 56px con línea #EEF0F2; hover #F6F7F8; seleccionada en lavado de señal y puesto en
-  negrita. Columnas: Puesto · Tema · Etapa · Aceleración · Outliers · Fuentes · Oportunidad (barra + cifra) · Acción.
+- **Tabla de ranking:** filas de 54–56px con línea #EEF0F2; hover #F6F7F8; seleccionada en lavado de señal y puesto
+  en negrita. Columnas: Puesto · Tema · Etapa · 6 días · Aceleración · Oportunidad (barra + cifra). Muestra 10 filas
+  y "Ver los 38 temas" despliega el resto.
+- **Mini barras de 6 días:** seis barras de 8px por tema con las piezas nuevas de cada periodo de 24 h
+  (`/timeline`); ventana anterior en #C9CED6, actual en Tinta, un periodo sin piezas como trazo de 2px. Escala común
+  a todas las filas (5 piezas/día llenan la barra) para poder compararlas; `aria-label` con los valores.
+- **Panel lateral:** tarjeta blanca a la derecha (`flex: 1 1 360px`), `position: sticky; top: 16px`, visible
+  mientras se baja por el ranking. Sin selección muestra «Esta semana» (Radar: los temas de «Publicar ya», una línea
+  hacia Explorar y "Qué no sabemos" en una frase) o «Dónde está funcionando» (Explorar). Con selección muestra la vista
+  previa del tema o de la pieza, con "← Esta semana" / "← Resumen" para volver. Cambia con fundido y 6px de subida.
+- **Vista previa del tema:** chip de etapa, tema (Bricolage 28px), "Observado · confianza media · 8 fuentes", anillo
+  de 104px con el puesto y el chip de recomendación, `recommendation_reason`, el inicio de "Por qué importa" (3
+  líneas) y tres baldosas (Aceleración · Encaje · Outliers). Primario "Ver expediente →"; secundario "Generar brief".
+- **Expediente:** "Cómo se compone" junto al anillo (cada componente de `score_breakdown` con barra, cifra y peso),
+  las dos ventanas de la evolución lado a lado, "Por qué importa" completo, criterios de encaje con chips de las
+  fuentes que citan (al pulsar uno se resaltan sus piezas, las demás bajan a 0.4 y la página baja hasta ellas),
+  evidencia en una lista con outliers primero y la barra **"Rendimiento frente a su canal"** (marcas en 1× y 3×, escala
+  hasta 6×), "Para quién importa" en la cabecera de la evidencia y "Siguiente paso" junto a "Qué no sabemos".
 - **Carga:** skeletons con la forma exacta del contenido (#ECEEF1 → #F2F3F5, 1.6s). Nada de spinners circulares.
 - **Vacío:** si hay menos oportunidades que las esperadas, se muestran las que hay y una frase que explica por qué
   ("Hay 7 temas analizados esta semana"). Nunca se rellena.
@@ -137,11 +167,12 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 
 **Radar y agente**
 
-- **Fila de filtros:** debajo de la cabecera y a todo el ancho. Un segmented control de selección múltiple con las
-  cinco etapas (cada segmento lleva el punto de su etapa, así que la fila hace de leyenda del radar) y un segundo
-  control con "Hueco en LATAM". Pista #E6E8EB, segmento activo blanco y peso 600. Con algún filtro activo aparece a la
-  derecha una frase ("Filtros activos" o "Filtros puestos por el agente") y el botón secundario "Restablecer vista",
-  en blanco sobre el lienzo.
+- **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando»,
+  «Emergentes» y «Sin etapa» escriben `lifecycle`; «Publicar ya» filtra por recomendación. La leyenda de etapas pasa
+  a la cabecera de la tarjeta del radar (chips no interactivos). "Hueco en LATAM" sale de la vista mientras
+  `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
+  filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista" (o la frase "Filtros
+  puestos por el agente").
 - **Barra de pregunta:** fija abajo y centrada (ancho máximo 840px), tarjeta blanca de radio 20px con la sombra
   flotante (§5), porque flota sobre la página. De izquierda a derecha: la marca del agente (cuadrado Tinta de 40px y
   radio 11px con un punto Lima de 12px), el campo (#F2F3F5, radio 12px, alto 48px, placeholder en Apagado) y el
@@ -167,10 +198,15 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 
 - Contenedor máximo **1440px**, gutter 32px (16px en móvil). Base de 4px; huecos de 16px entre tarjetas, 8px entre
   baldosas, 20px dentro del panel de detalle.
-- **Radar (Discover):** cabecera (H1 + frase a la izquierda, contadores a la derecha) → fila de filtros → fila
-  principal con el radar (`flex: 999 1 680px`) y el panel de detalle (`flex: 1 1 380px`) a la misma altura → fila
-  bento "Para quién importa" (1) + "Por qué importa" (2) → ranking a todo el ancho → nota al pie de metodología →
-  barra de pregunta, fija abajo (`position: sticky; bottom: 0`, con 16px de margen inferior).
+- **Radar (Discover):** cabecera (H1 + frase a la izquierda, contadores-filtro a la derecha) → fila principal: a
+  la izquierda (`flex: 999 1 720px`) el radar con su nota al pie y debajo el ranking; a la derecha el panel lateral
+  (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: sticky; bottom: 16px`). "Para quién
+  importa" y "Por qué importa" completos viven en el expediente, no en el Radar.
+- **Explorar sin tema:** cabecera (H1 «Lo que está funcionando» + contadores-filtro: Outliers · YouTube · Hacker News;
+  RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda el gráfico de rendimiento por fecha y la tabla
+  de piezas → a la derecha el panel lateral («Dónde está funcionando» o el detalle de la pieza).
+- **Expediente (`/explore/:id`):** cabecera (tema, recomendación y motivo; a la derecha el anillo con "Cómo se
+  compone") → evolución → por qué importa y encaje → evidencia → siguiente paso con "Qué no sabemos".
 - La cabecera, los contadores y el ranking reflejan los filtros: con filtro, el H1 dice "3 de 9 temas", la frase
   dice qué filtro hay, los contadores cuentan solo lo filtrado y el ranking muestra solo lo que entra, conservando el
   puesto global.
@@ -210,8 +246,8 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - **Barrido al cargar y al cambiar de periodo:** un haz pivota en la esquina "Prioridad" (de 170° a 290°, 1.8s,
   0.2s de retardo) con una estela del lavado de señal. Cada burbuja aparece (escala 0.2 → 1 con rebote) cuando el
   haz cruza su ángulo, así que se "detecta" como en un radar.
-- **Ping al seleccionar:** tres ondas del trazo de la etapa, 1.1s, escaladas ×4.6, separadas 160ms. En la primera
-  carga, la seleccionada hace ping cuando el haz la detecta.
+- **Ping al seleccionar:** tres ondas del trazo de la etapa, 1.1s, escaladas ×4.6, separadas 160ms. No hay
+  selección por defecto: el ping solo sale cuando la persona (o el agente) elige un tema.
 - **Latido con significado:** solo laten los temas que crecen, y la frecuencia codifica la aceleración. La nota al
   pie lo dice ("las burbujas que laten están creciendo").
 
@@ -223,7 +259,8 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   | > 0 | 3.6s |
   | ≤ 0, sin dato o "Sin etapa" | estática |
 
-- **Selección:** la mira, las lecturas de los ejes y la tarjeta flotante se deslizan a la nueva burbuja (320ms).
+- **Selección:** la mira y las lecturas de los ejes se deslizan a la nueva burbuja (320ms) y el panel lateral pasa a
+  la vista previa (fundido, 280ms). La tarjeta flotante sigue al cursor, no a la selección.
 - **Hover enlazado:** fila del ranking ↔ burbuja del radar se resaltan mutuamente.
 - Burbuja: hover `scale(1.12)`, active `scale(0.94)`.
 
@@ -269,10 +306,19 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   "Sin etapa" hueco con trazo discontinuo). Seleccionada: +6px y anillo de Tinta de 2px separado por 2px de blanco.
 - Líneas medias en 50/50 (#E2E5E9) que forman cuatro cuadrantes con nombre: **Prioridad** (arriba a la derecha, con
   lavado de señal, en Tinta 600) · Momentum sin encaje · Encaje sin momentum · Poca señal (en Apagado).
-- Mira de la selección: líneas de Tinta al 28 % hasta los ejes y dos lecturas en píldora de Tinta con texto blanco.
+- Sin selección por defecto: sin mira ni lecturas hasta que se elige un tema. Los temas de «Publicar ya» llevan su
+  nombre junto a la burbuja.
+- Mira de la selección: líneas de Tinta al 28 % hasta los ejes y dos lecturas en píldora de Tinta con texto blanco
+  (momentum a la izquierda, encaje abajo).
 - Filtrada o resaltada: la burbuja que no entra baja a opacidad 0.16 y pierde etiqueta y latido. La seleccionada
   nunca se atenúa.
-- **Timeline (Explorar):** barras por día; ventana actual en Tinta, ventana anterior en #C9CED6, con su badge de evidencia.
+- **Timeline (expediente):** barras por periodo; ventana actual en Tinta, ventana anterior en #C9CED6, con su badge
+  de evidencia. Los puntos de `/timeline` son periodos de 24 h que terminan a la hora de `last_updated`, no días de
+  calendario, y se rotulan así.
+- **Rendimiento por fecha (Explorar sin tema):** dispersión con X = `published_at` e Y = `outlier_ratio` en escala
+  logarítmica, líneas en 1× (#C9CED6) y 3× (Tinta). La forma distingue la plataforma (círculo YouTube, cuadrado Hacker
+  News) y los outliers van en Lima señal con borde Tinta. RSS no publica métricas y no entra; se dice debajo. La
+  tabla de piezas es su alternativa textual.
 - **Tipografía en ECharts:** `textStyle.fontFamily = 'Geist'`, 12–13px, color Apagado. Sin títulos ni leyendas
   internas de ECharts: la leyenda es HTML (chips de etapa) para que sea accesible.
 - Cada gráfico tiene una alternativa textual (el ranking es la del radar).
@@ -316,6 +362,8 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   puntos de "escribiendo…".
 - Que el agente oculte datos al filtrar (se atenúan) o actúe sin que la presencia haya llegado a su objetivo.
 - Filas de tres tarjetas idénticas con icono; dashboards falsos de barras grises.
+- Pantallas o paneles que solo dicen «elige algo», y un tema seleccionado por defecto en el Radar.
+- Tarjetas de relleno que repiten lo que ya dice otra parte de la vista: cada bloque responde una pregunta distinta.
 - Métricas inventadas, cifras redondas de relleno, 0 en lugar de "no disponible", el panel de coste.
 
 ## 11. Tokens (Tailwind v4 + shadcn-vue)
