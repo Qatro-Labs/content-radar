@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from app.intelligence import outliers as out
 from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
-from app.intelligence.lifecycle import classify
+from app.intelligence.lifecycle import Stage, classify
 from app.intelligence.ranking import (
     confidence,
     evidence_strength,
@@ -21,14 +21,24 @@ from app.intelligence.ranking import (
     recommendation,
     score_breakdown,
 )
-from app.intelligence.velocity import WINDOW, piece_rate, topic_velocity, window_counts
+from app.intelligence.velocity import (
+    WINDOW,
+    TopicVelocity,
+    WindowCounts,
+    piece_rate,
+    topic_velocity,
+    window_counts,
+)
 from app.schemas.opportunity import (
+    AudienceMix,
     Collection,
+    Confidence,
     Evidence,
     GrowthStatus,
     Opportunity,
     OpportunityTimeline,
     Rate,
+    ScoreBreakdown,
     TimelinePoint,
     TimelineWindow,
 )
@@ -65,6 +75,15 @@ class Piece:
 
 
 @dataclass
+class _ActiveTopic:
+    group: list[Piece]
+    rep: Piece
+    counts: WindowCounts
+    velocity: TopicVelocity
+    broad: bool
+
+
+@dataclass
 class TopicResult:
     opportunity: Opportunity
     evidence: list[Evidence]
@@ -81,7 +100,7 @@ def _performance(p: Piece) -> float | None:
     return float(value)
 
 
-def _is_reference_age(p: Piece, as_of: datetime) -> bool:
+def _old_enough_for_reference(p: Piece, as_of: datetime) -> bool:
     return as_of - p.published_at >= out.MIN_REFERENCE_AGE.get(p.platform, timedelta(0))
 
 
@@ -93,7 +112,7 @@ def outlier_ratios(pieces: Sequence[Piece], as_of: datetime) -> dict[int, float 
     by_source: dict[int, list[tuple[int, float]]] = defaultdict(list)
     for p in pieces:
         value = perf[p.item_id]
-        if value is not None and _is_reference_age(p, as_of):
+        if value is not None and _old_enough_for_reference(p, as_of):
             by_source[p.source_id].append((p.item_id, value))
     ratios: dict[int, float | None] = {}
     for p in pieces:
@@ -150,10 +169,10 @@ def _timeline(oid: str, published: Sequence[datetime], as_of: datetime) -> Oppor
 
 def _limitations(
     growth: GrowthStatus,
+    *,
     platforms: set[Platform],
     ratios: list[float | None],
     since: datetime,
-    *,
     broad: bool,
 ) -> list[str]:
     notes = [
@@ -178,6 +197,161 @@ def _stable_id(group: Sequence[Piece]) -> str:
     return f"opp_{anchor.item_id}"
 
 
+def _active_topics(
+    pieces: Sequence[Piece],
+    clusters: Sequence[Sequence[int]],
+    representatives: Sequence[int],
+    broad: Sequence[bool],
+    as_of: datetime,
+) -> list[_ActiveTopic]:
+    corpus = window_counts([p.published_at for p in pieces], as_of)
+    topics = []
+    for members, rep, is_broad in zip(clusters, representatives, broad, strict=True):
+        group = [pieces[i] for i in members]
+        counts = window_counts([p.published_at for p in group], as_of)
+        if counts.current + counts.previous < MIN_RECENT_ITEMS:
+            continue
+        velocity = topic_velocity(counts, corpus)
+        topics.append(_ActiveTopic(group, pieces[rep], counts, velocity, is_broad))
+    return topics
+
+
+def _audience(
+    group: Sequence[Piece], ratios: Sequence[float | None]
+) -> tuple[AudienceMix, bool | None]:
+    weights = [min(max(r or 1.0, MIX_WEIGHT_MIN), MIX_WEIGHT_MAX) for r in ratios]
+    mix = audience_mix([(p.segment, w) for p, w in zip(group, weights, strict=True)])
+    latam = latam_share([(p.region, w) for p, w in zip(group, weights, strict=True)])
+    assert mix is not None  # el grupo nunca está vacío
+    return mix, latam_gap(mix, latam)
+
+
+def _why_it_matters(topic: _ActiveTopic, source_count: int, outlier_count: int) -> str:
+    return (
+        f"Pendiente de análisis editorial. Señales medidas: {topic.counts.current} piezas en "
+        f"los últimos 3 días frente a {topic.counts.previous} en los 3 anteriores "
+        f"(aceleración ajustada por volumen {topic.velocity.acceleration:+.0%}), "
+        f"{source_count} fuentes independientes y {outlier_count} outliers."
+    )
+
+
+@dataclass
+class _TopicScores:
+    stage: Stage
+    growth: GrowthStatus
+    confidence: Confidence
+    momentum: float
+    cross_source: float
+    breakdown: ScoreBreakdown | None
+
+
+def _score_topic(
+    topic: _ActiveTopic,
+    *,
+    outlets: set[str],
+    platforms: set[Platform],
+    outlier_count: int,
+    saturation: float,
+    velocity_percentile: float,
+) -> _TopicScores:
+    acceleration, item_count = topic.velocity.acceleration, len(topic.group)
+    source_count = len(outlets)
+    stage = classify(
+        acceleration=acceleration,
+        saturation=saturation,
+        source_count=source_count,
+        item_count=item_count,
+    )
+    growth = growth_status(stage.insufficient, topic.counts.previous)
+    momentum = momentum_score(velocity_percentile, acceleration, outlier_count)
+    cross = cross_source_score(outlets, {p.value for p in platforms})
+    breakdown = score_breakdown(
+        momentum=momentum,
+        audience_fit=None,
+        cross_source=cross,
+        saturation=saturation,
+        actionability=None,
+        source_count=source_count,
+        item_count=item_count,
+    )
+    conf = confidence(growth, source_count, item_count)
+    return _TopicScores(stage, growth, conf, momentum, cross, breakdown)
+
+
+def _opportunity(
+    topic: _ActiveTopic,
+    ratios: list[float | None],
+    *,
+    saturation: float,
+    velocity_percentile: float,
+    as_of: datetime,
+    monitoring_started_at: datetime,
+) -> Opportunity:
+    group, vel = topic.group, topic.velocity
+    outlets = {outlet_key(p.platform.value, p.source_name) for p in group}
+    platforms = {p.platform for p in group}
+    flagged = [r for r in ratios if r is not None]
+    outlier_count = sum(r >= out.OUTLIER_RATIO for r in flagged)
+    mix, gap = _audience(group, ratios)
+    scores = _score_topic(
+        topic,
+        outlets=outlets,
+        platforms=platforms,
+        outlier_count=outlier_count,
+        saturation=saturation,
+        velocity_percentile=velocity_percentile,
+    )
+    # Correspondencia 1:1 con los campos del contrato: partirlo más no lo haría más legible.
+    return Opportunity(
+        id=_stable_id(group),
+        topic=topic.rep.title,
+        description=(
+            f"Tema agrupado automáticamente: {len(group)} piezas de {len(outlets)} fuentes "
+            f"independientes ({', '.join(sorted(p.value for p in platforms))})."
+        ),
+        lifecycle=scores.stage.lifecycle,
+        lifecycle_reason=scores.stage.reason,
+        growth_status=scores.growth,
+        velocity=vel.velocity,
+        acceleration=vel.acceleration,
+        momentum_score=scores.momentum,
+        outlier_count=outlier_count,
+        top_outlier_ratio=max(flagged) if flagged else None,
+        audience_mix=mix,
+        audience_fit_score=None,
+        cross_source_score=scores.cross_source,
+        saturation_score=saturation,
+        actionability_score=None,
+        opportunity_score=None if scores.breakdown is None else scores.breakdown.total,
+        score_breakdown=scores.breakdown,
+        confidence=scores.confidence,
+        source_count=len(outlets),
+        evidence_strength=evidence_strength(len(group), len(outlets)),
+        latam_gap=gap,
+        recommendation=recommendation(scores.stage, scores.confidence, None),
+        why_it_matters=_why_it_matters(topic, len(outlets), outlier_count),
+        limitations=_limitations(
+            scores.growth,
+            platforms=platforms,
+            ratios=ratios,
+            since=monitoring_started_at,
+            broad=topic.broad,
+        ),
+        last_updated=as_of,
+    )
+
+
+def _ranked_evidence(group: Sequence[Piece], ratios: Sequence[float | None]) -> list[Evidence]:
+    return sorted(
+        (_evidence(p, r) for p, r in zip(group, ratios, strict=True)),
+        key=lambda e: (
+            e.outlier_ratio is None,
+            -(e.outlier_ratio or 0),
+            -e.published_at.timestamp(),
+        ),
+    )[:MAX_EVIDENCE]
+
+
 def build_opportunities(
     pieces: Sequence[Piece],
     clusters: Sequence[Sequence[int]],
@@ -187,104 +361,29 @@ def build_opportunities(
     monitoring_started_at: datetime,
     broad: Sequence[bool] | None = None,
 ) -> list[TopicResult]:
-    corpus = window_counts([p.published_at for p in pieces], as_of)
     ratios = outlier_ratios(pieces, as_of)
-
-    # Primera pasada: métricas por tema, para normalizar saturación y velocidad entre temas.
-    topics = []
     broad_flags = broad if broad is not None else [False] * len(clusters)
-    for members, rep, is_broad in zip(clusters, representatives, broad_flags, strict=True):
-        group = [pieces[i] for i in members]
-        counts = window_counts([p.published_at for p in group], as_of)
-        if counts.current + counts.previous < MIN_RECENT_ITEMS:
-            continue
-        topics.append((group, pieces[rep], counts, topic_velocity(counts, corpus), is_broad))
+    topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of)
     if not topics:
         return []
 
-    saturation = saturation_scores([c.current + c.previous for _, _, c, _, _ in topics])
-    velocity_pct = saturation_scores([v.current_count for _, _, _, v, _ in topics])
+    # Saturación y velocidad se normalizan entre temas: necesitan todos los temas activos.
+    saturation = saturation_scores([t.counts.current + t.counts.previous for t in topics])
+    velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
 
     results = []
-    for n, (group, rep, counts, vel, is_broad) in enumerate(topics, start=1):
-        oid = _stable_id(group)
-        outlets = {outlet_key(p.platform.value, p.source_name) for p in group}
-        platforms = {p.platform for p in group}
-        group_ratios = [ratios[p.item_id] for p in group]
-        flagged = [r for r in group_ratios if r is not None]
-        outlier_count = sum(r >= out.OUTLIER_RATIO for r in flagged)
-
-        weights = [min(max(r or 1.0, MIX_WEIGHT_MIN), MIX_WEIGHT_MAX) for r in group_ratios]
-        mix = audience_mix([(p.segment, w) for p, w in zip(group, weights, strict=True)])
-        latam = latam_share([(p.region, w) for p, w in zip(group, weights, strict=True)])
-        assert mix is not None  # el grupo nunca está vacío
-        stage = classify(
-            acceleration=vel.acceleration,
-            saturation=saturation[n - 1],
-            source_count=len(outlets),
-            item_count=len(group),
+    for topic, sat, vel_pct in zip(topics, saturation, velocity_pct, strict=True):
+        group_ratios = [ratios[p.item_id] for p in topic.group]
+        opportunity = _opportunity(
+            topic,
+            group_ratios,
+            saturation=sat,
+            velocity_percentile=vel_pct,
+            as_of=as_of,
+            monitoring_started_at=monitoring_started_at,
         )
-        growth = growth_status(stage.insufficient, counts.previous)
-        conf = confidence(growth, len(outlets), len(group))
-        momentum = momentum_score(velocity_pct[n - 1], vel.acceleration, outlier_count)
-        cross = cross_source_score(outlets, {p.value for p in platforms})
-        breakdown = score_breakdown(
-            momentum=momentum,
-            audience_fit=None,
-            cross_source=cross,
-            saturation=saturation[n - 1],
-            actionability=None,
-            source_count=len(outlets),
-            item_count=len(group),
-        )
-
-        opportunity = Opportunity(
-            id=oid,
-            topic=rep.title,
-            description=(
-                f"Tema agrupado automáticamente: {len(group)} piezas de {len(outlets)} fuentes "
-                f"independientes ({', '.join(sorted(p.value for p in platforms))})."
-            ),
-            lifecycle=stage.lifecycle,
-            lifecycle_reason=stage.reason,
-            growth_status=growth,
-            velocity=vel.velocity,
-            acceleration=vel.acceleration,
-            momentum_score=momentum,
-            outlier_count=outlier_count,
-            top_outlier_ratio=max(flagged) if flagged else None,
-            audience_mix=mix,
-            audience_fit_score=None,
-            cross_source_score=cross,
-            saturation_score=saturation[n - 1],
-            actionability_score=None,
-            opportunity_score=None if breakdown is None else breakdown.total,
-            score_breakdown=breakdown,
-            confidence=conf,
-            source_count=len(outlets),
-            evidence_strength=evidence_strength(len(group), len(outlets)),
-            latam_gap=latam_gap(mix, latam),
-            recommendation=recommendation(stage, conf, None),
-            why_it_matters=(
-                f"Pendiente de análisis editorial. Señales medidas: {counts.current} piezas en "
-                f"los últimos 3 días frente a {counts.previous} en los 3 anteriores "
-                f"(aceleración ajustada por volumen {vel.acceleration:+.0%}), "
-                f"{len(outlets)} fuentes independientes y {outlier_count} outliers."
-            ),
-            limitations=_limitations(
-                growth, platforms, group_ratios, monitoring_started_at, broad=is_broad
-            ),
-            last_updated=as_of,
-        )
-        evidence = sorted(
-            (_evidence(p, r) for p, r in zip(group, group_ratios, strict=True)),
-            key=lambda e: (
-                e.outlier_ratio is None,
-                -(e.outlier_ratio or 0),
-                -e.published_at.timestamp(),
-            ),
-        )[:MAX_EVIDENCE]
-        timeline = _timeline(oid, [p.published_at for p in group], as_of)
+        evidence = _ranked_evidence(topic.group, group_ratios)
+        timeline = _timeline(opportunity.id, [p.published_at for p in topic.group], as_of)
         results.append(TopicResult(opportunity, evidence, timeline))
 
     results.sort(
