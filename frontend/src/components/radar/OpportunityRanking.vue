@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { useOpportunityTimelines, type QueryState } from '@/api/opportunities'
+import { useAllTimelines, type QueryState } from '@/api/opportunities'
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import { formatUtcDay } from '@/lib/format'
 import { resetViewPatch } from '@/lib/radarQuery'
@@ -29,11 +29,6 @@ const { update } = useRadarQuery()
 const COLUMNS = ['Puesto', 'Tema', 'Etapa', '6 días', 'Aceleración', 'Oportunidad'] as const
 // DESIGN.md §4: el ranking enseña 10 filas y el resto se despliega.
 const COLLAPSED_ROWS = 10
-const PENDING_TIMELINE: QueryState<OpportunityTimeline | null> = {
-  data: undefined,
-  isPending: true,
-  isError: false,
-}
 
 const isExpanded = ref(false)
 // Vuelve a 10 filas cuando cambia lo que entra en el ranking, no al seleccionar ni al pasar por
@@ -49,16 +44,27 @@ const isCollapsible = computed(() => rows.length > COLLAPSED_ROWS)
 const shownRows = computed(() => (isExpanded.value ? rows : rows.slice(0, COLLAPSED_ROWS)))
 const isEmptyAfterFilter = computed(() => isFiltered && rows.length === 0)
 
-// D5 del plan fe-dashboard-v2: no hay endpoint de conteos, así que se pide `/timeline` solo para
-// las filas a la vista.
-const timelines = useOpportunityTimelines(() => shownRows.value.map((row) => row.id))
+const {
+  data: timelines,
+  isPending: isTimelinesPending,
+  isError: isTimelinesError,
+} = useAllTimelines()
+
+// Un tema que no está en la respuesta, o una respuesta fallida, queda en `null`: «no disponible».
+function timelineOf(id: string): QueryState<OpportunityTimeline | null> {
+  return {
+    data: timelines.value?.get(id) ?? null,
+    isPending: isTimelinesPending.value,
+    isError: isTimelinesError.value,
+  }
+}
 
 const BARS_NOTE = 'Barras: piezas nuevas por periodo de 24 h'
 
-// Las fechas salen del primer timeline cargado: todos comparten ventana. Sin ninguno, sin fechas.
+// Las fechas salen del primer timeline con puntos: todos comparten ventana. Sin ninguno, sin fechas.
 const barsNote = computed(() => {
-  const points = [...timelines.value.values()]
-    .map((state) => state.data?.points ?? [])
+  const points = [...(timelines.value?.values() ?? [])]
+    .map((timeline) => timeline.points)
     .find((loaded) => loaded.length > 0)
   const first = points?.at(0)
   const last = points?.at(-1)
@@ -102,7 +108,7 @@ const barsNote = computed(() => {
             :index
             :selected="row.id === selectedId"
             :hovered="row.id === hoveredId"
-            :timeline="timelines.get(row.id) ?? PENDING_TIMELINE"
+            :timeline="timelineOf(row.id)"
             @select="(id) => emit('select', id)"
             @hover="(id) => emit('hover', id)"
           />

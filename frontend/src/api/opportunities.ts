@@ -80,6 +80,13 @@ async function fetchTimeline(id: string): Promise<OpportunityTimeline | null> {
   return data
 }
 
+async function fetchAllTimelines(): Promise<OpportunityTimeline[] | null> {
+  if (USING_FIXTURES) return Object.values((await loadFixture()).timeline)
+  const { data, error } = await api.GET('/api/v1/timelines')
+  if (error !== undefined || data === undefined) throw new Error('GET /timelines falló')
+  return data
+}
+
 // Las consultas individuales y las de lista comparten clave: el expediente reutiliza la
 // evidencia que ya cargó Explorar, y al revés.
 function opportunityQueryOptions(id: string) {
@@ -139,11 +146,6 @@ function toStateById<T>(
   )
 }
 
-export function useOpportunityTimelines(ids: MaybeRefOrGetter<string[]>) {
-  const results = useQueries({ queries: () => toValue(ids).map(timelineQueryOptions) })
-  return computed(() => toStateById(toValue(ids), results.value))
-}
-
 export function useOpportunitiesEvidence(ids: MaybeRefOrGetter<string[]>) {
   const results = useQueries({ queries: () => toValue(ids).map(evidenceQueryOptions) })
   const evidenceById = computed(() => toStateById(toValue(ids), results.value))
@@ -153,4 +155,14 @@ export function useOpportunitiesEvidence(ids: MaybeRefOrGetter<string[]>) {
   }
 
   return { evidenceById, refetchFailed }
+}
+
+// Sin ejecución de `analyze` (`null`) el mapa queda vacío y cada fila dice que no hay dato.
+export function useAllTimelines() {
+  return useQuery({
+    queryKey: ['timelines'],
+    queryFn: fetchAllTimelines,
+    select: (timelines) =>
+      new Map((timelines ?? []).map((timeline) => [timeline.opportunity_id, timeline])),
+  })
 }
