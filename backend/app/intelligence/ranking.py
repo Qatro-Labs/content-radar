@@ -1,5 +1,7 @@
 """Momentum, Opportunity Score, confianza y recomendación (CLAUDE.md §7). Heurísticas ajustables."""
 
+from dataclasses import dataclass
+
 from app.intelligence.lifecycle import Stage
 from app.schemas.opportunity import (
     Confidence,
@@ -129,17 +131,60 @@ def confidence(growth: GrowthStatus, source_count: int, item_count: int) -> Conf
     return Confidence.MEDIUM
 
 
-def recommendation(
-    stage: Stage, confidence: Confidence, audience_fit: float | None
-) -> Recommendation:
+# org_application ≤ 1 en la rúbrica: ninguna organización real lo aplica todavía.
+NO_CASE_MAX_LEVEL = 1
+
+REASON_SATURATED = (
+    "Tema saturado: mucho contenido similar y en descenso en las fuentes monitoreadas."
+)
+REASON_INSUFFICIENT = "Esperar: no hay datos suficientes para afirmar una tendencia."
+REASON_LOW_CONFIDENCE = "Esperar: la confianza en la evidencia es baja."
+REASON_NO_CASE = "Esperar caso: ninguna pieza muestra una organización real aplicándolo."
+REASON_PEAKING = "Buscar ángulo: el tema está en su pico y hace falta un enfoque propio."
+REASON_NO_STAGE = "Buscar ángulo: hay datos, pero no muestran una etapa clara."
+REASON_LATAM_COVERED = "Buscar ángulo: ya hay bastante cobertura en fuentes de Latinoamérica."
+REASON_PUBLISH = (
+    f"Publicar: tema en crecimiento con encaje alto con la audiencia de 30X (≥ {PUBLISH_MIN_FIT})."
+)
+REASON_NO_FIT = "Buscar ángulo: falta evaluar el encaje con la audiencia de 30X."
+REASON_LOW_FIT = (
+    f"Buscar ángulo: tema en crecimiento, pero el encaje con la audiencia de 30X es menor de "
+    f"{PUBLISH_MIN_FIT}."
+)
+
+
+@dataclass(frozen=True)
+class Advice:
+    recommendation: Recommendation
+    reason: str  # la regla que se cumplió, para que la UI y el MCP la expliquen
+
+
+def recommend(
+    stage: Stage,
+    confidence: Confidence,
+    *,
+    audience_fit: float | None,
+    org_application: int | None,
+    latam_gap: bool | None,
+) -> Advice:
+    """Primera regla que se cumple (CLAUDE.md §7)."""
     if stage.lifecycle is Lifecycle.SATURATED:
-        return Recommendation.DISCARD
-    if stage.insufficient or confidence is Confidence.LOW:
-        return Recommendation.WAIT_FOR_CASE
-    # peaking, o unknown porque ninguna regla se cumple: hay datos, falta ángulo.
-    if stage.lifecycle in (Lifecycle.PEAKING, Lifecycle.UNKNOWN):
-        return Recommendation.FIND_ANGLE
-    # emerging / accelerating: publicar solo si sabemos que encaja con 30X.
-    if audience_fit is not None and audience_fit >= PUBLISH_MIN_FIT:
-        return Recommendation.PUBLISH_NOW
-    return Recommendation.FIND_ANGLE
+        return Advice(Recommendation.DISCARD, REASON_SATURATED)
+    if stage.insufficient:
+        return Advice(Recommendation.WAIT_FOR_CASE, REASON_INSUFFICIENT)
+    if confidence is Confidence.LOW:
+        return Advice(Recommendation.WAIT_FOR_CASE, REASON_LOW_CONFIDENCE)
+    if org_application is not None and org_application <= NO_CASE_MAX_LEVEL:
+        return Advice(Recommendation.WAIT_FOR_CASE, REASON_NO_CASE)
+    if stage.lifecycle is Lifecycle.PEAKING:
+        return Advice(Recommendation.FIND_ANGLE, REASON_PEAKING)
+    # unknown aquí es "ninguna regla se cumple": hay datos, falta ángulo.
+    if stage.lifecycle is Lifecycle.UNKNOWN:
+        return Advice(Recommendation.FIND_ANGLE, REASON_NO_STAGE)
+    if latam_gap is False:
+        return Advice(Recommendation.FIND_ANGLE, REASON_LATAM_COVERED)
+    if audience_fit is None:
+        return Advice(Recommendation.FIND_ANGLE, REASON_NO_FIT)
+    if audience_fit >= PUBLISH_MIN_FIT:
+        return Advice(Recommendation.PUBLISH_NOW, REASON_PUBLISH)
+    return Advice(Recommendation.FIND_ANGLE, REASON_LOW_FIT)

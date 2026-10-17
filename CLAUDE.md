@@ -235,15 +235,17 @@ GET  /health
   − penalizaciones (datos pobres, fuentes duplicadas, muestra pequeña)
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
-- **`recommendation` (implementada en `intelligence/ranking.py`, PR #7).** Primera regla que se cumple:
+- **`recommendation` (implementada en `intelligence/ranking.py`).** Primera regla que se cumple; `recommendation_reason` guarda en texto la regla cumplida, para que la UI y el MCP la expliquen:
   | Etiqueta | Regla |
   |---|---|
   | `discard` | `lifecycle` es `saturated` |
   | `wait_for_case` | datos insuficientes o `confidence` baja |
+  | `wait_for_case` | criterio "aplicación real en organizaciones" ≤ 1: ninguna pieza muestra un caso real |
   | `find_angle` | `lifecycle` es `peaking`, o `unknown` porque ninguna regla se cumple |
+  | `find_angle` | `latam_gap = false`: ya hay mucha cobertura en fuentes latinoamericanas |
   | `publish_now` | `emerging` o `accelerating`, y `audience_fit_score` ≥ 60 |
   | `find_angle` | cualquier otro caso (también mientras no haya audience fit) |
-  **Propuestas pendientes de revisión de Melkin** (17/10): descartar también si `audience_fit_score` < 40; esperar caso también si el criterio "aplicación real en organizaciones" ≤ 1 (no hay caso real en la evidencia); buscar ángulo también si ya hay mucha cobertura en LATAM (`latam_gap = false`); y guardar la regla cumplida en un campo `recommendation_reason` del contrato (avisando en el canal), para que la UI y el MCP puedan explicarla.
+  Decidido el 17/10: un fit bajo **no** descarta (con fit < 40 se descartaban 22 de 37 temas, también los de más momentum); da `find_angle` y la UI muestra la banda de fit.
 - **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita. Jev clasifica el gancho y el formato de cada pieza, y Python calcula el *lift* de cada rasgo entre los outliers y el resto del tema (lift ≥ 2 en ≥ 2 outliers = "patrón observado"; si no, "anecdótico"). El LLM redacta la hipótesis a partir de esa tabla. Con pocos outliers por tema casi todo saldrá "anecdótico", y se dice así.
 - **Los embeddings agrupan, Jev clasifica cada pieza, Python calcula, el LLM evalúa cada tema y redacta, y Jev verifica lo que escribe el LLM.** Cada modelo usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Resultados cacheados en Postgres.
 - **Jev (TypeSafe; lo sugiere el reto): decisiones atómicas sobre piezas.** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel) con probabilidades y, en `choice` y `score`, `confidence`. Las preguntas de una llamada corren en paralelo y el `state` se paga una vez, así que cada entidad se evalúa en **una llamada con todas sus preguntas** (una *batería*):

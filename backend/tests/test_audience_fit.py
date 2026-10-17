@@ -82,6 +82,7 @@ def test_apply_fit_fills_scores_breakdown_and_publish_now():
     assert o.opportunity_score == 64.8
     assert o.score_breakdown is not None and o.score_breakdown.total == 64.8
     assert o.recommendation is Recommendation.PUBLISH_NOW
+    assert o.recommendation_reason is not None and o.recommendation_reason.startswith("Publicar")
     assert o.audience_fit_criteria is not None
     assert [c.criterion for c in o.audience_fit_criteria] == list(FitCriterion)
     assert LLM_PENDING_NOTE not in o.limitations
@@ -93,6 +94,7 @@ def test_low_fit_does_not_publish():
         topic, assessments(dict.fromkeys(FitCriterion, 2), []), sent_urls=sent(topic)
     ).opportunity
     assert o.audience_fit_score == 40.0
+    # org_application = 2: hay caso, así que no espera; con fit 40 busca ángulo.
     assert o.recommendation is Recommendation.FIND_ANGLE
 
 
@@ -119,6 +121,13 @@ def test_citation_to_a_topic_piece_the_llm_did_not_receive_is_dropped():
 
     assert o.audience_fit_criteria is not None
     assert all(c.evidence_urls == [] for c in o.audience_fit_criteria)
+
+
+def test_fit_without_a_real_case_waits_for_one():
+    levels = {**LEVELS, FitCriterion.ORG_APPLICATION: 1}
+    topic = emerging_topic()
+    o = apply_fit(topic, assessments(levels, []), sent_urls=sent(topic)).opportunity
+    assert o.recommendation is Recommendation.WAIT_FOR_CASE
 
 
 def test_failed_fit_stays_null_with_limitation():

@@ -20,7 +20,7 @@ from app.intelligence.ranking import (
     evidence_strength,
     growth_status,
     momentum_score,
-    recommendation,
+    recommend,
     score_breakdown,
 )
 from app.intelligence.velocity import (
@@ -330,6 +330,7 @@ class _ScoreFields(TypedDict):
     source_count: int
     evidence_strength: float
     recommendation: Recommendation
+    recommendation_reason: str
 
 
 def _trend_fields(topic: _ActiveTopic, facts: _TopicFacts, scores: _TopicScores) -> _TrendFields:
@@ -349,6 +350,9 @@ def _score_fields(
     topic: _ActiveTopic, facts: _TopicFacts, scores: _TopicScores, *, saturation: float
 ) -> _ScoreFields:
     mix, gap = _audience(topic.group, facts.ratios)
+    advice = recommend(
+        scores.stage, scores.confidence, audience_fit=None, org_application=None, latam_gap=gap
+    )
     return {
         "audience_mix": mix,
         "latam_gap": gap,
@@ -359,7 +363,8 @@ def _score_fields(
         "confidence": scores.confidence,
         "source_count": len(facts.outlets),
         "evidence_strength": evidence_strength(len(topic.group), len(facts.outlets)),
-        "recommendation": recommendation(scores.stage, scores.confidence, None),
+        "recommendation": advice.recommendation,
+        "recommendation_reason": advice.reason,
     }
 
 

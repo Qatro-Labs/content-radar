@@ -175,6 +175,10 @@ class Opportunity(BaseModel):
     )
     latam_gap: bool | None = Field(description="None = sin datos suficientes para decidir")
     recommendation: Recommendation
+    recommendation_reason: str | None = Field(
+        default=None,
+        description="Regla de §7 que se cumplió, en texto; None en ejecuciones anteriores",
+    )
     why_it_matters: str
     limitations: list[str]
     last_updated: AwareDatetime
