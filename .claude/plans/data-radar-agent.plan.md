@@ -346,7 +346,7 @@ Solo lecturas a través de `app.services.opportunities` (sin queries nuevas) y u
 - **Verificación:** `cd backend && uv run pytest tests/test_agent.py -q`
 - **Commit:** `Add read-only data tools and view actions for the radar agent`
 
-### Paso 3 — Bucle
+### Paso 3 — Bucle [HECHO]
 
 - **Archivos:** `backend/app/agent/runner.py`, `backend/app/agent/model.py`,
   `backend/app/agent/prompts/radar_agent.v1.md`, `backend/tests/test_agent.py`

@@ -364,6 +364,19 @@ TOOL_SCHEMAS: list[ToolParam] = [
 ]
 
 
+@dataclass(frozen=True)
+class PendingStep:
+    kind: StepKind
+    label: str
+
+
+def pending_step(name: str) -> PendingStep:
+    tool = TOOLS.get(name)
+    if tool is None:
+        return PendingStep(StepKind.DATA, labels.UNKNOWN_TOOL_LABEL)
+    return PendingStep(tool.kind, tool.pending_label)
+
+
 async def execute_tool(
     name: str, raw_input: dict[str, object], session: AsyncSession, seen: Seen
 ) -> ToolOutcome:

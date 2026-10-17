@@ -2,11 +2,26 @@
 
 from datetime import UTC, datetime, timedelta
 
+import anthropic
+import httpx
 import pytest
+from anthropic.types import MessageParam, ToolUseBlock
 
-from app.agent.limits import LimitResult, RateLimiter
-from app.agent.tools import Seen, execute_tool
-from app.schemas.agent import ActionEvent, RadarPatch, StepKind
+from app.agent.limits import MAX_STEPS, LimitResult, RateLimiter
+from app.agent.model import ModelTurn, ToolCall
+from app.agent.runner import AGENT_OPERATION, DEFAULT_UNKNOWN, run_agent
+from app.agent.tools import FINAL_ANSWER, Seen, execute_tool
+from app.collectors.usage import UsageMeter
+from app.schemas.agent import (
+    ActionEvent,
+    AnswerEvent,
+    DoneEvent,
+    ErrorCode,
+    ErrorEvent,
+    RadarPatch,
+    StepKind,
+)
+from app.schemas.cost import Provider
 from tests.test_opportunity_routes import add_run, fixture_results
 
 T0 = datetime(2026, 10, 17, 12, tzinfo=UTC)
@@ -100,3 +115,139 @@ async def test_reset_view_patch(session, seeded):
         "selected": None,
         "highlight": [],
     }
+
+
+def turn(*calls: tuple[str, dict], tokens: tuple[int, int] = (100, 20)) -> ModelTurn:
+    tool_calls = [ToolCall(f"toolu_{n}", name, args) for n, (name, args) in enumerate(calls)]
+    blocks = [
+        ToolUseBlock(id=c.id, name=c.name, input=c.input, type="tool_use") for c in tool_calls
+    ]
+    return ModelTurn(list(blocks), tool_calls, tokens[0], tokens[1])
+
+
+def final(
+    text: str = "Agentes de IA acelera.",
+    cited: list[str] | None = None,
+    unknowns: list[str] | None = None,
+    tokens: tuple[int, int] = (100, 20),
+) -> ModelTurn:
+    args = {
+        "text": text,
+        "cited_ids": cited or [],
+        "unknowns": ["Sin datos de LinkedIn."] if unknowns is None else unknowns,
+    }
+    return turn((FINAL_ANSWER, args), tokens=tokens)
+
+
+class ScriptedModel:
+    def __init__(self, turns: list[ModelTurn | Exception]) -> None:
+        self.turns = list(turns)
+        self.force_finals: list[bool] = []
+        self.messages: list[list[MessageParam]] = []
+
+    async def next_turn(self, messages: list[MessageParam], *, force_final: bool) -> ModelTurn:
+        self.force_finals.append(force_final)
+        self.messages.append(list(messages))
+        next_turn = self.turns.pop(0)
+        if isinstance(next_turn, Exception):
+            raise next_turn
+        return next_turn
+
+
+async def run(session, model, meter: UsageMeter | None = None, question: str = "¿Qué acelera?"):
+    return [
+        e
+        async for e in run_agent(
+            question, model=model, session=session, meter=meter or UsageMeter()
+        )
+    ]
+
+
+def kinds(events) -> list[str]:
+    names = {
+        "StepEvent": "step",
+        "ActionEvent": "action",
+        "AnswerEvent": "answer",
+        "ErrorEvent": "error",
+        "DoneEvent": "done",
+    }
+    return [names[type(e).__name__] for e in events]
+
+
+async def test_run_emits_steps_actions_and_answer(session, seeded):
+    model = ScriptedModel(
+        [
+            turn(("list_opportunities", {})),
+            turn(("select_opportunity", {"id": "opp_001"})),
+            final(cited=["opp_001", "opp_inventado"]),
+        ]
+    )
+
+    events = await run(session, model)
+
+    assert kinds(events) == ["step", "step", "step", "step", "action", "answer", "done"]
+    answer = events[-2]
+    assert isinstance(answer, AnswerEvent)
+    assert [c.id for c in answer.cited] == ["opp_001"]
+    assert events[-1] == DoneEvent(steps=2, data_steps=1, view_steps=1)
+
+
+async def test_answer_drops_unseen_urls(session, seeded):
+    text = "Mira https://example.com/mock/1 y https://evil.example/x"
+    model = ScriptedModel([turn(("get_evidence", {"id": "opp_001"})), final(text=text)])
+
+    answer = (await run(session, model))[-2]
+
+    assert isinstance(answer, AnswerEvent)
+    assert "https://example.com/mock/1" in answer.text
+    assert "evil.example" not in answer.text
+
+
+async def test_forces_final_answer_after_max_steps(session, seeded):
+    listing = [turn(("list_opportunities", {})) for _ in range(MAX_STEPS + 1)]
+    model = ScriptedModel([*listing, final()])
+
+    events = await run(session, model)
+
+    assert model.force_finals == [False] * MAX_STEPS + [True, True]
+    assert events[-1].steps == MAX_STEPS
+
+
+async def test_missing_unknowns_get_default_note(session, seeded):
+    model = ScriptedModel([turn(("list_opportunities", {})), final(unknowns=[])])
+
+    answer = (await run(session, model))[-2]
+
+    assert isinstance(answer, AnswerEvent)
+    assert answer.unknowns == [DEFAULT_UNKNOWN]
+
+
+async def test_llm_error_emits_error_then_done(session, seeded):
+    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    model = ScriptedModel([anthropic.APIConnectionError(request=request)])
+
+    events = await run(session, model)
+
+    assert kinds(events) == ["error", "done"]
+    assert isinstance(events[0], ErrorEvent)
+    assert events[0].code is ErrorCode.LLM_UNAVAILABLE
+
+
+async def test_no_data_emits_error(session):
+    events = await run(session, ScriptedModel([]))
+
+    assert kinds(events) == ["error", "done"]
+    assert isinstance(events[0], ErrorEvent)
+    assert events[0].code is ErrorCode.NO_DATA
+
+
+async def test_usage_is_metered(session, seeded):
+    meter = UsageMeter()
+    model = ScriptedModel(
+        [turn(("list_opportunities", {}), tokens=(100, 20)), final(tokens=(150, 30))]
+    )
+
+    await run(session, model, meter)
+
+    usage = meter.counts[(Provider.LLM_TEXT, AGENT_OPERATION)]
+    assert (usage.calls, usage.units, usage.output_units) == (2, 250, 50)
