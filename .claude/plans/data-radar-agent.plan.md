@@ -316,7 +316,7 @@ Solo lecturas a través de `app.services.opportunities` (sin queries nuevas) y u
 
 ## Plan de implementación
 
-### Paso 1 — Contrato y límites
+### Paso 1 — Contrato y límites [HECHO]
 
 - **Archivos:** `backend/app/schemas/agent.py`, `backend/app/agent/__init__.py`,
   `backend/app/agent/limits.py`, `backend/tests/test_agent.py`
