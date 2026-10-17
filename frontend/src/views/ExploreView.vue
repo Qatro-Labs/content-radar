@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useOpportunities, useOpportunitiesEvidence } from '@/api/opportunities'
 import ExploreHeader from '@/components/explore/ExploreHeader.vue'
+import ExploreSidePanel from '@/components/explore/ExploreSidePanel.vue'
 import ExploreSkeleton from '@/components/explore/ExploreSkeleton.vue'
 import PiecesTable from '@/components/explore/PiecesTable.vue'
 import { PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
@@ -24,7 +25,8 @@ const router = useRouter()
 
 const { data: list, isPending, isError, refetch } = useOpportunities(DEFAULT_PERIOD)
 const opportunities = computed(() => list.value?.items ?? [])
-// No hay endpoint de todas las piezas: una petición a /evidence por tema (D5 del plan).
+// No hay endpoint de todas las piezas: una petición a /evidence por tema (D5 del plan
+// fe-dashboard-v2).
 const { evidenceById, refetchFailed } = useOpportunitiesEvidence(() =>
   opportunities.value.map((opportunity) => opportunity.id),
 )
@@ -89,6 +91,12 @@ function toggleFilter(clicked: ExploreFilter) {
   void router.replace({ query: { ...route.query, [EXPLORE_FILTER_PARAM]: next } })
 }
 
+// Se busca entre todas las piezas, no solo las filtradas: la pieza elegida sigue en el panel
+// aunque un filtro la saque de la tabla.
+const selectedPiece = computed(
+  () => view.value.pieces.find((piece) => piece.url === selectedUrl.value) ?? null,
+)
+
 function toggleSelection(url: string) {
   selectedUrl.value = selectedUrl.value === url ? null : url
 }
@@ -141,6 +149,8 @@ const RETRY_BUTTON =
           {{ PERFORMANCE_LEGEND }}
         </p>
       </div>
+
+      <ExploreSidePanel :view :selected="selectedPiece" @clear="selectedUrl = null" />
     </div>
   </div>
 </template>

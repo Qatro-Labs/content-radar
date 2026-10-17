@@ -19,7 +19,7 @@ export const EVIDENCE_LIMIT = 25
 // "Dónde está funcionando" muestra los cinco primeros temas y fuentes.
 const TOP_LIMIT = 5
 
-// Una pieza de la evidencia con el tema al que se atribuye y su puesto en el ranking.
+// Una URL puede estar en la evidencia de varios temas: cada pieza se atribuye a uno solo.
 export type Piece = Evidence & { opportunity: Opportunity; rank: number }
 
 export interface ExploreCounts {
@@ -46,6 +46,7 @@ export interface ExploreViewModel {
   visible: Piece[]
   counts: ExploreCounts
   publishedRange: PublishedRange | null
+  // Los temas cuya evidencia cargó: si alguno falló, la cabecera no lo cuenta.
   topicCount: number
   isCapped: boolean
   topTopics: Opportunity[]
@@ -205,7 +206,6 @@ function describePublished(range: PublishedRange | null, total: number): string 
   return `, ${published} entre el ${range.from} y el ${range.to}`
 }
 
-// Las cifras salen de lo cargado: si la evidencia de algún tema falló, la frase no lo cuenta.
 export function exploreSummary(input: ExploreSummaryInput): string {
   const { counts, topicCount, publishedRange, isCapped } = input
   const pieces = `${formatCount(counts.total)} ${plural(counts.total, 'pieza', 'piezas')}`
