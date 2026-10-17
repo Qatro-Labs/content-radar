@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+import numpy as np
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -18,6 +19,7 @@ from app.intelligence.clustering import cluster, is_broad, representative
 from app.intelligence.embeddings import embed, embedding_text
 from app.intelligence.jev import Judge, PieceJudgment, keep_about_ai
 from app.intelligence.opportunities import Piece, TopicResult, build_opportunities
+from app.intelligence.replicas import StoryAssignment
 from app.models import ContentItem, MetricSnapshot, OpportunityRecord, PipelineRun, Source
 from app.schemas.opportunity import (
     Confidence,
@@ -148,15 +150,27 @@ async def compute_opportunities(
         return ComputedOpportunities(0, removed, [], ReplicaStats(0, 0, 0, 0, 0, 0, 0))
     vectors = embed([embedding_text(p.title, p.description) for p in pieces])
     clusters = cluster(vectors)
-    reps = [representative(vectors, c) for c in clusters]
     # Entre clustering y scores: los pares se buscan dentro de cada tema (CLAUDE.md §7).
     stories, replica_stats = await detect_replicas(
         session, pieces, clusters, vectors, judge=judge, meter=meter
     )
-    results = build_opportunities(
+    results = _scored_topics(pieces, vectors, clusters, loaded=loaded, stories=stories, as_of=as_of)
+    return ComputedOpportunities(len(pieces), removed, results, replica_stats)
+
+
+def _scored_topics(
+    pieces: list[Piece],
+    vectors: np.ndarray,
+    clusters: list[list[int]],
+    *,
+    loaded: list[Piece],
+    stories: StoryAssignment,
+    as_of: datetime,
+) -> list[TopicResult]:
+    return build_opportunities(
         pieces,
         clusters,
-        reps,
+        [representative(vectors, c) for c in clusters],
         as_of=as_of,
         monitoring_started_at=MONITORING_STARTED_AT,
         broad=[is_broad(vectors, c) for c in clusters],
@@ -165,7 +179,6 @@ async def compute_opportunities(
         reference=loaded,
         stories=stories,
     )
-    return ComputedOpportunities(len(pieces), removed, results, replica_stats)
 
 
 async def save_opportunities(session: AsyncSession, run_id: int, results: list[TopicResult]):

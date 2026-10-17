@@ -162,13 +162,24 @@ async def detect_replicas(
         judged = await _judge_missing(session, by_key, cached, judge=judge, meter=meter)
 
     stories = group_stories(pieces, edges + _decided_edges(candidates, keys, judged.answers))
-    return stories, ReplicaStats(
-        candidates=len(candidates),
+    stats = _stats(keys, cached, judged, stories)
+    stats.skipped_reason = SKIPPED_WITHOUT_KEY if judge is None else None
+    return stories, stats
+
+
+def _stats(
+    keys: Sequence[str],
+    cached: dict[str, dict[str, Any]],
+    judged: _Judged,
+    stories: StoryAssignment,
+) -> ReplicaStats:
+    # Por par candidato: dos pares con el mismo state comparten llamada pero cuentan los dos.
+    return ReplicaStats(
+        candidates=len(keys),
         judged=sum(key in judged.new for key in keys),
         cached=sum(key in cached for key in keys),
         failed=sum(key in judged.failed for key in keys),
         over_budget=sum(key in judged.over_budget for key in keys),
         replicas=len(stories.replica_ids),
         unverified=len(stories.unverified),
-        skipped_reason=SKIPPED_WITHOUT_KEY if judge is None else None,
     )

@@ -203,31 +203,6 @@ def _timeline(oid: str, published: Sequence[datetime], as_of: datetime) -> Oppor
     return OpportunityTimeline(opportunity_id=oid, window_days=days, points=points)
 
 
-def _limitations(
-    growth: GrowthStatus,
-    *,
-    platforms: set[Platform],
-    ratios: list[float | None],
-    since: datetime,
-    broad: bool,
-    replicas: int,
-    unverified: bool,
-) -> list[str]:
-    notes = [
-        f"El monitoreo comenzó el {since:%d/%m}: los periodos anteriores no son históricos.",
-        LLM_PENDING_NOTE,
-    ]
-    if growth is not GrowthStatus.OBSERVED:
-        notes.append("Crecimiento no observado en dos ventanas: es estimado o preliminar.")
-    if len(platforms) == 1:
-        notes.append(f"Solo aparece en una plataforma ({next(iter(platforms)).value}).")
-    if all(r is None for r in ratios):
-        notes.append("Ninguna pieza tiene referencia para calcular outliers.")
-    if broad:
-        notes.append(BROAD_TOPIC_NOTE)
-    return notes + replica_notes(replicas, unverified=unverified)
-
-
 def _stable_id(group: Sequence[Piece]) -> str:
     # Anclado a la pieza más antigua: el frontend y el MCP guardan el id entre ejecuciones, y
     # sigue igual mientras esa pieza esté en el cluster y dentro del LOOKBACK.
@@ -311,6 +286,25 @@ def _topic_facts(
 
 def _originals(group: Sequence[Piece], stories: StoryAssignment) -> list[Piece]:
     return [p for p in group if p.item_id not in stories.replica_ids]
+
+
+def _limitations(
+    growth: GrowthStatus, facts: _TopicFacts, *, since: datetime, broad: bool
+) -> list[str]:
+    platforms, ratios = facts.platforms, facts.ratios
+    notes = [
+        f"El monitoreo comenzó el {since:%d/%m}: los periodos anteriores no son históricos.",
+        LLM_PENDING_NOTE,
+    ]
+    if growth is not GrowthStatus.OBSERVED:
+        notes.append("Crecimiento no observado en dos ventanas: es estimado o preliminar.")
+    if len(platforms) == 1:
+        notes.append(f"Solo aparece en una plataforma ({next(iter(platforms)).value}).")
+    if all(r is None for r in ratios):
+        notes.append("Ninguna pieza tiene referencia para calcular outliers.")
+    if broad:
+        notes.append(BROAD_TOPIC_NOTE)
+    return notes + replica_notes(facts.replica_count, unverified=facts.unverified)
 
 
 @dataclass
@@ -447,13 +441,7 @@ def _opportunity(
         **_score_fields(topic, facts, scores, saturation=saturation),
         why_it_matters=_why_it_matters(topic, len(facts.outlets), facts.outlier_count),
         limitations=_limitations(
-            scores.growth,
-            platforms=facts.platforms,
-            ratios=facts.ratios,
-            since=monitoring_started_at,
-            broad=topic.broad,
-            replicas=facts.replica_count,
-            unverified=facts.unverified,
+            scores.growth, facts, since=monitoring_started_at, broad=topic.broad
         ),
         last_updated=as_of,
     )
@@ -523,6 +511,16 @@ def _topic_result(
     return TopicResult(opportunity, evidence, timeline, stage, pieces, facts.replica_ids)
 
 
+def _story_saturation(
+    topics: Sequence[_ActiveTopic], stories: StoryAssignment, as_of: datetime
+) -> list[float]:
+    # Cuenta notas, no copias (CLAUDE.md §7); la velocidad sigue por pieza.
+    counts = [
+        window_counts([p.published_at for p in _originals(t.group, stories)], as_of) for t in topics
+    ]
+    return saturation_scores([c.current + c.previous for c in counts])
+
+
 def build_opportunities(
     pieces: Sequence[Piece],
     clusters: Sequence[Sequence[int]],
@@ -541,12 +539,8 @@ def build_opportunities(
     if not topics:
         return []
 
-    # Saturación y velocidad se normalizan entre temas: necesitan todos los temas activos. La
-    # saturación cuenta notas, no copias; la velocidad sigue por pieza.
-    story_counts = [
-        window_counts([p.published_at for p in _originals(t.group, stories)], as_of) for t in topics
-    ]
-    saturation = saturation_scores([c.current + c.previous for c in story_counts])
+    # Saturación y velocidad se normalizan entre temas: necesitan todos los temas activos.
+    saturation = _story_saturation(topics, stories, as_of)
     velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
 
     results = [
