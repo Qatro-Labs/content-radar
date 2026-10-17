@@ -278,6 +278,39 @@ Si al empezar `origin/intel/engine` o `origin/data/opportunity-routes` ya se mer
   - al atenuar, la burbuja pasaba de una serie a otra, se recreaba y volvía a entrar en vez de fundirse (G3).
 - **Descartado:** dos series de burbujas (causa G1–G3).
 
+### D14 — Correcciones de la auditoría (coordinador, tras `code-standards-auditor`: `fix-then-ship`)
+
+- **Tipo de evidencia junto a la aceleración** (blocker, CLAUDE.md §2.3 y §2.5; DESIGN.md §4 pide el badge "siempre
+  visible junto al dato"). En el ranking y en la tarjeta flotante, si `growth_status !== 'observed'`, la aceleración
+  lleva `· Estimado` o `· Preliminar` (`GROWTH_LABEL`), en el color Apagado. Ejemplo: "↑ +67 % · Estimado". El panel
+  ya lo muestra.
+- **Frase de la cabecera:** "Hay N temas con datos suficientes esta semana." pasa a "Hay N temas analizados esta
+  semana.". La cuenta incluye temas `preliminary`, así que "datos suficientes" no es verdad.
+- **Atenuado con fundido (G3):** `universalTransition: true` en la serie de burbujas y `use(UniversalTransition)` en
+  `lib/echarts.ts`. ECharts 6.1 no anima la opacidad con `animationDurationUpdate`; medido por el paso 8b, así queda
+  en ~340 ms.
+- **La mira y las lecturas esperan** a que el haz detecte la seleccionada, igual que el anillo y la tarjeta (hoy
+  aparecen en t = 0).
+- **Tokens** que faltan en `main.css` (`:root` y `@theme inline` → clases de Tailwind), y se sustituyen todos los
+  hex sueltos de los componentes:
+
+  | Token | Valor | Rol |
+  |---|---|---|
+  | `--label` | #4A505A | Etiqueta |
+  | `--data-line` | #E2E5E9 | Línea de dato |
+  | `--table-line` | #EEF0F2 | Línea de tabla |
+  | `--sample` | #FFF0DC | Chip "Datos de ejemplo" (texto `--notice-foreground`) |
+  | `--secondary-hover` | #E8EAED | Hover del secundario |
+  | `--primary-hover` | #2A2E35 | Hover del primario |
+  | `--ink-read` | #22262C | Tinta de lectura |
+  | `--neutral-action` | #F0F1F3 | Fondo de "Buscar ángulo" y "Esperar caso" |
+  | `--negative-bg` | #FDE8E9 | Fondo de "Descartar" |
+  | `--audience-business` | #8A919C | Segmento Negocio |
+  | `--saturation` | #FF9A3C | Barra de saturación |
+
+  `radarChart.ts` deja de copiar `--card`, `--foreground` y `--muted-foreground` como literales: los resuelve con
+  `getComputedStyle`, junto a la paleta de etapas. `DESIGN.md` §11 documenta los tokens nuevos.
+
 ## Diseño de módulos
 
 - **Seam principal: `buildRadarView(list, query)`** en `src/lib/radarView.ts`, función pura. Entra la
@@ -482,7 +515,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm test radarChart && pnpm lint && pnpm type-check`
 - **Commit:** `Draw the opportunity radar with sweep, pulse and selection layers`
 
-### Paso 8b — Entrada sincronizada con el barrido y atenuado sin saltos (D13)
+### Paso 8b — Entrada sincronizada con el barrido y atenuado sin saltos (D13) [HECHO]
 
 - **Archivos:**
   - `frontend/src/lib/radarChart.ts` y `frontend/src/lib/__tests__/radarChart.spec.ts`;
@@ -507,6 +540,45 @@ visual del contexto verificado.
     - tras el barrido laten las que crecen;
     - con `?lifecycle=peaking,saturated`, la burbuja que latía se atenúa en su sitio (~320 ms), sin desaparecer.
 - **Commit:** `Sync the bubble entry with the sweep and fade dimmed bubbles in place`
+
+### Paso 13 — Correcciones de la auditoría (D14)
+
+- **Archivos:**
+  - `frontend/src/assets/main.css` y `DESIGN.md` §11;
+  - los componentes con hex sueltos:
+    - `components/opportunities/{RecommendationChip,MetricBar}.vue`;
+    - `components/radar/{WhyItMattersCard,OpportunityDetail,OpportunityRanking,AudienceMixCard,RadarFilters,RadarSelectionLayer,RadarFloatingCard,OpportunityRadar}.vue`;
+    - `components/layout/AppHeader.vue`;
+  - nuevo `components/radar/RankingRow.vue`;
+  - `lib/{radarChart,radarView,lifecycle,echarts}.ts`;
+  - `components/radar/RadarStates.vue` y `components/layout/DataStatus.vue`;
+  - `api/__tests__/opportunities.spec.ts` y `lib/__tests__/{radarView,radarChart}.spec.ts`;
+  - `frontend/vite.config.ts`.
+- **Cambio:**
+  1. D14.
+  2. `OpportunityRanking` baja de 200 líneas: la fila sale a `RankingRow.vue`.
+  3. `lifecycle.ts`: fuera el flag `{ ownStroke }`. `name` se tipa como `Lifecycle` y la variable del trazo se pasa
+     explícita por etapa.
+  4. `opportunities.spec.ts` importa `LIFECYCLES` y `CONFIDENCES` de `@/lib/radarQuery` y `SCORE_MAX` de
+     `@/lib/opportunityFormat`. Solo `RECOMMENDATIONS` y `GROWTH_STATUSES` quedan locales.
+  5. `PLOT_ASPECT` (la proporción CSS) se exporta una sola vez desde `lib/radarChart.ts` y lo usan
+     `OpportunityRadar` y `RadarStates`.
+  6. `DataStatus`: `motion-reduce:animate-none` en el `animate-pulse`.
+  7. `vite.config.ts`: `build.rollupOptions.output.manualChunks` separa `echarts`/`vue-echarts` en su propio chunk,
+     para que no salga el aviso de 711 kB.
+- **Test primero:**
+  - `radarView.spec.ts`: actualiza las dos expectativas de la frase ("Hay 5 temas analizados esta semana." y la del
+    singular).
+  - `radarChart.spec.ts`: la serie de burbujas lleva `universalTransition: true`.
+  - Si sacas a `lib` el texto de la aceleración con su tipo de evidencia, añade tres casos (observed sin sufijo,
+    estimated "· Estimado", preliminary "· Preliminar").
+- **Verificación:** `cd frontend && pnpm lint && pnpm type-check && pnpm test && pnpm build`.
+  - El build no avisa de chunks de más de 500 kB.
+  - `grep -rnE "#[0-9a-fA-F]{6}" frontend/src/components frontend/src/lib --include=*.vue --include=*.ts` solo
+    devuelve casos justificados con un comentario, o ninguno.
+  - Manual con fixtures: opp_002 y opp_005 muestran su sufijo en el ranking y en la tarjeta flotante; el atenuado se
+    funde.
+- **Commit:** uno por bloque, si cabe: tokens, evidencia y frase, fundido y mira, refactors.
 
 ### Paso 9 — Panel de detalle y bento [HECHO]
 
