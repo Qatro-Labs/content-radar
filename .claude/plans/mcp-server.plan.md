@@ -510,7 +510,7 @@ Antes de empezar: `git checkout -b intel/mcp-server` desde `main` @ `2f546a2` y 
 "Contexto verificado del código" que toca cada paso. Si algo no coincide, anotarlo en "Preguntas
 abiertas", gate `BLOQUEADO`, y parar.
 
-### Paso 1 — Mover `SessionFactory`, `OPPORTUNITY_ID_PATTERN` y `clean_tree` (D6)
+### Paso 1 — Mover `SessionFactory`, `OPPORTUNITY_ID_PATTERN` y `clean_tree` (D6) [HECHO]
 
 - **Archivos:** `backend/app/db/session.py`, `backend/app/api/routes/agent.py`,
   `backend/app/schemas/opportunity.py`, `backend/app/agent/tools.py`, `backend/app/agent/sanitize.py`

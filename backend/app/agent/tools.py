@@ -28,6 +28,7 @@ from app.agent.limits import MAX_ANSWER_WORDS
 from app.agent.sanitize import clean_external, wrap_data
 from app.schemas.agent import CitedOpportunity, RadarPatch, RadarSort, StepKind
 from app.schemas.opportunity import (
+    OPPORTUNITY_ID_PATTERN,
     AudienceMix,
     Confidence,
     GrowthStatus,
@@ -42,7 +43,6 @@ MAX_LISTED = 10
 MAX_EVIDENCE = 5
 MAX_HIGHLIGHTED = 5
 MAX_TOPIC_ARG_CHARS = 60
-OPPORTUNITY_ID_PATTERN = r"^opp_[A-Za-z0-9_]{1,64}$"
 FINAL_ANSWER = "final_answer"
 DECLINE = "decline"
 OK_CONTENT = "ok"
