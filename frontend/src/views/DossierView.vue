@@ -13,9 +13,11 @@ import DossierEvolution from '@/components/dossier/DossierEvolution.vue'
 import DossierHeader from '@/components/dossier/DossierHeader.vue'
 import DossierStates, { DossierPlaceholder } from '@/components/dossier/DossierStates.vue'
 import EvidenceSection from '@/components/dossier/EvidenceSection.vue'
+import NextStep from '@/components/dossier/NextStep.vue'
 import ScoreComposition from '@/components/dossier/ScoreComposition.vue'
 import WhyItMattersSection from '@/components/dossier/WhyItMattersSection.vue'
 import { rankLabel, rankOf } from '@/lib/dossierView'
+import { formatUtcTimestamp } from '@/lib/format'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 import type { components } from '@/types/api'
 
@@ -71,6 +73,7 @@ function cite(url: string | null) {
 const rankText = computed(() =>
   listQuery.isPending.value ? null : rankLabel(rankOf(listQuery.data.value, id.value)),
 )
+const monitoringStartedAt = computed(() => listQuery.data.value?.monitoring_started_at ?? null)
 </script>
 
 <template>
@@ -94,5 +97,16 @@ const rankText = computed(() =>
       :cited-url="citedUrl"
       @retry="evidenceQuery.refetch()"
     />
+    <NextStep :opportunity />
+
+    <!-- DESIGN.md §9: desde cuándo se monitorea va siempre a la vista, y el encaje y la saturación
+         se rotulan para que no se lean como mediciones absolutas (CLAUDE.md §2.3). -->
+    <p class="px-1 text-[13.5px] text-muted-foreground">
+      <template v-if="monitoringStartedAt">
+        Datos desde el {{ formatUtcTimestamp(monitoringStartedAt) }}.
+      </template>
+      La saturación se mide dentro de las fuentes monitoreadas. El encaje es una evaluación
+      editorial, no una medición. Los enlaces abren la pieza original.
+    </p>
   </div>
 </template>

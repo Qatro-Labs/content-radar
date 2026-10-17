@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import ScoreRing from '@/components/opportunities/ScoreRing.vue'
-import { componentRows, describePenalties } from '@/lib/dossierView'
+import { componentRows, compositionSubline } from '@/lib/dossierView'
 import { formatScore, SCORE_MAX } from '@/lib/opportunityFormat'
 import type { components } from '@/types/api'
 
@@ -20,11 +20,7 @@ const BAR_STAGGER_MS = 50
 const breakdown = computed(() => opportunity.score_breakdown ?? null)
 const rows = computed(() => (breakdown.value ? componentRows(breakdown.value) : []))
 
-const subline = computed(() => {
-  const parts = ['Oportunidad', rankText]
-  if (breakdown.value) parts.push(describePenalties(breakdown.value.penalties))
-  return parts.filter((part) => part !== null).join(' · ')
-})
+const subline = computed(() => compositionSubline(rankText, breakdown.value))
 </script>
 
 <template>

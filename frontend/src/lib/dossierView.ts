@@ -155,6 +155,18 @@ export function describePenalties(penalties: readonly ScorePenalty[]): string {
     .join(LIST_SEPARATOR)
 }
 
+// "Oportunidad · puesto 3 de 38 · sin penalizaciones". Sin `rankText` (la lista aún no llegó) se
+// omite el puesto; sin desglose no hay penalizaciones que contar.
+export function compositionSubline(
+  rankText: string | null,
+  breakdown: ScoreBreakdown | null,
+): string {
+  const parts = ['Oportunidad']
+  if (rankText !== null) parts.push(rankText)
+  if (breakdown !== null) parts.push(describePenalties(breakdown.penalties))
+  return parts.join(LIST_SEPARATOR)
+}
+
 export const CRITERION_LABEL: Record<FitCriterion, string> = {
   business_impact: 'Impacto en decisiones empresariales',
   org_application: 'Aplicación real en organizaciones',
