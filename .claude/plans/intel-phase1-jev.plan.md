@@ -372,7 +372,7 @@ uv run python -m app.jobs.analyze
 | --- | --- | --- | --- |
 | 2026-10-17 16:50 | Sin `TYPESAFE_API_KEY` y fit asignado a Jev | Tras #8 el fit pasa al LLM (parte C); la clave ya está en `backend/.env` | — |
 | 2026-10-17 17:50 | Migración de Steven con head duplicado | Steven la encadenó (`0b34f85`); consumo con `UsageMeter` + `record_meter` (D12) | — |
-| 2026-10-17 20:15 | v1: relevancia incierta en el 45 %, legibilidad en el 61 % y `latam_context` con sí en el 86 % de España | Melkin: "relevante" no es lo que interesa; `about_ai` filtra y `business_use` es pista. Batería v2 (una condición por pregunta), probada en 120 piezas y aplicada al corpus (run #18, 1074 piezas, 0 fallidas): `about_ai` 14,9 % incierto, `launch` 13 %, `tech_jargon` 21,5 %, `latam_context` sí en España 0 %. Umbrales sin tocar hasta validar con las 40 piezas etiquetadas a mano | `5af6a01`, `9b0f70a` |
+| 2026-10-17 18:15 | v1: relevancia incierta en el 45 %, legibilidad en el 61 % y `latam_context` con sí en el 86 % de España | Melkin: "relevante" no es lo que interesa; `about_ai` filtra y `business_use` es pista. Batería v2 (una condición por pregunta), probada en 120 piezas y aplicada al corpus (run #18, 1074 piezas, 0 fallidas): `about_ai` 14,9 % incierto, `launch` 13 %, `tech_jargon` 21,5 %, `latam_context` sí en España 0 %. Umbrales sin tocar hasta validar con las 40 piezas etiquetadas a mano | `5af6a01`, `9b0f70a` |
 
 ## Preguntas abiertas
 
