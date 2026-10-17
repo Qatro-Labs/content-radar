@@ -881,7 +881,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 
 ### Parte A — Backend (rama `fe/radar-agent-backend`, checkout principal)
 
-#### Paso A.1 — Filtros, reset, etiquetas y tools nuevas
+#### Paso A.1 — Filtros, reset, etiquetas y tools nuevas [HECHO]
 
 - **Archivos:** `backend/app/agent/tools.py`, `backend/app/agent/labels.py`, `backend/tests/test_agent.py`
 - **Cambio:** lo de «Backend (parte A)» para `tools.py` y `labels.py`.
@@ -903,7 +903,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd backend && uv run pytest tests/test_agent.py -q && uv run pyright app/agent`
 - **Commit:** `Add dossier, search and recommendation tools to the radar agent`
 
-#### Paso A.2 — Contexto de conversación y paso de respaldo
+#### Paso A.2 — Contexto de conversación y paso de respaldo [HECHO]
 
 - **Archivos:** `backend/app/agent/context.py`, `backend/app/agent/sanitize.py`, `backend/app/agent/runner.py`,
   `backend/app/api/routes/agent.py`, `backend/tests/test_agent.py`
@@ -931,7 +931,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
   app/api/routes/agent.py`
 - **Commit:** `Give the radar agent conversation context and a view fallback step`
 
-#### Paso A.3 — Prompt v2 y límites
+#### Paso A.3 — Prompt v2 y límites [HECHO]
 
 - **Archivos:** `backend/app/agent/prompts/radar_agent.v2.md`, `backend/app/agent/model.py`,
   `backend/app/agent/limits.py`, `backend/tests/test_agent.py`
