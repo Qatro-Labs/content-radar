@@ -6,8 +6,15 @@ from app.schemas.opportunity import AudienceMix
 from app.schemas.signal import Segment
 
 GAP_MIN_BUSINESS = 0.15  # hay conversación de negocio…
-GAP_MAX_LATAM = 0.10  # …y casi nada en español/LATAM
+GAP_MAX_LATAM = 0.10  # …y casi nada de fuentes latinoamericanas
 COVERED_MIN_LATAM = 0.30  # ya cubierto en la región
+
+# Grupo B del gap (CLAUDE.md §5). España comparte el segmento `latam_es` pero no cuenta: es
+# contexto, no el mercado objetivo.
+LATAM_REGIONS = frozenset(
+    {"latam", "ar", "bo", "br", "cl", "co", "cr", "cu", "do", "ec", "gt", "hn", "mx", "ni",
+     "pa", "pe", "pr", "py", "sv", "uy", "ve"}
+)  # fmt: skip
 
 
 def audience_mix(pieces: Sequence[tuple[Segment, float]]) -> AudienceMix | None:
@@ -27,14 +34,25 @@ def audience_mix(pieces: Sequence[tuple[Segment, float]]) -> AudienceMix | None:
     )
 
 
-def latam_gap(mix: AudienceMix | None) -> bool | None:
+def latam_share(pieces: Sequence[tuple[str | None, float]]) -> float | None:
+    """`pieces` = (región de la fuente, peso). Proporción del peso que viene de LATAM.
+    None si no hay peso.
+    """
+    total = sum(max(weight, 0.0) for _, weight in pieces)
+    if total == 0:
+        return None
+    latam = sum(max(weight, 0.0) for region, weight in pieces if region in LATAM_REGIONS)
+    return round(latam / total, 3)
+
+
+def latam_gap(mix: AudienceMix | None, latam: float | None) -> bool | None:
     """True = negocio presente y LATAM ausente. False = ya cubierto en la región.
     None = no hay señal de negocio suficiente para decidir.
     """
-    if mix is None:
+    if mix is None or latam is None:
         return None
-    if mix.latam_es >= COVERED_MIN_LATAM:
+    if latam >= COVERED_MIN_LATAM:
         return False
-    if mix.business >= GAP_MIN_BUSINESS and mix.latam_es < GAP_MAX_LATAM:
+    if mix.business >= GAP_MIN_BUSINESS and latam < GAP_MAX_LATAM:
         return True
     return None

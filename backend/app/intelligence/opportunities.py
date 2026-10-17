@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from app.intelligence import outliers as out
-from app.intelligence.audience_mix import audience_mix, latam_gap
+from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
 from app.intelligence.lifecycle import classify
 from app.intelligence.ranking import (
@@ -55,6 +55,7 @@ class Piece:
     observed_at: datetime  # última observación
     metrics: Metrics  # último snapshot (vacío si la fuente no expone métricas)
     snapshots: list[tuple[datetime, Metrics]] = field(default_factory=list)
+    region: str | None = None  # de la fuente; decide si cuenta para el LATAM Gap
 
 
 @dataclass
@@ -180,12 +181,9 @@ def build_opportunities(
         flagged = [r for r in group_ratios if r is not None]
         outlier_count = sum(r >= out.OUTLIER_RATIO for r in flagged)
 
-        mix = audience_mix(
-            [
-                (p.segment, min(max(r or 1.0, MIX_WEIGHT_MIN), MIX_WEIGHT_MAX))
-                for p, r in zip(group, group_ratios, strict=True)
-            ]
-        )
+        weights = [min(max(r or 1.0, MIX_WEIGHT_MIN), MIX_WEIGHT_MAX) for r in group_ratios]
+        mix = audience_mix([(p.segment, w) for p, w in zip(group, weights, strict=True)])
+        latam = latam_share([(p.region, w) for p, w in zip(group, weights, strict=True)])
         assert mix is not None  # el grupo nunca está vacío
         stage = classify(
             acceleration=vel.acceleration,
@@ -230,7 +228,7 @@ def build_opportunities(
             confidence=conf,
             source_count=len(outlets),
             evidence_strength=evidence_strength(len(group), len(outlets)),
-            latam_gap=latam_gap(mix),
+            latam_gap=latam_gap(mix, latam),
             recommendation=recommendation(stage, conf, None),
             why_it_matters=(
                 f"Pendiente de análisis editorial. Señales medidas: {counts.current} piezas en "
