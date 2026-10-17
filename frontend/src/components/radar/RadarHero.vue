@@ -21,7 +21,12 @@ const counters = computed(() => [
     label: 'emergentes',
     dotVar: LIFECYCLE_STYLE.emerging.cssVar.fill,
   },
-  { key: 'latamGap', value: props.view.counts.latamGap, label: 'con hueco en LATAM', dotVar: null },
+  {
+    key: 'unknown',
+    value: props.view.counts.unknown,
+    label: 'sin etapa',
+    dotVar: LIFECYCLE_STYLE.unknown.cssVar.fill,
+  },
 ])
 </script>
 

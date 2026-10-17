@@ -26,6 +26,7 @@ const { plotted } = buildRadarView(list, {
   highlight: [],
   gap: false,
   sort: 'opportunity',
+  recommendation: null,
 })
 
 // Paleta fija con los colores de DESIGN.md §2; en la app se lee de las variables de main.css.
