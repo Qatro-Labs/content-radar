@@ -145,7 +145,7 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Community Sensor | El equipo o la comunidad pega enlaces de redes cerradas y los etiqueta | Reto (§1) | `collectors/manual`, `POST /signals/manual` | P1 |
 | LinkedIn Sensor | Posts curados por reacción (API de portabilidad DMA) o por URL, con métricas reales de los exports de 30X y Bilbao, mostrados con el embed oficial | Propia | `collectors/linkedin_dma`, `jobs/import_linkedin_export` | P1 |
 | Claim Verification | Verifica cada afirmación del LLM contra la evidencia que cita; lo no respaldado no se publica | Cookbook de TypeSafe | Batería de verificación de Jev | P1 · tras el núcleo (CLAUDE.md §12) |
-| LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en fuentes de Latinoamérica (España fuera: decisión del 17/10) | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
+| LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en fuentes de Latinoamérica (España aparte, como contexto) | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
 | MCP Integration | Permite consultar oportunidades, temas y evidencias desde asistentes de IA | Propia | `mcp/` | P1 |
 
 ## 7. Qué podemos afirmar con los datos
@@ -159,7 +159,7 @@ respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
 | Estimación o señal preliminar | Hay una sola observación, o la pieza aparece sin aceleración demostrada (`estimated`, `preliminary`) | Con la etiqueta "estimado" o "preliminar"; es una señal, no crecimiento |
 | Outlier | Existe la referencia comparable (mediana del canal o de la búsqueda) | "6,1× la mediana de su canal". Si falta la referencia: "sin línea base" |
 | Saturación | Siempre, porque es relativa a la muestra | "en las fuentes que monitoreamos" |
-| LATAM Gap | Ambos grupos de fuentes tienen cobertura suficiente (CLAUDE.md §5) | "poca cobertura observada en fuentes latinoamericanas". Es una hipótesis sobre la muestra |
+| LATAM Gap | Ambos grupos de fuentes tienen cobertura suficiente (CLAUDE.md §5) | "poca cobertura observada en fuentes latinoamericanas". Es una hipótesis sobre la muestra; España se muestra aparte |
 | Audience fit | Se aplicó la rúbrica al perfil de 30X | "evaluación editorial asistida por IA", en banda (bajo · medio · alto) con sus 6 niveles y sus justificaciones |
 | Por qué funcionó | Se comparó el outlier con el resto del tema | Como hipótesis, con su limitación al lado |
 | Gancho o estructura | Depende de lo que se haya podido leer | Distinguir "inferido del título" de "revisado en el contenido" |

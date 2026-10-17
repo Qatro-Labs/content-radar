@@ -124,9 +124,10 @@ Cada `source` lleva un **`segment`** (`tech` | `business` | `latam_es`), además
 
 Cada colector devuelve `ContentSignal` normalizado (fuente, url, título/descr., `published_at`, `observed_at`, formato, idioma, métricas públicas). Usar `tenacity` para reintentos. **Empezar a guardar snapshots cuanto antes**: sin historial no hay crecimiento observado.
 
-Grupos para el **LATAM Opportunity Gap** (decidido el 17/10: **target LATAM, detección temprana global (sobre todo USA), España fuera**):
-- **A (global, detección):** HN, YouTube, medios y blogs de labs en inglés: sobre todo USA, donde nacen la mayoría de las tendencias de IA, y también Europa, UK y China. España no entra: es un mercado seguidor, no un origen.
-- **B (LATAM, target):** medios y canales de LATAM, de preferencia de negocio, y los perfiles de 30X y Andrés Bilbao. Las fuentes de España se desactivan (`active: false`). El segment `latam_es` conserva su nombre en el contrato, pero significa "LATAM".
+Grupos para el **LATAM Opportunity Gap** (decidido el 17/10: **target LATAM, detección temprana global, sobre todo USA**):
+- **A (global, detección):** HN, YouTube, medios y blogs de labs en inglés: sobre todo USA, donde nacen la mayoría de las tendencias de IA, y también Europa, UK y China.
+- **B (LATAM, target):** fuentes `latam_es` con `region` latinoamericana (`latam`, `mx`, `co`, `ar`…), de preferencia de negocio, y los perfiles de 30X y Andrés Bilbao.
+- **España:** sus fuentes siguen activas (segmento `latam_es`, `region: es`), pero **no cuentan para el gap**: se muestran aparte como contexto ("en España ya hay N piezas").
 
 ---
 
@@ -212,8 +213,9 @@ GET  /health
   `unknown` se evalúa **antes** que las demás: con datos insuficientes no se asigna etapa aunque otra regla se cumpla. Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
 - **Para quién importa (estilo SparkToro).** `audience_mix` = proporción de la evidencia de cada `segment`, ponderada por el engagement normalizado. Lectura editorial:
   - Mucho `tech`, poco `business` y fit alto → "todavía no llegó a ejecutivos: traducirlo a negocio".
-  - `business` presente y `latam_es` bajo → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
-  - `latam_es` alto → probablemente ya cubierto en la región: buscar otro ángulo.
+  - `business` presente y poca evidencia de fuentes latinoamericanas (grupo B de §5, sin contar España) → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
+  - Mucha evidencia de fuentes latinoamericanas → probablemente ya cubierto en la región: buscar otro ángulo.
+  - `latam_gap` calcula la proporción LATAM solo con piezas de `region` latinoamericana. El `latam_es` del `audience_mix` mezcla España y Latinoamérica, así que en la UI se rotula "en español".
 - **Cross-source:** nº de fuentes **independientes**: un medio o canal cuenta una vez (todas las búsquedas de HN cuentan como una sola fuente). Normalizar métricas dentro de cada fuente. Pendiente: deduplicar notas de prensa replicadas (pares candidatos por embeddings y Jev decide si son la misma nota; mientras tanto, regla de similitud coseno ≥ umbral y fuente distinta).
 - **Saturation:** volumen de contenido similar en la ventana reciente **dentro de las fuentes monitoreadas** (decirlo así en la UI).
 - **Audience Fit (LLM, salida Pydantic):** el LLM evalúa el tema completo en 6 criterios. Para cada uno devuelve primero la justificación, citando ids de evidencia, y después un nivel entero de 0 a 5 (en ese orden, para que razone antes de puntuar). Recibe como pistas los conteos de las etiquetas de Jev por pieza (p. ej. "8 de 20 piezas muestran un caso real"), que la UI muestra como apoyo. Python combina los 6 niveles con pesos en código → `audience_fit_score`; la UI lo muestra como banda (bajo · medio · alto) junto a los 6 niveles, no como precisión al punto. `actionability_score` sale del criterio 6. Criterios:
