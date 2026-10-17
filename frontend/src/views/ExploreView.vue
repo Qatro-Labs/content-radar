@@ -137,7 +137,6 @@ const RETRY_BUTTON =
         <PiecesTable
           v-model:text="text"
           :rows="view.visible"
-          :total="view.counts.total"
           :filter
           :selected-url="selectedUrl"
           @select="toggleSelection"

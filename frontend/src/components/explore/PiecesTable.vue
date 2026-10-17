@@ -7,10 +7,9 @@ import type { ExploreFilter, Piece } from '@/lib/exploreView'
 
 import PieceRow, { PIECES_GRID_CLASS } from './PieceRow.vue'
 
-const { rows, total, filter, selectedUrl } = defineProps<{
+const { rows, filter, selectedUrl } = defineProps<{
   // Las piezas que pasan el filtro y el texto, ya ordenadas.
   rows: Piece[]
-  total: number
   filter: ExploreFilter | null
   selectedUrl: string | null
 }>()
