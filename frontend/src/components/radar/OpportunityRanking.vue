@@ -8,6 +8,7 @@ import {
   formatAcceleration,
   formatOutliers,
   formatScore,
+  GROWTH_LABEL,
   isDeclining,
   SCORE_MAX,
 } from '@/lib/opportunityFormat'
@@ -145,11 +146,21 @@ function resetView() {
             :title="row.lifecycle_reason"
             class="justify-self-start"
           />
-          <span
-            class="font-medium whitespace-nowrap"
-            :class="{ 'text-destructive': isDeclining(row.acceleration) }"
-          >
-            {{ formatAcceleration(row.acceleration) }}
+          <!-- CLAUDE.md §2.5 y DESIGN.md §4: sin dos mediciones, el tipo de evidencia va junto a la
+               aceleración. -->
+          <span class="flex flex-wrap items-baseline gap-x-1">
+            <span
+              class="font-medium whitespace-nowrap"
+              :class="{ 'text-destructive': isDeclining(row.acceleration) }"
+            >
+              {{ formatAcceleration(row.acceleration) }}
+            </span>
+            <span
+              v-if="row.growth_status !== 'observed'"
+              class="whitespace-nowrap text-muted-foreground"
+            >
+              · {{ GROWTH_LABEL[row.growth_status] }}
+            </span>
           </span>
           <span class="text-ink-soft">
             {{ formatOutliers(row.outlier_count, row.top_outlier_ratio) }}

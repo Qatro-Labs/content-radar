@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
-import { formatAcceleration, formatScore } from '@/lib/opportunityFormat'
+import { formatAcceleration, formatScore, GROWTH_LABEL } from '@/lib/opportunityFormat'
 import { translateTo, type PlotPoint } from '@/lib/radarChart'
 import type { PlottedOpportunity } from '@/lib/radarView'
 
@@ -32,9 +32,14 @@ const placement = computed(() => {
   >
     <LifecycleChip :lifecycle="opportunity.lifecycle" size="sm" class="self-start" />
     <span class="text-[15px] leading-tight font-semibold">{{ opportunity.topic }}</span>
+    <!-- CLAUDE.md §2.5 y DESIGN.md §4: sin dos mediciones, el tipo de evidencia va junto a la
+         aceleración. -->
     <span class="text-[13px] text-label">
       Oportunidad {{ formatScore(opportunity.opportunity_score) }} ·
       {{ formatAcceleration(opportunity.acceleration) }}
+      <span v-if="opportunity.growth_status !== 'observed'" class="text-muted-foreground">
+        · {{ GROWTH_LABEL[opportunity.growth_status] }}
+      </span>
     </span>
   </div>
 </template>
