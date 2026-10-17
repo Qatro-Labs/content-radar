@@ -131,7 +131,7 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   negrita. Columnas: Puesto · Tema · Etapa · Aceleración · Outliers · Fuentes · Oportunidad (barra + cifra) · Acción.
 - **Carga:** skeletons con la forma exacta del contenido (#ECEEF1 → #F2F3F5, 1.6s). Nada de spinners circulares.
 - **Vacío:** si hay menos oportunidades que las esperadas, se muestran las que hay y una frase que explica por qué
-  ("Hay 7 temas con datos suficientes esta semana"). Nunca se rellena.
+  ("Hay 7 temas analizados esta semana"). Nunca se rellena.
 - **Error:** inline, en la tarjeta afectada, con qué falló y qué sigue funcionando.
 - **Foco:** anillo de 2px en Tinta con 2px de separación, siempre visible al navegar con teclado.
 
@@ -363,6 +363,17 @@ no el acento de marca; el acento de marca es `--signal`.
   --plot: #F7F8F9;
   --notice: #FFF4E5;
   --notice-foreground: #8A4B00;
+  --label: #4A505A;            /* Etiqueta */
+  --data-line: #E2E5E9;        /* Línea de dato: ejes y líneas medias del radar */
+  --table-line: #EEF0F2;       /* Línea de tabla: filas del ranking */
+  --sample: #FFF0DC;           /* Chip "Datos de ejemplo" (texto --notice-foreground) */
+  --secondary-hover: #E8EAED;  /* Hover del botón secundario */
+  --primary-hover: #2A2E35;    /* Hover del botón primario */
+  --ink-read: #22262C;         /* Tinta de lectura */
+  --neutral-action: #F0F1F3;   /* "Buscar ángulo" y "Esperar caso" */
+  --negative-bg: #FDE8E9;      /* "Descartar" */
+  --audience-business: #8A919C; /* Segmento Negocio de "Para quién importa" */
+  --saturation: #FF9A3C;       /* Barra de saturación */
 
   --lc-emerging: #3D7BFF;      --lc-emerging-bg: #E8F0FF;      --lc-emerging-fg: #1D4FC4;
   --lc-accelerating: #B5E61D;  --lc-accelerating-stroke: #6E8F00;
@@ -390,10 +401,24 @@ no el acento de marca; el acento de marca es `--signal`.
   --color-sunken: var(--sunken);
   --color-notice: var(--notice);
   --color-notice-foreground: var(--notice-foreground);
+  --color-label: var(--label);
+  --color-data-line: var(--data-line);
+  --color-table-line: var(--table-line);
+  --color-sample: var(--sample);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-primary-hover: var(--primary-hover);
+  --color-ink-read: var(--ink-read);
+  --color-neutral-action: var(--neutral-action);
+  --color-negative-bg: var(--negative-bg);
+  --color-audience-business: var(--audience-business);
+  --color-saturation: var(--saturation);
   --radius-card: 1.25rem;
   --radius-tile: 0.875rem;
 }
 ```
 
 Los colores de etapa los consume ECharts desde `src/lib/lifecycle.ts` (un mapa `lifecycle → { fill, stroke, bg, fg, label }`
-que lee estas variables), para que el radar, los chips y la leyenda usen la misma fuente.
+que lee estas variables), para que el radar, los chips y la leyenda usen la misma fuente. Los colores de base del radar
+(`--card`, `--foreground`, `--muted-foreground`) los lee `src/lib/radarChart.ts` de la misma forma. Ningún componente
+escribe un color en hex: cada rol de §2 tiene su variable aquí y su clase de Tailwind (`text-label`,
+`border-table-line`, `hover:bg-secondary-hover`…).

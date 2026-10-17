@@ -29,26 +29,30 @@ describe('useRadarQuery', () => {
 
     expect(radar.query.value).toEqual({
       period: '7d',
-      lifecycle: null,
+      lifecycle: [],
       confidence: null,
       topic: null,
       selected: null,
       highlight: [],
+      gap: false,
+      sort: 'opportunity',
     })
   })
 
   it('reads every radar param from the URL', async () => {
     const { radar } = await mountAt(
-      '/?period=24h&lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004',
+      '/?period=24h&lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004&gap=1&sort=acceleration',
     )
 
     expect(radar.query.value).toEqual({
       period: '24h',
-      lifecycle: 'emerging',
+      lifecycle: ['emerging'],
       confidence: 'high',
       topic: 'agentes',
       selected: 'opp_001',
       highlight: ['opp_001', 'opp_004'],
+      gap: true,
+      sort: 'acceleration',
     })
   })
 
@@ -56,14 +60,31 @@ describe('useRadarQuery', () => {
     const { radar } = await mountAt('/?period=1y&lifecycle=viral&confidence=total')
 
     expect(radar.query.value.period).toBe('7d')
-    expect(radar.query.value.lifecycle).toBeNull()
+    expect(radar.query.value.lifecycle).toEqual([])
     expect(radar.query.value.confidence).toBeNull()
   })
 
   it('takes the first value when a param is repeated', async () => {
     const { radar } = await mountAt('/?lifecycle=peaking&lifecycle=emerging')
 
-    expect(radar.query.value.lifecycle).toBe('peaking')
+    expect(radar.query.value.lifecycle).toEqual(['peaking'])
+  })
+
+  it('keeps the valid stages of a list once, in their order', async () => {
+    const { radar } = await mountAt('/?lifecycle=emerging,bogus,peaking,emerging')
+
+    expect(radar.query.value.lifecycle).toEqual(['emerging', 'peaking'])
+  })
+
+  it('reads the LATAM gap and the ranking sort and writes them back unchanged', async () => {
+    const { radar, router } = await mountAt('/?gap=1&sort=acceleration')
+
+    expect(radar.query.value.gap).toBe(true)
+    expect(radar.query.value.sort).toBe('acceleration')
+
+    await radar.update({})
+
+    expect(router.currentRoute.value.query).toEqual({ gap: '1', sort: 'acceleration' })
   })
 
   it('writes a patch to the URL and keeps unrelated params', async () => {
@@ -82,8 +103,18 @@ describe('useRadarQuery', () => {
   it('drops params that go back to their default', async () => {
     const { radar, router } = await mountAt('/?period=24h&lifecycle=peaking&highlight=opp_001')
 
-    await radar.update({ period: '7d', lifecycle: null, highlight: [] })
+    await radar.update({ period: '7d', lifecycle: [], highlight: [] })
 
     expect(router.currentRoute.value.query).toEqual({})
+  })
+
+  it('drops the stage, gap and sort params on reset and keeps unrelated params', async () => {
+    const { radar, router } = await mountAt(
+      '/?lifecycle=peaking,saturated&gap=1&sort=acceleration&utm=demo',
+    )
+
+    await radar.update({ lifecycle: [], gap: false, sort: 'opportunity' })
+
+    expect(router.currentRoute.value.query).toEqual({ utm: 'demo' })
   })
 })

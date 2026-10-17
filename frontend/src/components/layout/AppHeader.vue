@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 
+import { USING_FIXTURES } from '@/api/opportunities'
 import { RouteName } from '@/router'
 
 import DataStatus from './DataStatus.vue'
+import PeriodControl from './PeriodControl.vue'
 
 const route = useRoute()
 
@@ -38,6 +40,15 @@ const views = [
       </nav>
     </div>
 
-    <DataStatus />
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <DataStatus />
+      <PeriodControl v-if="route.name === RouteName.Discover" />
+      <span
+        v-if="USING_FIXTURES"
+        class="rounded-full bg-sample px-3 py-1.5 text-[13px] font-medium text-notice-foreground"
+      >
+        Datos de ejemplo
+      </span>
+    </div>
   </header>
 </template>
