@@ -237,7 +237,7 @@
       {
         "id": "opp_003",
         "topic": "[MOCK] IA en atención al cliente",
-        "description": "Asistentes de IA que responden a clientes en canales de mensajería y voz.",
+        "description": "Asistentes de IA que responden a clientes en canales de mensajería y voz. 1 republicación no cuenta como fuente independiente.",
         "lifecycle": "peaking",
         "lifecycle_reason": "Saturación ≥ 60 y |aceleración| < 0.2.",
         "growth_status": "observed",
@@ -338,14 +338,15 @@
           "total": 66.1
         },
         "confidence": "high",
-        "source_count": 6,
+        "source_count": 5,
         "evidence_strength": 81,
         "latam_gap": false,
         "recommendation": "find_angle",
         "recommendation_reason": "Buscar ángulo: el tema está en su pico y hace falta un enfoque propio.",
         "why_it_matters": "Tema maduro y ya cubierto en la región; solo vale la pena con un caso concreto o un ángulo de métricas.",
         "limitations": [
-          "La saturación se mide solo dentro de las fuentes monitoreadas."
+          "La saturación se mide solo dentro de las fuentes monitoreadas.",
+          "1 pieza es una republicación de la misma nota: no cuentan como fuentes independientes ni para la saturación."
         ],
         "last_updated": "2026-10-17T09:00:00Z"
       },

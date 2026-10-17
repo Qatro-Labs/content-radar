@@ -109,3 +109,13 @@ def test_fixture_replicas_point_inside_their_topic(raw):
             original = originals[str(e.replica_of)]
             assert original.replica_count >= 1
     assert replicas >= 1  # el fixture enseña al frontend al menos una republicación
+
+
+def test_fixture_replicas_are_explained(raw):
+    # Como en `build_opportunities`: si hay republicaciones, la descripción y las limitaciones
+    # lo dicen.
+    for o in OpportunityList.model_validate(raw["opportunities"]).items:
+        if all(e["replica_of"] is None for e in raw["evidence"][o.id]):
+            continue
+        assert "republicación" in o.description
+        assert any("republicación" in note for note in o.limitations)
