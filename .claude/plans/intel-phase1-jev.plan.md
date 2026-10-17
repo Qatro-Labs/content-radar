@@ -254,7 +254,7 @@ class JudgeResult:
 
 ## Plan de implementación
 
-### Paso 1 — Dependencia, settings y smoke real
+### Paso 1 — Dependencia, settings y smoke real [HECHO]
 
 - **Archivos:** `backend/pyproject.toml`, `backend/uv.lock`, `backend/app/core/config.py`.
 - **Cambio:** D1.
