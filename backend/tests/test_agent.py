@@ -380,6 +380,24 @@ async def test_conversation_context_goes_before_the_question(session, seeded):
     assert first.count("</contexto>") == 1
 
 
+async def test_view_filters_reach_the_model_bounded(session, seeded):
+    # Los filtros los manda el cliente sin límite de tamaño: solo pasan ids servidos y sin repetir.
+    model = ScriptedModel([final()])
+    filters = {
+        "lifecycle": ["accelerating"] * 50,
+        "highlight": ["opp_001", *(f"opp_x{i}" for i in range(50))],
+        "selected": "opp_inexistente",
+    }
+
+    await run(session, model, view={"screen": "radar", "filters": filters})
+
+    first = str(model.messages[0][0]["content"])
+    assert first.count("accelerating") == 1
+    assert "opp_x" not in first
+    assert "opp_inexistente" not in first
+    assert "opp_001" in first
+
+
 async def test_without_context_the_first_message_is_the_question(session, seeded):
     model = ScriptedModel([final()])
 

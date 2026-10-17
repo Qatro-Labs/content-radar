@@ -29,6 +29,21 @@ def _topic_ref(o: Opportunity) -> dict[str, str]:
     return {"id": o.id, "topic": o.topic, "lifecycle": o.lifecycle.value}
 
 
+def _bounded_filters(filters: RadarPatch, served: dict[str, Opportunity]) -> dict[str, object]:
+    # El cliente manda los filtros sin límite de tamaño y van enteros al modelo: solo pasan ids
+    # servidos y etapas sin repetir, para que nadie infle el coste con listas enormes.
+    bounded = filters.model_copy()
+    if filters.lifecycle is not None:
+        bounded.lifecycle = list(dict.fromkeys(filters.lifecycle))
+    if filters.highlight is not None:
+        bounded.highlight = [i for i in dict.fromkeys(filters.highlight) if i in served][
+            :MAX_HIGHLIGHTED
+        ]
+    if filters.selected not in served:
+        bounded.selected = None
+    return bounded.model_dump(mode="json", exclude_none=True)
+
+
 async def build_context(body: AgentQuestion, session: AsyncSession) -> dict[str, object] | None:
     if not (body.history or body.focus_ids or body.view):
         return None
@@ -47,7 +62,7 @@ async def build_context(body: AgentQuestion, session: AsyncSession) -> dict[str,
         "pantalla": view.screen.value if view else None,
         "tema_abierto": _topic_ref(opened) if opened else None,
         "busqueda": view.search if view else None,
-        "filtros": filters.model_dump(mode="json", exclude_none=True) if filters else None,
+        "filtros": _bounded_filters(filters, served) if filters else None,
     }
 
 
