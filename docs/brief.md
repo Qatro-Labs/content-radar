@@ -66,9 +66,9 @@ y dónde la respondemos.
 | "si es una tendencia que recién empieza o una que ya todos copiaron" | Etapa del ciclo de vida y saturación, no solo volumen | `lifecycle` (`emerging` … `saturated`), `saturation_score` |
 | "por qué funcionó: gancho, formato, tema, momento, quién" | Outliers frente a su referencia y contraste con el resto del tema, presentado como hipótesis | CLAUDE.md §7 (outliers y "por qué funcionó") |
 | "ejecutivos y equipos de Latinoamérica aprendiendo IA" | Encaje con la audiencia evaluado contra el perfil de 30X | `audience_fit_score`, `audience_mix`, `latam_gap` |
-| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. LinkedIn entra por vías legítimas: el índice público de Brave (`site:linkedin.com/posts`, uso transitorio), la curación de la comunidad, el embed oficial de LinkedIn y los canales abiertos de sus referentes. Instagram y TikTok entran por curación. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
+| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. Sus términos tampoco permiten usar su contenido obtenido a través de buscadores sin consentimiento del dueño. LinkedIn entra por vías oficiales o con consentimiento: la API de portabilidad (DMA, "un clic = señal" del curador), los exports de analítica de 30X y de Andrés Bilbao, la curación de la comunidad, el embed oficial y los canales abiertos de sus referentes. Instagram y TikTok entran por curación. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
 | "la propia comunidad como sensor" | Sensor editorial: el equipo o la comunidad pega enlaces y los etiqueta | `POST /signals/manual` (P1) |
-| "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe).** Clasifica relevancia, formato y gancho, y puntúa audience fit y accionabilidad con preguntas tipadas. Python combina sus juicios y el LLM generativo solo redacta | CLAUDE.md §7 (Jev) |
+| "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe).** Cuatro baterías de preguntas en paralelo: pieza (relevancia, formato, gancho…), par (notas replicadas), tema (audience fit) y verificación de lo que escribe el LLM. Python combina sus juicios y el LLM generativo solo redacta | CLAUDE.md §7 · [`jev.md`](jev.md) |
 | "el mismo problema que tiene cualquier marca, medio o creador" | El perfil de audiencia es un archivo: cambiarlo adapta el radar a otra marca. En la demo basta con contarlo | `data/audiences/30x.yaml` · "varias audiencias" es P2 |
 | "un prototipo funcional que responda una pregunta concreta" | Una pregunta, respondida con datos reales y evidencia enlazada | La pregunta de CLAUDE.md §1 |
 
@@ -143,7 +143,8 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Historical Tracking | Guarda observaciones y muestra la evolución cuando hay historial | Exploding Topics | `metric_snapshots` (P0) · timeline (P1) | P0 / P1 |
 | Content Recommendations | Propone tema, ángulo y formato por plataforma | SparkToro / vidIQ | `recommendation` (P0) · `editorial/briefs` y vista Create (P1) | P0 / P1 |
 | Community Sensor | El equipo o la comunidad pega enlaces de redes cerradas y los etiqueta | Reto (§1) | `collectors/manual`, `POST /signals/manual` | P1 |
-| LinkedIn Sensor | Posts públicos de LinkedIn desde el índice de Brave (transitorio), mostrados con el embed oficial | Propia | `GET /opportunities/{id}/linkedin`, agregados en `analyze` | P1 |
+| LinkedIn Sensor | Posts curados por reacción (API de portabilidad DMA) o por URL, con métricas reales de los exports de 30X y Bilbao, mostrados con el embed oficial | Propia | `collectors/linkedin_dma`, `jobs/import_linkedin_export` | P1 |
+| Claim Verification | Verifica cada afirmación del LLM contra la evidencia que cita; lo no respaldado no se publica | Cookbook de TypeSafe | Batería de verificación de Jev | P0 |
 | LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en español | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
 | MCP Integration | Permite consultar oportunidades, temas y evidencias desde asistentes de IA | Propia | `mcp/` | P1 |
 
@@ -163,7 +164,8 @@ respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
 | Por qué funcionó | Se comparó el outlier con el resto del tema | Como hipótesis, con su limitación al lado |
 | Gancho o estructura | Depende de lo que se haya podido leer | Distinguir "inferido del título" de "revisado en el contenido" |
 | Fuentes independientes | Tras quitar las republicaciones | Medios distintos, no copias de la misma nota |
-| Presencia en LinkedIn | Brave devolvió posts públicos indexados | "N posts públicos indexados esta semana": es lo que indexa el buscador, no todo LinkedIn |
+| Señal de LinkedIn | La marcó un curador (reacción o URL) o viene del export de su dueño | "Curado por el equipo". Métricas solo si vienen del export del dueño |
+| Afirmación del análisis | Jev la verificó contra la evidencia que cita | Se publica solo si está respaldada; si no, se elimina |
 | Juicio de Jev | Hay respuesta con `confidence` | Con su nivel de confianza; con `confidence < 0.5`, "incierto" |
 | Coste | Se midió nuestro gasto real (APIs, Jev, LLM, hosting) | Con la cifra medida y la proyección mensual etiquetada como estimación. El coste de los servicios pagos se cita como dato de 30X ("miles de dólares al año"); no calculamos ahorros |
 | Clientes MCP | Se probó la conexión | Solo los clientes que se probaron de verdad |
@@ -206,7 +208,8 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
   mensual por separado, con el desglose por proveedor y la fuente de cada precio.
 - Cada juicio de Jev guarda la versión del modelo y su `confidence`. Jev se validó con piezas
   etiquetadas a mano en `data/evaluations/`.
-- El pitch explica cómo entra LinkedIn (índice de Brave, curación y embed oficial), cómo entran
+- El pitch explica cómo entra LinkedIn (API de portabilidad, exports de 30X, curación y embed
+  oficial), cómo entran
   Instagram y TikTok (curación), y por qué así (§2).
 
 **Entrega**
