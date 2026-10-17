@@ -153,6 +153,13 @@ def _step_events(step_id: int, outcome: ToolOutcome) -> list[AgentEvent]:
     return events
 
 
+def _nudge_once(*, already_nudged: bool) -> bool:
+    # Texto suelto sin tools: se descarta y se pide la respuesta final una sola vez.
+    if already_nudged:
+        raise AgentFailedError(ErrorCode.INTERNAL, INTERNAL_MESSAGE)
+    return True
+
+
 async def _run_tools(
     turn: ModelTurn, state: RunState, session: AsyncSession, results: list[ToolResultBlockParam]
 ) -> AsyncIterator[AgentEvent]:
@@ -194,10 +201,7 @@ async def _loop(
             yield answer
             return
         if not turn.tool_calls:
-            # Texto suelto sin tools: se descarta y se pide la respuesta final una sola vez.
-            if nudged:
-                raise AgentFailedError(ErrorCode.INTERNAL, INTERNAL_MESSAGE)
-            nudged = True
+            nudged = _nudge_once(already_nudged=nudged)
             continue
         results: list[ToolResultBlockParam] = []
         async for event in _run_tools(turn, state, session, results):

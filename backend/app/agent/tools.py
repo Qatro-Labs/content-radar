@@ -24,6 +24,7 @@ from pydantic import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent import labels
+from app.agent.limits import MAX_ANSWER_WORDS
 from app.agent.sanitize import clean_external, wrap_data
 from app.schemas.agent import CitedOpportunity, RadarPatch, RadarSort, StepKind
 from app.schemas.opportunity import (
@@ -123,7 +124,7 @@ class DeclineInput(ToolInput):
 
 
 class FinalAnswerInput(ToolInput):
-    text: str = Field(description="Respuesta en español, 120 palabras como máximo")
+    text: str = Field(description=f"Respuesta en español, {MAX_ANSWER_WORDS} palabras como máximo")
     cited_ids: list[str] = Field(description="Ids de las oportunidades en las que se apoya")
     unknowns: list[str] = Field(description="Qué no sabemos: al menos un elemento")
 

@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 
 MAX_STEPS = 8
+# Lo que se lee de un vistazo en la barra del agente (DESIGN.md §7); el corte duro está en D13.
+MAX_ANSWER_WORDS = 120
 MAX_OUTPUT_TOKENS = 1500
 PER_IP_PER_HOUR = 20
 GLOBAL_PER_DAY = 300

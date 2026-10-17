@@ -15,8 +15,8 @@ from starlette.types import ASGIApp
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.agent import runner
-from app.agent.limits import MAX_STEPS, LimitResult, RateLimiter
-from app.agent.model import ModelTurn, ToolCall
+from app.agent.limits import MAX_ANSWER_WORDS, MAX_STEPS, LimitResult, RateLimiter
+from app.agent.model import ModelTurn, ToolCall, system_prompt
 from app.agent.runner import AGENT_OPERATION, DEFAULT_UNKNOWN, run_agent
 from app.agent.sanitize import CANARY
 from app.agent.tools import FINAL_ANSWER, Seen, execute_tool
@@ -557,3 +557,21 @@ async def test_busy_does_not_use_the_ip_quota(seeded, overrides):
 
     assert busy.status_code == 429
     assert accepted.status_code == 200
+
+
+def test_system_prompt_takes_limits_from_code():
+    prompt = system_prompt()
+
+    assert "{{" not in prompt
+    assert f"{MAX_STEPS} pasos" in prompt
+    assert f"{MAX_ANSWER_WORDS} palabras" in prompt
+
+
+async def test_loose_text_turn_forces_the_final_answer_once(session, seeded):
+    loose_text = ModelTurn([], [], 100, 20)
+    model = ScriptedModel([loose_text, final()])
+
+    events = await run(session, model)
+
+    assert model.force_finals == [False, True]
+    assert kinds(events) == ["answer", "done"]
