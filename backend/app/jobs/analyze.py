@@ -20,15 +20,17 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collectors.usage import UsageMeter
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.db.session import SessionLocal, engine
 from app.editorial.evaluator import build_evaluator
+from app.editorial.explanation import build_explainer
 from app.intelligence.jev import build_judge, to_piece_judgment
 from app.intelligence.opportunities import TopicResult, rank
 from app.models import PipelineRun
 from app.services.audience_fit import FitStats, evaluate_topics
 from app.services.classification import ClassificationStats, classify_pieces, load_judgments
 from app.services.costs import record_meter
+from app.services.explanation import ExplainStats, explain_topics
 from app.services.opportunities import (
     ANALYZE_JOB,
     ComputedOpportunities,
@@ -46,6 +48,7 @@ LOCK_KEY = 0x0A7A1F2E  # clave de pg_advisory_lock para este job
 class _Evaluated:
     jev: ClassificationStats
     fit: FitStats
+    explain: ExplainStats
     computed: ComputedOpportunities
     results: list[TopicResult]
 
@@ -60,16 +63,30 @@ async def _evaluate(session: AsyncSession, run_id: int, as_of: datetime) -> _Eva
     judgments = {item_id: to_piece_judgment(item_id, a) for item_id, a in answers.items()}
     computed = await compute_opportunities(session, as_of, pieces=loaded, judgments=judgments)
     llm_meter = UsageMeter()
-    results, fit = await evaluate_topics(
-        session,
-        computed.results,
-        answers=answers,
-        evaluator=build_evaluator(settings),
-        meter=llm_meter,
+    results, fit, explain = await _fit_and_explain(
+        session, computed.results, answers=answers, settings=settings, meter=llm_meter
     )
     await record_meter(session, llm_meter, pipeline_run_id=run_id)
     # El orden se decide después del audience fit: antes no hay Opportunity Score.
-    return _Evaluated(jev, fit, computed, rank(results))
+    return _Evaluated(jev, fit, explain, computed, rank(results))
+
+
+async def _fit_and_explain(
+    session: AsyncSession,
+    results: list[TopicResult],
+    *,
+    answers: dict[int, dict[str, Any]],
+    settings: Settings,
+    meter: UsageMeter,
+) -> tuple[list[TopicResult], FitStats, ExplainStats]:
+    fitted, fit = await evaluate_topics(
+        session, results, answers=answers, evaluator=build_evaluator(settings), meter=meter
+    )
+    # Después del fit y de la recomendación: el texto explica lo que ya calculó Python.
+    explained, explain = await explain_topics(
+        session, fitted, answers=answers, explainer=build_explainer(settings), meter=meter
+    )
+    return explained, fit, explain
 
 
 def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
@@ -82,28 +99,21 @@ def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
         "recommendation": dict(Counter(r.opportunity.recommendation.value for r in e.results)),
         "jev": asdict(e.jev),
         "llm": asdict(e.fit),
+        "explain": asdict(e.explain),
     }
 
 
-async def _run(
-    session: AsyncSession, run_row: PipelineRun
-) -> tuple[ClassificationStats, FitStats, list[TopicResult], dict[str, Any]]:
+async def _run(session: AsyncSession, run_row: PipelineRun) -> tuple[_Evaluated, dict[str, Any]]:
     as_of = datetime.now(UTC)
     evaluated = await _evaluate(session, run_row.id, as_of)
     await save_opportunities(session, run_row.id, evaluated.results)
     stats = _stats(as_of, evaluated)
     run_row.status, run_row.stats = "success", stats
-    return evaluated.jev, evaluated.fit, evaluated.results, stats
+    return evaluated, stats
 
 
-def _print_summary(
-    run_id: int,
-    stats: dict[str, Any],
-    *,
-    jev: ClassificationStats,
-    fit: FitStats,
-    results: list[TopicResult],
-) -> None:
+def _print_summary(run_id: int, stats: dict[str, Any], evaluated: _Evaluated) -> None:
+    jev, fit, explain, results = evaluated.jev, evaluated.fit, evaluated.explain, evaluated.results
     print(
         f"✓ run #{run_id}: {stats['pieces']} piezas · {len(results)} oportunidades · "
         f"{stats['lifecycle']}"
@@ -118,6 +128,10 @@ def _print_summary(
     )
     if fit.skipped_reason:
         print(f"  llm omitido: {fit.skipped_reason}")
+    print(
+        f"  por qué importa: {explain.explained} redactados · {explain.cached} de caché · "
+        f"{explain.failed} fallidos · {explain.without_fit} sin audience fit"
+    )
     print(f"  recomendaciones: {stats['recommendation']}")
     for r in results[:10]:
         o = r.opportunity
@@ -141,7 +155,7 @@ async def main() -> int:
             await session.commit()
 
             try:
-                jev, fit, results, stats = await _run(session, run_row)
+                evaluated, stats = await _run(session, run_row)
             except Exception as e:
                 await session.rollback()
                 run_row.status, run_row.error = "failed", f"{type(e).__name__}: {e}"
@@ -153,7 +167,7 @@ async def main() -> int:
                 await lock_conn.execute(text("select pg_advisory_unlock(:k)"), {"k": LOCK_KEY})
 
     log.info("analyze_done", run=run_row.id, stats=run_row.stats)
-    _print_summary(run_row.id, stats, jev=jev, fit=fit, results=results)
+    _print_summary(run_row.id, stats, evaluated)
     return 0
 
 
