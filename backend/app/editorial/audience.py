@@ -33,7 +33,7 @@ MAX_PIECES = 10
 MAX_DESCRIPTION_CHARS = 500
 MIX_DECIMALS = 2  # el mix redondeado no cambia la clave de caché por ruido entre ejecuciones
 
-# Pistas de Jev que recibe el LLM, con el texto que las describe (batería piece.v2).
+# Pistas de Jev que recibe el LLM, con el texto que las describe (batería piece.v3).
 HINTS = {
     "business_use": "tratan del uso, la adopción o el impacto de la IA en organizaciones",
     "business_case": "describen cómo una organización concreta usa la IA",
