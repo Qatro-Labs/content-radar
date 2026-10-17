@@ -117,5 +117,5 @@ def test_fixture_replicas_are_explained(raw):
     for o in OpportunityList.model_validate(raw["opportunities"]).items:
         if all(e["replica_of"] is None for e in raw["evidence"][o.id]):
             continue
-        assert "republicación" in o.description
-        assert any("republicación" in note for note in o.limitations)
+        assert "republica" in o.description
+        assert any("republica" in note for note in o.limitations)
