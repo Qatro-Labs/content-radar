@@ -1,0 +1,80 @@
+# Perfil editorial de 30X (CLAUDE.md §7). Lo lee el LLM al evaluar el audience fit de cada tema.
+#
+# BORRADOR para revisar. Sale de la web pública de 30X (consultada el 2026-10-17):
+#   - https://30x.com
+#   - https://30x.com/programas
+#   - https://30x.com/ai-for-executives
+#   - https://30x.com/operacionesconai
+# Falta contrastarlo a mano con @crece30x y @andresbilbao (Instagram): qué temas publican de verdad,
+# con qué formatos y qué tono. Lo que no se pueda confirmar ahí se quita o se marca como pendiente.
+status: borrador
+reviewed_by: null # nombre de quien lo revise contra los perfiles de Instagram
+
+audience:
+  summary: >-
+    Fundadores, CEOs, ejecutivos y líderes de equipo de Latinoamérica que quieren aplicar IA en su
+    negocio con criterio y resultados, sin necesidad de saber programar.
+  roles: [fundadores, CEOs y C-level, directivos y líderes de equipo, líderes de operación, líderes comerciales y de growth]
+  region: Latinoamérica (Colombia, México, Perú, Chile, Argentina, Venezuela) y latinos en EE. UU.
+  needs:
+    - pasar de acumular herramientas a dirigir una estrategia de IA
+    - evaluar si una iniciativa de IA crea valor y presentar su business case
+    - escalar la operación, las ventas y el growth de su empresa
+  not_for: >-
+    Quien quiere aprender IA solo a nivel personal, programar o construir agentes a fondo, o
+    buscar una habilidad técnica puntual (descrito así en la página de AI for Executives).
+
+# Pilares: los temas en los que 30X enseña y publica. Cada uno con su fuente en la web.
+pillars:
+  - id: ai_strategy
+    name: Estrategia y gobierno de la IA
+    description: >-
+      Convertir la IA en estrategia, adopción y resultados: ROI, business case, roadmap de
+      implementación, qué delegar, exigir y controlar.
+    source: "ai-for-executives: «Convierte la IA en estrategia, adopción y resultados»"
+  - id: ai_productivity
+    name: Productividad ejecutiva y organizacional con IA
+    description: >-
+      Usar la IA en el trabajo diario del directivo y del equipo, configurar herramientas y crear
+      agentes sin depender de equipos técnicos.
+    source: "ai-for-executives (semanas 1–4) · programas: Second Brain"
+  - id: ai_risk
+    name: Riesgo, control y fallos de la IA
+    description: >-
+      Por qué fallan los proyectos de IA, riesgos (deepfakes, modelos sin control), escalar con
+      control.
+    source: "ai-for-executives: «La IA mal hecha no es gratis. Cuesta caro.» (Zillow, Arup)"
+  - id: sales_growth
+    name: Ventas y growth con IA
+    description: >-
+      Ventas B2B, adquisición, producto y escala, apoyados en IA; vender desde redes y LinkedIn.
+    source: "programas: AI Sales, LinkedIn Sales, Growth Rockstar, Xtreme Growth"
+  - id: operations
+    name: Operaciones y escala sin caos
+    description: >-
+      Playbooks de operación, decisiones con datos (KPI Tree, benchmarks), cuellos de botella y
+      cadencias para que la empresa no dependa de una persona.
+    source: "operacionesconai: «Escalar sin caos es otra cosa»"
+  - id: founder_mindset
+    name: Construir y escalar empresas desde LATAM
+    description: >-
+      Aprender de operadores que han construido empresas de alto crecimiento en la región
+      (Rappi, Mercado Libre…): mentalidad de fundador y crecimiento 10, 20, 30X.
+    source: "30x.com: «Los líderes que construyen son quienes enseñan»"
+
+tone:
+  - directo y de operador: criterio y ejecución por encima de la teoría («Done and good > perfect»)
+  - ambicioso y orientado a resultados de negocio
+  - casos con cifras concretas (p. ej. «95 % de los proyectos de IA no genera impacto medible»)
+  - español de Latinoamérica, sin jerga técnica innecesaria
+
+# PENDIENTE: confirmarlo en @crece30x y @andresbilbao. La web no dice qué formatos publican.
+formats: []
+
+# Qué no encaja con la línea editorial. Borrador deducido del público objetivo; revisar.
+does_not_fit:
+  - detalles técnicos para desarrolladores sin implicación de negocio (librerías, benchmarks, código)
+  - investigación académica sin aplicación en organizaciones
+  - sucesos, polémicas o cotilleo de personas o empresas de IA sin lección para un directivo
+  - gadgets y productos de consumo sin uso empresarial
+  - noticias que solo afectan a un mercado fuera de LATAM, sin traducción a la región
