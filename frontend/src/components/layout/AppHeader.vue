@@ -7,6 +7,7 @@ import { RouteName } from '@/router'
 
 import DataStatus from './DataStatus.vue'
 import PeriodControl from './PeriodControl.vue'
+import SearchButton from './SearchButton.vue'
 
 const route = useRoute()
 
@@ -50,6 +51,8 @@ function isCurrent(routes: readonly string[]): boolean {
           {{ view.label }}
         </RouterLink>
       </nav>
+
+      <SearchButton />
     </div>
 
     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
