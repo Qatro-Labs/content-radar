@@ -759,7 +759,7 @@ comandos de backend se corren desde `backend/`.
   Supabase.
 - **Commit:** `Run replica detection between clustering and scoring in analyze`
 
-### Paso 7 — Tipos del frontend
+### Paso 7 — Tipos del frontend [HECHO]
 
 - **Archivos:** `frontend/src/types/api.ts`
 - **Cambio:** regenerar desde el OpenAPI de la app sin levantar servidor. El archivo se escribe
