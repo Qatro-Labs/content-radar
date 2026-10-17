@@ -189,3 +189,19 @@ def test_id_is_anchored_to_the_oldest_piece():
     assert build_one([*pieces, newer]).opportunity.id == "opp_6"
     tie = piece(0, hours_ago=5 + 6 * 10)  # mismo published_at que la 6, item_id menor
     assert build_one([*pieces, tie]).opportunity.id == "opp_0"
+
+
+def test_broad_topic_has_limitation():
+    pieces = [piece(i, hours_ago=5 + i * 10) for i in range(6)]
+    [r] = build_opportunities(
+        pieces,
+        [list(range(len(pieces)))],
+        [0],
+        as_of=AS_OF,
+        monitoring_started_at=STARTED,
+        broad=[True],
+    )
+    assert any(note.startswith("Tema amplio") for note in r.opportunity.limitations)
+    assert not any(
+        note.startswith("Tema amplio") for note in build_one(pieces).opportunity.limitations
+    )

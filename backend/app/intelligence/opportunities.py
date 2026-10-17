@@ -39,6 +39,10 @@ PERFORMANCE_METRIC = {Platform.YOUTUBE: "views", Platform.HACKERNEWS: "points"}
 MIN_RECENT_ITEMS = 3  # piezas en las dos últimas ventanas para considerar el tema activo
 MIX_WEIGHT_MIN, MIX_WEIGHT_MAX = 0.5, 3.0
 MAX_EVIDENCE = 25
+BROAD_TOPIC_NOTE = (
+    "Tema amplio: las piezas comparten poco más que el término de búsqueda; tómalo como "
+    "categoría, no como historia concreta."
+)
 
 
 @dataclass
@@ -145,7 +149,12 @@ def _timeline(oid: str, published: Sequence[datetime], as_of: datetime) -> Oppor
 
 
 def _limitations(
-    growth: GrowthStatus, platforms: set[Platform], ratios: list[float | None], since: datetime
+    growth: GrowthStatus,
+    platforms: set[Platform],
+    ratios: list[float | None],
+    since: datetime,
+    *,
+    broad: bool,
 ) -> list[str]:
     notes = [
         f"El monitoreo comenzó el {since:%d/%m}: los periodos anteriores no son históricos.",
@@ -157,6 +166,8 @@ def _limitations(
         notes.append(f"Solo aparece en una plataforma ({next(iter(platforms)).value}).")
     if all(r is None for r in ratios):
         notes.append("Ninguna pieza tiene referencia para calcular outliers.")
+    if broad:
+        notes.append(BROAD_TOPIC_NOTE)
     return notes
 
 
@@ -174,26 +185,28 @@ def build_opportunities(
     *,
     as_of: datetime,
     monitoring_started_at: datetime,
+    broad: Sequence[bool] | None = None,
 ) -> list[TopicResult]:
     corpus = window_counts([p.published_at for p in pieces], as_of)
     ratios = outlier_ratios(pieces, as_of)
 
     # Primera pasada: métricas por tema, para normalizar saturación y velocidad entre temas.
     topics = []
-    for members, rep in zip(clusters, representatives, strict=True):
+    broad_flags = broad if broad is not None else [False] * len(clusters)
+    for members, rep, is_broad in zip(clusters, representatives, broad_flags, strict=True):
         group = [pieces[i] for i in members]
         counts = window_counts([p.published_at for p in group], as_of)
         if counts.current + counts.previous < MIN_RECENT_ITEMS:
             continue
-        topics.append((group, pieces[rep], counts, topic_velocity(counts, corpus)))
+        topics.append((group, pieces[rep], counts, topic_velocity(counts, corpus), is_broad))
     if not topics:
         return []
 
-    saturation = saturation_scores([c.current + c.previous for _, _, c, _ in topics])
-    velocity_pct = saturation_scores([v.current_count for *_, v in topics])
+    saturation = saturation_scores([c.current + c.previous for _, _, c, _, _ in topics])
+    velocity_pct = saturation_scores([v.current_count for _, _, _, v, _ in topics])
 
     results = []
-    for n, (group, rep, counts, vel) in enumerate(topics, start=1):
+    for n, (group, rep, counts, vel, is_broad) in enumerate(topics, start=1):
         oid = _stable_id(group)
         outlets = {outlet_key(p.platform.value, p.source_name) for p in group}
         platforms = {p.platform for p in group}
@@ -258,7 +271,9 @@ def build_opportunities(
                 f"(aceleración ajustada por volumen {vel.acceleration:+.0%}), "
                 f"{len(outlets)} fuentes independientes y {outlier_count} outliers."
             ),
-            limitations=_limitations(growth, platforms, group_ratios, monitoring_started_at),
+            limitations=_limitations(
+                growth, platforms, group_ratios, monitoring_started_at, broad=is_broad
+            ),
             last_updated=as_of,
         )
         evidence = sorted(

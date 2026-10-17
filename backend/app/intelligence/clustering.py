@@ -7,12 +7,14 @@ from sklearn.cluster import AgglomerativeClustering
 # ("todo lo de agentes"); con 0.5 los temas son historias concretas y cruzan ES/EN.
 DISTANCE_THRESHOLD = 0.5
 MIN_CLUSTER_SIZE = 5
+# Con average linkage a 0.5 aparecen clusters que solo comparten el término de la búsqueda
+# ("AI agents" en HN: 36 piezas, similitud media 0.555 el 17/10). Se vuelven a partir una vez.
+SPLIT_MIN_SIZE = 25
+SPLIT_MIN_COHESION = 0.6
+SPLIT_THRESHOLD = 0.4
 
 
-def cluster(embeddings: np.ndarray, threshold: float = DISTANCE_THRESHOLD) -> list[list[int]]:
-    """Índices de cada cluster con al menos MIN_CLUSTER_SIZE piezas, de mayor a menor."""
-    if len(embeddings) < MIN_CLUSTER_SIZE:
-        return []
+def _agglomerate(embeddings: np.ndarray, threshold: float) -> list[list[int]]:
     labels = AgglomerativeClustering(
         n_clusters=None,  # pyright: ignore[reportArgumentType] (sklearn acepta None)
         metric="cosine",
@@ -22,7 +24,44 @@ def cluster(embeddings: np.ndarray, threshold: float = DISTANCE_THRESHOLD) -> li
     groups: dict[int, list[int]] = {}
     for i, label in enumerate(labels):
         groups.setdefault(int(label), []).append(i)
-    return sorted((g for g in groups.values() if len(g) >= MIN_CLUSTER_SIZE), key=len, reverse=True)
+    return [g for g in groups.values() if len(g) >= MIN_CLUSTER_SIZE]
+
+
+def cohesion(embeddings: np.ndarray, members: list[int]) -> float:
+    """Similitud coseno media entre pares distintos (los embeddings vienen normalizados)."""
+    n = len(members)
+    if n < 2:
+        return 1.0
+    vectors = embeddings[members]
+    similarities = vectors @ vectors.T
+    return float((similarities.sum() - np.trace(similarities)) / (n * (n - 1)))
+
+
+def _needs_split(embeddings: np.ndarray, members: list[int]) -> bool:
+    return len(members) > SPLIT_MIN_SIZE or cohesion(embeddings, members) < SPLIT_MIN_COHESION
+
+
+def is_broad(embeddings: np.ndarray, members: list[int]) -> bool:
+    """Grande y poco cohesionado incluso después de partir: categoría, no historia concreta."""
+    return len(members) > SPLIT_MIN_SIZE and cohesion(embeddings, members) < SPLIT_MIN_COHESION
+
+
+def _split(embeddings: np.ndarray, members: list[int]) -> list[list[int]]:
+    subgroups = _agglomerate(embeddings[members], SPLIT_THRESHOLD)
+    return [[members[i] for i in sub] for sub in subgroups]
+
+
+def cluster(embeddings: np.ndarray, threshold: float = DISTANCE_THRESHOLD) -> list[list[int]]:
+    """Índices de cada cluster con al menos MIN_CLUSTER_SIZE piezas, de mayor a menor."""
+    if len(embeddings) < MIN_CLUSTER_SIZE:
+        return []
+    result: list[list[int]] = []
+    for members in _agglomerate(embeddings, threshold):
+        if _needs_split(embeddings, members):
+            result.extend(_split(embeddings, members))
+        else:
+            result.append(members)
+    return sorted(result, key=len, reverse=True)
 
 
 def representative(embeddings: np.ndarray, members: list[int]) -> int:

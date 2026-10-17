@@ -436,7 +436,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_build_opportunities.py -q`
 - **Commit:** `Anchor opportunity ids to the oldest piece of each topic`
 
-### Paso 10 — Partir clusters cajón de sastre
+### Paso 10 — Partir clusters cajón de sastre [HECHO]
 
 - **Archivos:** `backend/app/intelligence/clustering.py`, `backend/app/intelligence/opportunities.py`,
   `backend/app/services/opportunities.py`, `backend/tests/test_clustering.py` (nuevo),

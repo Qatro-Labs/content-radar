@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.intelligence.clustering import cluster, representative
+from app.intelligence.clustering import cluster, is_broad, representative
 from app.intelligence.embeddings import embed, embedding_text
 from app.intelligence.opportunities import Piece, TopicResult, build_opportunities
 from app.models import ContentItem, MetricSnapshot, OpportunityRecord, PipelineRun, Source
@@ -95,6 +95,7 @@ async def compute_opportunities(
         reps,
         as_of=as_of,
         monitoring_started_at=MONITORING_STARTED_AT,
+        broad=[is_broad(vectors, c) for c in clusters],
     )
     return len(pieces), results
 
