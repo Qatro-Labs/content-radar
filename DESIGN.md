@@ -4,7 +4,8 @@
 > Las vistas y su contenido están en `.claude/rules/frontend.md`; el stack, en `CLAUDE.md` §9.
 > Referencia aprobada el 17/10: artboard **D · Claro (A + C)** del canvas
 > [30X Signal — Direcciones visuales](https://claude.ai/artifact/BVjFhXdfVVXrpB2yucQmsT) (privado: pedir acceso).
-> Los datos del canvas son de ejemplo.
+> El agente del Radar se aprobó el mismo día en el artboard **E · Agente sobre el radar** (D + agente).
+> Los datos y las ejecuciones del canvas son de ejemplo.
 
 ## 1. Atmósfera
 
@@ -15,7 +16,11 @@ publicarse. El radar es el protagonista; todo lo demás explica lo que el radar 
 - **Densidad 6 · "Daily App Balanced".** Denso donde hay datos (ranking, panel de detalle), aireado alrededor.
 - **Variación 4 · "Offset Asymmetric".** Rejilla estable de producto, con bloques de ancho desigual (radar 2:1 panel).
 - **Movimiento 5 · "Fluid CSS".** Un solo efecto llamativo por vista (en el Radar: el barrido y el ping); el resto
-  son microinteracciones que siguen a la selección.
+  son microinteracciones que siguen a la selección. Mientras el agente actúa, el efecto es su presencia (§7).
+
+**El agente maneja la página.** Se le pregunta desde una barra fija abajo y responde moviendo el Radar: pulsa los
+mismos filtros que una persona, resalta burbujas, abre el detalle y cita la evidencia. No es un chat en un cajón
+lateral: la respuesta ocurre en la página y la barra solo lleva la pregunta, los pasos y el texto final.
 
 Jerarquía de lectura en cada pantalla: **score → evolución → explicación → acción**.
 
@@ -130,13 +135,45 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **Error:** inline, en la tarjeta afectada, con qué falló y qué sigue funcionando.
 - **Foco:** anillo de 2px en Tinta con 2px de separación, siempre visible al navegar con teclado.
 
+**Radar y agente**
+
+- **Fila de filtros:** debajo de la cabecera y a todo el ancho. Un segmented control de selección múltiple con las
+  cinco etapas (cada segmento lleva el punto de su etapa, así que la fila hace de leyenda del radar) y un segundo
+  control con "Hueco en LATAM". Pista #E6E8EB, segmento activo blanco y peso 600. Con algún filtro activo aparece a la
+  derecha una frase ("Filtros activos" o "Filtros puestos por el agente") y el botón secundario "Restablecer vista",
+  en blanco sobre el lienzo.
+- **Barra de pregunta:** fija abajo y centrada (ancho máximo 840px), tarjeta blanca de radio 20px con la sombra
+  flotante (§5), porque flota sobre la página. De izquierda a derecha: la marca del agente (cuadrado Tinta de 40px y
+  radio 11px con un punto Lima de 12px), el campo (#F2F3F5, radio 12px, alto 48px, placeholder en Apagado) y el
+  primario "Preguntar", que pasa a secundario "Detener" mientras el agente trabaja. Debajo, en 13px Apagado: "El
+  agente lee las mismas oportunidades que ves y usa los mismos controles". En reposo, encima del campo, 2–4
+  preguntas sugeridas (botones #F2F3F5, radio 10px, alto 40px).
+- **Transcripción del agente** (dentro de la barra, encima del campo; alto máximo 46vh con scroll):
+  - la pregunta en Bricolage 19px;
+  - los pasos: hecho = check en Tinta suave; en curso = punto Tinta de 9px y peso 600. Cada paso lleva su etiqueta:
+    **Datos** (#F0F1F3) si lee o **Vista** (Lima) si mueve la página;
+  - la respuesta en Geist 16px / 1.55, Tinta de lectura, ancho ≤ 720px;
+  - al terminar: "Citadas" (chips #F2F3F5 con el punto de etapa y la cifra de oportunidad; seleccionan la
+    oportunidad), el bloque "Qué no sabemos" y dos enlaces: "Copiar enlace a esta vista" y "Hacer esta pregunta desde
+    Claude o ChatGPT (MCP)". Los pasos se pliegan en una línea subrayada ("Hizo 6 pasos: 3 de datos y 3 en la
+    vista") que los vuelve a abrir.
+- **Presencia del agente:** un punto Lima de 16px con anillo de Tinta de 2px y la sombra flotante, más un rótulo en
+  píldora Tinta (radio 10px, texto blanco 13px/600) con el paso en curso ("Pulsando «Hueco en LATAM»"). Al actuar
+  sobre una sección o un control, la rodea un **anillo de foco** de 2px en Tinta, separado 5–6px y con el radio del
+  objetivo más 6px. Sobre una burbuja no hay anillo de foco: basta la selección. Al pulsar algo deja una onda de
+  Tinta.
+
 ## 5. Layout, espaciado y elevación
 
 - Contenedor máximo **1440px**, gutter 32px (16px en móvil). Base de 4px; huecos de 16px entre tarjetas, 8px entre
   baldosas, 20px dentro del panel de detalle.
-- **Radar (Discover):** cabecera (H1 + frase a la izquierda, contadores a la derecha) → fila principal con el radar
-  (`flex: 999 1 680px`) y el panel de detalle (`flex: 1 1 380px`) a la misma altura → fila bento "Para quién importa"
-  (1) + "Por qué importa" (2) → ranking a todo el ancho → nota al pie de metodología.
+- **Radar (Discover):** cabecera (H1 + frase a la izquierda, contadores a la derecha) → fila de filtros → fila
+  principal con el radar (`flex: 999 1 680px`) y el panel de detalle (`flex: 1 1 380px`) a la misma altura → fila
+  bento "Para quién importa" (1) + "Por qué importa" (2) → ranking a todo el ancho → nota al pie de metodología →
+  barra de pregunta, fija abajo (`position: sticky; bottom: 0`, con 16px de margen inferior).
+- La cabecera, los contadores y el ranking reflejan los filtros: con filtro, el H1 dice "3 de 9 temas", la frase
+  dice qué filtro hay, los contadores cuentan solo lo filtrado y el ranking muestra solo lo que entra, conservando el
+  puesto global.
 - **Radios:** 20px tarjetas · 16px contadores · 14px baldosas, gráfico y tooltip · 12px botones y pistas · 9–10px
   segmentos y enlaces de navegación · 8px chips de acción · completo en chips de estado y barras.
 - **Elevación:** nada en reposo lleva sombra. Solo lo que flota: tooltip del radar, popovers y diálogos
@@ -148,7 +185,8 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 ## 6. Responsive
 
 - **< 768px:** todo a una columna (el panel de detalle baja bajo el radar; la fila bento se apila). La navegación y
-  los controles hacen wrap; la marca y el periodo quedan arriba.
+  los controles hacen wrap; la marca y el periodo quedan arriba. La barra de pregunta ocupa todo el ancho con el
+  gutter de 16px, y las preguntas sugeridas hacen wrap.
 - La página nunca hace scroll horizontal. El ranking sí puede, **dentro de su tarjeta** (`overflow-x: auto`, ancho
   mínimo 1000px), como cualquier tabla ancha.
 - El radar mantiene 16:9 con un alto mínimo de 300px; en móvil las etiquetas de burbuja se ocultan y queda la
@@ -159,7 +197,8 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 ## 7. Movimiento
 
 **Regla de efectos (de `frontend.md`):** como mucho un efecto llamativo por vista, y nunca tapa los datos. En el
-Radar ese efecto es el **escaneo**; todo lo demás es discreto y sigue a la acción del usuario.
+Radar ese efecto es el **escaneo**; todo lo demás es discreto y sigue a la acción del usuario. **Excepción:** mientras
+el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cuando el agente lee datos.
 
 **Curvas y tiempos**
 - UI: `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out). Rebote solo en la aparición de burbujas: `cubic-bezier(0.34, 1.4, 0.64, 1)`.
@@ -193,12 +232,30 @@ Radar ese efecto es el **escaneo**; todo lo demás es discreto y sigue a la acci
 - Barras de métrica y de audiencia crecen hasta su valor (420ms); textos del panel con fundido y 4px de subida (300ms).
 - Ranking: entrada escalonada de 40ms por fila y barras de score que crecen.
 
+**Agente**
+- **Primero llega, después actúa.** La presencia viaja hasta el objetivo (680ms, ease-out) y la acción se aplica al
+  llegar: el filtro se activa, la burbuja se selecciona y hace ping, el radar se atenúa. Cada paso dura unos 1,6s.
+- El anillo de foco se desplaza con la presencia (600ms) y se funde (240ms) cuando el objetivo es una burbuja.
+- Si el objetivo no está a la vista, la página hace scroll suave hasta dejarlo centrado por encima de la barra de
+  pregunta. Solo se desplaza la ventana de la app.
+- Filtros y resaltados **atenúan, no ocultan**: lo que no entra baja a opacidad 0.16 en 320ms, sin etiqueta ni
+  latido, para que el radar no pierda contexto.
+- Los pasos entran con fundido y 4px de subida (300ms). La respuesta aparece palabra a palabra (unos 45ms por
+  palabra) y los bloques del final, escalonados 80ms.
+- Sin spinners ni puntos de "escribiendo" que parpadean: el estado lo dicen el paso en curso y la presencia.
+- **`prefers-reduced-motion`:** la presencia salta sin viajar, los pasos duran 0,7s y la respuesta aparece entera.
+
 **Implementación**
 - El latido es nativo de ECharts: serie `effectScatter` con `rippleEffect.period` calculado desde `acceleration` y
   `brushType: 'stroke'`. El ping, un `effectScatter` temporal o `graphic`. El barrido, una capa CSS sobre el canvas.
 - Fuera del gráfico, `<Transition>` / `<TransitionGroup>` y CSS; `motion-v` solo si no alcanza.
 - Solo `transform` y `opacity` (barras con `scaleX` y `transform-origin: left`). Nada de animar `top`, `left`,
   `width` o `height` en producción.
+- Presencia del agente: una capa `position: absolute` sobre la raíz de la vista que se mueve con
+  `transform: translate()`, con coordenadas medidas desde los elementos marcados como objetivo. El anillo de foco se
+  coloca con `transform` sobre una caja del tamaño del objetivo. El prototipo E anima `left`, `top`, `width` y
+  `height`: no copiarlo. Las acciones del agente cambian el estado de la URL (`useRadarQuery`), igual que los
+  controles.
 - **`prefers-reduced-motion: reduce`:** sin barrido, ping, latido ni entradas; los datos aparecen al instante. Se
   mantiene el feedback de hover y active.
 - Nada de bucles infinitos fuera del latido. Nada de puntos "live" que parpadean.
@@ -213,6 +270,8 @@ Radar ese efecto es el **escaneo**; todo lo demás es discreto y sigue a la acci
 - Líneas medias en 50/50 (#E2E5E9) que forman cuatro cuadrantes con nombre: **Prioridad** (arriba a la derecha, con
   lavado de señal, en Tinta 600) · Momentum sin encaje · Encaje sin momentum · Poca señal (en Apagado).
 - Mira de la selección: líneas de Tinta al 28 % hasta los ejes y dos lecturas en píldora de Tinta con texto blanco.
+- Filtrada o resaltada: la burbuja que no entra baja a opacidad 0.16 y pierde etiqueta y latido. La seleccionada
+  nunca se atenúa.
 - **Timeline (Explorar):** barras por día; ventana actual en Tinta, ventana anterior en #C9CED6, con su badge de evidencia.
 - **Tipografía en ECharts:** `textStyle.fontFamily = 'Geist'`, 12–13px, color Apagado. Sin títulos ni leyendas
   internas de ECharts: la leyenda es HTML (chips de etapa) para que sea accesible.
@@ -224,7 +283,12 @@ Radar ese efecto es el **escaneo**; todo lo demás es discreto y sigue a la acci
 - Formato: decimales con coma ("6,1×"), espacio antes de % ("+80 %"), flechas ↑ ↓ → para la aceleración, fechas
   "17/10, 02:50 UTC".
 - **Etiquetas fijas:** Emergente · Acelerando · En pico · Saturado · Sin etapa | Publicar ya · Buscar ángulo ·
-  Esperar caso · Descartar | Observado · Estimado · Preliminar | confianza alta · media · baja.
+  Esperar caso · Descartar | Observado · Estimado · Preliminar | confianza alta · media · baja | Datos · Vista (pasos
+  del agente).
+- **Texto del agente:** cada paso dice qué hace con un verbo ("Pulsando «Hueco en LATAM»", "Revisando qué no
+  sabemos"). La respuesta nombra el tema primero, da las cifras con su formato (↑ +80 %, "Alto · 82") y cita las
+  oportunidades en las que se apoya. Si un dato falta, dice "no disponible". Siempre termina con "Qué no sabemos".
+  Una ejecución grabada o guionizada lleva el chip "Ejecución de ejemplo", igual que los datos de ejemplo.
 - **Banda de encaje:** Alto ≥ 67 · Medio ≥ 34 · Bajo < 34 (umbrales iniciales, ajustables con Melkin). Se muestra la
   banda junto a la cifra, no la cifra sola.
 - **Honestidad de datos** (`CLAUDE.md` §2): un dato ausente se escribe "no disponible", nunca 0 ni guion. Si hay 7
@@ -248,16 +312,27 @@ Radar ese efecto es el **escaneo**; todo lo demás es discreto y sigue a la acci
 - Morado / índigo, crema con terracota, negro puro (#000000), acentos saturados de neón.
 - Emojis, Inter / Roboto / Arial, cualquier serif.
 - Más de un efecto llamativo por vista; bucles infinitos que no codifican un dato; puntos "live" parpadeantes.
+- El agente como chat en un cajón lateral o como pantalla de chat que sustituye al Radar; burbujas de chat; avatares;
+  puntos de "escribiendo…".
+- Que el agente oculte datos al filtrar (se atenúan) o actúe sin que la presencia haya llegado a su objetivo.
 - Filas de tres tarjetas idénticas con icono; dashboards falsos de barras grises.
 - Métricas inventadas, cifras redondas de relleno, 0 en lugar de "no disponible", el panel de coste.
 
 ## 11. Tokens (Tailwind v4 + shadcn-vue)
 
-Variables CSS en `src/assets/main.css`. El bloque `@theme inline` que genera la CLI de shadcn-vue mapea las
+Variables CSS en `frontend/src/assets/main.css`. El bloque `@theme inline` que genera la CLI de shadcn-vue mapea las
 variables base; aquí van los valores y los tokens propios. Ojo: en shadcn, `--accent` es el fondo de hover de menús,
 no el acento de marca; el acento de marca es `--signal`.
 
+- Las curvas y la sombra flotante van en `@theme`, no en `:root` + `@theme inline`: comparten nombre con su utilidad
+  de Tailwind (`ease-out`, `shadow-float`), y con `var(--x)` dentro de `@theme inline` cada una quedaría definida como
+  `var()` de sí misma.
+- `@custom-variant dark (&:is(.dark *));` se mantiene aunque no haya tema oscuro: sin ella, Tailwind v4 activa `dark:`
+  con el modo oscuro del sistema y los componentes de shadcn-vue se oscurecerían a medias.
+
 ```css
+@custom-variant dark (&:is(.dark *));
+
 :root {
   --background: #F2F3F5;
   --foreground: #121418;
@@ -296,7 +371,9 @@ no el acento de marca; el acento de marca es `--signal`.
   --lc-peaking-bg: #FFF0E0;    --lc-peaking-fg: #9A4A00;
   --lc-saturated: #F0565C;     --lc-saturated-bg: #FDE8E9;     --lc-saturated-fg: #B0262C;
   --lc-unknown: #8A919C;       --lc-unknown-bg: #F0F1F3;       --lc-unknown-fg: #50565F;
+}
 
+@theme {
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
   --shadow-float: 0 14px 32px -10px rgb(18 20 24 / 0.22), 0 2px 6px rgb(18 20 24 / 0.06);
@@ -305,6 +382,7 @@ no el acento de marca; el acento de marca es `--signal`.
 @theme inline {
   --font-sans: 'Geist Variable', system-ui, sans-serif;
   --font-display: 'Bricolage Grotesque Variable', 'Geist Variable', sans-serif;
+  --font-heading: var(--font-display);   /* los títulos de shadcn-vue usan font-heading */
   --color-signal: var(--signal);
   --color-signal-foreground: var(--signal-foreground);
   --color-ink-soft: var(--ink-soft);
@@ -314,7 +392,6 @@ no el acento de marca; el acento de marca es `--signal`.
   --color-notice-foreground: var(--notice-foreground);
   --radius-card: 1.25rem;
   --radius-tile: 0.875rem;
-  --shadow-float: var(--shadow-float);
 }
 ```
 
