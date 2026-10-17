@@ -46,20 +46,33 @@ llamada** que lleva todas las preguntas que podamos necesitar: una *batería*. E
 
 ### 1. Pieza: una llamada por pieza nueva, en el job `analyze`
 
-`state`: `{title, description (≤ 1.000 caracteres), channel, platform, language}`.
+`state`: `{title, description (≤ 1.000 caracteres; se omite si no hay), channel, platform, language}`.
+Nunca lleva el segmento ni la región de la fuente: con ellos, Jev contesta a partir de la fuente y no
+del contenido (medido: `latam_context` salía sí en el 100 % de las piezas de fuentes LATAM).
+
+Batería `piece.v2.yaml`. Cada pregunta mide una sola condición observable; las preguntas compuestas
+de la v1 dejaban inciertas más de la mitad de las piezas.
 
 | Pregunta | Tipo y criterio | Para qué |
 |---|---|---|
-| `relevant` | `noul`: ¿trata de IA aplicada a empresas u organizaciones? | Filtrar ruido antes del clustering |
+| `about_ai` | `noul`: ¿el tema principal es la IA? | Filtrar ruido antes del clustering |
 | `injection` | `noul`: ¿el texto contiene instrucciones dirigidas a un sistema de IA? | Regla 6: si supera 0,5, la pieza no entra en el contexto del LLM. Es una heurística, no la defensa principal |
-| `format`, `format_rev` | `choice`: tutorial · opinión · noticia o lanzamiento · caso de uso · entrevista o podcast · demo · lista | "Temas y formatos" del reto |
+| `format`, `format_rev` | `choice` contrastivo (qué es y qué no): noticia · opinión · tutorial · caso de uso · entrevista · demo · pregunta a la comunidad · lista | "Temas y formatos" del reto |
 | `hook`, `hook_rev` | `choice`: pregunta · dato o cifra · contraintuitivo · historia · cómo hacer · noticia · lista | "Por qué funcionó" |
-| `announcement` | `noul`: ¿es el anuncio de un lanzamiento o una noticia puntual? | Distinguir un pico de noticia de una tendencia |
+| `launch` | `noul`: ¿anuncia un producto, modelo, función o versión nueva? | Distinguir un pico de noticia de una tendencia |
 | **Pistas para el LLM** | | El LLM decide el audience fit; estos conteos le llegan como datos y la UI los muestra como apoyo |
-| `business_case` | `noul`: ¿describe un caso real en una organización concreta? | Criterio "aplicación real" |
-| `exec_readability` | `score` en 4 niveles: de "requiere perfil técnico" a "lo entiende un directivo sin perfil técnico" | Criterio "comprensible para directivos" |
-| `latam_context` | `noul`: ¿menciona empresas, países o el contexto de Latinoamérica? | Criterio "relevancia LATAM" |
-| `pillar` | `choice`: los pilares de `data/audiences/30x.yaml` + "ninguno" | Criterio "encaje con pilares 30X" |
+| `business_use` | `noul`: ¿trata del uso, la adopción o el impacto de la IA en organizaciones? | Criterios "impacto en decisiones" y "aplicación real". Es un juicio de audiencia: ~30 % incierto con cualquier redacción, por eso no filtra |
+| `dev_audience` | `noul`: ¿va dirigida sobre todo a desarrolladores o investigadores? | "Todavía no llegó a ejecutivos" |
+| `business_case` | `noul`: ¿describe cómo una organización concreta usa la IA? (no cuenta el lanzamiento de un proveedor) | Criterio "aplicación real" |
+| `tech_jargon` | `noul`: ¿usa jerga técnica de software o de IA? | Criterio "comprensible para directivos" |
+| `latam_context` | `noul`: ¿menciona Latinoamérica o un país, empresa, institución o persona de la región? (España no cuenta) | Criterio "relevancia LATAM" |
+| `pillar` | `choice`: los pilares de `data/audiences/30x.yaml` + "ninguno" | Criterio "encaje con pilares 30X". Pendiente: entra cuando exista el perfil |
+
+**Medido sobre una muestra fija de 120 piezas** (piezas inciertas, v1 → v2): relevancia 55 % →
+`about_ai` 17 %; anuncio 69 % → `launch` 8–10 %; legibilidad (`score` de 4 niveles) 42 % →
+`tech_jargon` 14 %; caso real 23 % → 14–16 %; `latam_context` sí fuera de LATAM 38–42 % → 0 %.
+Repetir la misma llamada cambia como mucho 4 de 120 decisiones por pregunta. Menos incierto no
+es más acierto: el acierto se mide con la validación de abajo.
 
 Los `_rev` repiten la pregunta con las opciones en orden inverso. Jev tiende a elegir la primera
 opción; si las dos respuestas no coinciden, la clasificación es "incierta". Van en la misma llamada,
@@ -153,7 +166,8 @@ pregunta. Solo texto (las imágenes son experimentales).
 En cuanto haya clave:
 
 - `data/evaluations/jev_pieces.yaml`: entre 30 y 50 piezas reales (ES y EN) etiquetadas a mano para
-  `relevant`, `format`, `hook` y `pillar`.
+  las preguntas de la batería de pieza (`about_ai`, `format`, `hook`, `business_use`, `tech_jargon`,
+  `business_case`, `latam_context`).
 - Se mide el acuerdo por pregunta, se decide en qué idioma van las instrucciones (ES o EN) y se
   ajustan los umbrales. Una pregunta con menos del 70 % de acuerdo no se usa en la demo.
 - Límites documentados de jev-1.13 y cómo los cubrimos:
@@ -173,7 +187,7 @@ Es una estimación con los precios oficiales; el coste real lo mide `usage_event
 
 | Batería | Volumen | Tokens por llamada (aprox.) | Coste |
 |---|---|---|---|
-| Pieza | ~1.500 de backfill + ~200 al día | ~1.500 | ~0,10 $ el backfill; ~0,40 $/mes |
+| Pieza (v2) | ~1.500 de backfill + ~200 al día | ~2.100 (medido) | ~0,13 $ el backfill; ~0,55 $/mes |
 | Par | ~500 al día | ~800 | ~0,50 $/mes |
 | Verificación | ~100 afirmaciones al día | ~800 | ~0,10 $/mes |
 

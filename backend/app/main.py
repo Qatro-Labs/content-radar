@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes import opportunities, sources
+from app.api.routes import costs, opportunities, sources
 from app.core.config import get_settings
 from app.db.session import get_session
 
@@ -23,6 +23,7 @@ app.add_middleware(
 api_v1 = APIRouter(prefix="/api/v1")
 api_v1.include_router(opportunities.router)
 api_v1.include_router(sources.router)
+api_v1.include_router(costs.router)
 app.include_router(api_v1)
 
 
