@@ -10,7 +10,8 @@ from app.models import Base
 
 # Base de datos aparte para tests, en el mismo servidor que DATABASE_URL.
 BASE_URL = make_url(get_settings().database_url)
-TEST_URL = os.environ.get("TEST_DATABASE_URL") or BASE_URL.set(database="radar_test")
+_raw_test_url = os.environ.get("TEST_DATABASE_URL")
+TEST_URL = make_url(_raw_test_url) if _raw_test_url else BASE_URL.set(database="radar_test")
 
 
 @pytest.fixture

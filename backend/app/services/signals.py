@@ -37,12 +37,13 @@ async def store_signals(
         }
         stmt = insert(ContentItem).values(**values)
         # En conflicto se actualiza lo que puede cambiar.
+        # Una descripción ausente no borra la ya guardada.
         # first_observed_at y source_id se conservan.
         stmt = stmt.on_conflict_do_update(
             index_elements=["platform", "external_id"],
             set_={
                 "title": stmt.excluded.title,
-                "description": stmt.excluded.description,
+                "description": func.coalesce(stmt.excluded.description, ContentItem.description),
                 "last_observed_at": stmt.excluded.last_observed_at,
                 "format": stmt.excluded.format,
             },

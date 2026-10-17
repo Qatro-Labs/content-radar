@@ -12,12 +12,18 @@ from app.services.signals import store_signals
 T0 = datetime(2026, 10, 16, 20, 0, tzinfo=UTC)
 
 
-def signal(observed_at: datetime, views: int, title: str = "Agentes de IA en ventas"):
+def signal(
+    observed_at: datetime,
+    views: int,
+    title: str = "Agentes de IA en ventas",
+    description: str | None = None,
+):
     return ContentSignal(
         platform=Platform.YOUTUBE,
         external_id="vid123",
         url="https://www.youtube.com/watch?v=vid123",
         title=title,
+        description=description,
         author_name="Canal Ejemplo",
         published_at=T0 - timedelta(days=2),
         observed_at=observed_at,
@@ -60,6 +66,22 @@ async def test_dedupes_items_and_keeps_snapshot_history(session):
     assert item.title == "Título nuevo"
     assert item.first_observed_at == T0
     assert item.last_observed_at == T0 + timedelta(hours=2)
+
+
+async def test_missing_description_does_not_erase_existing(session):
+    src = await make_source(session)
+    await store_signals(session, src, [signal(T0, 1000, description="Resumen original")])
+    await store_signals(
+        session,
+        src,
+        [signal(T0 + timedelta(hours=1), 1200, description="Resumen nuevo")],
+    )
+    item = await session.scalar(select(ContentItem))
+    assert item.description == "Resumen nuevo"
+
+    await store_signals(session, src, [signal(T0 + timedelta(hours=2), 1400)])
+    item = await session.scalar(select(ContentItem))
+    assert item.description == "Resumen nuevo"
 
 
 async def test_same_observation_is_not_duplicated(session):
