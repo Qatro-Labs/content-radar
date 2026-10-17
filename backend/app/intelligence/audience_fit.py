@@ -89,7 +89,7 @@ def apply_fit(
         saturation=o.saturation_score,
         actionability=action,
         source_count=o.source_count,
-        item_count=len(result.pieces),
+        item_count=result.story_count,
     )
     advice = recommend(
         result.stage,

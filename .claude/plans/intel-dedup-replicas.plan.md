@@ -670,7 +670,7 @@ comandos de backend se corren desde `backend/`.
 - **Verificación:** `uv run pytest tests/test_jev.py -q && uv run pyright app/intelligence/jev.py`
 - **Commit:** `Add the Jev pair battery for replicated stories`
 
-### Paso 4 — Scores con notas deduplicadas
+### Paso 4 — Scores con notas deduplicadas [HECHO]
 
 - **Archivos:** `backend/app/intelligence/opportunities.py`,
   `backend/app/intelligence/audience_fit.py`, `backend/tests/test_build_opportunities.py`,

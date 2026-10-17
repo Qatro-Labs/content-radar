@@ -6,10 +6,12 @@ Sale sin audience fit: lo añade después `intelligence.audience_fit` con los ni
 """
 
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TypedDict
+
+from pydantic import HttpUrl
 
 from app.intelligence import outliers as out
 from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
@@ -22,6 +24,12 @@ from app.intelligence.ranking import (
     momentum_score,
     recommend,
     score_breakdown,
+)
+from app.intelligence.replicas import (
+    NO_REPLICAS,
+    StoryAssignment,
+    replica_notes,
+    replica_outlets,
 )
 from app.intelligence.velocity import (
     WINDOW,
@@ -106,6 +114,12 @@ class TopicResult:
     # Para añadir el audience fit después sin reconstruir la etapa ni el grupo desde el contrato.
     stage: Stage
     pieces: list[Piece]
+    replica_ids: frozenset[int] = field(default_factory=frozenset)
+
+    # Sin las republicaciones de la misma nota, que no cuentan como muestra (CLAUDE.md §7).
+    @property
+    def story_count(self) -> int:
+        return len(self.pieces) - len(self.replica_ids & {p.item_id for p in self.pieces})
 
 
 def _performance(p: Piece) -> float | None:
@@ -156,7 +170,9 @@ def _collection(kind: SourceKind) -> Collection:
     return Collection.MANUAL if kind is SourceKind.MANUAL else Collection.AUTOMATIC
 
 
-def _evidence(p: Piece, ratio: float | None) -> Evidence:
+def _evidence(
+    p: Piece, ratio: float | None, *, replica_of: str | None, replica_count: int
+) -> Evidence:
     return Evidence(
         url=p.url,  # type: ignore[arg-type]
         source=p.source_name,
@@ -171,6 +187,8 @@ def _evidence(p: Piece, ratio: float | None) -> Evidence:
         outlier_ratio=ratio,
         is_outlier=out.is_outlier(ratio),
         collection=_collection(p.source_kind),
+        replica_of=HttpUrl(replica_of) if replica_of else None,
+        replica_count=replica_count,
     )
 
 
@@ -192,6 +210,8 @@ def _limitations(
     ratios: list[float | None],
     since: datetime,
     broad: bool,
+    replicas: int,
+    unverified: bool,
 ) -> list[str]:
     notes = [
         f"El monitoreo comenzó el {since:%d/%m}: los periodos anteriores no son históricos.",
@@ -205,7 +225,7 @@ def _limitations(
         notes.append("Ninguna pieza tiene referencia para calcular outliers.")
     if broad:
         notes.append(BROAD_TOPIC_NOTE)
-    return notes
+    return notes + replica_notes(replicas, unverified=unverified)
 
 
 def _stable_id(group: Sequence[Piece]) -> str:
@@ -254,6 +274,46 @@ def _why_it_matters(topic: _ActiveTopic, source_count: int, outlier_count: int) 
 
 
 @dataclass
+class _TopicFacts:
+    outlets: set[str]  # solo de las piezas originales
+    platforms: set[Platform]
+    original_platforms: set[Platform]
+    ratios: list[float | None]
+    outlier_count: int
+    top_outlier_ratio: float | None
+    replica_ids: frozenset[int]
+    story_count: int
+    unverified: bool  # alguna republicación decidida solo por título o similitud
+
+    @property
+    def replica_count(self) -> int:
+        return len(self.replica_ids)
+
+
+def _topic_facts(
+    group: Sequence[Piece], ratios: list[float | None], stories: StoryAssignment
+) -> _TopicFacts:
+    flagged = [r for r in ratios if r is not None]
+    originals = _originals(group, stories)
+    replica_ids = frozenset(p.item_id for p in group) & stories.replica_ids
+    return _TopicFacts(
+        outlets={outlet_key(p.platform.value, p.source_name) for p in originals},
+        platforms={p.platform for p in group},
+        original_platforms={p.platform for p in originals},
+        ratios=ratios,
+        outlier_count=sum(r >= out.OUTLIER_RATIO for r in flagged),
+        top_outlier_ratio=max(flagged) if flagged else None,
+        replica_ids=replica_ids,
+        story_count=len(originals),
+        unverified=bool(replica_ids & stories.unverified),
+    )
+
+
+def _originals(group: Sequence[Piece], stories: StoryAssignment) -> list[Piece]:
+    return [p for p in group if p.item_id not in stories.replica_ids]
+
+
+@dataclass
 class _TopicScores:
     stage: Stage
     growth: GrowthStatus
@@ -264,16 +324,12 @@ class _TopicScores:
 
 
 def _score_topic(
-    topic: _ActiveTopic,
-    *,
-    outlets: set[str],
-    platforms: set[Platform],
-    outlier_count: int,
-    saturation: float,
-    velocity_percentile: float,
+    topic: _ActiveTopic, facts: _TopicFacts, *, saturation: float, velocity_percentile: float
 ) -> _TopicScores:
-    acceleration, item_count = topic.velocity.acceleration, len(topic.group)
-    source_count = len(outlets)
+    # Fuentes y muestra sin republicaciones; velocidad y momentum siguen por pieza
+    # (CLAUDE.md §7, "Cross-source").
+    acceleration, item_count = topic.velocity.acceleration, facts.story_count
+    source_count = len(facts.outlets)
     stage = classify(
         acceleration=acceleration,
         saturation=saturation,
@@ -281,8 +337,8 @@ def _score_topic(
         item_count=item_count,
     )
     growth = growth_status(stage.insufficient, topic.counts.previous)
-    momentum = momentum_score(velocity_percentile, acceleration, outlier_count)
-    cross = cross_source_score(outlets, {p.value for p in platforms})
+    momentum = momentum_score(velocity_percentile, acceleration, facts.outlier_count)
+    cross = cross_source_score(facts.outlets, {p.value for p in facts.original_platforms})
     breakdown = score_breakdown(
         momentum=momentum,
         audience_fit=None,
@@ -294,26 +350,6 @@ def _score_topic(
     )
     conf = confidence(growth, source_count, item_count)
     return _TopicScores(stage, growth, conf, momentum, cross, breakdown)
-
-
-@dataclass
-class _TopicFacts:
-    outlets: set[str]
-    platforms: set[Platform]
-    ratios: list[float | None]
-    outlier_count: int
-    top_outlier_ratio: float | None
-
-
-def _topic_facts(group: Sequence[Piece], ratios: list[float | None]) -> _TopicFacts:
-    flagged = [r for r in ratios if r is not None]
-    return _TopicFacts(
-        outlets={outlet_key(p.platform.value, p.source_name) for p in group},
-        platforms={p.platform for p in group},
-        ratios=ratios,
-        outlier_count=sum(r >= out.OUTLIER_RATIO for r in flagged),
-        top_outlier_ratio=max(flagged) if flagged else None,
-    )
 
 
 # Los dos TypedDict reparten los campos de `Opportunity` por tema; pyright comprueba los nombres
@@ -372,7 +408,7 @@ def _score_fields(
         "score_breakdown": scores.breakdown,
         "confidence": scores.confidence,
         "source_count": len(facts.outlets),
-        "evidence_strength": evidence_strength(len(topic.group), len(facts.outlets)),
+        "evidence_strength": evidence_strength(facts.story_count, len(facts.outlets)),
         "recommendation": advice.recommendation,
         "recommendation_reason": advice.reason,
     }
@@ -380,29 +416,24 @@ def _score_fields(
 
 def _description(group: Sequence[Piece], facts: _TopicFacts) -> str:
     platforms = ", ".join(sorted(p.value for p in facts.platforms))
+    replicas = f" ({facts.replica_count} republicaciones)" if facts.replica_count else ""
     return (
-        f"Tema agrupado automáticamente: {len(group)} piezas de {len(facts.outlets)} fuentes "
-        f"independientes ({platforms})."
+        f"Tema agrupado automáticamente: {len(group)} piezas{replicas} de "
+        f"{len(facts.outlets)} fuentes independientes ({platforms})."
     )
 
 
 def _opportunity(
     topic: _ActiveTopic,
-    ratios: list[float | None],
+    facts: _TopicFacts,
     *,
     saturation: float,
     velocity_percentile: float,
     as_of: datetime,
     monitoring_started_at: datetime,
 ) -> tuple[Opportunity, Stage]:
-    facts = _topic_facts(topic.group, ratios)
     scores = _score_topic(
-        topic,
-        outlets=facts.outlets,
-        platforms=facts.platforms,
-        outlier_count=facts.outlier_count,
-        saturation=saturation,
-        velocity_percentile=velocity_percentile,
+        topic, facts, saturation=saturation, velocity_percentile=velocity_percentile
     )
     opportunity = Opportunity(
         id=_stable_id(topic.group),
@@ -414,9 +445,11 @@ def _opportunity(
         limitations=_limitations(
             scores.growth,
             platforms=facts.platforms,
-            ratios=ratios,
+            ratios=facts.ratios,
             since=monitoring_started_at,
             broad=topic.broad,
+            replicas=facts.replica_count,
+            unverified=facts.unverified,
         ),
         last_updated=as_of,
     )
@@ -424,19 +457,66 @@ def _opportunity(
 
 
 def _ranked(
-    group: Sequence[Piece], ratios: Sequence[float | None]
+    group: Sequence[Piece], ratios: Sequence[float | None], replica_ids: frozenset[int]
 ) -> list[tuple[Piece, float | None]]:
-    # Outliers primero y después lo más reciente; `item_id` desempata para que el orden (y lo
+    # Originales antes que republicaciones: con el corte de MAX_EVIDENCE, cada `replica_of`
+    # apunta a una pieza guardada, y el LLM no gasta contexto en copias. Dentro de cada grupo,
+    # outliers primero y después lo más reciente; `item_id` desempata para que el orden (y lo
     # que se envía al LLM) no cambie entre ejecuciones.
     return sorted(
         zip(group, ratios, strict=True),
         key=lambda pair: (
+            pair[0].item_id in replica_ids,
             pair[1] is None,
             -(pair[1] or 0),
             -pair[0].published_at.timestamp(),
             pair[0].item_id,
         ),
     )
+
+
+def _topic_evidence(
+    ranked: Sequence[tuple[Piece, float | None]],
+    group: Sequence[Piece],
+    stories: StoryAssignment,
+) -> list[Evidence]:
+    by_id = {p.item_id: p for p in group}
+    # Sobre el tema completo, no sobre la evidencia recortada a MAX_EVIDENCE.
+    outlets = replica_outlets(group, stories)
+    evidence = []
+    for p, ratio in ranked[:MAX_EVIDENCE]:
+        rep_id = stories.representative_of.get(p.item_id)
+        replica_of = by_id[rep_id].url if rep_id is not None else None
+        count = outlets.get(p.item_id, 0)
+        evidence.append(_evidence(p, ratio, replica_of=replica_of, replica_count=count))
+    return evidence
+
+
+def _topic_result(
+    topic: _ActiveTopic,
+    ratios: Mapping[int, float | None],
+    stories: StoryAssignment,
+    *,
+    saturation: float,
+    velocity_percentile: float,
+    as_of: datetime,
+    monitoring_started_at: datetime,
+) -> TopicResult:
+    group_ratios = [ratios[p.item_id] for p in topic.group]
+    facts = _topic_facts(topic.group, group_ratios, stories)
+    opportunity, stage = _opportunity(
+        topic,
+        facts,
+        saturation=saturation,
+        velocity_percentile=velocity_percentile,
+        as_of=as_of,
+        monitoring_started_at=monitoring_started_at,
+    )
+    ranked = _ranked(topic.group, group_ratios, facts.replica_ids)
+    evidence = _topic_evidence(ranked, topic.group, stories)
+    timeline = _timeline(opportunity.id, [p.published_at for p in topic.group], as_of)
+    pieces = [p for p, _ in ranked]
+    return TopicResult(opportunity, evidence, timeline, stage, pieces, facts.replica_ids)
 
 
 def build_opportunities(
@@ -448,35 +528,35 @@ def build_opportunities(
     monitoring_started_at: datetime,
     broad: Sequence[bool] | None = None,
     reference: Sequence[Piece] | None = None,
+    stories: StoryAssignment | None = None,
 ) -> list[TopicResult]:
     ratios = outlier_ratios(pieces, as_of, reference=reference)
+    stories = stories if stories is not None else NO_REPLICAS
     broad_flags = broad if broad is not None else [False] * len(clusters)
     topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of)
     if not topics:
         return []
 
-    # Saturación y velocidad se normalizan entre temas: necesitan todos los temas activos.
-    saturation = saturation_scores([t.counts.current + t.counts.previous for t in topics])
+    # Saturación y velocidad se normalizan entre temas: necesitan todos los temas activos. La
+    # saturación cuenta notas, no copias; la velocidad sigue por pieza.
+    story_counts = [
+        window_counts([p.published_at for p in _originals(t.group, stories)], as_of) for t in topics
+    ]
+    saturation = saturation_scores([c.current + c.previous for c in story_counts])
     velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
 
-    results = []
-    for topic, sat, vel_pct in zip(topics, saturation, velocity_pct, strict=True):
-        group_ratios = [ratios[p.item_id] for p in topic.group]
-        opportunity, stage = _opportunity(
+    results = [
+        _topic_result(
             topic,
-            group_ratios,
+            ratios,
+            stories,
             saturation=sat,
             velocity_percentile=vel_pct,
             as_of=as_of,
             monitoring_started_at=monitoring_started_at,
         )
-        ranked = _ranked(topic.group, group_ratios)
-        evidence = [_evidence(p, r) for p, r in ranked[:MAX_EVIDENCE]]
-        timeline = _timeline(opportunity.id, [p.published_at for p in topic.group], as_of)
-        results.append(
-            TopicResult(opportunity, evidence, timeline, stage, pieces=[p for p, _ in ranked])
-        )
-
+        for topic, sat, vel_pct in zip(topics, saturation, velocity_pct, strict=True)
+    ]
     return rank(results)
 
 
