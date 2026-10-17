@@ -11,6 +11,13 @@ export const RouteName = {
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // Una vista nueva empieza arriba; los filtros y la selección cambian solo la query y no mueven
+  // la página. Atrás y adelante recuperan la posición guardada.
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.path !== from.path) return { top: 0 }
+    return false
+  },
   routes: [
     { path: '/', name: RouteName.Discover, component: DiscoverView },
     {
