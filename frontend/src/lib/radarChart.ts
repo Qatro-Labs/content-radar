@@ -4,20 +4,22 @@ import type { ComposeOption } from 'echarts/core'
 
 import { LIFECYCLE_STYLE, type LifecyclePalette } from './lifecycle'
 import { bubbleSize, pulsePeriodSeconds, SCORE_MAX } from './opportunityFormat'
-import type { RankedOpportunity } from './radarView'
+import type { PlottedOpportunity, RankedOpportunity } from './radarView'
 
 export type RadarChartOption = ComposeOption<
   ScatterSeriesOption | EffectScatterSeriesOption | GridComponentOption
 >
 
 export interface RadarChartInput {
-  plotted: RankedOpportunity[]
+  plotted: PlottedOpportunity[]
   dimmedIds: Set<string>
   selectedId: string | null
   hoveredId: string | null
   palette: LifecyclePalette
   reducedMotion: boolean
   showLabels: boolean
+  // `true` mientras el haz barre: sin anillos ni etiquetas (D13).
+  entering: boolean
 }
 
 export interface PlotSize {
@@ -56,6 +58,7 @@ const PULSE_RIPPLE = { brushType: 'stroke', scale: 2.4, number: 1 } as const
 
 // ECharts pinta en canvas y no lee `var(--…)`: blanco, Tinta y Apagado de DESIGN.md §2.
 const WHITE = '#ffffff'
+const TRANSPARENT = 'transparent'
 const INK = '#121418'
 const MUTED = '#626873'
 // Borde blanco de 2 px (DESIGN.md §8); "Sin etapa", hueca con trazo discontinuo (artboard E).
@@ -69,8 +72,8 @@ const LABEL = { fontSize: 12.5, distance: 8, maxWidthPx: 160 }
 // Artboard E: a la derecha de una burbuja con este encaje ya no cabe la etiqueta.
 const LABEL_FLIP_FIT_MIN = 76
 
-const STILL_SERIES_ID = 'still'
-const PULSE_SERIES_ID = 'pulse'
+const BUBBLE_SERIES_ID = 'bubbles'
+const RING_SERIES_ID = 'rings'
 
 export function sweepDelaySeconds(fit: number, momentum: number): number {
   const leftward = (SCORE_MAX - fit) * RADAR_ASPECT.width
@@ -78,14 +81,6 @@ export function sweepDelaySeconds(fit: number, momentum: number): number {
   const angleDeg = Math.atan2(leftward, downward) * DEGREES_PER_RADIAN
   const progress = (angleDeg + BEAM_DOWN_DEG - SWEEP.fromDeg) / (SWEEP.toDeg - SWEEP.fromDeg)
   return (SWEEP.delayMs + progress * SWEEP.durationMs) / MS_PER_SECOND
-}
-
-export type PlottedOpportunity = RankedOpportunity & { audience_fit_score: number }
-
-// Sin encaje no hay posición en X, así que no se dibuja (radarView.ts). `plotted` ya llega así,
-// pero el tipo del contrato no lo sabe.
-export function isPlotted(opportunity: RankedOpportunity): opportunity is PlottedOpportunity {
-  return opportunity.audience_fit_score != null
 }
 
 export function detectionDelayMs(opportunity: PlottedOpportunity): number {
@@ -99,6 +94,8 @@ export function bubblePosition(opportunity: PlottedOpportunity, size: PlotSize):
     y: ((SCORE_MAX - opportunity.momentum_score) / SCORE_MAX) * size.height,
   }
 }
+
+export const translateTo = ({ x, y }: PlotPoint) => `translate(${x}px, ${y}px)`
 
 interface Focus {
   selectedId: string | null
@@ -115,21 +112,27 @@ export function shownBubbleSize(opportunity: RankedOpportunity, focus: Focus): n
 interface Bubble {
   opportunity: PlottedOpportunity
   dimmed: boolean
-  pulseSeconds: number | null
 }
 
-type PulsingBubble = Bubble & { pulseSeconds: number }
-
-function isPulsing(bubble: Bubble): bubble is PulsingBubble {
-  return bubble.pulseSeconds !== null
+interface Ring {
+  opportunity: PlottedOpportunity
+  periodSeconds: number
 }
 
-function toBubbles({ plotted, dimmedIds, reducedMotion }: RadarChartInput): Bubble[] {
-  return plotted.filter(isPlotted).map((opportunity) => {
-    const dimmed = dimmedIds.has(opportunity.id)
-    const pulse = pulsePeriodSeconds(opportunity.lifecycle, opportunity.acceleration)
-    return { opportunity, dimmed, pulseSeconds: dimmed || reducedMotion ? null : pulse }
+function toBubbles({ plotted, dimmedIds }: RadarChartInput): Bubble[] {
+  return plotted.map((opportunity) => ({ opportunity, dimmed: dimmedIds.has(opportunity.id) }))
+}
+
+// DESIGN.md §8: lo atenuado pierde el latido.
+function toRings(bubbles: Bubble[]): Ring[] {
+  return bubbles.flatMap(({ opportunity, dimmed }) => {
+    const periodSeconds = pulsePeriodSeconds(opportunity.lifecycle, opportunity.acceleration)
+    return dimmed || periodSeconds === null ? [] : [{ opportunity, periodSeconds }]
   })
+}
+
+function plotValue(opportunity: PlottedOpportunity): [number, number] {
+  return [opportunity.audience_fit_score, opportunity.momentum_score]
 }
 
 function bubbleItemStyle({ opportunity, dimmed }: Bubble, palette: LifecyclePalette) {
@@ -148,10 +151,16 @@ function bubbleItemStyle({ opportunity, dimmed }: Bubble, palette: LifecyclePale
 }
 
 // La seleccionada no lleva etiqueta: su tema ya está en la tarjeta flotante (artboard E).
-function bubbleLabel({ opportunity, dimmed }: Bubble, input: RadarChartInput) {
+function isLabelShown({ opportunity, dimmed }: Bubble, input: RadarChartInput): boolean {
+  if (!input.showLabels || input.entering || dimmed) return false
+  return opportunity.id !== input.selectedId
+}
+
+function bubbleLabel(bubble: Bubble, input: RadarChartInput) {
+  const { opportunity } = bubble
   const hovered = opportunity.id === input.hoveredId
   return {
-    show: input.showLabels && !dimmed && opportunity.id !== input.selectedId,
+    show: isLabelShown(bubble, input),
     formatter: () => opportunity.topic,
     position:
       opportunity.audience_fit_score > LABEL_FLIP_FIT_MIN ? ('left' as const) : ('right' as const),
@@ -169,42 +178,50 @@ function bubbleItem(bubble: Bubble, input: RadarChartInput) {
   return {
     // El id viaja como `name` para que el clic y el hover lo devuelvan tal cual.
     name: bubble.opportunity.id,
-    value: [bubble.opportunity.audience_fit_score, bubble.opportunity.momentum_score],
+    value: plotValue(bubble.opportunity),
     symbolSize: shownBubbleSize(bubble.opportunity, input),
     itemStyle: bubbleItemStyle(bubble, input.palette),
     label: bubbleLabel(bubble, input),
   }
 }
 
-function stillSeries(bubbles: Bubble[], input: RadarChartInput): ScatterSeriesOption {
+// Todas las burbujas en una sola serie, también las que laten: así entran con el retardo del
+// barrido y, al atenuarse, cambian de opacidad en su sitio en lugar de pasar a otra serie y
+// volver a entrar (D13).
+function bubbleSeries(bubbles: Bubble[], input: RadarChartInput): ScatterSeriesOption {
   const delays = bubbles.map(({ opportunity }) => detectionDelayMs(opportunity))
   return {
-    id: STILL_SERIES_ID,
+    id: BUBBLE_SERIES_ID,
     type: 'scatter',
     clip: false,
     // El hover agranda la burbuja desde `shownBubbleSize`, igual desde el radar que desde el ranking.
     emphasis: { scale: false },
-    animationDelay: (index) => delays[index],
+    // Entre dos etiquetas que chocan, ECharts deja la de la burbuja más grande (su prioridad es el
+    // área), que es la de más evidencia. Solo compara etiquetas entre sí, no con burbujas.
+    labelLayout: { hideOverlap: true },
+    // El retardo es solo para la entrada: `LabelLayout` lo reutiliza al fundir cada etiqueta nueva,
+    // y tras el barrido las retrasaría hasta 1,3 s más.
+    animationDelay: input.entering ? (index) => delays[index] : 0,
     data: bubbles.map((bubble) => bubbleItem(bubble, input)),
   }
 }
 
-function pulseSeries(bubbles: PulsingBubble[], input: RadarChartInput): EffectScatterSeriesOption {
-  const delays = bubbles.map(({ opportunity }) => detectionDelayMs(opportunity))
+// El `EffectSymbol` de ECharts rehace su entrada sin `animationDelay`: solo pinta el anillo, sobre
+// un símbolo transparente del tamaño de la burbuja, y `silent` deja el clic y el hover a la burbuja.
+function ringSeries(rings: Ring[], input: RadarChartInput): EffectScatterSeriesOption {
   return {
-    id: PULSE_SERIES_ID,
+    id: RING_SERIES_ID,
     type: 'effectScatter',
+    silent: true,
     clip: false,
     showEffectOn: 'render',
     rippleEffect: PULSE_RIPPLE,
-    emphasis: { scale: false },
-    animationDelay: (index) => delays[index],
-    data: bubbles.map((bubble) => ({
-      ...bubbleItem(bubble, input),
-      rippleEffect: {
-        period: bubble.pulseSeconds,
-        color: input.palette[bubble.opportunity.lifecycle].stroke,
-      },
+    data: rings.map(({ opportunity, periodSeconds }) => ({
+      name: opportunity.id,
+      value: plotValue(opportunity),
+      symbolSize: shownBubbleSize(opportunity, input),
+      itemStyle: { color: TRANSPARENT },
+      rippleEffect: { period: periodSeconds, color: input.palette[opportunity.lifecycle].stroke },
     })),
   }
 }
@@ -213,10 +230,10 @@ function pulseSeries(bubbles: PulsingBubble[], input: RadarChartInput): EffectSc
 // x = encaje % e y = (100 − momentum) % del área, y las capas HTML se colocan sin convertToPixel.
 export function buildRadarOption(input: RadarChartInput): RadarChartOption {
   const bubbles = toBubbles(input)
-  const still = bubbles.filter((bubble) => !isPulsing(bubble))
-  const pulsing = bubbles.filter(isPulsing)
-  const series: (ScatterSeriesOption | EffectScatterSeriesOption)[] = [stillSeries(still, input)]
-  if (!input.reducedMotion) series.push(pulseSeries(pulsing, input))
+  // Durante el barrido aún no late nada: cada anillo saldría antes que su burbuja (D13).
+  const rings = input.entering ? [] : toRings(bubbles)
+  const series: (ScatterSeriesOption | EffectScatterSeriesOption)[] = [bubbleSeries(bubbles, input)]
+  if (!input.reducedMotion) series.push(ringSeries(rings, input))
   return {
     animation: !input.reducedMotion,
     animationDuration: ENTRY_DURATION_MS,

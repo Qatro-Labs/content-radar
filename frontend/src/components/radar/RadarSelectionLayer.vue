@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
-import { formatAcceleration, formatScore } from '@/lib/opportunityFormat'
+import { formatScore } from '@/lib/opportunityFormat'
 import {
   bubblePosition,
   detectionDelayMs,
-  isPlotted,
   shownBubbleSize,
+  translateTo,
   type PlotPoint,
   type PlotSize,
-  type PlottedOpportunity,
 } from '@/lib/radarChart'
-import type { RankedOpportunity } from '@/lib/radarView'
+import { hasAudienceFit, type PlottedOpportunity, type RankedOpportunity } from '@/lib/radarView'
+
+import RadarFloatingCard from './RadarFloatingCard.vue'
 
 const { selected, hovered, size } = defineProps<{
   selected: RankedOpportunity | null
@@ -24,10 +24,6 @@ const { selected, hovered, size } = defineProps<{
 // DESIGN.md §7: tres ondas del trazo de la etapa, separadas 160 ms.
 const PING_WAVES = [0, 1, 2]
 const PING_STAGGER_MS = 160
-// Artboard E: la tarjeta va a 26 px de la burbuja y, con encaje > 62, a su izquierda, porque a la
-// derecha ya no cabe.
-const CARD_GAP_PX = 26
-const CARD_FLIP_FIT_MIN = 62
 // Un instante después de que el haz detecte la burbuja, cuando ya empieza a aparecer.
 const AFTER_DETECTION_MS = 50
 // DESIGN.md §7: la mira, las lecturas, los anillos y la tarjeta se deslizan en 320 ms, solo con
@@ -46,7 +42,9 @@ interface Spot {
 
 // Una oportunidad sin encaje (seleccionada desde el ranking) no tiene burbuja que marcar.
 function spotOf(opportunity: RankedOpportunity | null): Spot | null {
-  if (!opportunity || !isPlotted(opportunity) || size.width === 0 || size.height === 0) return null
+  if (!opportunity || !hasAudienceFit(opportunity) || size.width === 0 || size.height === 0) {
+    return null
+  }
   const focus = { selectedId: selected?.id ?? null, hoveredId: hovered?.id ?? null }
   return {
     opportunity,
@@ -65,17 +63,8 @@ watch(
   },
 )
 
-const translateTo = ({ x, y }: PlotPoint) => `translate(${x}px, ${y}px)`
-
 function ringBox({ point, diameter }: Spot) {
   return { width: `${diameter}px`, height: `${diameter}px`, transform: translateTo(point) }
-}
-
-function cardSide({ opportunity }: Spot): string {
-  if (opportunity.audience_fit_score > CARD_FLIP_FIT_MIN) {
-    return `translate(calc(-100% - ${CARD_GAP_PX}px), -50%)`
-  }
-  return `translate(${CARD_GAP_PX}px, -50%)`
 }
 
 const layout = computed(() => {
@@ -95,10 +84,8 @@ const layout = computed(() => {
     momentumReading: { transform: `translateY(calc(${y}px - 50%))` },
     fitReading: { transform: `translateX(calc(${x}px - 50%))` },
     ring: { ...ringBox(spot), animationDelay: `${delayMs}ms` },
-    card: {
-      transform: `${translateTo(spot.point)} ${cardSide(spot)}`,
-      animationDelay: `${delayMs}ms`,
-    },
+    // La tarjeta se coloca sola (RadarFloatingCard); aquí solo espera al haz.
+    card: { animationDelay: `${delayMs}ms` },
     pingColor: `var(${LIFECYCLE_STYLE[spot.opportunity.lifecycle].cssVar.stroke})`,
   }
 })
@@ -150,25 +137,13 @@ const hoverSpot = computed(() => (hovered?.id === selected?.id ? null : spotOf(h
           }"
         />
       </div>
-      <div
-        class="absolute top-0 left-0 z-[4] flex w-60 flex-col gap-1.5 rounded-tile bg-card px-3.5 py-3 shadow-float"
+      <RadarFloatingCard
+        :opportunity="layout.spot.opportunity"
+        :point="layout.spot.point"
+        class="absolute top-0 left-0 z-[4]"
         :class="[SLIDE, { 'radar-entry': isFirstSelection }]"
         :style="layout.card"
-      >
-        <LifecycleChip
-          :lifecycle="layout.spot.opportunity.lifecycle"
-          size="sm"
-          class="self-start"
-        />
-        <span class="text-[15px] leading-tight font-semibold">
-          {{ layout.spot.opportunity.topic }}
-        </span>
-        <!-- Etiqueta (#4A505A, DESIGN.md §2) no tiene token en main.css. -->
-        <span class="text-[13px] text-[#4a505a]">
-          Oportunidad {{ formatScore(layout.spot.opportunity.opportunity_score) }} ·
-          {{ formatAcceleration(layout.spot.opportunity.acceleration) }}
-        </span>
-      </div>
+      />
     </template>
     <span
       v-if="hoverSpot"
