@@ -5,8 +5,8 @@ oportunidad leída de la DB, no de los argumentos del modelo. Etiquetas fijas de
 """
 
 from app.agent.sanitize import TITLE_MAX_CHARS, strip_invisible, truncate
-from app.schemas.agent import RadarSort
-from app.schemas.opportunity import Confidence, Lifecycle
+from app.schemas.agent import DossierSection, RadarSort
+from app.schemas.opportunity import Confidence, Lifecycle, Recommendation
 
 LIFECYCLE_LABELS = {
     Lifecycle.EMERGING: "Emergente",
@@ -14,6 +14,21 @@ LIFECYCLE_LABELS = {
     Lifecycle.PEAKING: "En pico",
     Lifecycle.SATURATED: "Saturado",
     Lifecycle.UNKNOWN: "Sin etapa",
+}
+RECOMMENDATION_LABELS = {
+    Recommendation.PUBLISH_NOW: "Publicar ya",
+    Recommendation.FIND_ANGLE: "Buscar ángulo",
+    Recommendation.WAIT_FOR_CASE: "Esperar caso",
+    Recommendation.DISCARD: "Descartar",
+}
+# Los contadores de frontend/src/components/radar/RadarHero.vue: un filtro que equivale a uno de
+# ellos se nombra como el control que pulsa una persona.
+COUNTER_LABELS: dict[Lifecycle | Recommendation, str] = {
+    Recommendation.PUBLISH_NOW: RECOMMENDATION_LABELS[Recommendation.PUBLISH_NOW],
+    Lifecycle.ACCELERATING: LIFECYCLE_LABELS[Lifecycle.ACCELERATING],
+    # En plural, como el contador: cuenta temas.
+    Lifecycle.EMERGING: "Emergentes",
+    Lifecycle.UNKNOWN: LIFECYCLE_LABELS[Lifecycle.UNKNOWN],
 }
 CONFIDENCE_LABELS = {
     Confidence.HIGH: "confianza alta",
@@ -23,6 +38,13 @@ CONFIDENCE_LABELS = {
 SORT_LABELS: dict[RadarSort, str] = {
     "acceleration": "Ordenando por aceleración",
     "opportunity": "Ordenando por oportunidad",
+}
+SECTION_LABELS = {
+    DossierSection.SCORE: "Abriendo el expediente de",
+    DossierSection.EVOLUTION: "Mostrando la evolución de",
+    DossierSection.FIT: "Mostrando el encaje de",
+    DossierSection.EVIDENCE: "Mostrando la evidencia de",
+    DossierSection.LIMITS: "Mostrando qué no sabemos de",
 }
 GAP_LABEL = "Pulsando «Hueco en LATAM»"
 TOPIC_FILTER_LABEL = "tema"
@@ -37,6 +59,9 @@ EVIDENCE_PENDING_LABEL = "Revisando la evidencia"
 TIMELINE_PENDING_LABEL = "Revisando la evolución"
 HIGHLIGHT_PENDING_LABEL = "Resaltando oportunidades"
 SELECT_PENDING_LABEL = "Abriendo una oportunidad"
+SECTION_PENDING_LABEL = "Abriendo un expediente"
+SEARCH_PENDING_LABEL = "Buscando piezas"
+EXPLORE_LABEL = "Abriendo Explorar con la búsqueda"
 UNKNOWN_TOOL_LABEL = "Intentando un paso que no existe"
 
 
@@ -66,13 +91,43 @@ def select_label(topic: str) -> str:
     return f"Abriendo {_quoted(topic)}"
 
 
+def section_label(section: DossierSection, topic: str) -> str:
+    return f"{SECTION_LABELS[section]} {_quoted(topic)}"
+
+
+def search_label(count: int) -> str:
+    if count == 0:
+        return f"{SEARCH_PENDING_LABEL}: ninguna encontrada"
+    found = "1 encontrada" if count == 1 else f"{count} encontradas"
+    return f"{SEARCH_PENDING_LABEL}: {found}"
+
+
 def highlight_label(count: int) -> str:
     return "Resaltando 1 oportunidad" if count == 1 else f"Resaltando {count} oportunidades"
+
+
+def cited_label(count: int) -> str:
+    if count == 1:
+        return "Enseñando la oportunidad citada"
+    return f"Enseñando las {count} oportunidades citadas"
+
+
+def _counter(
+    lifecycle: list[Lifecycle] | None, recommendation: Recommendation | None
+) -> Lifecycle | Recommendation | None:
+    if recommendation and not lifecycle:
+        candidate = recommendation
+    elif lifecycle and len(lifecycle) == 1 and not recommendation:
+        candidate = lifecycle[0]
+    else:
+        return None
+    return candidate if candidate in COUNTER_LABELS else None
 
 
 def filters_label(
     *,
     lifecycle: list[Lifecycle] | None,
+    recommendation: Recommendation | None,
     confidence: Confidence | None,
     filters_topic: bool,
     gap: bool | None,
@@ -80,7 +135,12 @@ def filters_label(
 ) -> str:
     if gap:
         return GAP_LABEL
+    counter = _counter(lifecycle, recommendation)
+    if counter is not None and not (confidence or filters_topic or sort):
+        return f"Pulsando «{COUNTER_LABELS[counter]}»"
     filters = [LIFECYCLE_LABELS[stage] for stage in lifecycle or []]
+    if recommendation:
+        filters.append(RECOMMENDATION_LABELS[recommendation])
     if confidence:
         filters.append(CONFIDENCE_LABELS[confidence])
     if filters_topic:

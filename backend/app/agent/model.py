@@ -13,7 +13,7 @@ from app.agent.sanitize import CANARY
 from app.agent.tools import FINAL_ANSWER, TOOL_SCHEMAS
 from app.core.config import Settings
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 PROMPT_FILE = Path(__file__).resolve().parent / "prompts" / f"radar_agent.v{PROMPT_VERSION}.md"
 TOOL_USE = "tool_use"
 

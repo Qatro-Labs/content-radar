@@ -172,17 +172,18 @@ async def ask_agent(
     steps = 0
     try:
         async with session_factory() as session:
-            stream = run_agent(body.question, model=model, session=session, meter=meter)
+            stream = run_agent(body, model=model, session=session, meter=meter)
             async for event in stream:
                 if isinstance(event, DoneEvent):
                     steps = event.steps
                 yield _to_sse(event)
     finally:
         await _record_usage_despite_cancel(meter, session_factory)
-        # Nunca el texto de la pregunta ni la IP (D15).
+        # Nunca el texto de la pregunta, el de las anteriores ni la IP (D15).
         log.info(
             "agent_question",
             chars=len(body.question),
+            turn=len(body.history) + 1,
             steps=steps,
             ip_hash=_ip_hash(client_ip(request)),
         )
