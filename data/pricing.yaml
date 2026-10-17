@@ -1,0 +1,72 @@
+# Precios para el coste de operación (CLAUDE.md §4). Cada precio lleva su fuente.
+# El coste se calcula al registrar cada consumo en usage_events, así que cambiar un precio aquí
+# no altera el histórico. Si un precio cambia, se actualiza el valor, la fuente y checked_at.
+
+currency: USD
+checked_at: 2026-10-17
+
+# Coste por unidad consumida.
+variable:
+  youtube:
+    unit: quota_units
+    price_per_unit: 0
+    note: "Gratis dentro de la cuota de 10.000 unidades/día."
+    source: https://developers.google.com/youtube/v3/getting-started#quota
+  hackernews:
+    unit: requests
+    price_per_unit: 0
+    source: https://hn.algolia.com/api
+  rss:
+    unit: requests
+    price_per_unit: 0
+  brave_search:
+    unit: requests
+    price_per_unit: 0.005 # 5 $ por 1.000 consultas
+    free_credit_monthly: 5.00 # ≈ 1.000 consultas al mes
+    source: https://brave.com/search/api/
+  typesafe_jev:
+    unit: input_tokens
+    price_per_unit: 0.000000042 # 0,042 $ por millón de tokens de entrada; la salida es gratis
+    source: https://docs.typesafe.ai/models
+  llm_text:
+    # Pendiente: proveedor y modelo del LLM generativo (Melkin, CLAUDE.md §7).
+    unit: tokens
+    input_price_per_unit: null
+    output_price_per_unit: null
+
+# Coste mensual de los planes. "demo" es lo que usamos en la hackathon; "production" es lo que
+# necesitaría 30X para uso comercial (Vercel Hobby no permite uso comercial).
+fixed_monthly:
+  demo:
+    railway_hobby:
+      monthly: 5.00
+      note: "Compromiso mínimo de uso; el exceso se paga aparte."
+      source: https://railway.com/pricing
+    supabase_free:
+      monthly: 0
+      note: "Pausa el proyecto tras 1 semana sin actividad."
+      source: https://supabase.com/pricing
+    vercel_hobby:
+      monthly: 0
+      note: "Solo uso personal no comercial."
+      source: https://vercel.com/pricing
+    github_actions:
+      monthly: 0
+      note: "Gratis en repositorios públicos."
+      source: https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions
+  production:
+    railway_hobby:
+      monthly: 5.00
+      note: "Compromiso mínimo de uso; el exceso se paga aparte."
+      source: https://railway.com/pricing
+    supabase_pro:
+      monthly: 25.00
+      source: https://supabase.com/pricing
+    vercel_pro:
+      monthly: 20.00
+      note: "Por usuario."
+      source: https://vercel.com/pricing
+    github_actions:
+      monthly: 0
+      note: "Gratis en repositorios públicos."
+      source: https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions

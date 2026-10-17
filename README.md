@@ -1,8 +1,26 @@
 # content-radar · 30X Signal
 
-content-radar ayuda a líderes y equipos en Latinoamérica a producir contenido sobre IA buscando referentes y piezas que estén funcionando en LinkedIn, Instagram, TikTok y YouTube.
+Radar de inteligencia editorial para 30X: detecta qué temas de IA están acelerando, por qué funcionan y si encajan con su audiencia de líderes y equipos de Latinoamérica. Convierte señales públicas (YouTube, Hacker News, medios y RSS, más enlaces de LinkedIn, Instagram o TikTok curados a mano) en oportunidades editoriales con evidencia verificable, consultables desde un dashboard o desde asistentes de IA vía MCP.
 
-Radar de inteligencia editorial: detecta qué temas de IA están acelerando, por qué funcionan y si encajan con la audiencia de 30X, usando solo fuentes públicas. Plan, reglas y contratos en [CLAUDE.md](CLAUDE.md).
+- **Por qué y para quién:** [docs/brief.md](docs/brief.md)
+- **Plan, reglas y contratos:** [CLAUDE.md](CLAUDE.md)
+
+## Cómo trabajamos
+
+1. **Al empezar un bloque:** `git pull` y leer el último handoff del canal.
+2. **Antes de coger una tarea:** pasarla por el filtro de valor (`CLAUDE.md` §12). Si no mejora ningún paso del recorrido de demo, se aparca.
+3. **Una rama por tarea** (`data/…`, `intel/…`, `fe/…`), PRs pequeños y mergeados pronto. `main` siempre desplegable.
+4. **Elegir el modo de trabajo:**
+   - Tarea de 1 h o más con un contrato claro (scoring, endpoints, tools MCP, migraciones): `/spec` para planearla y `/build` para implementarla. `/spec <slug>` retoma un plan bloqueado o a medias.
+   - Todo lo demás (UI, arreglos, ajustes): directo con Claude, sin plan.
+5. **Contratos** (`Opportunity`, `Evidence`, `ContentSignal`, OpenAPI): se avisan en el canal antes de cambiarlos. Los tipos del frontend se generan desde la API, nunca a mano.
+6. **Decisiones:** se hablan en el canal y se escriben en `CLAUDE.md` con un PR. Si no está ahí, Claude no la conoce.
+7. **Merge:** cualquiera puede mergear a `main` (mismo poder de decisión) con los tests en verde. Claude nunca mergea.
+8. **Al cerrar un bloque:** handoff en el canal con el formato de `CLAUDE.md` §3.
+9. **Estado:** pregunta a Claude "¿cómo vamos?"; lo calcula a partir de los planes, los PRs y `git log`.
+10. **Bloqueado más de 30 min:** avisa, propón una alternativa y cambia de tarea.
+
+Estándares de código: [`.claude/rules/engineering-standards.md`](.claude/rules/engineering-standards.md).
 
 ## Requisitos
 
@@ -63,8 +81,9 @@ backend/app/
   mcp/           servidor MCP
   api/routes/    FastAPI (delgado)
   jobs/          pipelines ejecutables por cron
-frontend/        React + Vite (pendiente)
+frontend/        Vue 3 + Vite (pendiente)
 data/            fixtures, evaluaciones y perfiles de audiencia
+docs/            brief de producto y documentación de la entrega
 ```
 
 ## Estado

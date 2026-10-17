@@ -29,3 +29,6 @@ data/raw/
 
 # Logs del collector
 backend/logs/
+
+# Claude Code: ajustes personales
+.claude/settings.local.json
