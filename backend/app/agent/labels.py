@@ -106,6 +106,12 @@ def highlight_label(count: int) -> str:
     return "Resaltando 1 oportunidad" if count == 1 else f"Resaltando {count} oportunidades"
 
 
+def cited_label(count: int) -> str:
+    if count == 1:
+        return "Enseñando la oportunidad citada"
+    return f"Enseñando las {count} oportunidades citadas"
+
+
 def _counter(
     lifecycle: list[Lifecycle] | None, recommendation: Recommendation | None
 ) -> Lifecycle | Recommendation | None:
