@@ -98,6 +98,7 @@ class ComputedOpportunities:
 async def compute_opportunities(
     session: AsyncSession,
     as_of: datetime,
+    *,
     pieces: list[Piece] | None = None,
     judgments: Mapping[int, PieceJudgment] | None = None,
 ) -> ComputedOpportunities:

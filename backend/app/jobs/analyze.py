@@ -11,7 +11,7 @@ LLM_API_KEY, o si el LLM falla en un tema, su audience fit queda en null (CLAUDE
 import asyncio
 import sys
 from collections import Counter
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from typing import Any
 
@@ -31,6 +31,7 @@ from app.services.classification import ClassificationStats, classify_pieces, lo
 from app.services.costs import record_meter
 from app.services.opportunities import (
     ANALYZE_JOB,
+    ComputedOpportunities,
     compute_opportunities,
     load_pieces,
     save_opportunities,
@@ -41,15 +42,20 @@ log = structlog.get_logger()
 LOCK_KEY = 0x0A7A1F2E  # clave de pg_advisory_lock para este job
 
 
-async def _run(
-    session: AsyncSession, run_row: PipelineRun
-) -> tuple[ClassificationStats, FitStats, list[TopicResult], dict[str, Any]]:
-    as_of = datetime.now(UTC)
+@dataclass
+class _Evaluated:
+    jev: ClassificationStats
+    fit: FitStats
+    computed: ComputedOpportunities
+    results: list[TopicResult]
+
+
+async def _evaluate(session: AsyncSession, run_id: int, as_of: datetime) -> _Evaluated:
     settings = get_settings()
     loaded = await load_pieces(session, as_of)
     meter = UsageMeter()
     jev = await classify_pieces(session, loaded, judge=build_judge(settings), meter=meter)
-    await record_meter(session, meter, pipeline_run_id=run_row.id)
+    await record_meter(session, meter, pipeline_run_id=run_id)
     answers = await load_judgments(session, loaded)
     judgments = {item_id: to_piece_judgment(item_id, a) for item_id, a in answers.items()}
     computed = await compute_opportunities(session, as_of, pieces=loaded, judgments=judgments)
@@ -61,20 +67,32 @@ async def _run(
         evaluator=build_evaluator(settings),
         meter=llm_meter,
     )
-    await record_meter(session, llm_meter, pipeline_run_id=run_row.id)
-    await save_opportunities(session, run_row.id, results)
-    stats: dict[str, Any] = {
+    await record_meter(session, llm_meter, pipeline_run_id=run_id)
+    return _Evaluated(jev, fit, computed, results)
+
+
+def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
+    return {
         "as_of": as_of.isoformat(),
-        "pieces": computed.analyzed,
-        "off_topic_removed": computed.off_topic_removed,
-        "opportunities": len(results),
-        "lifecycle": dict(Counter(r.opportunity.lifecycle.value for r in results)),
-        "recommendation": dict(Counter(r.opportunity.recommendation.value for r in results)),
-        "jev": asdict(jev),
-        "llm": asdict(fit),
+        "pieces": e.computed.analyzed,
+        "off_topic_removed": e.computed.off_topic_removed,
+        "opportunities": len(e.results),
+        "lifecycle": dict(Counter(r.opportunity.lifecycle.value for r in e.results)),
+        "recommendation": dict(Counter(r.opportunity.recommendation.value for r in e.results)),
+        "jev": asdict(e.jev),
+        "llm": asdict(e.fit),
     }
+
+
+async def _run(
+    session: AsyncSession, run_row: PipelineRun
+) -> tuple[ClassificationStats, FitStats, list[TopicResult], dict[str, Any]]:
+    as_of = datetime.now(UTC)
+    evaluated = await _evaluate(session, run_row.id, as_of)
+    await save_opportunities(session, run_row.id, evaluated.results)
+    stats = _stats(as_of, evaluated)
     run_row.status, run_row.stats = "success", stats
-    return jev, fit, results, stats
+    return evaluated.jev, evaluated.fit, evaluated.results, stats
 
 
 def _print_summary(

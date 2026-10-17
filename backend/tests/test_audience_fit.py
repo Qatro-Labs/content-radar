@@ -34,6 +34,10 @@ def assessments(levels: dict[FitCriterion, int], urls: list[str]) -> list[Criter
     ]
 
 
+def sent(topic: TopicResult) -> set[str]:
+    return {p.url for p in topic.pieces}
+
+
 def emerging_topic() -> TopicResult:
     hn = [piece(i, hours_ago=5 + i * 6) for i in range(6)]
     rss = [
@@ -69,7 +73,8 @@ def test_actionability_is_the_actionable_content_level():
 def test_apply_fit_fills_scores_breakdown_and_publish_now():
     topic = emerging_topic()
 
-    o = apply_fit(topic, assessments(LEVELS, ["https://example.com/0"])).opportunity
+    cited = assessments(LEVELS, ["https://example.com/0"])
+    o = apply_fit(topic, cited, sent_urls=sent(topic)).opportunity
 
     assert (o.audience_fit_score, o.actionability_score) == (63.3, 100.0)
     # 0,30·50 + 0,25·63,3 + 0,20·60 + 0,15·(100 − 20) + 0,10·100 = 64,825; 9 piezas, 4 fuentes:
@@ -83,7 +88,10 @@ def test_apply_fit_fills_scores_breakdown_and_publish_now():
 
 
 def test_low_fit_does_not_publish():
-    o = apply_fit(emerging_topic(), assessments(dict.fromkeys(FitCriterion, 2), [])).opportunity
+    topic = emerging_topic()
+    o = apply_fit(
+        topic, assessments(dict.fromkeys(FitCriterion, 2), []), sent_urls=sent(topic)
+    ).opportunity
     assert o.audience_fit_score == 40.0
     assert o.recommendation is Recommendation.FIND_ANGLE
 
@@ -91,7 +99,8 @@ def test_low_fit_does_not_publish():
 def test_citation_outside_the_topic_is_dropped_and_noted():
     cited = ["https://example.com/0", "https://otro-sitio.example/x"]
 
-    o = apply_fit(emerging_topic(), assessments(LEVELS, cited)).opportunity
+    topic = emerging_topic()
+    o = apply_fit(topic, assessments(LEVELS, cited), sent_urls=sent(topic)).opportunity
 
     assert o.audience_fit_criteria is not None
     assert all(
@@ -99,6 +108,17 @@ def test_citation_outside_the_topic_is_dropped_and_noted():
         for c in o.audience_fit_criteria
     )
     assert any("6 citas" in note for note in o.limitations)  # una por criterio
+
+
+def test_citation_to_a_topic_piece_the_llm_did_not_receive_is_dropped():
+    topic = emerging_topic()
+    received = {"https://example.com/0"}
+    not_sent = next(p.url for p in topic.pieces if p.url not in received)
+
+    o = apply_fit(topic, assessments(LEVELS, [not_sent]), sent_urls=received).opportunity
+
+    assert o.audience_fit_criteria is not None
+    assert all(c.evidence_urls == [] for c in o.audience_fit_criteria)
 
 
 def test_failed_fit_stays_null_with_limitation():

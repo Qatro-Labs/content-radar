@@ -96,6 +96,7 @@ async def _save(
 
 def _pending_by_key(
     results: Sequence[TopicResult],
+    *,
     inputs: Sequence[TopicInput],
     keys: Sequence[str],
     cached: Mapping[str, Any],
@@ -141,13 +142,15 @@ async def evaluate_topics(
     inputs = [build_topic_input(r, answers) for r in results]
     keys = [evaluation_cache_key(t, model) for t in inputs]
     cached = await _cached_outputs(session, keys)
-    pending = _pending_by_key(results, inputs, keys, cached)
+    pending = _pending_by_key(results, inputs=inputs, keys=keys, cached=cached)
     evaluated = await _evaluate_pending(session, evaluator, pending, meter=meter)
 
     outputs = {**cached, **{key: r.output for key, r in evaluated.items()}}
     fitted = [
-        apply_fit(result, outputs[key].assessments()) if key in outputs else mark_fit_failed(result)
-        for result, key in zip(results, keys, strict=True)
+        apply_fit(result, outputs[key].assessments(), sent_urls={p.url for p in topic.pieces})
+        if key in outputs
+        else mark_fit_failed(result)
+        for result, topic, key in zip(results, inputs, keys, strict=True)
     ]
     without_evidence = sum(not t.pieces for t in inputs)
     stats = FitStats(

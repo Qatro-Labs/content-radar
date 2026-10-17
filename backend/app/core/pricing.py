@@ -20,12 +20,16 @@ class VariablePrice(BaseModel):
     # Un LLM cobra distinto la entrada y la salida: `units` son los tokens de entrada.
     input_price_per_unit: Decimal | None = None
     output_price_per_unit: Decimal | None = None
+    model: str | None = None  # modelo al que corresponde el precio, si depende del modelo
     free_credit_monthly: Decimal | None = None
 
-    def cost(self, units: Decimal, *, output_units: Decimal = Decimal(0)) -> Decimal | None:
+    def cost(self, units: Decimal, *, output_units: Decimal | None = None) -> Decimal | None:
         if self.price_per_unit is not None:
             return units * self.price_per_unit
+        # Sin los tokens de salida el coste sería parcial: mejor null que un número falso.
         if self.input_price_per_unit is None or self.output_price_per_unit is None:
+            return None
+        if output_units is None:
             return None
         return units * self.input_price_per_unit + output_units * self.output_price_per_unit
 

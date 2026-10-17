@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.collectors.hackernews import API_URL as HN_URL
 from app.collectors.usage import UsageCount, UsageMeter
 from app.collectors.youtube import API_BASE, YouTubeClient, YouTubeCollector
+from app.core.config import Settings
 from app.core.pricing import VariablePrice, get_pricing
 from app.db.session import get_session
 from app.jobs import collect
@@ -29,6 +30,14 @@ def unknown_llm_price(monkeypatch):
     variable = {**pricing.variable, Provider.LLM_TEXT: VariablePrice(unit="tokens")}
     patched = pricing.model_copy(update={"variable": variable})
     monkeypatch.setattr(costs, "get_pricing", lambda: patched)
+
+
+@pytest.fixture
+def llm_model(monkeypatch):
+    def use(model: str) -> None:
+        monkeypatch.setattr(costs, "get_settings", lambda: Settings(llm_model=model))
+
+    return use
 
 
 # --- precios ------------------------------------------------------------------------------
@@ -65,7 +74,12 @@ def test_llm_cost_prices_input_and_output_separately():
     assert price.cost(Decimal(1_000_000), output_units=Decimal(1_000_000)) == Decimal("0.60")
 
 
-async def test_llm_meter_records_total_tokens_and_split(session):
+def test_llm_cost_without_output_tokens_is_null():
+    assert get_pricing().variable[Provider.LLM_TEXT].cost(Decimal(1_000_000)) is None
+
+
+async def test_llm_meter_records_total_tokens_and_split(session, llm_model):
+    llm_model("claude-haiku-5-5")
     meter = UsageMeter()
     meter.add(Provider.LLM_TEXT, "evaluate_topic", units=600, output_units=200)
     meter.add(Provider.LLM_TEXT, "evaluate_topic", units=400, output_units=300)
@@ -77,6 +91,17 @@ async def test_llm_meter_records_total_tokens_and_split(session):
     # 1000 de entrada · 0,10 $/M + 500 de salida · 0,50 $/M = 0,0001 + 0,00025.
     assert (event.calls, event.units, event.cost_usd) == (2, 1500, Decimal("0.00035"))
     assert event.details == {"input_tokens": 1000, "output_tokens": 500}
+
+
+async def test_llm_cost_is_null_when_the_configured_model_is_not_the_priced_one(session, llm_model):
+    llm_model("claude-sonnet-5-5")
+    meter = UsageMeter()
+    meter.add(Provider.LLM_TEXT, "evaluate_topic", units=600, output_units=200)
+
+    await record_meter(session, meter)
+
+    event = await session.scalar(select(UsageEvent))
+    assert event is not None and event.cost_usd is None
 
 
 async def test_record_usage_keeps_unknown_price_as_null(session, unknown_llm_price):

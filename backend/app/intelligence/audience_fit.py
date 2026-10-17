@@ -4,7 +4,7 @@ Aquí no hay LLM ni DB: entran los niveles ya validados y salen los scores, el d
 Opportunity Score y la recomendación (regla 4).
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, Sequence, Set
 from dataclasses import dataclass, replace
 
 from pydantic import HttpUrl
@@ -29,7 +29,7 @@ EDITORIAL_PENDING_NOTE = (
 class CriterionAssessment:
     criterion: FitCriterion
     justification: str
-    cited_urls: list[str]  # tal cual las da el LLM: `apply_fit` quita las que no son del tema
+    cited_urls: list[str]  # tal cual las da el LLM: `apply_fit` quita las que no recibió
     level: int
 
 
@@ -48,11 +48,11 @@ def actionability_score(levels: Mapping[FitCriterion, int]) -> float:
 
 
 def _criteria(
-    assessments: Sequence[CriterionAssessment], topic_urls: set[str]
+    assessments: Sequence[CriterionAssessment], sent_urls: Set[str]
 ) -> tuple[list[AudienceFitCriterion], int]:
     criteria, dropped = [], 0
     for a in sorted(assessments, key=lambda a: list(FitCriterion).index(a.criterion)):
-        valid = [u for u in a.cited_urls if u in topic_urls]
+        valid = [u for u in a.cited_urls if u in sent_urls]
         dropped += len(a.cited_urls) - len(valid)
         criteria.append(
             AudienceFitCriterion(
@@ -69,15 +69,19 @@ def _limitations(notes: list[str], replacement: str, *, dropped_citations: int) 
     kept = [replacement if n == LLM_PENDING_NOTE else n for n in notes]
     if dropped_citations:
         citations = "1 cita" if dropped_citations == 1 else f"{dropped_citations} citas"
-        kept.append(f"Se descartaron {citations} del LLM a evidencias que no son de este tema.")
+        kept.append(f"Se descartaron {citations} del LLM a evidencias que no recibió.")
     return kept
 
 
-def apply_fit(result: TopicResult, assessments: Sequence[CriterionAssessment]) -> TopicResult:
+def apply_fit(
+    result: TopicResult, assessments: Sequence[CriterionAssessment], *, sent_urls: Set[str]
+) -> TopicResult:
+    # Solo valen las citas a piezas que el LLM recibió: el tema incluye piezas excluidas por
+    # inyección y otras que no se envían, y citarlas sería evidencia aparente (CLAUDE.md §2.3).
     o = result.opportunity
     levels = {a.criterion: a.level for a in assessments}
     fit, action = audience_fit_score(levels), actionability_score(levels)
-    criteria, dropped = _criteria(assessments, {p.url for p in result.pieces})
+    criteria, dropped = _criteria(assessments, sent_urls)
     breakdown = score_breakdown(
         momentum=o.momentum_score,
         audience_fit=fit,
