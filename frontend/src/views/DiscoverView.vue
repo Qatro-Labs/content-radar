@@ -3,12 +3,12 @@ import { computed, ref } from 'vue'
 
 import { useOpportunities } from '@/api/opportunities'
 import AudienceMixCard from '@/components/radar/AudienceMixCard.vue'
-import OpportunityDetail from '@/components/radar/OpportunityDetail.vue'
 import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
 import OpportunityRanking from '@/components/radar/OpportunityRanking.vue'
 import RadarFilters from '@/components/radar/RadarFilters.vue'
 import RadarFootnote from '@/components/radar/RadarFootnote.vue'
 import RadarHero from '@/components/radar/RadarHero.vue'
+import RadarSidePanel from '@/components/radar/RadarSidePanel.vue'
 import RadarStates, { RadarPlaceholder } from '@/components/radar/RadarStates.vue'
 import WhyItMattersCard from '@/components/radar/WhyItMattersCard.vue'
 import { useRadarQuery } from '@/composables/useRadarQuery'
@@ -56,10 +56,12 @@ function hover(id: string | null) {
         @select="select"
         @hover="hover"
       />
-      <OpportunityDetail
-        class="flex-[1_1_380px]"
-        :opportunity="view.selected"
-        :total="view.total"
+      <RadarSidePanel
+        :view
+        :monitoring-started-at="data.monitoring_started_at"
+        @select="select"
+        @hover="hover"
+        @clear="update({ selected: null })"
       />
     </div>
 

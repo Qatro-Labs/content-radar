@@ -234,6 +234,16 @@ export function radarSubline(view: RadarView, query: RadarQuery): string {
   return HOW_TO_READ
 }
 
+// D9 del plan fe-dashboard-v2.
+export function describeWeekPicks({ topics, hasPublishNow }: WeekPicks): string {
+  if (!hasPublishNow) {
+    return 'Ningún tema cumple hoy las condiciones de «Publicar ya». Los primeros del ranking:'
+  }
+  const reason = topics.length === 1 ? 'crece y encaja' : 'crecen y encajan'
+  const count = formatCount(topics.length, TOPIC_NOUN)
+  return `${count} para publicar ya: ${reason} con la audiencia de 30X.`
+}
+
 function missingStageReason(unknownCount: number, preliminaryCount: number): string {
   const unmatchedCount = unknownCount - preliminaryCount
   if (preliminaryCount === 0) return 'ninguna regla se cumple'
