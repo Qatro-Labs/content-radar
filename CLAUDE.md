@@ -84,7 +84,7 @@ Domain services (Python)
 `collect → normalize & dedupe → save snapshots → embed → cluster → score → editorial insights → persist opportunities`.
 Lock para que nunca corran dos ejecuciones del mismo pipeline a la vez.
 
-**Coste de operación (P0; responde al "sin gastar una fortuna" del reto).** Cada llamada a una API externa (YouTube, Brave, Jev, LLM) registra su consumo en `usage_events`, con el coste calculado en ese momento a partir de `data/pricing.yaml` (precios con fuente y fecha). `services/costs.py` agrega el coste medido y lo proyecta al mes sumando los planes fijos (perfiles `demo` y `production`). Lo consumen `GET /costs`, el panel de coste del dashboard y la tool MCP `get_operating_cost`. El coste medido y la proyección se etiquetan siempre por separado: la proyección es una estimación.
+**Coste de operación (P1, se consulta bajo demanda; responde al "sin gastar una fortuna" del reto).** Es un complemento: el protagonista es el Radar con su evidencia. Cada llamada a una API externa (YouTube, Brave, Jev, LLM) registra su consumo en `usage_events`, con el coste calculado en ese momento a partir de `data/pricing.yaml` (precios con fuente y fecha). `services/costs.py` agrega el coste medido y lo proyecta al mes sumando los planes fijos (perfiles `demo` y `production`). Lo consumen `GET /costs` y la tool MCP `get_operating_cost`. El dashboard no tiene panel de coste; como mucho, un enlace discreto. El coste medido y la proyección se etiquetan siempre por separado: la proyección es una estimación.
 
 **Comandos** (desde `backend/`; la puesta en marcha completa está en `README.md`):
 
@@ -331,14 +331,14 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 3. **¿Se sostiene con datos reales y evidencia enlazada?** Si solo luce con datos de ejemplo, no aporta a la demo.
 4. **¿Cabe antes del próximo checkpoint (§13)?** Si no, se recorta a la versión mínima que aporta, o se avisa.
 
-- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · clasificación por pieza con Jev · audience fit con el LLM · evidencias verificables · coste de operación medido (registro de consumo, `GET /costs` y panel) · dashboard Vue con Radar y detalle · despliegue.
-- **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LinkedIn vía API de portabilidad, exports de analítica y embed oficial · LATAM Opportunity Gap · comparación de oportunidades.
+- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · clasificación por pieza con Jev · audience fit con el LLM · evidencias verificables · dashboard Vue con Radar y detalle · despliegue.
+- **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LinkedIn vía API de portabilidad, exports de analítica y embed oficial · LATAM Opportunity Gap · comparación de oportunidades · coste de operación bajo demanda (`GET /costs` y `get_operating_cost`, sin panel).
 - **P2:** Topic Network · animaciones avanzadas · más fuentes · varias audiencias.
 
 **Ningún P2 puede poner en riesgo un P0.**
 
 **Orden de construcción.** No se recorta nada; se decide qué va primero para que la demo funcione aunque un extra no llegue a tiempo:
-1. **Núcleo, para el MVP de las 00:30:** datos → embeddings y clustering → scores en Python → clasificación por pieza (Jev, o el LLM en lote) → audience fit y textos con el LLM → API → Radar y detalle en Vue → coste.
+1. **Núcleo, para el MVP de las 00:30:** datos → embeddings y clustering → scores en Python → clasificación por pieza (Jev, o el LLM en lote) → audience fit y textos con el LLM → API → Radar y detalle en Vue.
 2. **Después del núcleo:** verificación de afirmaciones con Jev, *lift* del "por qué funcionó", batería de pares (mientras tanto, la regla de similitud), MCP, briefs, LinkedIn por la API de portabilidad y Brave.
 
 **Fuera de alcance:** scraping de redes cerradas · entrenar modelos · auto-publicación · editor de contenido · multi-tenant · auth avanzada · facturación · causalidad o viralidad presentadas como certeza · igualar la cobertura de las herramientas de referencia (1of10, SparkToro, Exploding Topics…) · una base propia de comportamiento de audiencias · monitorizar todas las redes o todo el mercado LATAM · predicciones con poco historial.
@@ -365,7 +365,7 @@ Las ideas sin prioridad asignada están en `docs/brief.md` §9.
 
 **Criterios de aceptación:** la lista de verificación de la entrega está en `docs/brief.md` §8. Se repasa en la revisión del domingo a las 12:30 y antes del code freeze.
 
-**Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1) → el impacto: coste real medido de operar el radar (sin cifras de ahorro que no hayamos medido).
+**Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1). El coste medido de operar el radar no es un paso del guion: se responde si alguien lo pregunta, por MCP o con `GET /costs` (sin cifras de ahorro que no hayamos medido).
 
 **La demo usa una ejecución de `analyze` congelada:** los clusters cambian entre ejecuciones, así que el ranking que se enseña es el de una ejecución fijada y revisada a mano.
 
