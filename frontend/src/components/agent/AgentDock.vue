@@ -3,11 +3,13 @@ import type { AgentStatus, AgentTurnView } from '@/lib/agentTypes'
 
 import AgentComposer from './AgentComposer.vue'
 import AgentTranscript from './AgentTranscript.vue'
+import type { RadMarkState } from './RadMark.vue'
 
-const { turns, status, suggestions } = defineProps<{
+const { turns, status, suggestions, mark } = defineProps<{
   turns: AgentTurnView[]
   status: AgentStatus
   suggestions: string[]
+  mark: RadMarkState
 }>()
 
 const emit = defineEmits<{
@@ -39,6 +41,7 @@ const emit = defineEmits<{
     <AgentComposer
       :busy="status !== 'idle'"
       :suggestions
+      :mark
       @ask="(question) => emit('ask', question)"
       @stop="emit('stop')"
     />

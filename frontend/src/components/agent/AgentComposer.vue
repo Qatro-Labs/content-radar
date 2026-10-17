@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
 
-const { busy, suggestions } = defineProps<{ busy: boolean; suggestions: string[] }>()
+import RadMark, { type RadMarkState } from './RadMark.vue'
+
+const { busy, suggestions, mark } = defineProps<{
+  busy: boolean
+  suggestions: string[]
+  mark: RadMarkState
+}>()
 
 const emit = defineEmits<{
   ask: [question: string]
@@ -45,13 +51,7 @@ function submit() {
     </ul>
 
     <form data-agent="composer" class="flex items-center gap-2" @submit.prevent="submit">
-      <!-- Marca provisional del artboard E; el paso C.2 del plan la sustituye por RadMark. -->
-      <span
-        aria-hidden="true"
-        class="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-foreground"
-      >
-        <span class="size-3 rounded-full bg-signal" />
-      </span>
+      <RadMark :state="mark" />
 
       <label :for="inputId" class="sr-only">Pregunta para Rad</label>
       <input
