@@ -61,7 +61,7 @@ y dónde la respondemos.
 | El reto dice | Qué implica para nosotros | Dónde lo respondemos |
 |---|---|---|
 | "de forma confiable" | Cada afirmación lleva su evidencia y dice si es dato observado, estimado o preliminar | CLAUDE.md §2 (reglas 3 y 5) · §7 de este brief |
-| "sin gastar una fortuna" (hoy pagan miles de USD al año) | Solo fuentes gratuitas o con API oficial, y modelos baratos. El coste real de operar el radar se mide en cada llamada y se enseña en el dashboard y por MCP | CLAUDE.md §4 (coste de operación) · `data/pricing.yaml` · [`sources.md`](sources.md) |
+| "sin gastar una fortuna" (hoy pagan miles de USD al año) | Solo fuentes gratuitas o con API oficial, y modelos baratos. El coste real de operar el radar se mide en cada llamada y se consulta bajo demanda (MCP o `GET /costs`) | CLAUDE.md §4 (coste de operación) · `data/pricing.yaml` · [`sources.md`](sources.md) |
 | "temas **y formatos**" | El formato es una dimensión más: se analiza qué formato funciona y se recomienda formato por plataforma | `ContentSignal.format` · "por qué funcionó" · `recommendation` |
 | "si es una tendencia que recién empieza o una que ya todos copiaron" | Etapa del ciclo de vida y saturación, no solo volumen | `lifecycle` (`emerging` … `saturated`), `saturation_score` |
 | "por qué funcionó: gancho, formato, tema, momento, quién" | Outliers frente a su referencia y contraste con el resto del tema, presentado como hipótesis | CLAUDE.md §7 (outliers y "por qué funcionó") |
@@ -138,7 +138,7 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Opportunity Score | Ordena oportunidades por señal, relevancia, evidencia y saturación | Propia | `intelligence/ranking` | P0 |
 | Explainable Insights | Une cada interpretación con su evidencia, su hipótesis y sus limitaciones | Feedly AI | `editorial/analyzer` (`why_it_matters`, `limitations`) | P0 |
 | Content Pattern Analysis | Jev clasifica gancho y formato; Python calcula el *lift* de los outliers frente al resto del tema (también momento y autor); el LLM redacta la hipótesis | vidIQ / 1of10 | `editorial/analyzer` | P0 · *lift* tras el núcleo |
-| Operating Cost | Registra el consumo de cada API y muestra el coste medido y la proyección mensual | Reto (§1) | `services/costs`, `GET /costs`, panel de coste | P0 |
+| Operating Cost | Registra el consumo de cada API y muestra el coste medido y la proyección mensual | Reto (§1) | `services/costs`, `GET /costs`, `get_operating_cost` (sin panel) | P1 |
 | Interactive Radar | Permite explorar, filtrar, seleccionar y abrir evidencias | Propia | `frontend/`: vistas Discover y Explore | P0 |
 | Historical Tracking | Guarda observaciones y muestra la evolución cuando hay historial | Exploding Topics | `metric_snapshots` (P0) · timeline (P1) | P0 / P1 |
 | Content Recommendations | Propone tema, ángulo y formato por plataforma | SparkToro / vidIQ | `recommendation` (P0) · `editorial/briefs` y vista Create (P1) | P0 / P1 |
@@ -204,7 +204,7 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
 
 **Respuesta al reto**
 - El prototipo responde la pregunta de CLAUDE.md §1 con datos reales.
-- El panel de coste (y `get_operating_cost` por MCP) muestra el coste medido y la proyección
+- `get_operating_cost` por MCP (y `GET /costs`) muestra el coste medido y la proyección
   mensual por separado, con el desglose por proveedor y la fuente de cada precio.
 - Cada juicio de Jev guarda la versión del modelo y su `confidence`. Si hubo clave de Jev, se
   validó con piezas etiquetadas a mano en `data/evaluations/`.
