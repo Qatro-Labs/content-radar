@@ -57,6 +57,7 @@ class ContentItem(TimestampMixin, Base):
     platform: Mapped[str] = mapped_column(String(32))
     external_id: Mapped[str] = mapped_column(String(512))
     url: Mapped[str] = mapped_column(Text)
+    target_url: Mapped[str | None] = mapped_column(Text)
     title: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     author_name: Mapped[str | None] = mapped_column(String(255))

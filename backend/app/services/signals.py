@@ -25,6 +25,7 @@ async def store_signals(
             "platform": s.platform.value,
             "external_id": s.external_id,
             "url": str(s.url),
+            "target_url": str(s.target_url) if s.target_url else None,
             "title": s.title,
             "description": s.description,
             "author_name": s.author_name,

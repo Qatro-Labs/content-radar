@@ -61,6 +61,8 @@ class ContentSignal(BaseModel):
         description="ID estable en la plataforma (video id, HN objectID, guid RSS)"
     )
     url: HttpUrl
+    # Enlace al que apunta la pieza (p. ej. el artículo de una story de HN). Une fuentes.
+    target_url: HttpUrl | None = None
     title: str
     description: str | None = Field(default=None, max_length=5000)
     # Nombre público del canal/medio/cuenta. Nunca datos personales de usuarios.

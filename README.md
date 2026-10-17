@@ -19,6 +19,7 @@ cd backend
 uv sync
 uv run alembic upgrade head
 uv run python -m app.jobs.seed_sources   # carga data/sources.yaml (idempotente)
+uv run python -m app.jobs.collect        # backfill 14 días; --days 7 para refrescar métricas
 uv run uvicorn app.main:app --reload # http://localhost:8000/health · docs en /docs
 ```
 
@@ -62,5 +63,5 @@ data/            fixtures, evaluaciones y perfiles de audiencia
 | Tablas `sources`, `content_items`, `metric_snapshots`, `pipeline_runs` | ✅ |
 | `store_signals` (dedupe + historial de snapshots) y `GET /api/v1/sources/status` | ✅ |
 | Lista inicial de fuentes (`data/sources.yaml`: 38 YouTube · 7 HN · 34 RSS) + loader `app.jobs.seed_sources` | ✅ (YouTube pendiente de API key) |
-| Collectors YouTube / HN / RSS + backfill 14 días | ⏳ |
+| Collectors HN / RSS / YouTube + backfill 14 días (`app.jobs.collect`) | ✅ HN y RSS con datos reales · YouTube listo, pendiente de API key |
 | Job periódico de snapshots | ⏳ |
