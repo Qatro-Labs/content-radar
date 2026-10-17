@@ -528,7 +528,9 @@
         },
         "outlier_ratio": 6.1,
         "is_outlier": true,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/2",
@@ -549,7 +551,9 @@
         },
         "outlier_ratio": 3.4,
         "is_outlier": true,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/3",
@@ -564,7 +568,9 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ],
     "opp_002": [
@@ -584,7 +590,9 @@
         "velocity": null,
         "outlier_ratio": 2.2,
         "is_outlier": false,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/5",
@@ -603,7 +611,9 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ],
     "opp_003": [
@@ -627,7 +637,9 @@
         },
         "outlier_ratio": 1.8,
         "is_outlier": false,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/7",
@@ -688,7 +700,9 @@
         },
         "outlier_ratio": 0.6,
         "is_outlier": false,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ],
     "opp_005": [
@@ -705,7 +719,9 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ]
   },
