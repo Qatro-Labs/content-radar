@@ -1,5 +1,5 @@
-import { queryOptions, useQueries, useQuery } from '@tanstack/vue-query'
-import { computed, toValue, type MaybeRefOrGetter } from 'vue'
+import { queryOptions, useQuery } from '@tanstack/vue-query'
+import { toValue, type MaybeRefOrGetter } from 'vue'
 
 import type { Period } from '@/lib/radarQuery'
 
@@ -8,10 +8,11 @@ import { api, type Schemas } from './client'
 type OpportunityList = Schemas['OpportunityList']
 type Opportunity = Schemas['Opportunity']
 type Evidence = Schemas['Evidence']
+type TopicEvidence = Schemas['TopicEvidence']
 type OpportunityTimeline = Schemas['OpportunityTimeline']
 
-// Lo que una vista necesita de cada consulta de una lista (mini barras, evidencia de todos los
-// temas) para pintar su estado sin depender del tipo interno de TanStack Query.
+// Lo que una sección necesita de su consulta (mini barras, evidencia y evolución del expediente)
+// para pintar su estado sin depender del tipo interno de TanStack Query.
 export interface QueryState<T> {
   data: T | undefined
   isPending: boolean
@@ -80,6 +81,18 @@ async function fetchTimeline(id: string): Promise<OpportunityTimeline | null> {
   return data
 }
 
+async function fetchAllEvidence(): Promise<TopicEvidence[] | null> {
+  if (USING_FIXTURES) {
+    const { evidence } = await loadFixture()
+    return Object.entries(evidence).flatMap(([id, pieces]) =>
+      pieces.map((piece) => ({ ...piece, opportunity_id: id })),
+    )
+  }
+  const { data, error } = await api.GET('/api/v1/evidence')
+  if (error !== undefined || data === undefined) throw new Error('GET /evidence falló')
+  return data
+}
+
 async function fetchAllTimelines(): Promise<OpportunityTimeline[] | null> {
   if (USING_FIXTURES) return Object.values((await loadFixture()).timeline)
   const { data, error } = await api.GET('/api/v1/timelines')
@@ -87,8 +100,6 @@ async function fetchAllTimelines(): Promise<OpportunityTimeline[] | null> {
   return data
 }
 
-// Las consultas individuales y las de lista comparten clave: el expediente reutiliza la
-// evidencia que ya cargó Explorar, y al revés.
 function opportunityQueryOptions(id: string) {
   return queryOptions({ queryKey: ['opportunity', id], queryFn: () => fetchOpportunity(id) })
 }
@@ -127,34 +138,13 @@ export function useOpportunityTimeline(id: MaybeRefOrGetter<string>) {
   return useQuery(() => timelineQueryOptions(toValue(id)))
 }
 
-function toStateById<T>(
-  ids: string[],
-  results: readonly { data: T | undefined; isPending: boolean; isError: boolean }[],
-): ReadonlyMap<string, QueryState<T>> {
-  return new Map(
-    ids.map((id, index) => {
-      const result = results[index]
-      return [
-        id,
-        {
-          data: result?.data,
-          isPending: result?.isPending ?? true,
-          isError: result?.isError ?? false,
-        },
-      ]
-    }),
-  )
-}
-
-export function useOpportunitiesEvidence(ids: MaybeRefOrGetter<string[]>) {
-  const results = useQueries({ queries: () => toValue(ids).map(evidenceQueryOptions) })
-  const evidenceById = computed(() => toStateById(toValue(ids), results.value))
-
-  function refetchFailed() {
-    for (const result of results.value) if (result.isError) void result.refetch()
-  }
-
-  return { evidenceById, refetchFailed }
+// Explorar y la paleta comparten la clave: lo que cargó uno lo reutiliza el otro.
+export function useAllEvidence(enabled: MaybeRefOrGetter<boolean> = true) {
+  return useQuery(() => ({
+    queryKey: ['evidence'],
+    queryFn: fetchAllEvidence,
+    enabled: toValue(enabled),
+  }))
 }
 
 // Sin ejecución de `analyze` (`null`) el mapa queda vacío y cada fila dice que no hay dato.

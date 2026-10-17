@@ -7,6 +7,7 @@ import { formatUtcDay } from './format'
 
 type Schemas = components['schemas']
 type Evidence = Schemas['Evidence']
+type TopicEvidence = Schemas['TopicEvidence']
 type Opportunity = Schemas['Opportunity']
 
 export const EXPLORE_FILTERS = ['outliers', 'youtube', 'hackernews'] as const
@@ -45,7 +46,8 @@ export interface ExploreViewModel {
   visible: Piece[]
   counts: ExploreCounts
   publishedRange: PublishedRange | null
-  loadedTopicCount: number
+  // Temas del ranking con alguna pieza en la evidencia servida.
+  topicsWithPiecesCount: number
   isCapped: boolean
   topTopics: Opportunity[]
   topSources: SourceOutliers[]
@@ -54,8 +56,14 @@ export interface ExploreViewModel {
 export interface LoadedEvidence {
   // En el orden de la API, que es el del ranking.
   opportunities: readonly Opportunity[]
-  // Solo los temas cuya evidencia ya cargó.
-  evidenceById: ReadonlyMap<string, readonly Evidence[]>
+  // GET /evidence: las piezas de todos los temas, cada una con su `opportunity_id`.
+  evidence: readonly TopicEvidence[]
+}
+
+interface TopicPieces {
+  opportunity: Opportunity
+  rank: number
+  pieces: readonly TopicEvidence[]
 }
 
 export interface ExploreInput extends LoadedEvidence {
@@ -89,17 +97,40 @@ export function foldForSearch(text: string): string {
   return text.normalize('NFD').replace(COMBINING_MARKS, '').toLocaleLowerCase('es')
 }
 
+function groupByOpportunity(evidence: readonly TopicEvidence[]): Map<string, TopicEvidence[]> {
+  const groups = new Map<string, TopicEvidence[]>()
+  for (const piece of evidence) {
+    const group = groups.get(piece.opportunity_id)
+    if (group === undefined) groups.set(piece.opportunity_id, [piece])
+    else group.push(piece)
+  }
+  return groups
+}
+
+// En el orden del ranking. Una pieza de un tema que no está en la lista se descarta: no hay tema
+// al que atribuirla.
+function piecesByTopic({ opportunities, evidence }: LoadedEvidence): TopicPieces[] {
+  const groups = groupByOpportunity(evidence)
+  return opportunities.flatMap((opportunity, index) => {
+    const pieces = groups.get(opportunity.id)
+    return pieces === undefined ? [] : [{ opportunity, rank: index + 1, pieces }]
+  })
+}
+
 // La misma URL puede estar en la evidencia de dos temas: se queda con el de mejor puesto, que es
 // el primero que se recorre.
-export function collectPieces({ opportunities, evidenceById }: LoadedEvidence): Piece[] {
+function uniquePieces(topics: readonly TopicPieces[]): Piece[] {
   const byUrl = new Map<string, Piece>()
-  opportunities.forEach((opportunity, index) => {
-    for (const evidence of evidenceById.get(opportunity.id) ?? []) {
-      if (byUrl.has(evidence.url)) continue
-      byUrl.set(evidence.url, { ...evidence, opportunity, rank: index + 1 })
+  for (const { opportunity, rank, pieces } of topics) {
+    for (const piece of pieces) {
+      if (!byUrl.has(piece.url)) byUrl.set(piece.url, { ...piece, opportunity, rank })
     }
-  })
+  }
   return [...byUrl.values()]
+}
+
+export function collectPieces(loaded: LoadedEvidence): Piece[] {
+  return uniquePieces(piecesByTopic(loaded))
 }
 
 // Sin ratio no hay rendimiento que comparar: esas piezas van al final, nunca como si fueran 0.
@@ -172,26 +203,16 @@ function filterPieces(pieces: Piece[], { filter, text }: ExploreInput): Piece[] 
   )
 }
 
-function loadedEvidenceLists({
-  opportunities,
-  evidenceById,
-}: LoadedEvidence): (readonly Evidence[])[] {
-  return opportunities.flatMap((opportunity) => {
-    const list = evidenceById.get(opportunity.id)
-    return list === undefined ? [] : [list]
-  })
-}
-
 export function buildExploreView(input: ExploreInput): ExploreViewModel {
-  const pieces = collectPieces(input).sort(byRatioThenRecency)
-  const loadedLists = loadedEvidenceLists(input)
+  const topics = piecesByTopic(input)
+  const pieces = uniquePieces(topics).sort(byRatioThenRecency)
   return {
     pieces,
     visible: filterPieces(pieces, input),
     counts: countByKind(pieces),
     publishedRange: publishedRangeOf(pieces),
-    loadedTopicCount: loadedLists.length,
-    isCapped: loadedLists.some((list) => list.length >= EVIDENCE_LIMIT),
+    topicsWithPiecesCount: topics.length,
+    isCapped: topics.some((topic) => topic.pieces.length >= EVIDENCE_LIMIT),
     topTopics: topicsWithMostOutliers(input.opportunities),
     topSources: sourcesWithMostOutliers(pieces),
   }
@@ -199,7 +220,7 @@ export function buildExploreView(input: ExploreInput): ExploreViewModel {
 
 export type ExploreSummaryInput = Pick<
   ExploreViewModel,
-  'counts' | 'loadedTopicCount' | 'publishedRange' | 'isCapped'
+  'counts' | 'topicsWithPiecesCount' | 'publishedRange' | 'isCapped'
 >
 
 function describePublished(range: PublishedRange | null, total: number): string {
@@ -210,9 +231,10 @@ function describePublished(range: PublishedRange | null, total: number): string 
 }
 
 export function exploreSummary(input: ExploreSummaryInput): string {
-  const { counts, loadedTopicCount, publishedRange, isCapped } = input
+  const { counts, topicsWithPiecesCount, publishedRange, isCapped } = input
   const pieces = countLabel(counts.total, 'pieza', 'piezas')
-  const topics = loadedTopicCount === 1 ? '1 tema' : `los ${formatCount(loadedTopicCount)} temas`
+  const topics =
+    topicsWithPiecesCount === 1 ? '1 tema' : `los ${formatCount(topicsWithPiecesCount)} temas`
   const outliers = countLabel(counts.outliers, 'rinde', 'rinden')
   const cap = isCapped ? ` Hasta ${EVIDENCE_LIMIT} piezas por tema.` : ''
   return (

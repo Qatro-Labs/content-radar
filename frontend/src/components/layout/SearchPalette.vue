@@ -4,7 +4,7 @@ import { ListboxFilter } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 import { useRouter, type RouteLocationRaw } from 'vue-router'
 
-import { useOpportunities, useOpportunitiesEvidence } from '@/api/opportunities'
+import { useAllEvidence, useOpportunities } from '@/api/opportunities'
 import StageDot from '@/components/explore/StageDot.vue'
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
 import { DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
@@ -14,9 +14,6 @@ import { formatScore } from '@/lib/opportunityFormat'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 import { buildSearchResults, hasResults } from '@/lib/searchPalette'
 import { RouteName } from '@/router'
-import type { components } from '@/types/api'
-
-type Evidence = components['schemas']['Evidence']
 
 const open = defineModel<boolean>('open', { required: true })
 
@@ -29,33 +26,21 @@ const {
   isError: isTopicsError,
 } = useOpportunities(DEFAULT_PERIOD)
 const opportunities = computed(() => list.value?.items ?? [])
-// Las piezas se piden solo con la paleta abierta: al cargar la app serían una petición por tema.
-const { evidenceById } = useOpportunitiesEvidence(() =>
-  open.value ? opportunities.value.map((opportunity) => opportunity.id) : [],
-)
-
-const evidenceStates = computed(() => [...evidenceById.value.values()])
-const isPiecesPending = computed(() => evidenceStates.value.some((state) => state.isPending))
-const failedTopicCount = computed(
-  () => evidenceStates.value.filter((state) => state.isError && state.data === undefined).length,
-)
-const loadedEvidence = computed(() => {
-  const loaded = new Map<string, Evidence[]>()
-  for (const [id, state] of evidenceById.value) {
-    if (state.data !== undefined) loaded.set(id, state.data)
-  }
-  return loaded
-})
+// Las piezas se piden al abrir la paleta: al cargar la app todavía no hacen falta.
+const {
+  data: evidence,
+  isPending: isPiecesPending,
+  isError: isPiecesError,
+} = useAllEvidence(() => open.value)
 
 const results = computed(() =>
   buildSearchResults({
     opportunities: opportunities.value,
-    evidenceById: loadedEvidence.value,
+    evidence: evidence.value ?? [],
     text: text.value,
   }),
 )
 const isLoading = computed(() => isTopicsPending.value || isPiecesPending.value)
-// Mientras llegan las piezas de cada tema, sus grupos se reordenarían con cada respuesta.
 const showPieces = computed(() => !isLoading.value)
 
 const statusLine = computed<string | null>(() => {
@@ -63,8 +48,8 @@ const statusLine = computed<string | null>(() => {
   if (list.value === null) return 'Todavía no hay análisis: el job analyze no ha corrido.'
   if (isTopicsPending.value) return 'Cargando temas…'
   if (isPiecesPending.value) return 'Cargando piezas…'
-  if (failedTopicCount.value === 0) return null
-  return `No se pudo cargar la evidencia de ${countLabel(failedTopicCount.value, 'tema', 'temas')}.`
+  if (isPiecesError.value && evidence.value === undefined) return 'No se pudo cargar la evidencia.'
+  return null
 })
 // Sin temas cargados, "ningún tema coincide" se leería como un resultado (CLAUDE.md §2.3).
 const showNoMatches = computed(

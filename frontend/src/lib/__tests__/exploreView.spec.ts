@@ -13,6 +13,7 @@ import {
 
 type Schemas = components['schemas']
 type Evidence = Schemas['Evidence']
+type TopicEvidence = Schemas['TopicEvidence']
 type Opportunity = Schemas['Opportunity']
 type OpportunityList = Schemas['OpportunityList']
 
@@ -42,6 +43,17 @@ function piece(url: string, overrides: Partial<Evidence> = {}): Evidence {
   }
 }
 
+function inTopic(opportunityId: string, pieces: Evidence[]): TopicEvidence[] {
+  return pieces.map((item) => ({ ...item, opportunity_id: opportunityId }))
+}
+
+function topicPieces(opportunityId: string, count: number): TopicEvidence[] {
+  const pieces = Array.from({ length: count }, (_, index) =>
+    piece(`https://example.com/${opportunityId}/${index}`),
+  )
+  return inTopic(opportunityId, pieces)
+}
+
 const shared = piece('https://news.ycombinator.com/item?id=3', {
   platform: 'hackernews',
   source: 'HN · Claude',
@@ -50,7 +62,7 @@ const shared = piece('https://news.ycombinator.com/item?id=3', {
   published_at: '2026-10-11T08:00:00Z',
 })
 
-const evidence = {
+const evidenceByTopic = {
   // La pieza compartida llega antes desde opp_b: tiene que quedarse con opp_a, de mejor puesto.
   opp_b: [
     shared,
@@ -95,16 +107,14 @@ const evidence = {
   ],
 }
 
-// API order: opp_a is rank 1. opp_d has no evidence loaded (its request failed or is pending).
+// GET /evidence, flat as the API serves it.
+const evidence = Object.entries(evidenceByTopic).flatMap(([id, pieces]) => inTopic(id, pieces))
+
+// API order: opp_a is rank 1. opp_d has no pieces in the evidence.
 const opportunities = [topic('opp_a', 1), topic('opp_b', 3), topic('opp_c', 0), topic('opp_d', 3)]
 
 function view(filter: ExploreFilter | null = null, text = '') {
-  return buildExploreView({
-    opportunities,
-    evidenceById: new Map(Object.entries(evidence)),
-    filter,
-    text,
-  })
+  return buildExploreView({ opportunities, evidence, filter, text })
 }
 
 const urls = (pieces: { url: string }[]) => pieces.map((item) => item.url)
@@ -155,12 +165,34 @@ describe('buildExploreView', () => {
     expect(urls(view(null, text).visible)).toEqual(expected)
   })
 
-  it('reports the published range and the topics whose evidence loaded', () => {
+  it('reports the published range and the topics with pieces', () => {
     const result = view()
 
     expect(result.publishedRange).toEqual({ from: '10/10', to: '16/10' })
-    expect(result.loadedTopicCount).toBe(3)
+    expect(result.topicsWithPiecesCount).toBe(3)
     expect(result.isCapped).toBe(false)
+  })
+
+  it('groups interleaved pieces by opportunity_id and skips topics outside the list', () => {
+    const interleaved = [
+      ...inTopic('opp_b', [piece('https://a.com/1')]),
+      ...inTopic('opp_a', [piece('https://a.com/2')]),
+      ...inTopic('opp_gone', [piece('https://a.com/3')]),
+      ...inTopic('opp_b', [piece('https://a.com/4')]),
+    ]
+    const result = buildExploreView({
+      opportunities: [topic('opp_a', 0), topic('opp_b', 0)],
+      evidence: interleaved,
+      filter: null,
+      text: '',
+    })
+
+    expect(result.pieces.map((item) => [item.url, item.opportunity.id, item.rank])).toEqual([
+      ['https://a.com/2', 'opp_a', 1],
+      ['https://a.com/1', 'opp_b', 2],
+      ['https://a.com/4', 'opp_b', 2],
+    ])
+    expect(result.topicsWithPiecesCount).toBe(2)
   })
 
   it('ranks topics by outliers, breaks ties by rank and leaves out topics without outliers', () => {
@@ -171,17 +203,12 @@ describe('buildExploreView', () => {
     const outlier = { outlier_ratio: 3.2, is_outlier: true }
     const result = buildExploreView({
       opportunities: [topic('opp_a', 4)],
-      evidenceById: new Map([
-        [
-          'opp_a',
-          [
-            piece('https://youtube.com/watch?v=10', { ...outlier, source: 'Wes Roth' }),
-            piece('https://youtube.com/watch?v=11', { ...outlier, source: 'Matthew Berman' }),
-            piece('https://youtube.com/watch?v=12', { ...outlier, source: 'midudev' }),
-            piece('https://youtube.com/watch?v=13', { ...outlier, source: 'Matthew Berman' }),
-            piece('https://youtube.com/watch?v=14', { source: 'OpenAI', outlier_ratio: 2.1 }),
-          ],
-        ],
+      evidence: inTopic('opp_a', [
+        piece('https://youtube.com/watch?v=10', { ...outlier, source: 'Wes Roth' }),
+        piece('https://youtube.com/watch?v=11', { ...outlier, source: 'Matthew Berman' }),
+        piece('https://youtube.com/watch?v=12', { ...outlier, source: 'midudev' }),
+        piece('https://youtube.com/watch?v=13', { ...outlier, source: 'Matthew Berman' }),
+        piece('https://youtube.com/watch?v=14', { source: 'OpenAI', outlier_ratio: 2.1 }),
       ]),
       filter: null,
       text: '',
@@ -195,10 +222,9 @@ describe('buildExploreView', () => {
   })
 
   it('flags the list as capped when a topic reaches the 25 pieces the API serves at most', () => {
-    const capped = Array.from({ length: 25 }, (_, index) => piece(`https://example.com/${index}`))
     const result = buildExploreView({
       opportunities: [topic('opp_a', 0)],
-      evidenceById: new Map([['opp_a', capped]]),
+      evidence: topicPieces('opp_a', 25),
       filter: null,
       text: '',
     })
@@ -206,14 +232,26 @@ describe('buildExploreView', () => {
     expect(result.isCapped).toBe(true)
   })
 
-  it('has no published range and no top sources without pieces', () => {
+  it('counts the cap per topic, not across topics', () => {
     const result = buildExploreView({
-      opportunities: [topic('opp_a', 0)],
-      evidenceById: new Map([['opp_a', []]]),
+      opportunities: [topic('opp_a', 0), topic('opp_b', 0)],
+      evidence: [...topicPieces('opp_a', 24), ...topicPieces('opp_b', 1)],
       filter: null,
       text: '',
     })
 
+    expect(result.isCapped).toBe(false)
+  })
+
+  it('has no published range, no top sources and no topics without pieces', () => {
+    const result = buildExploreView({
+      opportunities: [topic('opp_a', 0)],
+      evidence: [],
+      filter: null,
+      text: '',
+    })
+
+    expect(result.topicsWithPiecesCount).toBe(0)
     expect(result.publishedRange).toBeNull()
     expect(result.topSources).toEqual([])
     expect(result.topTopics).toEqual([])
@@ -245,7 +283,7 @@ describe('exploreSummary', () => {
   it('describes the served pieces with the real figures', () => {
     const summary = exploreSummary({
       counts: { total: 356, outliers: 27, youtube: 96, hackernews: 145, rss: 115 },
-      loadedTopicCount: 38,
+      topicsWithPiecesCount: 38,
       publishedRange: { from: '04/10', to: '17/10' },
       isCapped: true,
     })
@@ -259,7 +297,7 @@ describe('exploreSummary', () => {
   it('uses the singular for one piece, one topic and one day', () => {
     const summary = exploreSummary({
       counts: { total: 1, outliers: 1, youtube: 1, hackernews: 0, rss: 0 },
-      loadedTopicCount: 1,
+      topicsWithPiecesCount: 1,
       publishedRange: { from: '07/10', to: '07/10' },
       isCapped: false,
     })
@@ -270,7 +308,7 @@ describe('exploreSummary', () => {
   it('groups thousands', () => {
     const summary = exploreSummary({
       counts: { total: 1363, outliers: 0, youtube: 0, hackernews: 1363, rss: 0 },
-      loadedTopicCount: 60,
+      topicsWithPiecesCount: 60,
       publishedRange: { from: '01/10', to: '17/10' },
       isCapped: false,
     })
