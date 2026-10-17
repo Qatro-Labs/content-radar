@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  countLabel,
   formatCount,
   formatMetrics,
   formatRatio,
@@ -35,6 +36,16 @@ describe('formatCount', () => {
   it('groups four-digit numbers', () => {
     expect(formatCount(1363)).toBe('1.363')
     expect(formatCount(658220)).toBe('658.220')
+  })
+})
+
+describe('countLabel', () => {
+  it.each([
+    ['the singular for one', 1, '1 fuente'],
+    ['the plural for none', 0, '0 fuentes'],
+    ['grouped thousands in the plural', 1363, '1.363 fuentes'],
+  ])('writes %s', (_, count, expected) => {
+    expect(countLabel(count, 'fuente', 'fuentes')).toBe(expected)
   })
 })
 

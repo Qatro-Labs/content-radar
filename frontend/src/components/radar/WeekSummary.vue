@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
-import { formatCount } from '@/lib/evidenceFormat'
+import { countLabel } from '@/lib/evidenceFormat'
 import { formatAcceleration, formatScore, GROWTH_LABEL, isDeclining } from '@/lib/opportunityFormat'
 import { describeStageUnknowns, describeWeekPicks, type RadarView } from '@/lib/radarView'
 import { RouteName } from '@/router'
@@ -21,7 +21,7 @@ const emit = defineEmits<{
 const outlierLine = computed(() => {
   const count = view.outlierPieces
   return {
-    count: `${formatCount(count)} ${count === 1 ? 'pieza' : 'piezas'}`,
+    count: countLabel(count, 'pieza', 'piezas'),
     verb: count === 1 ? 'rinde' : 'rinden',
   }
 })

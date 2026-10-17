@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { formatCount } from '@/lib/evidenceFormat'
+import { countLabel, formatCount } from '@/lib/evidenceFormat'
 import type { SourceOutliers } from '@/lib/exploreView'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
@@ -21,7 +21,7 @@ const LIMITATION =
 const hasOutliers = computed(() => topTopics.length > 0 || topSources.length > 0)
 
 function outlierLabel(count: number): string {
-  return count === 1 ? '1 outlier' : `${formatCount(count)} outliers`
+  return countLabel(count, 'outlier', 'outliers')
 }
 </script>
 

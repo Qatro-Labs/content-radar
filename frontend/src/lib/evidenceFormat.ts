@@ -39,6 +39,11 @@ export function formatCount(count: number): string {
   return groupedCount.format(count)
 }
 
+// "1 fuente", "0 fuentes", "1.363 fuentes".
+export function countLabel(count: number, singular: string, plural: string): string {
+  return `${formatCount(count)} ${count === 1 ? singular : plural}`
+}
+
 const METRIC_LABELS: readonly [keyof Metrics, string][] = [
   ['views', 'vistas'],
   ['points', 'puntos'],

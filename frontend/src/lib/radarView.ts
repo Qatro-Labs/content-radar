@@ -1,5 +1,6 @@
 import type { components } from '@/types/api'
 
+import { countLabel } from './evidenceFormat'
 import { formatUtcTimestamp } from './format'
 import { LIFECYCLE_STYLE } from './lifecycle'
 import { RECOMMENDATION_LABEL } from './opportunityFormat'
@@ -186,19 +187,16 @@ export function buildRadarView(list: OpportunityList | null, query: RadarQuery):
   }
 }
 
-interface Noun {
-  one: string
-  many: string
-}
-
-const TOPIC_NOUN: Noun = { one: 'tema', many: 'temas' }
-// No "con datos suficientes": la cuenta incluye temas preliminares (D14 del plan fe-radar-view).
-const ANALYZED_TOPIC_NOUN: Noun = { one: 'tema analizado', many: 'temas analizados' }
 const STAGE_SEPARATOR = ' o '
 const FILTER_SEPARATOR = ' · '
 
-function formatCount(count: number, noun: Noun): string {
-  return `${count} ${count === 1 ? noun.one : noun.many}`
+function topicsLabel(count: number): string {
+  return countLabel(count, 'tema', 'temas')
+}
+
+// No "con datos suficientes": la cuenta incluye temas preliminares (D14 del plan fe-radar-view).
+function analyzedTopicsLabel(count: number): string {
+  return countLabel(count, 'tema analizado', 'temas analizados')
 }
 
 function stageLabel(lifecycle: Lifecycle): string {
@@ -218,8 +216,8 @@ function describeFilters(query: RadarQuery): string {
 }
 
 export function radarHeadline(view: RadarView, query: RadarQuery): string {
-  if (hasFilters(query)) return `${view.visible.length} de ${formatCount(view.total, TOPIC_NOUN)}`
-  return `${formatCount(view.total, TOPIC_NOUN)} esta semana`
+  if (hasFilters(query)) return `${view.visible.length} de ${topicsLabel(view.total)}`
+  return `${topicsLabel(view.total)} esta semana`
 }
 
 // El agente puede ordenar por aceleración (`sort` en la URL) aunque no haya botón de orden.
@@ -238,7 +236,7 @@ export function radarSubline(view: RadarView, query: RadarQuery): string {
     return `Filtro: ${describeFilters(query)}. El resto queda atenuado en el radar.`
   }
   if (view.total < EXPECTED_OPPORTUNITIES) {
-    return `Hay ${formatCount(view.total, ANALYZED_TOPIC_NOUN)} esta semana. ${howToRead(query)}`
+    return `Hay ${analyzedTopicsLabel(view.total)} esta semana. ${howToRead(query)}`
   }
   return howToRead(query)
 }
@@ -249,8 +247,7 @@ export function describeWeekPicks({ topics, hasPublishNow }: WeekPicks): string 
     return 'Ningún tema cumple hoy las condiciones de «Publicar ya». Los primeros del ranking:'
   }
   const reason = topics.length === 1 ? 'crece y encaja' : 'crecen y encajan'
-  const count = formatCount(topics.length, TOPIC_NOUN)
-  return `${count} para publicar ya: ${reason} con la audiencia de 30X.`
+  return `${topicsLabel(topics.length)} para publicar ya: ${reason} con la audiencia de 30X.`
 }
 
 function missingStageReason(unknownCount: number, preliminaryCount: number): string {
@@ -273,6 +270,6 @@ export function describeStageUnknowns(
     (opportunity) => opportunity.growth_status === 'preliminary',
   ).length
   const verb = unknown.length === 1 ? 'tiene' : 'tienen'
-  const share = `${unknown.length} de ${formatCount(topics.length, TOPIC_NOUN)}`
+  const share = `${unknown.length} de ${topicsLabel(topics.length)}`
   return `${share} no ${verb} etapa: ${missingStageReason(unknown.length, preliminaryCount)}. ${since}`
 }

@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import ScoreRing from '@/components/opportunities/ScoreRing.vue'
+import { countLabel } from '@/lib/evidenceFormat'
 import { TEXT_ENTER_CLASS } from '@/lib/motion'
 import {
   CONFIDENCE_LABEL,
@@ -31,14 +32,13 @@ interface StatTile {
 const PREVIEW_RING_SIZE_PX = 104
 const SUMMARY_SEPARATOR = ' · '
 
-const evidenceSummary = computed(() => {
-  const sources = opportunity.source_count === 1 ? 'fuente' : 'fuentes'
-  return [
+const evidenceSummary = computed(() =>
+  [
     GROWTH_LABEL[opportunity.growth_status],
     `confianza ${CONFIDENCE_LABEL[opportunity.confidence]}`,
-    `${opportunity.source_count} ${sources}`,
-  ].join(SUMMARY_SEPARATOR)
-})
+    countLabel(opportunity.source_count, 'fuente', 'fuentes'),
+  ].join(SUMMARY_SEPARATOR),
+)
 
 const tiles = computed<StatTile[]>(() => [
   {

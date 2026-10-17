@@ -7,7 +7,7 @@ import ExploreHeader from '@/components/explore/ExploreHeader.vue'
 import ExploreSidePanel from '@/components/explore/ExploreSidePanel.vue'
 import ExploreSkeleton from '@/components/explore/ExploreSkeleton.vue'
 import PiecesTable from '@/components/explore/PiecesTable.vue'
-import { PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
+import { countLabel, PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
 import {
   buildExploreView,
   EXPLORE_FILTER_PARAM,
@@ -62,10 +62,9 @@ const view = computed(() =>
 // que terminen todas.
 const isLoading = computed(() => isPending.value || isEvidencePending.value)
 
-const failedMessage = computed(() => {
-  const count = failedTopicCount.value
-  return `No se pudo cargar la evidencia de ${count} ${count === 1 ? 'tema' : 'temas'}.`
-})
+const failedMessage = computed(
+  () => `No se pudo cargar la evidencia de ${countLabel(failedTopicCount.value, 'tema', 'temas')}.`,
+)
 
 // Sin piezas cargadas no se monta la cabecera: "0 piezas de los 0 temas" se leería como un
 // resultado real (CLAUDE.md §2.3).

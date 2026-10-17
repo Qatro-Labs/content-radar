@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
 
-import { formatCount, PLATFORM_LABEL, shortSourceName } from './evidenceFormat'
+import { countLabel, PLATFORM_LABEL, shortSourceName } from './evidenceFormat'
 import { formatUtcDay, formatUtcTime, formatUtcTimestamp } from './format'
 import {
   CONFIDENCE_LABEL,
@@ -29,11 +29,6 @@ type Platform = Schemas['Platform']
 const MINUS_SIGN = '−'
 const RANGE_DASH = '–'
 const LIST_SEPARATOR = ' · '
-
-// "1 fuente independiente", "8 fuentes independientes".
-export function countLabel(count: number, singular: string, plural: string): string {
-  return `${formatCount(count)} ${count === 1 ? singular : plural}`
-}
 
 export function dossierStatusLine(opportunity: Opportunity): string {
   return [
