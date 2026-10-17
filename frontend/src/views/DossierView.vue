@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, type ComputedRef, type Ref, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import {
@@ -12,13 +12,29 @@ import {
 import DossierEvolution from '@/components/dossier/DossierEvolution.vue'
 import DossierHeader from '@/components/dossier/DossierHeader.vue'
 import DossierStates, { DossierPlaceholder } from '@/components/dossier/DossierStates.vue'
+import EvidenceSection from '@/components/dossier/EvidenceSection.vue'
 import ScoreComposition from '@/components/dossier/ScoreComposition.vue'
 import WhyItMattersSection from '@/components/dossier/WhyItMattersSection.vue'
 import { rankLabel, rankOf } from '@/lib/dossierView'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 import type { components } from '@/types/api'
 
-type OpportunityTimeline = components['schemas']['OpportunityTimeline']
+type Schemas = components['schemas']
+
+interface QueryRefs<T> {
+  data: Ref<T | undefined>
+  isPending: Ref<boolean>
+  isError: Ref<boolean>
+}
+
+// Cada sección recibe el estado de su consulta, no el objeto de TanStack Query.
+function toQueryState<T>(query: QueryRefs<T>): ComputedRef<QueryState<T>> {
+  return computed(() => ({
+    data: query.data.value,
+    isPending: query.isPending.value,
+    isError: query.isError.value,
+  }))
+}
 
 const route = useRoute()
 const id = computed(() => String(route.params.id))
@@ -30,11 +46,8 @@ const evidenceQuery = useOpportunityEvidence(id)
 const listQuery = useOpportunities(DEFAULT_PERIOD)
 
 const opportunity = computed(() => opportunityQuery.data.value ?? null)
-const timeline = computed<QueryState<OpportunityTimeline | null>>(() => ({
-  data: timelineQuery.data.value,
-  isPending: timelineQuery.isPending.value,
-  isError: timelineQuery.isError.value,
-}))
+const timeline = toQueryState<Schemas['OpportunityTimeline'] | null>(timelineQuery)
+const evidence = toQueryState<Schemas['Evidence'][]>(evidenceQuery)
 
 const placeholder = computed<DossierPlaceholder | null>(() => {
   if (opportunityQuery.isPending.value) return DossierPlaceholder.Loading
@@ -43,7 +56,7 @@ const placeholder = computed<DossierPlaceholder | null>(() => {
   return null
 })
 
-const evidence = computed(() => evidenceQuery.data.value ?? [])
+const citablePieces = computed(() => evidence.value.data ?? [])
 
 // D11: la pieza citada que se resalta es estado local, no va en la URL.
 const citedUrl = ref<string | null>(null)
@@ -69,6 +82,17 @@ const rankText = computed(() =>
       <ScoreComposition :opportunity :rank-text="rankText" />
     </div>
     <DossierEvolution :opportunity :timeline />
-    <WhyItMattersSection :opportunity :evidence :cited-url="citedUrl" @cite="cite" />
+    <WhyItMattersSection
+      :opportunity
+      :evidence="citablePieces"
+      :cited-url="citedUrl"
+      @cite="cite"
+    />
+    <EvidenceSection
+      :opportunity
+      :evidence
+      :cited-url="citedUrl"
+      @retry="evidenceQuery.refetch()"
+    />
   </div>
 </template>

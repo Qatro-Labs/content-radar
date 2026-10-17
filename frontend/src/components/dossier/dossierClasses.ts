@@ -1,3 +1,7 @@
+import type { components } from '@/types/api'
+
+type Segment = components['schemas']['Segment']
+
 // Clases que comparten las tarjetas del expediente (DESIGN.md §3 y §4): tarjeta blanca de radio
 // 20px sin borde ni sombra, título Bricolage 22px y botones con objetivo táctil ≥ 44px.
 export const CARD_CLASS = 'flex min-w-0 rounded-card bg-card p-6'
@@ -11,3 +15,16 @@ export const SECONDARY_BUTTON_CLASS = `${BUTTON_CLASS} bg-secondary text-seconda
 // Sobre el lienzo el secundario va en blanco, como «Restablecer vista»: el gris de siempre casi
 // no se distingue del fondo (DESIGN.md §4).
 export const SECONDARY_ON_CANVAS_CLASS = `${BUTTON_CLASS} bg-card text-foreground hover:bg-secondary-hover`
+
+// DESIGN.md §2 «Audiencia»: Tech en Tinta, Negocio en gris y En español en Lima señal.
+export const SEGMENT_COLOR_CLASS: Record<Segment, string> = {
+  tech: 'bg-foreground',
+  business: 'bg-audience-business',
+  latam_es: 'bg-signal',
+}
+// La lima sobre blanco no tiene contraste (DESIGN.md §2): en las muestras pequeñas la marca un
+// filo de tinta.
+export const SEGMENT_SWATCH_CLASS: Record<Segment, string> = {
+  ...SEGMENT_COLOR_CLASS,
+  latam_es: `${SEGMENT_COLOR_CLASS.latam_es} inset-ring inset-ring-foreground/15`,
+}

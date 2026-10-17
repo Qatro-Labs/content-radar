@@ -214,3 +214,22 @@ export function platformCounts(evidence: readonly Evidence[]): PlatformCount[] {
   })
   return [{ platform: ALL_PLATFORMS, label: 'Todas', count: evidence.length }, ...present]
 }
+
+export function filterByPlatform(
+  evidence: readonly Evidence[],
+  filter: PlatformFilter,
+): Evidence[] {
+  if (filter === ALL_PLATFORMS) return [...evidence]
+  return evidence.filter((item) => item.platform === filter)
+}
+
+// GET /evidence devuelve como mucho 25 piezas por tema: con 25, puede haber más que no se ven.
+export const EVIDENCE_LIMIT = 25
+
+// D11: con una pieza citada, esa se marca y el resto baja de opacidad sin desaparecer.
+export type RowEmphasis = 'cited' | 'dimmed' | 'none'
+
+export function rowEmphasis(url: string, citedUrl: string | null): RowEmphasis {
+  if (citedUrl === null) return 'none'
+  return url === citedUrl ? 'cited' : 'dimmed'
+}
