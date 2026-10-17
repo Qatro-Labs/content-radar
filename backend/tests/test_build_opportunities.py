@@ -86,6 +86,16 @@ def test_tiktok_ratio_uses_views_per_day_against_same_search():
     assert outlier_ratios([*reference, hit], AS_OF)[99] == 6.0
 
 
+def test_instagram_ratio_uses_views_per_day_against_same_profile():
+    def reel(i, days_ago, views):
+        p = piece(i, hours_ago=24 * days_ago, platform=Platform.INSTAGRAM, source="@creadora")
+        return replace(p, metrics=Metrics(views=views))
+
+    reference = [reel(i, 5, 10000) for i in range(5)]  # 2.000 views/día cada uno
+    hit = reel(99, 3, 30000)  # 10.000 views/día
+    assert outlier_ratios([*reference, hit], AS_OF)[99] == 5.0
+
+
 def test_reddit_ratio_uses_score_against_same_subreddit():
     def post(i, score):
         p = piece(i, hours_ago=24, platform=Platform.REDDIT, source="r/OpenAI")

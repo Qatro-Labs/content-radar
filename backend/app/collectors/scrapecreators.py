@@ -1,15 +1,16 @@
-"""TikTok y Reddit vía ScrapeCreators (proveedor de datos públicos, pago por crédito).
+"""TikTok, Reddit e Instagram vía ScrapeCreators (proveedor de datos públicos, pago por crédito).
 
 Coste: 1 crédito por llamada (también si la página viene vacía). Cada fuente hace una sola
 llamada por ejecución, así que el gasto por ciclo = nº de fuentes activas de estas plataformas.
 
 - TikTok: búsqueda por palabra clave de la última semana, opcionalmente por región.
 - Reddit: posts top de la semana de un subreddit.
+- Instagram: últimos reels de un perfil, como un canal de YouTube (no hay búsqueda por tema fiable).
 
 Re-ejecutar = nuevo snapshot de las piezas que sigan apareciendo.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import httpx
 from pydantic import HttpUrl
@@ -24,6 +25,7 @@ from app.schemas.signal import ContentFormat, ContentSignal, Metrics, Platform
 API_BASE = "https://api.scrapecreators.com"
 TIKTOK_VIDEO_URL = "https://www.tiktok.com/@{}/video/{}"
 REDDIT_POST_URL = "https://www.reddit.com/r/{}/comments/{}/"
+INSTAGRAM_REEL_URL = "https://www.instagram.com/reel/{}/"
 # Enlaces de Reddit que apuntan a su propio contenido (imagen, vídeo, galería): no unen fuentes.
 REDDIT_HOSTS = ("reddit.com", "redd.it")
 MIN_TIKTOK_VIEWS = 100  # descarta spam y vídeos sin ninguna tracción
@@ -174,4 +176,71 @@ def _post_signal(post: dict, source: Source, observed_at: datetime) -> ContentSi
         format=ContentFormat.DISCUSSION,
         language=source.language,
         metrics=Metrics(points=post.get("score"), comments=post.get("num_comments")),
+    )
+
+
+class InstagramCollector:
+    """`source.external_id` = handle del perfil (sin `@`).
+
+    Usa el endpoint de reels y no el de posts: el de posts no trae views en todos los perfiles,
+    y sin views no hay outlier.
+    """
+
+    def __init__(self, client: ScrapeCreatorsClient):
+        self._api = client
+
+    async def collect(self, source: Source, *, backfill_days: int = 14) -> list[ContentSignal]:
+        data = await self._api.get(
+            "/v1/instagram/user/reels", {"handle": source.external_id, "trim": "true"}
+        )
+        observed_at = datetime.now(UTC)
+        since = observed_at - timedelta(days=backfill_days)
+        ai_filter = source.config.get("ai_filter", False)
+        return [
+            _reel_signal(reel, source, observed_at)
+            for reel in data.get("items") or []
+            if _keep_reel(reel, source.external_id, since, ai_filter=ai_filter)
+        ]
+
+
+def _caption(reel: dict) -> str:
+    caption = reel.get("caption")
+    text = caption.get("text") if isinstance(caption, dict) else caption
+    return (text or "").strip()
+
+
+def _keep_reel(reel: dict, handle: str, since: datetime, *, ai_filter: bool) -> bool:
+    caption = _caption(reel)
+    return bool(
+        reel.get("code")
+        and caption
+        # Las colaboraciones de otras cuentas aparecen en el perfil, pero su rendimiento depende
+        # de otra audiencia: compararlas con la mediana del perfil daría outliers falsos.
+        and (reel.get("user") or {}).get("username") == handle
+        and reel.get("play_count") is not None
+        # Los reels fijados llegan primero aunque tengan meses.
+        and datetime.fromtimestamp(reel.get("taken_at") or 0, UTC) >= since
+        and (not ai_filter or is_ai_related(caption))
+    )
+
+
+def _reel_signal(reel: dict, source: Source, observed_at: datetime) -> ContentSignal:
+    caption = _caption(reel)
+    return ContentSignal(
+        platform=Platform.INSTAGRAM,
+        external_id=reel["code"],
+        url=HttpUrl(INSTAGRAM_REEL_URL.format(reel["code"])),
+        title=_title(caption),
+        description=clean_html(caption),
+        # Cuenta pública que publica (como un canal de YouTube), no un usuario.
+        author_name=f"@{source.external_id}",
+        published_at=datetime.fromtimestamp(reel["taken_at"], UTC),
+        observed_at=observed_at,
+        format=ContentFormat.SHORT_VIDEO,
+        language=source.language,
+        metrics=Metrics(
+            views=reel["play_count"],
+            likes=reel.get("like_count"),
+            comments=reel.get("comment_count"),
+        ),
     )

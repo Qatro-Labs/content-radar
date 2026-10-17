@@ -25,7 +25,12 @@ from sqlalchemy import select, text
 from app.collectors.base import SignalCollector
 from app.collectors.hackernews import HackerNewsCollector
 from app.collectors.rss import RSSCollector
-from app.collectors.scrapecreators import RedditCollector, ScrapeCreatorsClient, TikTokCollector
+from app.collectors.scrapecreators import (
+    InstagramCollector,
+    RedditCollector,
+    ScrapeCreatorsClient,
+    TikTokCollector,
+)
 from app.collectors.usage import UsageMeter
 from app.collectors.youtube import YouTubeClient, YouTubeCollector
 from app.core.config import get_settings
@@ -56,6 +61,7 @@ def build_collectors(http: httpx.AsyncClient, usage: UsageMeter) -> dict[str, Si
         scrapecreators = ScrapeCreatorsClient(settings.scrapecreators_api_key, http, usage)
         collectors[Platform.TIKTOK.value] = TikTokCollector(scrapecreators)
         collectors[Platform.REDDIT.value] = RedditCollector(scrapecreators)
+        collectors[Platform.INSTAGRAM.value] = InstagramCollector(scrapecreators)
     return collectors
 
 

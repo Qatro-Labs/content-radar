@@ -34,6 +34,7 @@ from app.services.editorial import (
     NoSafeEvidence,
     OpportunityNotFound,
     generate_brief,
+    generate_metered_brief,
 )
 from app.services.opportunities import load_evidence_pieces
 from tests.test_audience_fit_service import two_topics
@@ -294,6 +295,23 @@ async def test_rejected_brief_is_not_cached(session):
 
     briefs = select(func.count()).where(LlmEvaluation.operation == EDITORIAL_BRIEF_OPERATION)
     assert await session.scalar(briefs) == 0
+
+
+async def test_metered_brief_records_usage_even_when_rejected(session):
+    opportunity_id = await seed(session)
+
+    with pytest.raises(BriefFailed):
+        await generate_metered_brief(
+            session,
+            request(opportunity_id),
+            briefer=FakeBriefer(angle="El 70 % ya delega."),
+            now=NOW,
+        )
+
+    events = (await session.scalars(select(UsageEvent))).all()
+    assert [(e.provider, e.operation) for e in events] == [
+        (Provider.LLM_TEXT, EDITORIAL_BRIEF_OPERATION)
+    ]
 
 
 async def test_unknown_opportunity(session):

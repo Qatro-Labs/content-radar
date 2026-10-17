@@ -3,8 +3,8 @@
     uv run python -m app.jobs.seed_sources            # carga todo
     uv run python -m app.jobs.seed_sources --dry-run  # solo valida el YAML
 
-Sin YOUTUBE_API_KEY se cargan HN, RSS, TikTok y Reddit y se omiten los canales de YouTube (aviso,
-no error). TikTok y Reddit no llaman a ninguna API al darse de alta.
+Sin YOUTUBE_API_KEY se cargan HN, RSS, TikTok, Reddit e Instagram y se omiten los canales de
+YouTube (aviso, no error). TikTok, Reddit e Instagram no llaman a ninguna API al darse de alta.
 """
 
 import argparse
@@ -61,12 +61,17 @@ class RedditSeed(_Common):
     subreddit: str
 
 
+class InstagramSeed(_Common):
+    handle: str
+
+
 class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
     hackernews: list[HackerNewsSeed] = []
     rss: list[RSSSeed] = []
     tiktok: list[TikTokSeed] = []
     reddit: list[RedditSeed] = []
+    instagram: list[InstagramSeed] = []
 
 
 def load_seed_file(path: Path) -> SeedFile:
@@ -155,6 +160,22 @@ async def _seed_reddit(session: AsyncSession, seeds: list[RedditSeed]) -> int:
     return len(seeds)
 
 
+async def _seed_instagram(session: AsyncSession, seeds: list[InstagramSeed]) -> int:
+    for s in seeds:
+        handle = s.handle.removeprefix("@")
+        await upsert_source(
+            session,
+            platform=Platform.INSTAGRAM.value,
+            kind=SourceKind.CHANNEL.value,
+            external_id=handle,
+            name=f"Instagram · @{handle}",
+            url=f"https://www.instagram.com/{handle}/",
+            config={"ai_filter": s.ai_filter},
+            **_common(s),
+        )
+    return len(seeds)
+
+
 async def _seed_youtube(
     session: AsyncSession, seeds: list[YouTubeSeed], youtube: YouTubeClient
 ) -> tuple[int, list[str]]:
@@ -188,6 +209,7 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
         "rss": await _seed_rss(session, data.rss),
         "tiktok": await _seed_tiktok(session, data.tiktok),
         "reddit": await _seed_reddit(session, data.reddit),
+        "instagram": await _seed_instagram(session, data.instagram),
         "youtube": 0,
         "youtube_unresolved": [],
     }
@@ -208,7 +230,8 @@ async def main(path: Path, dry_run: bool) -> int:
     data = load_seed_file(path)
     print(
         f"{path.name}: {len(data.youtube)} YouTube · {len(data.hackernews)} HN · "
-        f"{len(data.rss)} RSS · {len(data.tiktok)} TikTok · {len(data.reddit)} Reddit"
+        f"{len(data.rss)} RSS · {len(data.tiktok)} TikTok · {len(data.reddit)} Reddit · "
+        f"{len(data.instagram)} Instagram"
     )
     if dry_run:
         return 0
