@@ -10,7 +10,9 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.collectors.text import clean_html, is_ai_related
+from app.collectors.usage import UsageMeter
 from app.models import Source
+from app.schemas.cost import Provider
 from app.schemas.signal import ContentFormat, ContentSignal, Platform
 
 USER_AGENT = (
@@ -30,8 +32,9 @@ def _entry_datetime(entry) -> datetime | None:
 
 
 class RSSCollector:
-    def __init__(self, client: httpx.AsyncClient):
+    def __init__(self, client: httpx.AsyncClient, usage: UsageMeter | None = None):
         self._http = client
+        self.usage = usage or UsageMeter()
 
     @retry(
         retry=retry_if_exception_type(httpx.TransportError),
@@ -41,6 +44,7 @@ class RSSCollector:
     )
     async def _fetch(self, url: str) -> bytes:
         r = await self._http.get(url, headers={"User-Agent": USER_AGENT}, follow_redirects=True)
+        self.usage.add(Provider.RSS, "feed")
         r.raise_for_status()
         return r.content
 
