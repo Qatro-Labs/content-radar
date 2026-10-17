@@ -3,14 +3,23 @@
 from datetime import UTC, datetime, timedelta
 
 from app.intelligence.opportunities import Piece, build_opportunities, outlier_ratios
-from app.schemas.opportunity import Lifecycle
-from app.schemas.signal import Metrics, Platform, Segment
+from app.schemas.opportunity import Collection, Lifecycle
+from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
 AS_OF = datetime(2026, 10, 17, 12, tzinfo=UTC)
 STARTED = datetime(2026, 10, 16, tzinfo=UTC)
 
 
-def piece(i, *, hours_ago, platform=Platform.HACKERNEWS, source="HN · LLM", points=10, seg=None):
+def piece(
+    i,
+    *,
+    hours_ago,
+    platform=Platform.HACKERNEWS,
+    source="HN · LLM",
+    points=10,
+    seg=None,
+    kind=SourceKind.QUERY,
+):
     published = AS_OF - timedelta(hours=hours_ago)
     metrics = Metrics(points=points) if platform is Platform.HACKERNEWS else Metrics()
     snapshots = [(AS_OF - timedelta(hours=2), Metrics(points=points // 2)), (AS_OF, metrics)]
@@ -27,6 +36,7 @@ def piece(i, *, hours_ago, platform=Platform.HACKERNEWS, source="HN · LLM", poi
         published_at=published,
         observed_at=AS_OF,
         metrics=metrics,
+        source_kind=kind,
         snapshots=snapshots if platform is Platform.HACKERNEWS else [],
     )
 
@@ -86,3 +96,21 @@ def test_inactive_topics_are_skipped():
         )
         == []
     )
+
+
+def test_manual_source_is_marked_manual_in_evidence():
+    pieces = [piece(i, hours_ago=5 + i * 6) for i in range(5)]
+    pieces.append(
+        piece(9, hours_ago=4, platform=Platform.RSS, source="Curación", kind=SourceKind.MANUAL)
+    )
+    [r] = build_opportunities(
+        pieces,
+        [list(range(len(pieces)))],
+        [0],
+        as_of=AS_OF,
+        monitoring_started_at=STARTED,
+        id_prefix="opp_t",
+    )
+    by_url = {str(e.url): e.collection for e in r.evidence}
+    assert by_url.pop("https://example.com/9") is Collection.MANUAL
+    assert set(by_url.values()) == {Collection.AUTOMATIC}

@@ -22,7 +22,7 @@ from app.schemas.opportunity import (
     OpportunityTimeline,
     Period,
 )
-from app.schemas.signal import Metrics, Platform, Segment
+from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
 ANALYZE_JOB = "analyze"
 LOOKBACK = timedelta(days=14)
@@ -65,6 +65,7 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
                 published_at=item.published_at,
                 observed_at=item.last_observed_at,
                 metrics=snapshots[-1][1] if snapshots else Metrics(),
+                source_kind=SourceKind(source.kind),
                 snapshots=snapshots,
                 region=source.region,
             )

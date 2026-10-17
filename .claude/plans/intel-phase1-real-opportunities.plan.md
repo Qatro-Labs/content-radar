@@ -358,7 +358,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_intelligence.py -q`
 - **Commit:** `Compute the opportunity score breakdown in ranking`
 
-### Paso 4 — `collection` en la evidencia
+### Paso 4 — `collection` en la evidencia [HECHO]
 
 - **Archivos:** `backend/app/intelligence/opportunities.py`, `backend/app/services/opportunities.py`,
   `backend/tests/test_build_opportunities.py`.

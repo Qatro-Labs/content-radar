@@ -23,6 +23,7 @@ from app.intelligence.ranking import (
 )
 from app.intelligence.velocity import WINDOW, piece_rate, topic_velocity, window_counts
 from app.schemas.opportunity import (
+    Collection,
     Evidence,
     GrowthStatus,
     Opportunity,
@@ -31,7 +32,7 @@ from app.schemas.opportunity import (
     TimelinePoint,
     TimelineWindow,
 )
-from app.schemas.signal import Metrics, Platform, Segment
+from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
 # Métrica que mide el rendimiento de cada plataforma. RSS no expone métricas.
 PERFORMANCE_METRIC = {Platform.YOUTUBE: "views", Platform.HACKERNEWS: "points"}
@@ -54,6 +55,7 @@ class Piece:
     published_at: datetime
     observed_at: datetime  # última observación
     metrics: Metrics  # último snapshot (vacío si la fuente no expone métricas)
+    source_kind: SourceKind
     snapshots: list[tuple[datetime, Metrics]] = field(default_factory=list)
     region: str | None = None  # de la fuente; decide si cuenta para el LATAM Gap
 
@@ -102,6 +104,10 @@ def _rate(p: Piece) -> Rate | None:
     return None if value is None else Rate(value=value, unit=f"{metric}/h")
 
 
+def _collection(kind: SourceKind) -> Collection:
+    return Collection.MANUAL if kind is SourceKind.MANUAL else Collection.AUTOMATIC
+
+
 def _evidence(p: Piece, ratio: float | None) -> Evidence:
     return Evidence(
         url=p.url,  # type: ignore[arg-type]
@@ -116,6 +122,7 @@ def _evidence(p: Piece, ratio: float | None) -> Evidence:
         velocity=_rate(p),
         outlier_ratio=ratio,
         is_outlier=out.is_outlier(ratio),
+        collection=_collection(p.source_kind),
     )
 
 
