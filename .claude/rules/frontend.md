@@ -57,6 +57,7 @@ los datos ni bajar el rendimiento. Detalle en `DESIGN.md` §7.
 | Componentes animados | [Inspira UI](https://inspira-ui.com), [Vue Bits](https://vue-bits.dev) | Pocos y con intención (regla de efectos). Copiar el componente al repo, no instalar librerías enteras |
 | Animación | `<Transition>` / `<TransitionGroup>`; `motion-v` si no alcanza | Transiciones de panel, selección y entrada de listas |
 | Gráficos | ECharts con `vue-echarts` | Única librería de charts durante la hackathon |
+| Utilidades de composición | `@vueuse/core` (v14, la misma copia que Reka UI) | Tamaño de elementos, movimiento reducido, transiciones numéricas, portapapeles |
 
 Referencias de inspiración para el equipo (galerías, bloques de React como referencia visual,
 assets): `docs/design-resources.md`.

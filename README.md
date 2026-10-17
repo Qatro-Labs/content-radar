@@ -64,6 +64,9 @@ pnpm install
 pnpm dev                 # http://localhost:5173 · proxy de /api a http://localhost:8000
 ```
 
+- Sin backend, con datos de ejemplo: `VITE_USE_FIXTURES=true pnpm dev`. Las oportunidades salen de
+  `data/fixtures/opportunities.json` (marcado MOCK) y la cabecera muestra el chip "Datos de ejemplo".
+  Sin el flag, los datos salen solo de la API: si falla, se ve el error, nunca los fixtures.
 - Si la API corre en otro puerto: `API_DEV_TARGET=http://localhost:8001 pnpm dev`.
 - Tipos de la API (nunca a mano): con la API levantada, `pnpm gen:api` regenera `src/types/api.ts`.
   Sin API, desde un JSON: `OPENAPI_URL=ruta/openapi.json pnpm gen:api`.
