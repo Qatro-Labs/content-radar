@@ -536,7 +536,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check`
 - **Commit:** `Add the opportunity ranking table`
 
-### Paso 11 — Composición de la vista, estados y nota al pie
+### Paso 11 — Composición de la vista, estados y nota al pie [HECHO]
 
 - **Archivos:** `frontend/src/views/DiscoverView.vue`, `frontend/src/components/radar/RadarStates.vue` (skeletons,
   vacío y error), `frontend/src/components/radar/RadarFootnote.vue`
