@@ -112,6 +112,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/agent': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Ask Agent
+     * @description Agente del Radar. Stream SSE: `step`, `action`, `answer`, `error` y siempre `done`.
+     */
+    post: operations['ask_agent_api_v1_agent_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -133,6 +153,41 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    /**
+     * ActionEvent
+     * @description Se serializa con `exclude_unset=True` para que solo viajen los campos del parche.
+     */
+    ActionEvent: {
+      /** Step Id */
+      step_id: number
+      patch: components['schemas']['RadarPatch']
+    }
+    AgentEvent:
+      | components['schemas']['StepEvent']
+      | components['schemas']['ActionEvent']
+      | components['schemas']['AnswerEvent']
+      | components['schemas']['ErrorEvent']
+      | components['schemas']['DoneEvent']
+    /** AgentQuestion */
+    AgentQuestion: {
+      /** Question */
+      question: string
+    }
+    /** AnswerEvent */
+    AnswerEvent: {
+      /** Text */
+      text: string
+      /**
+       * Cited
+       * @description Solo oportunidades que devolvió alguna tool de datos en esta pregunta
+       */
+      cited: components['schemas']['CitedOpportunity'][]
+      /**
+       * Unknowns
+       * @description Qué no sabemos
+       */
+      unknowns: string[]
+    }
     /** AudienceFitCriterion */
     AudienceFitCriterion: {
       criterion: components['schemas']['FitCriterion']
@@ -165,6 +220,19 @@ export interface components {
       /** Latam Es */
       latam_es: number
     }
+    /** CitedOpportunity */
+    CitedOpportunity: {
+      /** Id */
+      id: string
+      /** Topic */
+      topic: string
+      lifecycle: components['schemas']['Lifecycle']
+      /**
+       * Opportunity Score
+       * @description None sin audience fit
+       */
+      opportunity_score: number | null
+    }
     /**
      * Collection
      * @enum {string}
@@ -180,6 +248,29 @@ export interface components {
      * @enum {string}
      */
     CostPeriod: '7d' | '30d'
+    /** DoneEvent */
+    DoneEvent: {
+      /** Steps */
+      steps: number
+      /** Data Steps */
+      data_steps: number
+      /** View Steps */
+      view_steps: number
+    }
+    /**
+     * ErrorCode
+     * @enum {string}
+     */
+    ErrorCode: 'llm_unavailable' | 'no_data' | 'internal' | 'timeout'
+    /** ErrorEvent */
+    ErrorEvent: {
+      code: components['schemas']['ErrorCode']
+      /**
+       * Message
+       * @description En español, sin detalles internos
+       */
+      message: string
+    }
     /** Evidence */
     Evidence: {
       /**
@@ -494,6 +585,27 @@ export interface components {
       unknown_price_events: number
     }
     /**
+     * RadarPatch
+     * @description Parche del estado de la URL del Radar (`useRadarQuery`): solo cambian los campos presentes.
+     *
+     *     Un campo presente con `null` significa "quitar ese filtro".
+     */
+    RadarPatch: {
+      /** Lifecycle */
+      lifecycle?: components['schemas']['Lifecycle'][] | null
+      confidence?: components['schemas']['Confidence'] | null
+      /** Topic */
+      topic?: string | null
+      /** Gap */
+      gap?: boolean | null
+      /** Sort */
+      sort?: ('opportunity' | 'acceleration') | null
+      /** Selected */
+      selected?: string | null
+      /** Highlight */
+      highlight?: string[] | null
+    }
+    /**
      * Rate
      * @description Tasa de crecimiento de una pieza entre snapshots.
      */
@@ -580,6 +692,32 @@ export interface components {
       /** Last Observed At */
       last_observed_at: string | null
     }
+    /** StepEvent */
+    StepEvent: {
+      /**
+       * Id
+       * @description Orden del paso en esta pregunta, desde 1
+       */
+      id: number
+      /** @description data → etiqueta Datos · view → etiqueta Vista */
+      kind: components['schemas']['StepKind']
+      /**
+       * Label
+       * @description Qué hace el paso, escrito por Python, nunca por el modelo
+       */
+      label: string
+      status: components['schemas']['StepStatus']
+    }
+    /**
+     * StepKind
+     * @enum {string}
+     */
+    StepKind: 'data' | 'view'
+    /**
+     * StepStatus
+     * @enum {string}
+     */
+    StepStatus: 'running' | 'done' | 'failed'
     /** TimelinePoint */
     TimelinePoint: {
       /**
@@ -788,6 +926,39 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['OperatingCost']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  ask_agent_api_v1_agent_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AgentQuestion']
+      }
+    }
+    responses: {
+      /** @description Stream SSE. El `data` de cada evento es el modelo de su nombre: step → StepEvent, action → ActionEvent, answer → AnswerEvent, error → ErrorEvent, done → DoneEvent. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'text/event-stream': components['schemas']['AgentEvent']
         }
       }
       /** @description Validation Error */
