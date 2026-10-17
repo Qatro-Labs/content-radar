@@ -83,6 +83,7 @@ class ToolInput(BaseModel):
 
 class ListInput(ToolInput):
     lifecycle: list[Lifecycle] | None = None
+    recommendation: list[Recommendation] | None = None
     confidence: Confidence | None = None
     topic: TopicArg | None = Field(default=None, description="Subcadena del tema")
     latam_gap_only: bool = False
@@ -203,6 +204,8 @@ async def _list(args: ListInput, session: AsyncSession, seen: Seen) -> ToolOutco
     if listed is None:
         return _error(StepKind.DATA, label, NO_DATA_MESSAGE)
     items = [o for o in listed.items if not args.lifecycle or o.lifecycle in args.lifecycle]
+    if args.recommendation:
+        items = [o for o in items if o.recommendation in args.recommendation]
     if args.latam_gap_only:
         items = [o for o in items if o.latam_gap is True]
     items = sorted(items, key=_sort_key(args.sort))[: args.limit]
@@ -304,8 +307,10 @@ class Tool[T: ToolInput]:
 TOOLS: dict[str, Tool] = {
     "list_opportunities": Tool(
         StepKind.DATA,
-        "Lista las oportunidades editoriales de la ejecución servida, con sus scores. Filtra por "
-        "etapa, confianza, tema o hueco en LATAM y ordena por oportunidad o aceleración.",
+        "Lista las oportunidades editoriales de la ejecución servida, con sus scores (como "
+        f"mucho {MAX_LISTED}). Filtra por etapa, recomendación, confianza, tema o hueco en LATAM "
+        "y ordena por oportunidad o aceleración. Para contar o enumerar las de una recomendación, "
+        "filtra por ella: sin filtro solo ves las primeras.",
         ListInput,
         labels.LIST_LABEL,
         _list,
