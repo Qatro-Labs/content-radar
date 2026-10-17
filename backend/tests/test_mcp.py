@@ -11,6 +11,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from mcp import Client
 from mcp.types import CallToolResult, TextContent
 from sqlalchemy import select
@@ -18,7 +19,8 @@ from sqlalchemy import select
 from app.agent.limits import LimitResult, RateLimiter
 from app.agent.sanitize import clean_tree
 from app.collectors.usage import UsageMeter
-from app.mcp.server import McpDeps, build_mcp_server, transport_security
+from app.main import app
+from app.mcp.server import McpDeps, build_mcp_app, build_mcp_server, transport_security
 from app.mcp.tools import COVERAGE_NOTE, MCP_BRIEF_LIMITS, NO_DATA
 from app.models import UsageEvent
 from app.schemas.cost import CostPeriod, Provider
@@ -330,3 +332,40 @@ async def test_brief_limit_is_an_error_without_calling_the_llm(session):
     assert second.is_error
     assert MCP_BRIEF_LIMITS[LimitResult.IP] in text_of(second)
     assert briefer.calls == 1
+
+
+INITIALIZE = {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+        "protocolVersion": "2025-06-18",
+        "capabilities": {},
+        "clientInfo": {"name": "test", "version": "1"},
+    },
+}
+MCP_ACCEPT = {"Accept": "application/json, text/event-stream"}
+
+
+@pytest.mark.parametrize(
+    ("base_url", "status"),
+    [("https://radar.example", 200), ("https://evil.example", 421)],
+    ids=["public-host", "other-host"],
+)
+async def test_mcp_http_accepts_the_public_host_and_rejects_others(session, base_url, status):
+    # Servidor nuevo en cada test: `run()` solo se puede entrar una vez por instancia, y
+    # ASGITransport no corre el lifespan que lo haría.
+    server = build_mcp_server(deps(session))
+    sub = build_mcp_app(server, "https://radar.example/mcp")
+
+    async with server.session_manager.run():
+        async with AsyncClient(transport=ASGITransport(app=sub), base_url=base_url) as http:
+            response = await http.post("/mcp", json=INITIALIZE, headers=MCP_ACCEPT)
+
+    assert response.status_code == status
+
+
+async def test_rest_routes_take_precedence_over_the_mcp_mount():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
+        assert (await http.get("/openapi.json")).status_code == 200
+        assert (await http.get("/no-existe")).status_code == 404

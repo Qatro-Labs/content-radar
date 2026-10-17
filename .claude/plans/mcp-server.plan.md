@@ -662,7 +662,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest tests/test_mcp.py tests/test_editorial_brief.py -q`
 - **Commit:** `Add editorial brief MCP tool with its own limits`
 
-### Paso 8 — Montaje en la app y protección de Host (D2, D3, D4)
+### Paso 8 — Montaje en la app y protección de Host (D2, D3, D4) [HECHO]
 
 - **Archivos:** `backend/app/main.py`, `backend/tests/test_mcp.py`
 - **Cambio:** lo descrito en "Diseño de módulos" para `app/main.py`.
