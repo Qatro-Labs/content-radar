@@ -1,0 +1,5 @@
+# vue-demi (vía vue-echarts) ya trae por defecto la build de Vue 3: su postinstall no hace falta.
+allowBuilds:
+  vue-demi: false
+# Estándares §11: no instalar paquetes publicados hace menos de 7 días (en minutos).
+minimumReleaseAge: 10080
