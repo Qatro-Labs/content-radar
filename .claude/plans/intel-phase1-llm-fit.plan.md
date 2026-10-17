@@ -87,7 +87,7 @@
 
 El plan no traía pasos: `plan-implementer` los deriva de D1–D12, sin decisiones nuevas.
 
-### Paso 1 — Precio de entrada y salida del LLM (D8)
+### Paso 1 — Precio de entrada y salida del LLM (D8) [HECHO]
 ### Paso 2 — Juicios de Jev por pieza y filtro `about_ai` (D4, D5)
 ### Paso 3 — Del nivel de cada criterio a los scores (D6)
 ### Paso 4 — Evaluador con el SDK de Anthropic y prompt v1 (D1, D2, D3, D10)

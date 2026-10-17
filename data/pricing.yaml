@@ -29,10 +29,13 @@ variable:
     price_per_unit: 0.000000042 # 0,042 $ por millón de tokens de entrada; la salida es gratis
     source: https://docs.typesafe.ai/models
   llm_text:
-    # Pendiente: Melkin elige entre los finalistas probando 3–5 temas reales (CLAUDE.md §7).
+    # Modelo elegido el 17/10: claude-haiku-5-5 (plan intel-phase1-llm-fit, D1). Precio de los
+    # prompts de hasta 100K tokens; evaluate_topic queda muy por debajo.
     unit: tokens
-    input_price_per_unit: null
-    output_price_per_unit: null
+    model: claude-haiku-5-5
+    input_price_per_unit: 0.0000001 # 0,10 $ por millón de tokens de entrada
+    output_price_per_unit: 0.0000005 # 0,50 $ por millón de tokens de salida
+    source: https://platform.claude.com/docs/en/about-claude/pricing
     candidates:
       claude-haiku-5-5:
         input_per_million: 0.10

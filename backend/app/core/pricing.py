@@ -15,13 +15,19 @@ PRICING_FILE = Path(__file__).resolve().parents[3] / "data" / "pricing.yaml"
 
 class VariablePrice(BaseModel):
     unit: str
-    # Ausente o null = precio desconocido (p. ej. llm_text con precios de entrada/salida aún
-    # pendientes). El coste queda en null, nunca en 0 (CLAUDE.md §2.3).
+    # Ausente o null = precio desconocido. El coste queda en null, nunca en 0 (CLAUDE.md §2.3).
     price_per_unit: Decimal | None = None
+    # Un LLM cobra distinto la entrada y la salida: `units` son los tokens de entrada.
+    input_price_per_unit: Decimal | None = None
+    output_price_per_unit: Decimal | None = None
     free_credit_monthly: Decimal | None = None
 
-    def cost(self, units: Decimal) -> Decimal | None:
-        return None if self.price_per_unit is None else units * self.price_per_unit
+    def cost(self, units: Decimal, *, output_units: Decimal = Decimal(0)) -> Decimal | None:
+        if self.price_per_unit is not None:
+            return units * self.price_per_unit
+        if self.input_price_per_unit is None or self.output_price_per_unit is None:
+            return None
+        return units * self.input_price_per_unit + output_units * self.output_price_per_unit
 
 
 class FixedItem(BaseModel):

@@ -11,15 +11,24 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.collectors.hackernews import API_URL as HN_URL
 from app.collectors.usage import UsageCount, UsageMeter
 from app.collectors.youtube import API_BASE, YouTubeClient, YouTubeCollector
-from app.core.pricing import get_pricing
+from app.core.pricing import VariablePrice, get_pricing
 from app.db.session import get_session
 from app.jobs import collect
 from app.main import app
 from app.models import PipelineRun, Source, UsageEvent
 from app.schemas.cost import CostPeriod, Provider
+from app.services import costs
 from app.services.costs import operating_cost, record_meter, record_usage
 
 NOW = datetime(2026, 10, 17, 12, 0, tzinfo=UTC)
+
+
+@pytest.fixture
+def unknown_llm_price(monkeypatch):
+    pricing = get_pricing()
+    variable = {**pricing.variable, Provider.LLM_TEXT: VariablePrice(unit="tokens")}
+    patched = pricing.model_copy(update={"variable": variable})
+    monkeypatch.setattr(costs, "get_pricing", lambda: patched)
 
 
 # --- precios ------------------------------------------------------------------------------
@@ -39,15 +48,38 @@ def test_every_provider_has_a_price_entry():
         (Provider.BRAVE_SEARCH, 200, Decimal("1.000")),
         (Provider.TYPESAFE_JEV, 1_000_000, Decimal("0.042")),
         (Provider.YOUTUBE, 300, Decimal(0)),
-        (Provider.LLM_TEXT, 5000, None),
     ],
-    ids=["brave", "jev", "youtube-free", "llm-unknown-price"],
+    ids=["brave", "jev", "youtube-free"],
 )
 def test_cost_is_units_times_price(provider, units, expected):
     assert get_pricing().variable[provider].cost(Decimal(units)) == expected
 
 
-async def test_record_usage_keeps_unknown_price_as_null(session):
+def test_unknown_price_costs_null():
+    assert VariablePrice(unit="tokens").cost(Decimal(5000)) is None
+
+
+def test_llm_cost_prices_input_and_output_separately():
+    # A mano con claude-haiku-5-5: 0,10 $ por millón de entrada + 0,50 $ por millón de salida.
+    price = get_pricing().variable[Provider.LLM_TEXT]
+    assert price.cost(Decimal(1_000_000), output_units=Decimal(1_000_000)) == Decimal("0.60")
+
+
+async def test_llm_meter_records_total_tokens_and_split(session):
+    meter = UsageMeter()
+    meter.add(Provider.LLM_TEXT, "evaluate_topic", units=600, output_units=200)
+    meter.add(Provider.LLM_TEXT, "evaluate_topic", units=400, output_units=300)
+
+    await record_meter(session, meter)
+
+    event = await session.scalar(select(UsageEvent))
+    assert event is not None
+    # 1000 de entrada · 0,10 $/M + 500 de salida · 0,50 $/M = 0,0001 + 0,00025.
+    assert (event.calls, event.units, event.cost_usd) == (2, 1500, Decimal("0.00035"))
+    assert event.details == {"input_tokens": 1000, "output_tokens": 500}
+
+
+async def test_record_usage_keeps_unknown_price_as_null(session, unknown_llm_price):
     event = await record_usage(session, Provider.LLM_TEXT, "explain_opportunity", 1200)
     assert event.cost_usd is None
     assert event.unit == "tokens"
@@ -153,7 +185,7 @@ async def test_single_recent_event_projects_from_at_least_one_day(session):
     assert cost.projection["demo"].variable_usd == 10.0
 
 
-async def test_unknown_price_is_counted_but_not_summed(session):
+async def test_unknown_price_is_counted_but_not_summed(session, unknown_llm_price):
     await record_usage(session, Provider.LLM_TEXT, "explain", 5000, occurred_at=NOW)
     cost = await operating_cost(session, CostPeriod.WEEK, now=NOW)
 
