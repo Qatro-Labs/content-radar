@@ -12,7 +12,7 @@
 **Pregunta que el prototipo debe responder:**
 > "¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?"
 
-**Propuesta de valor:** 30X Signal convierte señales públicas de Internet en oportunidades editoriales **verificables y accionables**, accesibles desde un dashboard visual (React) o desde asistentes de IA (Claude, ChatGPT, Grok) vía **MCP**.
+**Propuesta de valor:** 30X Signal convierte señales públicas de Internet en oportunidades editoriales **verificables y accionables**, accesibles desde un dashboard visual (Vue) o desde asistentes de IA (Claude, ChatGPT, Grok) vía **MCP**.
 
 Flujo del producto: **Señal → Tendencia → Oportunidad → Evidencia → Contenido recomendado**
 
@@ -44,7 +44,7 @@ Las tres preguntas del reto y cómo las respondemos:
 |---|---|---|---|
 | **Steven** | Colombia (UTC-5) | Data & Backend | Conectores, normalización, snapshots, DB, jobs, API base, despliegue backend |
 | **Melkin** | España (UTC+2) | AI & Intelligence | Embeddings, clustering, scoring, audience fit, análisis editorial LLM, **servidor MCP** |
-| **Frontend lead** | España (UTC+2) | Product & Frontend | React, visualizaciones, UX, integración funcional, demo y entrega |
+| **Frontend lead** | España (UTC+2) | Product & Frontend | Vue, visualizaciones, UX, integración funcional, demo y entrega |
 
 - Sin rotaciones durante la hackathon. Cada módulo tiene un dueño.
 - España va **7 h por delante** de Colombia.
@@ -69,7 +69,7 @@ PostgreSQL + pgvector  ◄──  Intelligence (embeddings → clustering → sc
         │
         ▼
 Domain services (Python)
-   ├── FastAPI REST  /api/v1  ──►  React dashboard (Radar · Explore · Create)
+   ├── FastAPI REST  /api/v1  ──►  Vue dashboard (Radar · Explore · Create)
    └── MCP server    /mcp      ──►  Claude / ChatGPT / Grok   (Streamable HTTP, montado en la misma app ASGI)
 ```
 
@@ -173,7 +173,7 @@ GET  /health
 
 ## 7. Motor de inteligencia y scoring
 
-- **Embeddings:** `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (ES/EN en el mismo espacio, necesario para el LATAM Gap).
+- **Embeddings:** `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (ES/EN en el mismo espacio, necesario para el LATAM Gap). Se calculan **solo en el job `analyze`** (GitHub Actions o local, torch CPU en un grupo de dependencias `ml`). La imagen de la API y el MCP no instala torch: sus búsquedas usan texto en Postgres, no embeddings de la consulta.
 - **Clustering:** scikit-learn sobre similitud coseno. Nada de BERTopic ni HDBSCAN salvo que sobre tiempo. LLM solo para **nombrar** clusters.
 - **Velocidad, no popularidad.** El total de views, likes o puntos **nunca** entra directamente en un score: solo tasas normalizadas dentro de cada fuente.
   - *Pieza:* `Δmétrica / Δhoras` entre snapshots (`views/h` en YouTube, `points/h` y `comments/h` en HN). Sin 2+ snapshots → `growth_status = estimated | preliminary`.
@@ -209,7 +209,7 @@ GET  /health
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
 - **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita.
-- **LLM:** vía LiteLLM, con un modelo económico y salidas estructuradas. Funciones concretas (`classify_topic`, `evaluate_audience_fit`, `explain_opportunity`, `recommend_content_angles`). **Sin agentes autónomos.** Resultados cacheados en Postgres.
+- **LLM:** vía el **SDK oficial del proveedor**, con un modelo económico y salidas estructuradas. Sin LiteLLM: un modelo y cuatro funciones no justifican la capa, y LiteLLM 1.82.7 y 1.82.8 fueron versiones maliciosas en PyPI (marzo de 2026). Proveedor y modelo: pendiente (Melkin). Funciones concretas (`classify_topic`, `evaluate_audience_fit`, `explain_opportunity`, `recommend_content_angles`). **Sin agentes autónomos.** Resultados cacheados en Postgres.
 - **Perfil editorial de 30X:** en `data/audiences/30x.yaml` (audiencia, pilares, tono, formatos, qué no encaja). Se define en la Fase 2 a partir de los Instagram de 30X y Andrés Bilbao.
 
 ---
@@ -219,15 +219,15 @@ GET  /health
 | Área | Tecnología |
 |---|---|
 | Backend | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 + Alembic + asyncpg, httpx, tenacity |
-| Datos / ML | Polars, NumPy, sentence-transformers, scikit-learn |
-| LLM | LiteLLM + modelo económico con structured outputs |
+| Datos / ML | Polars, NumPy, scikit-learn · sentence-transformers solo en el job `analyze` (grupo `ml`, torch CPU) |
+| LLM | SDK oficial del proveedor + modelo económico con structured outputs |
 | MCP | MCP Python SDK oficial, Streamable HTTP, montado en FastAPI |
-| DB | PostgreSQL + pgvector (Supabase en la demo, Docker en local) |
+| DB | PostgreSQL + pgvector (Supabase en la demo, Docker en local). Se migra con `pg_dump`/`pg_restore` desde la DB local para conservar el historial de snapshots (no repetir el backfill). Supabase y Railway en la misma región |
 | Jobs | cron / GitHub Actions |
-| Tooling | uv (Python), pnpm (frontend), Ruff, Pyright, pytest + respx, ESLint, Prettier, Vitest + Testing Library |
-| Deploy | React (build estático de Vite) → Vercel · API + MCP → Railway · DB → Supabase |
+| Tooling | uv (Python), pnpm (frontend), Ruff, Pyright, pytest + respx, ESLint (`eslint-plugin-vue`), Prettier, `vue-tsc`, Vitest + Vue Testing Library |
+| Deploy | Vue (build estático de Vite) → Vercel · API + MCP → Railway · DB → Supabase |
 
-**Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
+**Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, LiteLLM, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
 
 **Variables de entorno** (solo en el backend; ver `.env.example`):
 `DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`.
@@ -237,8 +237,10 @@ GET  /health
 ## 9. Frontend
 
 ### Stack base (P0)
-**React 19 + TypeScript + Vite** (SPA, sin Next.js: no hace falta SSR y el backend ya es FastAPI) · Tailwind CSS v4 (`@tailwindcss/vite`) · **shadcn/ui** · lucide-react · **Apache ECharts + `echarts-for-react`** · TanStack Query · React Router · Zustand (P1, solo si el estado en la URL no alcanza).
-React habla **solo con la API REST**, nunca con el MCP. Los filtros del Radar se guardan en la URL (query params) para poder compartir enlaces y repetir la demo.
+> Decisión del 17/10 (frontend lead): **Vue en lugar de React**, por facilidad de uso. Sustituye a la versión anterior de esta sección.
+
+**Vue 3 + TypeScript + Vite** (SPA con `<script setup>` y Composition API; sin Nuxt: no hace falta SSR y el backend ya es FastAPI) · Tailwind CSS v4 (`@tailwindcss/vite`) · **shadcn-vue** (sobre Reka UI) · `@lucide/vue` · **Apache ECharts + `vue-echarts`** · TanStack Vue Query (`@tanstack/vue-query`) · Vue Router · Pinia (P1, solo si el estado en la URL no alcanza).
+El frontend habla **solo con la API REST**, nunca con el MCP. Cliente tipado con `openapi-typescript` + `openapi-fetch`, envuelto en composables de TanStack Vue Query en `src/api/`. Los filtros del Radar se guardan en la URL (query params de Vue Router) para poder compartir enlaces y repetir la demo.
 
 ### Tres vistas
 1. **Discover (Radar):** gráfico de burbujas de ECharts como protagonista y ranking sincronizado.
@@ -249,23 +251,23 @@ React habla **solo con la API REST**, nunca con el MCP. Los filtros del Radar se
 2. **Explore (Evidencia):** timeline de velocidad del tema (barras por día, ventana actual vs. anterior) con su confianza · **barra apilada de `audience_mix`** (para quién importa) · Evidence Explorer por plataforma (enlaces originales, fechas, métricas, velocidad y **badge de outlier `6.1×`**; outliers primero) · AI Insights (por qué funciona, patrones, **qué no podemos saber**, encaje con 30X).
 3. **Create (Content Studio, P1):** oportunidad + plataforma + objetivo + formato → brief (ángulo, gancho, estructura, evidencias, por qué encaja). Se puede copiar. No es un editor.
 
-P2: Topic Network con React Flow (`@xyflow/react`) y animaciones avanzadas.
+P2: Topic Network con Vue Flow (`@vue-flow/core`) y animaciones avanzadas.
 
 ### Dirección visual
 "Intelligence platform", no un admin dashboard. Tono tecnológico, editorial y minimalista: fondo oscuro, superficies neutras, acentos de color solo para estados (lifecycle o confianza). Los gráficos son el centro de la interfaz. Jerarquía: **score → evolución → explicación → acción**. Microinteracciones suaves al seleccionar y filtrar. Ningún gráfico decorativo.
 
-**Regla de efectos:** como mucho un efecto llamativo por vista (por ejemplo, un fondo sutil en el Radar o number tickers en los scores). El Radar y la evidencia son el producto; los efectos de Aceternity o React Bits no pueden tapar los datos ni bajar el rendimiento.
+**Regla de efectos:** como mucho un efecto llamativo por vista (por ejemplo, un fondo sutil en el Radar o number tickers en los scores). El Radar y la evidencia son el producto; los efectos de Inspira UI o Vue Bits no pueden tapar los datos ni bajar el rendimiento.
 
 ### Recursos de diseño (de nuestra lista de referencias)
 
 | Uso | Recurso | Cómo lo usamos |
 |---|---|---|
-| Componentes base | [shadcn/ui](https://ui.shadcn.com) | Sistema de componentes principal (se instalan con el CLI de shadcn, el código queda en el repo) |
-| Tema / tokens | [tweakcn](https://tweakcn.com/) | Generar las variables CSS de shadcn para el tema oscuro |
-| Ecosistema shadcn | [21st.dev](https://21st.dev), [shadcndesign.com](https://www.shadcndesign.com/), [mapcn](https://www.mapcn.dev/) | Bloques ya hechos (sidebars, paneles, tablas). mapcn solo si añadimos un mapa de LATAM (P2) |
-| Componentes animados | [Aceternity UI](https://ui.aceternity.com), [Magic UI](https://magicui.design), [React Bits](https://reactbits.dev), [Motion Primitives](https://motion-primitives.com) | Pocos y con intención (ver regla de efectos). Copiar el componente al repo, no instalar librerías enteras |
-| Animación | Motion (`motion/react`) | Transiciones de panel, selección y entrada de listas |
-| Gráficos | ECharts con `echarts-for-react` (decidido). Recharts / TanStack Charts quedan como referencia | No cambiar de librería de charts durante la hackathon |
+| Componentes base | [shadcn-vue](https://www.shadcn-vue.com) | Sistema de componentes principal (se instalan con el CLI de shadcn-vue, el código queda en el repo) |
+| Tema / tokens | [tweakcn](https://tweakcn.com/) | Generar las variables CSS del tema oscuro (las mismas que usa shadcn-vue) |
+| Ecosistema shadcn | [21st.dev](https://21st.dev), [shadcndesign.com](https://www.shadcndesign.com/) | **Son de React: solo referencia visual** de bloques (sidebars, paneles, tablas); se reimplementan con shadcn-vue. Mapa de LATAM (P2): con ECharts |
+| Componentes animados | [Inspira UI](https://inspira-ui.com) (port Vue de Aceternity y Magic UI), [Vue Bits](https://vue-bits.dev) (port de React Bits) | Pocos y con intención (ver regla de efectos). Copiar el componente al repo, no instalar librerías enteras |
+| Animación | `<Transition>` / `<TransitionGroup>` de Vue; Motion para Vue (`motion-v`) si no alcanza | Transiciones de panel, selección y entrada de listas |
+| Gráficos | ECharts con `vue-echarts` (decidido) | No cambiar de librería de charts durante la hackathon |
 | Inspiración UI | [Refero Styles](https://styles.refero.design), [Mobbin](https://mobbin.com), [Godly](https://godly.website), [minimal.gallery](https://minimal.gallery), [60fps.design](https://60fps.design), [beautifului.dev](https://www.beautifului.dev), [component.gallery](https://component.gallery), [navbar.gallery](https://www.navbar.gallery), [cta.gallery](https://www.cta.gallery) | Buscar referencias de dashboards de analítica o inteligencia y de paneles laterales de detalle |
 | Principios | [Vercel Design Engineering](https://vercel.com/design/engineer) | Checklist de calidad de interacción |
 | Assets | [3dicons.co](https://3dicons.co), [backgrounds.supply](https://www.backgrounds.supply) | Solo para landing o hero si sobra tiempo (P2) |
@@ -295,8 +297,8 @@ P2: Topic Network con React Flow (`@xyflow/react`) y animaciones avanzadas.
 │   │   └── main.py
 │   ├── alembic/ · tests/ · pyproject.toml
 ├── frontend/
-│   └── src/{components/{ui,radar,opportunities,evidence,editorial},pages,hooks,lib,api,types,routes}
-│       # components/ui = shadcn/ui · api = cliente + hooks de TanStack Query · types/api.ts generado desde OpenAPI
+│   └── src/{components/{ui,radar,opportunities,evidence,editorial},views,composables,lib,api,types,router}
+│       # components/ui = shadcn-vue · api = cliente openapi-fetch + composables de TanStack Vue Query · types/api.ts generado desde OpenAPI
 ├── data/{fixtures,evaluations,audiences}
 └── docs/{architecture,scoring,sources,mcp}.md
 ```
@@ -316,7 +318,7 @@ P2: Topic Network con React Flow (`@xyflow/react`) y animaciones avanzadas.
 
 ## 12. Prioridades
 
-- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · audience fit · evidencias verificables · dashboard React con Radar y detalle · despliegue.
+- **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · audience fit · evidencias verificables · dashboard Vue con Radar y detalle · despliegue.
 - **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LATAM Opportunity Gap · comparación de oportunidades.
 - **P2:** Topic Network · animaciones avanzadas · más fuentes · varias audiencias.
 
@@ -333,7 +335,7 @@ P2: Topic Network con React Flow (`@xyflow/react`) y animaciones avanzadas.
 | Sáb 08:30 / 01:30 | Steven: repo, DB y ≥2 fuentes con datos reales + handoff escrito |
 | Sáb 10:30–12:00 / 03:30–05:00 | Melkin y Frontend: **contrato `Opportunity` congelado** y perfil 30X |
 | Sáb 16:30 / 09:30 | Sync de los tres (30 min): mismo modelo de datos |
-| Sáb 20:30 / 13:30 | Primera integración: datos reales → oportunidades → React |
+| Sáb 20:30 / 13:30 | Primera integración: datos reales → oportunidades → Vue |
 | Dom 00:30 / Sáb 17:30 | **MVP P0 end-to-end** (abrir → ver → seleccionar → evidencias → por qué → brief) |
 | Dom 12:30 / 05:30 | Revisión de MCP y frontend |
 | Dom 15:00 / 08:00 | **Feature freeze** |
@@ -358,7 +360,7 @@ Actúa como **Technical Project Coordinator y Product Engineering Copilot** de 3
 - Respeta el ownership de §3 al sugerir tareas o resolver dependencias.
 - Prefiere soluciones simples y librerías maduras. Evita la sobreingeniería y las herramientas de la lista de "fuera de la hackathon".
 - **Nunca** generes ni muestres datos ficticios como resultados reales. Los mocks viven solo en `data/fixtures/` y se marcan como tales.
-- Frontend en React + TypeScript con componentes funcionales y hooks. No introduzcas Vue ni otra librería de UI o de charts además de las de §9.
+- Frontend en Vue 3 + TypeScript con `<script setup>`, Composition API y composables. No introduzcas React ni otra librería de UI o de charts además de las de §9.
 - Antes de tocar UI, lee `DESIGN.md`. Antes de tocar contratos, avisa: rompen el trabajo de los demás.
 - Avisa pronto si una decisión pone en riesgo un checkpoint.
 - Cuando te pidan el estado, responde con esta tabla. Una tarea no está hecha porque haya pasado su horario; solo cuenta lo que el equipo confirme:

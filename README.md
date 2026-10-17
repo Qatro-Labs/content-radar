@@ -63,7 +63,7 @@ backend/app/
   mcp/           servidor MCP
   api/routes/    FastAPI (delgado)
   jobs/          pipelines ejecutables por cron
-frontend/        React + Vite (pendiente)
+frontend/        Vue 3 + Vite (pendiente)
 data/            fixtures, evaluaciones y perfiles de audiencia
 ```
 
