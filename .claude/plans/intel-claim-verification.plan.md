@@ -648,7 +648,7 @@ Se informa también por posición (1, 2, 3) y la variante sin `measured_facts`.
 - **Verificación:** `cd backend && TEST_DATABASE_URL=postgresql+asyncpg://radar:radar@localhost:5433/radar_test_verify uv run pytest tests/test_explanation.py -q`
 - **Commit:** `Split the explanation checks so Jev verdicts can be applied`
 
-### Paso 3 — Service de verificación con caché, presupuesto y consumo
+### Paso 3 — Service de verificación con caché, presupuesto y consumo [HECHO]
 
 - **Archivos:** `backend/app/services/verification.py` (nuevo), `backend/app/core/config.py`,
   `backend/tests/test_verification.py` (nuevo)
