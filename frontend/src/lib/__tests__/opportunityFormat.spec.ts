@@ -6,7 +6,6 @@ import {
   formatAcceleration,
   formatFit,
   isDeclining,
-  formatOutliers,
   formatScore,
   latamGapLabel,
   pulsePeriodSeconds,
@@ -23,26 +22,6 @@ describe('formatAcceleration', () => {
     { name: 'flat when it rounds to 0 %', acceleration: 0.004, expected: '→ 0\u00a0%' },
   ])('writes $name', ({ acceleration, expected }) => {
     expect(formatAcceleration(acceleration)).toBe(expected)
-  })
-})
-
-describe('formatOutliers', () => {
-  it.each([
-    {
-      name: 'count and top ratio with a decimal comma',
-      count: 2,
-      top: 6.1,
-      expected: '2 · máx. 6,1×',
-    },
-    { name: 'only the count when the top ratio is missing', count: 2, top: null, expected: '2' },
-    {
-      name: '0 when there are no outliers, even with a top ratio',
-      count: 0,
-      top: 2.2,
-      expected: '0',
-    },
-  ])('writes $name', ({ count, top, expected }) => {
-    expect(formatOutliers(count, top)).toBe(expected)
   })
 })
 

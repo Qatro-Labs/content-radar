@@ -158,3 +158,89 @@ async def test_detail_evidence_and_timeline(seeded, client):
 async def test_missing_opportunity_is_404(seeded, client, suffix):
     response = await client.get(f"/api/v1/opportunities/opp_999{suffix}")
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path", ["/api/v1/evidence", "/api/v1/timelines"], ids=["evidence", "timelines"]
+)
+async def test_bulk_reads_are_null_before_any_analyze_run(client, path):
+    response = await client.get(path)
+    assert response.status_code == 200
+    assert response.json() is None
+
+
+async def test_all_evidence_strongest_outlier_first_and_nulls_last(seeded, client):
+    body = (await client.get("/api/v1/evidence")).json()
+
+    # Ratios del fixture; los nulos van al final, de la más reciente a la más antigua.
+    assert [(e["opportunity_id"], e["outlier_ratio"]) for e in body] == [
+        ("opp_001", 6.1),
+        ("opp_001", 3.4),
+        ("opp_002", 2.2),
+        ("opp_003", 1.8),
+        ("opp_004", 0.6),
+        ("opp_005", None),  # 17/10 07:00
+        ("opp_002", None),  # 15/10 12:00
+        ("opp_001", None),  # 15/10 10:00
+        ("opp_003", None),  # 15/10 09:00
+    ]
+    raw = json.loads(FIXTURE.read_text())
+    expected = {(opp, e["url"]) for opp, items in raw["evidence"].items() for e in items}
+    assert {(e["opportunity_id"], e["url"]) for e in body} == expected
+
+
+async def test_timelines_follow_rank_order(session, client):
+    reversed_rank = fixture_results()[::-1]
+    await add_run(session, reversed_rank)
+
+    body = (await client.get("/api/v1/timelines")).json()
+
+    assert [t["opportunity_id"] for t in body] == [
+        "opp_005",
+        "opp_004",
+        "opp_003",
+        "opp_002",
+        "opp_001",
+    ]
+    assert all(len(t["points"]) == 6 for t in body)
+
+
+async def test_bulk_reads_serve_the_demo_run(session, client, demo_run):
+    results = fixture_results()
+    demo = await add_run(session, results[:2], finished_at=datetime(2026, 10, 16, tzinfo=UTC))
+    await add_run(session, results)
+    demo_run(demo)
+
+    evidence = (await client.get("/api/v1/evidence")).json()
+    timelines = (await client.get("/api/v1/timelines")).json()
+
+    assert {e["opportunity_id"] for e in evidence} == {"opp_001", "opp_002"}
+    assert [t["opportunity_id"] for t in timelines] == ["opp_001", "opp_002"]
+
+
+async def test_list_served_keeps_rank_and_carries_evidence_and_timeline(session):
+    expected = fixture_results()
+    await add_run(session, fixture_results())
+
+    served = await opportunities.list_served(session)
+
+    assert served is not None
+    assert served.generated_at == FINISHED_AT
+    assert [s.opportunity.id for s in served.items] == [r.opportunity.id for r in expected]
+    assert [s.evidence for s in served.items] == [r.evidence for r in expected]
+    assert [s.timeline for s in served.items] == [r.timeline for r in expected]
+
+
+async def test_list_served_applies_the_same_filters_as_the_list(session):
+    await add_run(session, fixture_results())
+
+    served = await opportunities.list_served(session, lifecycle=Lifecycle.ACCELERATING)
+    listed = await opportunities.list_opportunities(session, lifecycle=Lifecycle.ACCELERATING)
+
+    assert served is not None and listed is not None
+    assert [s.opportunity.id for s in served.items] == ["opp_001"]
+    assert [o.id for o in listed.items] == ["opp_001"]
+
+
+async def test_list_served_is_none_before_any_analyze_run(session):
+    assert await opportunities.list_served(session) is None

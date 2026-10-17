@@ -9,11 +9,16 @@ import PeriodControl from './PeriodControl.vue'
 
 const route = useRoute()
 
+// Una vista de la nav puede abarcar varias rutas: Explorar incluye el expediente de cada tema.
 const views = [
-  { name: RouteName.Discover, label: 'Radar' },
-  { name: RouteName.Explore, label: 'Explorar' },
-  { name: RouteName.Create, label: 'Crear' },
+  { name: RouteName.Discover, label: 'Radar', routes: [RouteName.Discover] },
+  { name: RouteName.Explore, label: 'Explorar', routes: [RouteName.Explore, RouteName.Dossier] },
+  { name: RouteName.Create, label: 'Crear', routes: [RouteName.Create] },
 ] as const
+
+function isCurrent(routes: readonly string[]): boolean {
+  return typeof route.name === 'string' && routes.includes(route.name)
+}
 </script>
 
 <template>
@@ -32,7 +37,7 @@ const views = [
           v-for="view in views"
           :key="view.name"
           :to="{ name: view.name }"
-          :aria-current="route.name === view.name ? 'page' : undefined"
+          :aria-current="isCurrent(view.routes) ? 'page' : undefined"
           class="flex h-11 items-center rounded-[10px] px-4 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
         >
           {{ view.label }}

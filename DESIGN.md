@@ -138,14 +138,15 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **"Qué no sabemos":** bloque Aviso con título en negrita y la limitación. Obligatorio en todo detalle.
 - **Contador-filtro:** baldosa blanca radio 16px, cifra Bricolage 32px y debajo la etiqueta con su muestra de color
   ("Publicar ya", "Acelerando", "Emergentes", "Sin etapa"). Es un botón (`aria-pressed`) que escribe el mismo estado
-  de la URL que el resto de filtros; activo, anillo de Tinta de 2px. Sin textos de ayuda debajo.
+  de la URL que el resto de filtros; activo, anillo de Tinta de 2px. Sin textos de ayuda debajo. Muestra el **total**
+  (no cambia al filtrar) y la selección es **única**: pulsar otro lo sustituye y pulsar el activo lo quita.
 - **Tooltip / tarjeta flotante del radar:** blanca, radio 14px, la única con sombra (§5). Chip de etapa, tema,
   "Oportunidad 79 · ↑ +80 %".
 - **Tabla de ranking:** filas de 54–56px con línea #EEF0F2; hover #F6F7F8; seleccionada en lavado de señal y puesto
   en negrita. Columnas: Puesto · Tema · Etapa · 6 días · Aceleración · Oportunidad (barra + cifra). Muestra 10 filas
   y "Ver los 38 temas" despliega el resto.
 - **Mini barras de 6 días:** seis barras de 8px por tema con las piezas nuevas de cada periodo de 24 h
-  (`/timeline`); ventana anterior en #C9CED6, actual en Tinta, un periodo sin piezas como trazo de 2px. Escala común
+  (`/timeline`); ventana anterior en #C9CED6, actual en Tinta, un periodo sin piezas como trazo de 2px en #D5D9DF. Escala común
   a todas las filas (5 piezas/día llenan la barra) para poder compararlas; `aria-label` con los valores.
 - **Panel lateral:** tarjeta blanca a la derecha (`flex: 1 1 360px`), `position: sticky; top: 16px`, visible
   mientras se baja por el ranking. Sin selección muestra «Esta semana» (Radar: los temas de «Publicar ya», una línea
@@ -168,7 +169,7 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 **Radar y agente**
 
 - **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando»,
-  «Emergentes» y «Sin etapa» escriben `lifecycle`; «Publicar ya» filtra por recomendación. La leyenda de etapas pasa
+  «Emergentes» y «Sin etapa» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`. La leyenda de etapas pasa
   a la cabecera de la tarjeta del radar (chips no interactivos). "Hueco en LATAM" sale de la vista mientras
   `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
   filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista" (o la frase "Filtros
@@ -203,13 +204,14 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: sticky; bottom: 16px`). "Para quién
   importa" y "Por qué importa" completos viven en el expediente, no en el Radar.
 - **Explorar sin tema:** cabecera (H1 «Lo que está funcionando» + contadores-filtro: Outliers · YouTube · Hacker News;
-  RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda el gráfico de rendimiento por fecha y la tabla
-  de piezas → a la derecha el panel lateral («Dónde está funcionando» o el detalle de la pieza).
+  RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda la tabla de piezas, ordenada por rendimiento
+  frente a su canal → a la derecha el panel lateral («Dónde está funcionando» o el detalle de la pieza). Sin gráfico:
+  la dispersión por fecha se descartó el 17/10 porque no respondía nada que la tabla no diga.
 - **Expediente (`/explore/:id`):** cabecera (tema, recomendación y motivo; a la derecha el anillo con "Cómo se
   compone") → evolución → por qué importa y encaje → evidencia → siguiente paso con "Qué no sabemos".
-- La cabecera, los contadores y el ranking reflejan los filtros: con filtro, el H1 dice "3 de 9 temas", la frase
-  dice qué filtro hay, los contadores cuentan solo lo filtrado y el ranking muestra solo lo que entra, conservando el
-  puesto global.
+- La cabecera y el ranking reflejan los filtros: con filtro, el H1 dice "3 de 9 temas", la frase dice qué filtro
+  hay y el ranking muestra solo lo que entra, conservando el puesto global. Los contadores siguen mostrando los totales
+  y marcan el filtro activo con su anillo.
 - **Radios:** 20px tarjetas · 16px contadores · 14px baldosas, gráfico y tooltip · 12px botones y pistas · 9–10px
   segmentos y enlaces de navegación · 8px chips de acción · completo en chips de estado y barras.
 - **Elevación:** nada en reposo lleva sombra. Solo lo que flota: tooltip del radar, popovers y diálogos
@@ -224,7 +226,7 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   los controles hacen wrap; la marca y el periodo quedan arriba. La barra de pregunta ocupa todo el ancho con el
   gutter de 16px, y las preguntas sugeridas hacen wrap.
 - La página nunca hace scroll horizontal. El ranking sí puede, **dentro de su tarjeta** (`overflow-x: auto`, ancho
-  mínimo 1000px), como cualquier tabla ancha.
+  mínimo 780px), como cualquier tabla ancha.
 - El radar mantiene 16:9 con un alto mínimo de 300px; en móvil las etiquetas de burbuja se ocultan y queda la
   tarjeta flotante de la selección.
 - Títulos con `clamp()`; texto nunca por debajo de 14px (12px solo en lecturas de ejes).
@@ -312,13 +314,9 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   (momentum a la izquierda, encaje abajo).
 - Filtrada o resaltada: la burbuja que no entra baja a opacidad 0.16 y pierde etiqueta y latido. La seleccionada
   nunca se atenúa.
-- **Timeline (expediente):** barras por periodo; ventana actual en Tinta, ventana anterior en #C9CED6, con su badge
-  de evidencia. Los puntos de `/timeline` son periodos de 24 h que terminan a la hora de `last_updated`, no días de
+- **Timeline (expediente):** barras HTML por periodo (seis barras no necesitan ECharts); ventana actual en Tinta,
+  ventana anterior en #C9CED6, periodo sin piezas como trazo en #D5D9DF, con su badge de evidencia. Los puntos de `/timeline` son periodos de 24 h que terminan a la hora de `last_updated`, no días de
   calendario, y se rotulan así.
-- **Rendimiento por fecha (Explorar sin tema):** dispersión con X = `published_at` e Y = `outlier_ratio` en escala
-  logarítmica, líneas en 1× (#C9CED6) y 3× (Tinta). La forma distingue la plataforma (círculo YouTube, cuadrado Hacker
-  News) y los outliers van en Lima señal con borde Tinta. RSS no publica métricas y no entra; se dice debajo. La
-  tabla de piezas es su alternativa textual.
 - **Tipografía en ECharts:** `textStyle.fontFamily = 'Geist'`, 12–13px, color Apagado. Sin títulos ni leyendas
   internas de ECharts: la leyenda es HTML (chips de etapa) para que sea accesible.
 - Cada gráfico tiene una alternativa textual (el ranking es la del radar).
@@ -422,6 +420,9 @@ no el acento de marca; el acento de marca es `--signal`.
   --negative-bg: #FDE8E9;      /* "Descartar" */
   --audience-business: #8A919C; /* Segmento Negocio de "Para quién importa" */
   --saturation: #FF9A3C;       /* Barra de saturación */
+  --window-previous: #C9CED6;  /* Ventana anterior del timeline y de las mini barras */
+  --window-empty: #D5D9DF;     /* Periodo sin piezas */
+  --reference-mark: #8A919C;   /* Marca 1× y barra de rendimiento que no es outlier */
 
   --lc-emerging: #3D7BFF;      --lc-emerging-bg: #E8F0FF;      --lc-emerging-fg: #1D4FC4;
   --lc-accelerating: #B5E61D;  --lc-accelerating-stroke: #6E8F00;
@@ -460,6 +461,9 @@ no el acento de marca; el acento de marca es `--signal`.
   --color-negative-bg: var(--negative-bg);
   --color-audience-business: var(--audience-business);
   --color-saturation: var(--saturation);
+  --color-window-previous: var(--window-previous);
+  --color-window-empty: var(--window-empty);
+  --color-reference-mark: var(--reference-mark);
   --radius-card: 1.25rem;
   --radius-tile: 0.875rem;
 }

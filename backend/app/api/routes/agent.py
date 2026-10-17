@@ -1,7 +1,6 @@
 import asyncio
 import hashlib
-from collections.abc import AsyncIterable, AsyncIterator, Callable
-from contextlib import AbstractAsyncContextManager
+from collections.abc import AsyncIterable, AsyncIterator
 from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Annotated
@@ -9,14 +8,13 @@ from typing import Annotated
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.limits import GLOBAL_PER_DAY, PER_IP_PER_HOUR, LimitResult, RateLimiter
 from app.agent.model import AgentModel, build_agent_model
 from app.agent.runner import run_agent
 from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
-from app.db.session import SessionLocal
+from app.db.session import SessionFactory, SessionLocal
 from app.schemas.agent import (
     ActionEvent,
     AgentEvent,
@@ -31,7 +29,6 @@ from app.services.costs import record_meter
 router = APIRouter(prefix="/agent", tags=["agent"])
 log = structlog.get_logger()
 
-SessionFactory = Callable[[], AbstractAsyncContextManager[AsyncSession]]
 NOT_CONFIGURED = "El asistente no está configurado."
 LIMIT_MESSAGES = {
     LimitResult.IP: "Has hecho demasiadas preguntas seguidas. Prueba en unos minutos.",

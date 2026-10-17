@@ -13,6 +13,9 @@ from pydantic import AwareDatetime, BaseModel, Field, HttpUrl
 from app.schemas.signal import Metrics, Platform, Segment
 
 Score = Annotated[float, Field(ge=0, le=100)]
+# Forma de `id` (`opp_<content_item.id>`, app/intelligence/opportunities.py): la validan el agente
+# y el MCP antes de buscar.
+OPPORTUNITY_ID_PATTERN = r"^opp_[A-Za-z0-9_]{1,64}$"
 
 
 class Lifecycle(StrEnum):
@@ -88,6 +91,12 @@ class Evidence(BaseModel):
     collection: Collection = Field(
         default=Collection.AUTOMATIC, description="Sensor automático o curación manual"
     )
+
+
+class TopicEvidence(Evidence):
+    """Elemento de GET /evidence: la evidencia de todas las oportunidades servidas."""
+
+    opportunity_id: str = Field(description="Oportunidad a la que pertenece la pieza")
 
 
 class ScoreComponentName(StrEnum):
