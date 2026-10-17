@@ -7,12 +7,14 @@ from pathlib import Path
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.core.config import Settings
 from app.db.session import get_session
 from app.intelligence.lifecycle import Stage
 from app.intelligence.opportunities import TopicResult
 from app.main import app
 from app.models import PipelineRun
 from app.schemas.opportunity import Evidence, Lifecycle, Opportunity, OpportunityTimeline
+from app.services import opportunities
 from app.services.opportunities import ANALYZE_JOB, save_opportunities
 
 FIXTURE = Path(__file__).resolve().parents[2] / "data" / "fixtures" / "opportunities.json"
@@ -79,6 +81,41 @@ async def test_list_serves_latest_successful_run_in_rank_order(session, client):
     assert body["period"] == "7d"
     assert body["generated_at"] == "2026-10-17T12:00:00Z"
     assert body["monitoring_started_at"] == "2026-10-16T00:00:00Z"
+
+
+@pytest.fixture
+def demo_run(monkeypatch):
+    def pin(run_id: int | None) -> None:
+        settings = Settings(demo_run_id=run_id)
+        monkeypatch.setattr(opportunities, "get_settings", lambda: settings)
+
+    return pin
+
+
+async def test_demo_run_is_served_instead_of_the_latest(session, client, demo_run):
+    results = fixture_results()
+    demo = await add_run(session, results[:2], finished_at=datetime(2026, 10, 16, tzinfo=UTC))
+    await add_run(session, results)
+    demo_run(demo)
+
+    body = (await client.get("/api/v1/opportunities")).json()
+    detail = await client.get(f"/api/v1/opportunities/{results[2].opportunity.id}")
+
+    assert [o["id"] for o in body["items"]] == [r.opportunity.id for r in results[:2]]
+    # El detalle sale de la misma ejecución: lo que no está en la demo no existe.
+    assert detail.status_code == 404
+
+
+async def test_demo_run_that_failed_is_not_served(session, client, demo_run):
+    failed = await add_run(session, fixture_results(), status="failed")
+    await add_run(session, fixture_results())
+    demo_run(failed)
+
+    assert (await client.get("/api/v1/opportunities")).json() is None
+
+
+def test_empty_demo_run_id_means_unset():
+    assert Settings.model_validate({"demo_run_id": ""}).demo_run_id is None
 
 
 @pytest.mark.parametrize(

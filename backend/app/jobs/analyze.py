@@ -24,7 +24,7 @@ from app.core.config import get_settings
 from app.db.session import SessionLocal, engine
 from app.editorial.evaluator import build_evaluator
 from app.intelligence.jev import build_judge, to_piece_judgment
-from app.intelligence.opportunities import TopicResult
+from app.intelligence.opportunities import TopicResult, rank
 from app.models import PipelineRun
 from app.services.audience_fit import FitStats, evaluate_topics
 from app.services.classification import ClassificationStats, classify_pieces, load_judgments
@@ -68,7 +68,8 @@ async def _evaluate(session: AsyncSession, run_id: int, as_of: datetime) -> _Eva
         meter=llm_meter,
     )
     await record_meter(session, llm_meter, pipeline_run_id=run_id)
-    return _Evaluated(jev, fit, computed, results)
+    # El orden se decide después del audience fit: antes no hay Opportunity Score.
+    return _Evaluated(jev, fit, computed, rank(results))
 
 
 def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
