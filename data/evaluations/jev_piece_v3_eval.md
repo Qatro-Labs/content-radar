@@ -28,7 +28,8 @@ quitaba eran buenas, sobre todo con un `about_ai` entre 0,2 y 0,3.
 ## Muestras
 
 - **40 piezas** de la hoja de la v2 (`jev_piece_v2_llm_labels.csv`).
-- **160 piezas nuevas** de la DB (`jev_piece_v3_sample_labels.csv`), elegidas al azar con semilla
+- **160 piezas nuevas** de la DB (`jev_piece_v3_sample_labels.csv`; la hoja guarda 300 caracteres
+  de descripción, pero el evaluador vio hasta 1.000, como Jev), elegidas al azar con semilla
   fija y estratificadas según el `about_ai` de v2: 35 en (0,2; 0,3], 15 en ≤ 0,2, 40 inciertas y
   70 con ≥ 0,7. Están sobrerrepresentadas las piezas que v2 quitaba, que son las que interesan.
   Las etiquetó un subagente LLM con las mismas definiciones de `about_ai` y `business_use` que la
@@ -53,7 +54,12 @@ Las 200 piezas etiquetadas (199 con etiqueta de `about_ai`), con los umbrales de
 | **v3: `about_ai` ≤ 0,3 y `ai_in_title` ≤ 0,3** | **36** | **27** | **9** | **75 %** |
 
 La v3 quita 15 piezas buenas menos que v2 (24 → 9) y solo 4 piezas fuera de tema menos (31 → 27, un
-13 % menos). Sobre estas 200 piezas, eso incumple por poco el criterio del 10 % fijado antes.
+13 % menos). Sobre estas 200 piezas, eso incumple por poco el criterio del 10 % fijado antes. Las 4 piezas
+fuera de tema que la v3 deja pasar están en la franja (0,2; 0,3] («Katie Zacharia…», «This Tesla
+Actually Flies (NOT AI)», «OpenAI engineer arrested…» y «Open Components…»), y esa franja está
+sobrerrepresentada: 35 de sus 55 piezas están en la muestra, frente a 15 de las 181 con ≤ 0,2. La
+regla `about_ai` y `ai_in_title` ya estaba en el script de puntuación antes de que llegaran las 160
+etiquetas; no se eligió después de ver los resultados.
 La muestra está sesgada hacia las piezas que v2 quitaba, así que se estimó el efecto sobre las 1.579
 piezas juzgadas, ponderando cada estrato de la muestra de 160 por su tamaño real:
 
@@ -101,7 +107,8 @@ respuestas guardadas de v2 (`dev_audience` y `tech_jargon` 2, `about_ai`, `busin
 falsos "sí" a falsos "no". Dice "no" a piezas que sí tratan del uso en organizaciones, como 4293,
 «La IA analiza tu comportamiento en Netflix…» o «Estudiar programación ya no garantiza trabajo», y
 "sí" a «Claude Haiku 5.5». No llega al criterio, así que `business_use` sigue como en v2. Con 200
-piezas, su incertidumbre real es del ~26 %, no del ~40 % que daban las 40 piezas de la hoja v2.
+piezas, Jev duda en el 26 %, no en el ~40 % que daban las 40 piezas de la hoja v2. Esa muestra está
+estratificada por `about_ai`; en las 1.579 piezas juzgadas, `business_use` es incierto en 360 (23 %).
 `relevant` no cambia: sale de `about_ai` y `business_use`, y ninguna de las dos cambia.
 
 `about_ai_c` acierta más como pregunta (91 % frente a 84 %), pero como filtro quita la mitad de
@@ -120,6 +127,17 @@ Hubo 240 llamadas a `jev-1.13.0`. La batería experimental (8 preguntas) se pas�
 y sumó 236.151 tokens de entrada. La batería v3 completa (13 preguntas) se pasó por las 40 piezas de
 la hoja v2: 90.553 tokens, unos 2.264 por llamada. En total, ~327.000 tokens, que son ~0,014 $ a
 0,042 $ por millón.
+
+## Puesta en producción
+
+La clave de caché incluye la versión de la batería, así que con la v3 desplegada no se reutiliza
+ningún juicio de la v2. Hasta que `analyze` reclasifique, ninguna pieza tiene juicio: el filtro no
+quita nada, el LLM no recibe pistas de Jev y los briefs fallan con `NoSafeEvidence`, porque sin
+respuesta de `injection` la pieza se excluye. Por eso, al desplegar hay que lanzar `analyze` en un
+entorno con `TYPESAFE_API_KEY` y comprobar que el número de piezas clasificadas se acerca al de
+cargadas. Reclasificarlo todo son ~1.600 llamadas, ~3,6 M de tokens, ~0,15 $. Ese mismo `analyze`
+deja entrar ~58 piezas más en el clustering, así que el ranking cambia: hay que revisarlo y volver a
+fijar `DEMO_RUN_ID`.
 
 ## Archivos
 

@@ -53,3 +53,8 @@ PYTHONPATH=. uv run python ../data/evaluations/score_jev.py --sheet <hoja_humana
 
 Solo lee la DB de `DATABASE_URL` (no llama a Jev). Las piezas se buscan por URL y los juicios con la
 misma clave de caché que usa `analyze`.
+
+*Desde la v3:* `score_jev.py` lee los juicios con la clave de la batería actual, así que puntúa la v3
+(y no devuelve nada hasta que `analyze` reclasifique). Los números exactos de la v2 salen de las
+respuestas guardadas: `eval_jev_battery.py score --answers jev_piece_v2_stored_answers.json`
+(ver `jev_piece_v3_eval.md`).

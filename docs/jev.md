@@ -63,7 +63,7 @@ de la v1 dejaban inciertas más de la mitad de las piezas. La v3 es la v2 más `
 | `hook`, `hook_rev` | `choice`: pregunta · dato o cifra · contraintuitivo · historia · cómo hacer · noticia · lista | "Por qué funcionó" |
 | `launch` | `noul`: ¿anuncia un producto, modelo, función o versión nueva? | Distinguir un pico de noticia de una tendencia |
 | **Pistas para el LLM** | | El LLM decide el audience fit; estos conteos le llegan como datos y la UI los muestra como apoyo |
-| `business_use` | `noul`: ¿trata del uso, la adopción o el impacto de la IA en organizaciones? | Criterios "impacto en decisiones" y "aplicación real". Es un juicio de audiencia: ~30 % incierto con cualquier redacción, por eso no filtra. Sobre 200 piezas, 26 % incierto y 95 % de acuerdo cuando está seguro; reformularla en la v3 no mejoró |
+| `business_use` | `noul`: ¿trata del uso, la adopción o el impacto de la IA en organizaciones? | Criterios "impacto en decisiones" y "aplicación real". Es un juicio de audiencia: ~30 % incierto con cualquier redacción, por eso no filtra. Incierto en 360 de 1.579 piezas (23 %); 95 % de acuerdo cuando está seguro (200 etiquetadas); reformularla en la v3 no mejoró |
 | `dev_audience` | `noul`: ¿va dirigida sobre todo a desarrolladores o investigadores? | "Todavía no llegó a ejecutivos" |
 | `business_case` | `noul`: ¿describe cómo una organización concreta usa la IA? (no cuenta el lanzamiento de un proveedor) | Criterio "aplicación real" |
 | `tech_jargon` | `noul`: ¿usa jerga técnica de software o de IA? | Criterio "comprensible para directivos" |
