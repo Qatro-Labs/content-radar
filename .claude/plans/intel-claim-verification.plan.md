@@ -583,7 +583,7 @@ Se informa también por posición (1, 2, 3) y la variante sin `measured_facts`.
 
 ## Plan de implementación
 
-### Paso 0 — Base y rama
+### Paso 0 — Base y rama [HECHO]
 
 - **Cambio:**
   - `git pull --ff-only` en `main`;
@@ -597,7 +597,7 @@ Se informa también por posición (1, 2, 3) y la variante sin `measured_facts`.
 - **Verificación:** `git log --oneline -1` y la tabla releída anotada en el informe.
 - **Commit:** ninguno.
 
-### Paso 1 — Batería `claim.v1`, estado, clave y veredicto
+### Paso 1 — Batería `claim.v1`, estado, clave y veredicto [HECHO]
 
 - **Archivos:** `backend/app/editorial/prompts/jev/claim.v1.yaml` (nuevo),
   `backend/app/intelligence/jev.py`, `backend/tests/test_jev.py`
