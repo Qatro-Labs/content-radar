@@ -120,6 +120,8 @@ Grupos para el **LATAM Opportunity Gap**:
 
 **Tablas:** `sources` (con `segment`), `content_items`, `metric_snapshots` (siempre tabla aparte), `topics`, `topic_content`, `embeddings`, `opportunities` (+ historial de scores), `opportunity_evidence`, `audience_profiles`, `editorial_briefs`, `editorial_feedback`, `pipeline_runs`.
 
+*Implementado (hackathon):* `opportunities` guarda una fila por oportunidad y por ejecución de `analyze`, con `payload`, `evidence` y `timeline` en JSONB ya validados contra el contrato. La API y el MCP leen la última ejecución correcta. `topics`, `topic_content`, `embeddings` y `opportunity_evidence` quedan para después: los embeddings se recalculan en cada ejecución (segundos en CPU).
+
 **Contrato `Opportunity` (congelado tras la Fase 2 del sábado):**
 ```jsonc
 {
@@ -185,6 +187,7 @@ GET  /health
   - *Pieza:* `Δmétrica / Δhoras` entre snapshots (`views/h` en YouTube, `points/h` y `comments/h` en HN). Sin 2+ snapshots → `growth_status = estimated | preliminary`.
   - *Tema:* `velocity` = piezas nuevas por día en la ventana actual (por `published_at`, ponderadas por fuentes independientes).
   - *Aceleración:* `(v_actual − v_anterior) / max(v_anterior, 1)`. Ventanas por defecto de 3 días (actual) vs. 3 días (anterior), configurables. Es la señal principal de tendencia temprana.
+    **Ajustada por volumen:** `v_anterior` se escala por `corpus_actual / corpus_anterior` antes de aplicar la fórmula. Los feeds RSS solo guardan sus últimas N piezas y los días recientes tienen más volumen en todas partes; sin el ajuste, casi todo parecería acelerar. Ventanas móviles de 72 h desde `as_of`, no días naturales.
   - `momentum_score` = combinación normalizada de velocidad del tema, aceleración y outliers. Pesos en `intelligence/momentum.py`.
 - **Outliers (por pieza, estilo 1of10).** `outlier_ratio = rendimiento ajustado por edad / mediana de su referencia`.
   - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
