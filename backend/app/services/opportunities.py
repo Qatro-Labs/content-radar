@@ -4,7 +4,7 @@ La lectura sirve la ejecución fijada en DEMO_RUN_ID o, sin ella, la última cor
 nunca recalcula.
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
@@ -68,26 +68,51 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
             (s for s in item.snapshots if s.observed_at <= as_of), key=lambda s: s.observed_at
         )
         snapshots = [(s.observed_at, _metrics(s)) for s in kept]
-        pieces.append(
-            Piece(
-                item_id=item.id,
-                url=item.url,
-                title=item.title,
-                description=item.description,
-                platform=Platform(item.platform),
-                source_id=source.id,
-                source_name=source.name,
-                segment=Segment(source.segment),
-                language=item.language or source.language,
-                published_at=item.published_at,
-                observed_at=snapshots[-1][0] if snapshots else min(item.last_observed_at, as_of),
-                metrics=snapshots[-1][1] if snapshots else Metrics(),
-                source_kind=SourceKind(source.kind),
-                snapshots=snapshots,
-                region=source.region,
-            )
-        )
+        pieces.append(_to_piece(item, source, snapshots, as_of=as_of))
     return pieces
+
+
+def _to_piece(
+    item: ContentItem,
+    source: Source,
+    snapshots: list[tuple[datetime, Metrics]],
+    *,
+    as_of: datetime,
+) -> Piece:
+    return Piece(
+        item_id=item.id,
+        url=item.url,
+        title=item.title,
+        description=item.description,
+        platform=Platform(item.platform),
+        source_id=source.id,
+        source_name=source.name,
+        segment=Segment(source.segment),
+        language=item.language or source.language,
+        published_at=item.published_at,
+        observed_at=snapshots[-1][0] if snapshots else min(item.last_observed_at, as_of),
+        metrics=snapshots[-1][1] if snapshots else Metrics(),
+        source_kind=SourceKind(source.kind),
+        snapshots=snapshots,
+        region=source.region,
+    )
+
+
+async def load_evidence_pieces(
+    session: AsyncSession, evidence: Sequence[Evidence], *, as_of: datetime
+) -> list[tuple[Piece, Evidence]]:
+    """Las piezas de la evidencia guardada, en su orden, con el texto con que las juzgó Jev."""
+    urls = [str(e.url) for e in evidence]
+    rows = await session.execute(
+        select(ContentItem, Source).join(Source).where(ContentItem.url.in_(urls))
+    )
+    # La misma URL puede estar en dos fuentes: la evidencia dice de cuál es.
+    by_key = {(item.url, source.name): (item, source) for item, source in rows.all()}
+    found = []
+    for e in evidence:
+        if match := by_key.get((str(e.url), e.source)):
+            found.append((_to_piece(*match, [], as_of=as_of), e))
+    return found
 
 
 @dataclass
@@ -192,6 +217,24 @@ async def _record(session: AsyncSession, opportunity_id: str) -> OpportunityReco
             OpportunityRecord.run_id == run.id,
             OpportunityRecord.opportunity_id == opportunity_id,
         )
+    )
+
+
+@dataclass(frozen=True)
+class ServedOpportunity:
+    opportunity: Opportunity
+    evidence: list[Evidence]
+    timeline: OpportunityTimeline
+
+
+async def get_served(session: AsyncSession, opportunity_id: str) -> ServedOpportunity | None:
+    r = await _record(session, opportunity_id)
+    if r is None:
+        return None
+    return ServedOpportunity(
+        opportunity=Opportunity.model_validate(r.payload),
+        evidence=[Evidence.model_validate(e) for e in r.evidence],
+        timeline=OpportunityTimeline.model_validate(r.timeline),
     )
 
 

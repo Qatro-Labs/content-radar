@@ -19,7 +19,12 @@ from app.core.config import Settings
 from app.editorial.audience import EvidencePiece, TopicInput, escape, evidence_block
 from app.editorial.evaluator import LLM_CONCURRENCY, LlmResult, StructuredLlm
 from app.intelligence.opportunities import TopicResult
-from app.schemas.opportunity import Recommendation, TimelineWindow
+from app.schemas.opportunity import (
+    Opportunity,
+    OpportunityTimeline,
+    Recommendation,
+    TimelineWindow,
+)
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 PROMPT_VERSION = 1
@@ -85,16 +90,17 @@ def _fit_band(score: float) -> str:
     return "medio" if score >= FIT_BAND_MEDIUM else "bajo"
 
 
-def _window_counts(result: TopicResult) -> tuple[int, int]:
-    points = result.timeline.points
+def _window_counts(timeline: OpportunityTimeline) -> tuple[int, int]:
+    points = timeline.points
     current = sum(p.count for p in points if p.window is TimelineWindow.CURRENT)
     previous = sum(p.count for p in points if p.window is TimelineWindow.PREVIOUS)
     return current, previous
 
 
-def _facts(result: TopicResult) -> list[str]:
-    o = result.opportunity
-    current, previous = _window_counts(result)
+# Lo usan también los briefs. Cambiar el texto cambia la clave de caché de todas las
+# explicaciones: el siguiente `analyze` volvería a pagar todos los temas.
+def opportunity_facts(o: Opportunity, timeline: OpportunityTimeline) -> list[str]:
+    current, previous = _window_counts(timeline)
     acceleration = round(o.acceleration * 100, ACCELERATION_ROUNDING)
     mix = {k: round(v * 100, MIX_ROUNDING) for k, v in o.audience_mix.model_dump().items()}
     facts = [
@@ -113,12 +119,17 @@ def _facts(result: TopicResult) -> list[str]:
     return facts
 
 
+def fit_notes(o: Opportunity) -> list[FitNote]:
+    return [
+        FitNote(c.criterion.value, c.level, c.justification) for c in o.audience_fit_criteria or []
+    ]
+
+
 def build_explain_input(result: TopicResult, topic: TopicInput) -> ExplainInput:
-    criteria = result.opportunity.audience_fit_criteria or []
     return ExplainInput(
         label=topic.label,
-        facts=_facts(result),
-        fit=[FitNote(c.criterion.value, c.level, c.justification) for c in criteria],
+        facts=opportunity_facts(result.opportunity, result.timeline),
+        fit=fit_notes(result.opportunity),
         pieces=topic.pieces,
     )
 
@@ -131,10 +142,12 @@ def facts_text(explain: ExplainInput) -> str:
     return "\n".join(explain.facts)
 
 
+def fit_lines(notes: list[FitNote]) -> str:
+    return "\n".join(f"- {n.criterion} (nivel {n.level}): {escape(n.justification)}" for n in notes)
+
+
 def user_message(explain: ExplainInput) -> str:
-    fit = "\n".join(
-        f"- {n.criterion} (nivel {n.level}): {escape(n.justification)}" for n in explain.fit
-    )
+    fit = fit_lines(explain.fit)
     evidence = "\n".join(evidence_block(i, p) for i, p in enumerate(explain.pieces, start=1))
     return (
         f"<topic_label>{escape(explain.label)}</topic_label>\n"

@@ -87,7 +87,7 @@ def require_agent_model(
 
 
 def _check_limits(limiter: RateLimiter, request: Request) -> None:
-    result = limiter.check(_client_ip(request), datetime.now(UTC))
+    result = limiter.check(client_ip(request), datetime.now(UTC))
     if result is not LimitResult.OK:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LIMIT_MESSAGES[result])
 
@@ -113,7 +113,7 @@ async def admit_question(
         slots.release()
 
 
-def _client_ip(request: Request) -> str:
+def client_ip(request: Request) -> str:
     # El proxy de Railway añade la IP real AL FINAL de X-Forwarded-For; lo de la izquierda lo
     # escribe el cliente. Con --forwarded-allow-ips='*', uvicorn pone en `request.client` la
     # entrada de la izquierda, así que no sirve para limitar.
@@ -187,5 +187,5 @@ async def ask_agent(
             "agent_question",
             chars=len(body.question),
             steps=steps,
-            ip_hash=_ip_hash(_client_ip(request)),
+            ip_hash=_ip_hash(client_ip(request)),
         )
