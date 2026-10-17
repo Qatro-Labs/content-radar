@@ -110,6 +110,7 @@
         "evidence_strength": 74,
         "latam_gap": true,
         "recommendation": "publish_now",
+        "recommendation_reason": "Publicar: tema en crecimiento con encaje alto con la audiencia de 30X (≥ 60).",
         "why_it_matters": "Crece en fuentes técnicas y de negocio a la vez, pero casi no hay cobertura en español: hueco para explicarlo a directivos de LATAM.",
         "limitations": [
           "El monitoreo empezó el 16/10: la tendencia cubre pocos días.",
@@ -225,6 +226,7 @@
         "evidence_strength": 38,
         "latam_gap": null,
         "recommendation": "find_angle",
+        "recommendation_reason": "Buscar ángulo: tema en crecimiento, pero el encaje con la audiencia de 30X es menor de 60.",
         "why_it_matters": "Conversación casi solo técnica: todavía no llegó a ejecutivos. El ángulo es privacidad y coste para negocio.",
         "limitations": [
           "Solo una medición por pieza: el crecimiento es estimado.",
@@ -340,6 +342,7 @@
         "evidence_strength": 81,
         "latam_gap": false,
         "recommendation": "find_angle",
+        "recommendation_reason": "Buscar ángulo: el tema está en su pico y hace falta un enfoque propio.",
         "why_it_matters": "Tema maduro y ya cubierto en la región; solo vale la pena con un caso concreto o un ángulo de métricas.",
         "limitations": [
           "La saturación se mide solo dentro de las fuentes monitoreadas."
@@ -454,6 +457,7 @@
         "evidence_strength": 66,
         "latam_gap": false,
         "recommendation": "discard",
+        "recommendation_reason": "Tema saturado: mucho contenido similar y en descenso en las fuentes monitoreadas.",
         "why_it_matters": "Mucho contenido similar y en descenso; poco encaje con los pilares de 30X.",
         "limitations": [
           "No medimos rendimiento en Instagram ni TikTok, donde este tema es más visual."
@@ -489,6 +493,7 @@
         "evidence_strength": 12,
         "latam_gap": null,
         "recommendation": "wait_for_case",
+        "recommendation_reason": "Esperar: no hay datos suficientes para afirmar una tendencia.",
         "why_it_matters": "Hoy solo hay una fuente; esperar confirmación. Audience fit todavía sin evaluar.",
         "limitations": [
           "Una sola fuente: no hay validación cruzada.",

@@ -14,7 +14,7 @@ from app.intelligence.ranking import (
     growth_status,
     momentum_score,
     opportunity_score,
-    recommendation,
+    recommend,
     score_breakdown,
 )
 from app.intelligence.velocity import WindowCounts, piece_rate, topic_velocity, window_counts
@@ -243,7 +243,7 @@ def test_evidence_strength():
     assert evidence_strength(25, 1) == pytest.approx(66.7)
 
 
-def test_growth_confidence_and_recommendation():
+def test_growth_and_confidence():
     assert growth_status(True, 5) is GrowthStatus.PRELIMINARY
     assert growth_status(False, 0) is GrowthStatus.ESTIMATED
     assert growth_status(False, 3) is GrowthStatus.OBSERVED
@@ -252,13 +252,48 @@ def test_growth_confidence_and_recommendation():
     assert confidence(GrowthStatus.ESTIMATED, 3, 10) is Confidence.MEDIUM
     assert confidence(GrowthStatus.OBSERVED, 1, 50) is Confidence.LOW
 
-    saturated, accelerating = stage(acc=-0.3, sat=80), stage(acc=0.6, sources=3)
-    no_rule, no_data = stage(acc=0.3, sat=50), stage(sources=1)
-    assert recommendation(saturated, Confidence.HIGH, 90) is Recommendation.DISCARD
-    assert recommendation(accelerating, Confidence.LOW, 90) is Recommendation.WAIT_FOR_CASE
-    assert recommendation(accelerating, Confidence.HIGH, 70) is Recommendation.PUBLISH_NOW
-    # Sin audience fit no se recomienda publicar.
-    assert recommendation(accelerating, Confidence.HIGH, None) is Recommendation.FIND_ANGLE
-    # unknown sin regla tiene datos: buscar ángulo. Unknown por falta de datos: esperar.
-    assert recommendation(no_rule, Confidence.MEDIUM, None) is Recommendation.FIND_ANGLE
-    assert recommendation(no_data, Confidence.MEDIUM, None) is Recommendation.WAIT_FOR_CASE
+
+def advise(st, conf=Confidence.HIGH, *, fit=None, org=None, gap=None) -> Recommendation:
+    return recommend(st, conf, audience_fit=fit, org_application=org, latam_gap=gap).recommendation
+
+
+SATURATED, ACCELERATING = stage(acc=-0.3, sat=80), stage(acc=0.6, sources=3)
+NO_RULE, NO_DATA = stage(acc=0.3, sat=50), stage(sources=1)
+
+
+@pytest.mark.parametrize(
+    ("st", "conf", "fit", "org", "gap", "expected"),
+    [
+        (SATURATED, Confidence.HIGH, 90, 5, None, Recommendation.DISCARD),
+        (ACCELERATING, Confidence.LOW, 90, 5, None, Recommendation.WAIT_FOR_CASE),
+        (NO_DATA, Confidence.MEDIUM, None, None, None, Recommendation.WAIT_FOR_CASE),
+        (ACCELERATING, Confidence.HIGH, 90, 1, None, Recommendation.WAIT_FOR_CASE),
+        (NO_RULE, Confidence.MEDIUM, 90, 0, None, Recommendation.WAIT_FOR_CASE),
+        (NO_RULE, Confidence.MEDIUM, 90, 3, None, Recommendation.FIND_ANGLE),
+        (ACCELERATING, Confidence.HIGH, 90, 3, False, Recommendation.FIND_ANGLE),
+        (ACCELERATING, Confidence.HIGH, None, None, None, Recommendation.FIND_ANGLE),
+        (ACCELERATING, Confidence.HIGH, 59, 3, None, Recommendation.FIND_ANGLE),
+        (ACCELERATING, Confidence.HIGH, 60, 2, True, Recommendation.PUBLISH_NOW),
+    ],
+    ids=[
+        "saturated-discards",
+        "low-confidence-waits",
+        "insufficient-data-waits",
+        "no-real-case-waits",
+        "no-real-case-waits-before-angle",
+        "unknown-with-data-finds-angle",
+        "latam-covered-finds-angle",
+        "no-fit-never-publishes",
+        "fit-below-60-finds-angle",
+        "growing-with-fit-and-case-publishes",
+    ],
+)
+def test_recommendation_takes_the_first_rule_that_holds(st, conf, fit, org, gap, expected):
+    assert advise(st, conf, fit=fit, org=org, gap=gap) is expected
+
+
+def test_recommendation_says_which_rule_held():
+    advice = recommend(
+        ACCELERATING, Confidence.HIGH, audience_fit=90, org_application=1, latam_gap=None
+    )
+    assert "organización real" in advice.reason

@@ -10,7 +10,7 @@ from dataclasses import dataclass, replace
 from pydantic import HttpUrl
 
 from app.intelligence.opportunities import LLM_PENDING_NOTE, TopicResult
-from app.intelligence.ranking import recommendation, score_breakdown
+from app.intelligence.ranking import recommend, score_breakdown
 from app.schemas.opportunity import AudienceFitCriterion, FitCriterion
 
 MAX_LEVEL = 5
@@ -91,6 +91,13 @@ def apply_fit(
         source_count=o.source_count,
         item_count=len(result.pieces),
     )
+    advice = recommend(
+        result.stage,
+        o.confidence,
+        audience_fit=fit,
+        org_application=levels[FitCriterion.ORG_APPLICATION],
+        latam_gap=o.latam_gap,
+    )
     opportunity = o.model_copy(
         update={
             "audience_fit_score": fit,
@@ -98,7 +105,8 @@ def apply_fit(
             "actionability_score": action,
             "score_breakdown": breakdown,
             "opportunity_score": None if breakdown is None else breakdown.total,
-            "recommendation": recommendation(result.stage, o.confidence, fit),
+            "recommendation": advice.recommendation,
+            "recommendation_reason": advice.reason,
             "limitations": _limitations(
                 o.limitations, EDITORIAL_PENDING_NOTE, dropped_citations=dropped
             ),
