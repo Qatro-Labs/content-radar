@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from itertools import combinations
@@ -146,7 +146,8 @@ def decide_pair(pair: CandidatePair, verdict: bool | None) -> ReplicaBasis | Non
 @dataclass(frozen=True)
 class StoryAssignment:
     representative_of: Mapping[int, int]  # republicación → representante (solo republicaciones)
-    unverified: frozenset[int]  # republicaciones sin ninguna arista SAME_LINK ni JEV
+    # Republicaciones que no llegan a su representante solo por aristas SAME_LINK o JEV.
+    unverified: frozenset[int]
 
     @property
     def replica_ids(self) -> frozenset[int]:
@@ -156,7 +157,7 @@ class StoryAssignment:
 NO_REPLICAS = StoryAssignment({}, frozenset())
 
 
-def _components(edges: Sequence[ReplicaEdge]) -> list[list[int]]:
+def _components(edges: Iterable[ReplicaEdge]) -> list[list[int]]:
     parent: dict[int, int] = {}
 
     def find(x: int) -> int:
@@ -174,7 +175,32 @@ def _components(edges: Sequence[ReplicaEdge]) -> list[list[int]]:
     return list(groups.values())
 
 
-def group_stories(pieces: Sequence[Piece], edges: Sequence[ReplicaEdge]) -> StoryAssignment:
+def _story_index(edges: Iterable[ReplicaEdge]) -> dict[int, int]:
+    return {i: k for k, members in enumerate(_components(edges)) for i in members}
+
+
+def _without_contradicted_rules(
+    edges: Sequence[ReplicaEdge], independent: Collection[tuple[int, int]]
+) -> list[ReplicaEdge]:
+    # Un "no" seguro de Jev manda sobre la regla (D2), también cuando la regla une el par a
+    # través de otras piezas: en esa nota se quitan las aristas de regla. Las cadenas de solo
+    # aristas verificadas siguen el riesgo aceptado de D5.
+    if not independent:
+        return list(edges)
+    story_of = _story_index(edges)
+    contradicted = {
+        story_of[a] for a, b in independent if a in story_of and story_of.get(b) == story_of[a]
+    }
+    return [e for e in edges if e.basis in VERIFIED_BASES or story_of[e.a] not in contradicted]
+
+
+def group_stories(
+    pieces: Sequence[Piece],
+    edges: Sequence[ReplicaEdge],
+    *,
+    independent: Collection[tuple[int, int]] = (),  # "no" seguro de Jev
+) -> StoryAssignment:
+    edges = _without_contradicted_rules(edges, independent)
     if not edges:
         return NO_REPLICAS
     by_id = {p.item_id: p for p in pieces}
@@ -183,9 +209,20 @@ def group_stories(pieces: Sequence[Piece], edges: Sequence[ReplicaEdge]) -> Stor
         # Lo primero publicado suele ser el original.
         rep = min(members, key=lambda i: (by_id[i].published_at, i))
         representative_of.update({i: rep for i in members if i != rep})
-    verified = {i for e in edges if e.basis in VERIFIED_BASES for i in (e.a, e.b)}
-    unverified = frozenset(i for i in representative_of if i not in verified)
-    return StoryAssignment(representative_of, unverified)
+    return StoryAssignment(representative_of, _unverified(representative_of, edges))
+
+
+def _unverified(
+    representative_of: Mapping[int, int], edges: Sequence[ReplicaEdge]
+) -> frozenset[int]:
+    # Por vínculo con la representante, no por pieza: una arista de Jev con otra copia no
+    # verifica una copia unida a la representante solo por la regla.
+    story_of = _story_index(e for e in edges if e.basis in VERIFIED_BASES)
+    return frozenset(
+        i
+        for i, rep in representative_of.items()
+        if i not in story_of or story_of.get(rep) != story_of[i]
+    )
 
 
 def replica_outlets(group: Sequence[Piece], stories: StoryAssignment) -> dict[int, int]:

@@ -101,6 +101,37 @@ async def test_without_judge_still_reads_cache(session):
     assert stats.cached == 1
 
 
+class SelectivePairJudge(FakePairJudge):
+    """Falla en todos los pares salvo en `independent`, que responde nivel 2 con seguridad."""
+
+    def __init__(self, independent: tuple[str, str]):
+        super().__init__(score=2.0)
+        self.independent = independent
+
+    async def judge(self, state: dict[str, Any], questions: Mapping[str, Any]) -> JudgeResult:
+        if (state["a"]["title"], state["b"]["title"]) != self.independent:
+            self.states.append(state)
+            raise JudgeError("rate limited")
+        return await super().judge(state, questions)
+
+
+async def test_jev_independent_pair_breaks_rule_chain(session):
+    # 1~2 y 2~3 a 0.95 (la regla los uniría si Jev falla); 1~3 a 0.805, y Jev dice que no.
+    pieces = [
+        piece(1, source="Medio A", hours_ago=30, title="Nota 1"),
+        piece(2, source="Medio B", hours_ago=20, title="Nota 2"),
+        piece(3, source="Medio C", hours_ago=10, title="Nota 3"),
+    ]
+    theta = math.acos(0.95)
+    vectors = np.array([[math.cos(k * theta), math.sin(k * theta)] for k in range(3)])
+    judge = SelectivePairJudge(independent=("Nota 1", "Nota 3"))
+    stories, stats = await detect_replicas(
+        session, pieces, [[0, 1, 2]], vectors, judge=judge, meter=UsageMeter()
+    )
+    assert (stats.candidates, stats.judged, stats.failed) == (3, 1, 2)
+    assert stories.representative_of == {}
+
+
 async def test_judge_failure_falls_back(session):
     stories, stats = await detect(session, 0.95, FakePairJudge(fail=True))
     assert stats.failed == 1

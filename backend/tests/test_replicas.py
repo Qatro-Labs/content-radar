@@ -228,6 +228,36 @@ def test_unverified_only_when_no_verified_edge():
     only_rule = [ReplicaEdge(1, 2, ReplicaBasis.SAME_TITLE)]
     assert group_stories(pieces, only_rule).unverified == frozenset({2})
 
+    # 1 —SIMILARITY— 2 —JEV— 3: la 3 tiene una arista de Jev, pero no con la representante (1);
+    # su vínculo con la 1 pasa por la regla.
+    rule_first = [ReplicaEdge(1, 2, ReplicaBasis.SIMILARITY), ReplicaEdge(2, 3, ReplicaBasis.JEV)]
+    stories = group_stories(pieces, rule_first)
+    assert stories.representative_of == {2: 1, 3: 1}
+    assert stories.unverified == frozenset({2, 3})
+
+
+def test_jev_independent_pair_is_not_merged_through_rule_edges():
+    pieces = [piece(1, hours_ago=30), piece(2, source="B", hours_ago=20), piece(3, source="C")]
+    # La regla une 1—2—3, pero Jev dijo con seguridad que 1 y 3 son coberturas independientes.
+    edges = [ReplicaEdge(1, 2, ReplicaBasis.SIMILARITY), ReplicaEdge(2, 3, ReplicaBasis.SAME_TITLE)]
+    assert group_stories(pieces, edges, independent={(1, 3)}) == NO_REPLICAS
+
+
+def test_jev_independent_pair_keeps_verified_edges():
+    pieces = [piece(1, hours_ago=30), piece(2, source="B", hours_ago=20), piece(3, source="C")]
+    edges = [ReplicaEdge(1, 2, ReplicaBasis.JEV), ReplicaEdge(2, 3, ReplicaBasis.SIMILARITY)]
+    stories = group_stories(pieces, edges, independent={(1, 3)})
+    assert stories.representative_of == {2: 1}
+    assert stories.unverified == frozenset()
+
+
+def test_jev_independent_pair_elsewhere_changes_nothing():
+    pieces = [piece(1, hours_ago=30), piece(2, source="B", hours_ago=20), piece(3, source="C")]
+    edges = [ReplicaEdge(1, 2, ReplicaBasis.SIMILARITY)]
+    stories = group_stories(pieces, edges, independent={(1, 3)})
+    assert stories.representative_of == {2: 1}
+    assert stories.unverified == frozenset({2})
+
 
 def test_replica_outlets_counts_distinct_outlets_other_than_representative():
     original = piece(1, source="Medio A", hours_ago=30)

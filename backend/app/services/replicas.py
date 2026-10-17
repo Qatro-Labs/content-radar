@@ -128,16 +128,24 @@ async def _judge_missing(
     return _Judged(answers, set(judged), set(allowed) - set(judged), set(missing[len(allowed) :]))
 
 
-def _decided_edges(
+@dataclass
+class _Decisions:
+    edges: list[ReplicaEdge]
+    independent: set[tuple[int, int]]  # "no" seguro de Jev: no se unen ni por la regla
+
+
+def _decide_pairs(
     candidates: Sequence[CandidatePair], keys: Sequence[str], answers: dict[str, dict[str, Any]]
-) -> list[ReplicaEdge]:
-    edges = []
+) -> _Decisions:
+    decisions = _Decisions([], set())
     for pair, key in zip(candidates, keys, strict=True):
         verdict = same_story_verdict(answers.get(key, {}).get(SAME_STORY_QUESTION))
+        if verdict is False:
+            decisions.independent.add((pair.a.item_id, pair.b.item_id))
         basis = decide_pair(pair, verdict)
         if basis is not None:
-            edges.append(ReplicaEdge(pair.a.item_id, pair.b.item_id, basis))
-    return edges
+            decisions.edges.append(ReplicaEdge(pair.a.item_id, pair.b.item_id, basis))
+    return decisions
 
 
 async def detect_replicas(
@@ -161,7 +169,8 @@ async def detect_replicas(
     else:
         judged = await _judge_missing(session, by_key, cached, judge=judge, meter=meter)
 
-    stories = group_stories(pieces, edges + _decided_edges(candidates, keys, judged.answers))
+    decisions = _decide_pairs(candidates, keys, judged.answers)
+    stories = group_stories(pieces, edges + decisions.edges, independent=decisions.independent)
     stats = _stats(keys, cached, judged, stories)
     stats.skipped_reason = SKIPPED_WITHOUT_KEY if judge is None else None
     return stories, stats
