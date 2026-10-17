@@ -1,17 +1,21 @@
 """Agente del Radar: límites, tools, bucle y ruta SSE (plan data-radar-agent)."""
 
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 
 import anthropic
 import httpx
 import pytest
 from anthropic.types import MessageParam, ToolUseBlock
+from httpx import ASGITransport, AsyncClient
 
 from app.agent.limits import MAX_STEPS, LimitResult, RateLimiter
 from app.agent.model import ModelTurn, ToolCall
 from app.agent.runner import AGENT_OPERATION, DEFAULT_UNKNOWN, run_agent
 from app.agent.tools import FINAL_ANSWER, Seen, execute_tool
+from app.api.routes.agent import get_agent_model, get_rate_limiter, get_session_factory
 from app.collectors.usage import UsageMeter
+from app.main import app
 from app.schemas.agent import (
     ActionEvent,
     AnswerEvent,
@@ -251,3 +255,65 @@ async def test_usage_is_metered(session, seeded):
 
     usage = meter.counts[(Provider.LLM_TEXT, AGENT_OPERATION)]
     assert (usage.calls, usage.units, usage.output_units) == (2, 250, 50)
+
+
+@pytest.fixture
+def overrides(session):
+    @asynccontextmanager
+    async def test_session():
+        yield session
+
+    app.dependency_overrides[get_session_factory] = lambda: test_session
+    app.dependency_overrides[get_rate_limiter] = lambda: RateLimiter(
+        per_ip_per_hour=20, global_per_day=300
+    )
+    try:
+        yield app.dependency_overrides
+    finally:
+        app.dependency_overrides.clear()
+
+
+async def ask(question: str = "¿Qué acelera?") -> httpx.Response:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        return await client.post("/api/v1/agent", json={"question": question})
+
+
+async def test_route_streams_events(seeded, overrides):
+    model = ScriptedModel([turn(("list_opportunities", {})), final(cited=["opp_001"])])
+    overrides[get_agent_model] = lambda: model
+
+    response = await ask()
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    body = response.text
+    positions = [body.index(f"event: {name}") for name in ("step", "answer", "done")]
+    assert positions == sorted(positions)
+
+
+async def test_route_rejects_long_question(overrides):
+    overrides[get_agent_model] = lambda: ScriptedModel([])
+
+    response = await ask("x" * 301)
+
+    assert response.status_code == 422
+
+
+async def test_route_without_llm_is_503(overrides):
+    overrides[get_agent_model] = lambda: None
+
+    response = await ask()
+
+    assert response.status_code == 503
+
+
+async def test_route_rate_limited_is_429(seeded, overrides):
+    limiter = RateLimiter(per_ip_per_hour=1, global_per_day=300)
+    overrides[get_rate_limiter] = lambda: limiter
+    overrides[get_agent_model] = lambda: ScriptedModel([final(), final()])
+
+    first, second = await ask(), await ask()
+
+    assert first.status_code == 200
+    assert second.status_code == 429
+    assert "demasiadas preguntas" in second.json()["detail"]

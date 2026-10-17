@@ -370,7 +370,7 @@ Solo lecturas a través de `app.services.opportunities` (sin queries nuevas) y u
 - **Verificación:** `cd backend && uv run pytest tests/test_agent.py -q`
 - **Commit:** `Run the radar agent loop with validated citations`
 
-### Paso 4 — Ruta SSE
+### Paso 4 — Ruta SSE [HECHO]
 
 - **Archivos:** `backend/app/api/routes/agent.py`, `backend/app/main.py`, `backend/tests/test_agent.py`
 - **Cambio:** ruta y dependencias de D3 y D7; `get_agent_model` como dependencia para poder
