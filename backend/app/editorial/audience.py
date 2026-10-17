@@ -219,7 +219,8 @@ def evaluation_cache_key(topic: TopicInput, model: str) -> str:
     payload = {
         "input": asdict(topic),
         "prompt_version": PROMPT_VERSION,
-        "rubric_version": rubric()["version"],
+        # Hash y no solo la versión: editar la rúbrica sin subir la versión dejaría la caché vieja.
+        "rubric_sha256": hashlib.sha256(RUBRIC_FILE.read_bytes()).hexdigest(),
         "profile_sha256": hashlib.sha256(profile_text().encode("utf-8")).hexdigest(),
         "model": model,
     }
