@@ -4,7 +4,7 @@ import type { ECElementEvent } from 'echarts/core'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import { VChart } from '@/lib/echarts'
-import { buildRadarOption, RADAR_ASPECT, resolveRadarPalette, SWEEP } from '@/lib/radarChart'
+import { buildRadarOption, PLOT_ASPECT, resolveRadarPalette, SWEEP } from '@/lib/radarChart'
 import type { RadarView } from '@/lib/radarView'
 
 import RadarSelectionLayer from './RadarSelectionLayer.vue'
@@ -26,7 +26,6 @@ const emit = defineEmits<{
 const LABELS_MIN_WIDTH_PX = 640
 const DATA_LINE = 'absolute bg-data-line'
 const QUADRANT_NOTE = 'absolute z-[1] text-[13px] text-muted-foreground'
-const PLOT_ASPECT = `${RADAR_ASPECT.width} / ${RADAR_ASPECT.height}`
 // Capas del área: nombres de cuadrante y mira (z-1) quedan bajo las burbujas; anillos, ping y
 // tarjeta flotante (z-3 y z-4, RadarSelectionLayer) van encima.
 const CHART_LAYER = 'relative z-[2]'

@@ -11,7 +11,7 @@ export type RadarPlaceholder = (typeof RadarPlaceholder)[keyof typeof RadarPlace
 </script>
 
 <script setup lang="ts">
-import { RADAR_ASPECT } from '@/lib/radarChart'
+import { PLOT_ASPECT } from '@/lib/radarChart'
 
 const { state } = defineProps<{ state: RadarPlaceholder }>()
 
@@ -23,7 +23,6 @@ const EMPTY_MESSAGE: Partial<Record<RadarPlaceholder, string>> = {
 }
 const ERROR_MESSAGE = 'No se pudieron cargar las oportunidades.'
 
-const PLOT_ASPECT = `${RADAR_ASPECT.width} / ${RADAR_ASPECT.height}`
 const CARD = 'flex min-w-0 flex-col rounded-card bg-card'
 const CARD_TITLE = 'font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]'
 const BONE = 'radar-bone block'

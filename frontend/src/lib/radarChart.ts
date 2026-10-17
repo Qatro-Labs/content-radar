@@ -43,7 +43,9 @@ export interface PlotPoint {
 
 // El área del radar es 16:9 (DESIGN.md §6); el ángulo con el que el haz detecta cada burbuja
 // usa esa proporción.
-export const RADAR_ASPECT: PlotSize = { width: 16, height: 9 }
+const RADAR_ASPECT: PlotSize = { width: 16, height: 9 }
+// La misma proporción como `aspect-ratio` de CSS: el área del radar y su skeleton.
+export const PLOT_ASPECT = `${RADAR_ASPECT.width} / ${RADAR_ASPECT.height}`
 
 // DESIGN.md §7: el haz pivota en la esquina "Prioridad" de 170° a 290°, en 1,8 s tras 0,2 s.
 // RadarSweep.vue anima con estos mismos valores para que cada burbuja aparezca cuando el haz pasa.
