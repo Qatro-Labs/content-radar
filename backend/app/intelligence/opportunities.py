@@ -123,7 +123,7 @@ def _old_enough_for_reference(p: Piece, as_of: datetime) -> bool:
 
 def outlier_ratios(pieces: Sequence[Piece], as_of: datetime) -> dict[int, float | None]:
     """Ratio de cada pieza frente a las otras de su fuente (canal o query) con edad suficiente:
-    mediana, o p90 en HN.
+    mediana, o p90 en HN y TikTok.
     """
     perf = {p.item_id: _performance(p) for p in pieces}
     by_source: dict[int, list[tuple[int, float]]] = defaultdict(list)
@@ -138,8 +138,7 @@ def outlier_ratios(pieces: Sequence[Piece], as_of: datetime) -> dict[int, float 
             ratios[p.item_id] = None
             continue
         reference = [v for item_id, v in by_source[p.source_id] if item_id != p.item_id]
-        quantile = out.HN_REFERENCE_QUANTILE if p.platform is Platform.HACKERNEWS else out.MEDIAN
-        ratios[p.item_id] = out.outlier_ratio(value, reference, quantile)
+        ratios[p.item_id] = out.outlier_ratio(value, reference, out.reference_quantile(p.platform))
     return ratios
 
 
