@@ -314,7 +314,7 @@ Cada paso termina en un commit. Añade ` [HECHO]` al título del paso en ese mis
 tests; los 6–11, componentes con verificación manual. Antes del paso 6, lee `DESIGN.md` entero y abre la referencia
 visual del contexto verificado.
 
-### Paso 1 — Tipos generados del contrato, fixture y enums comprobados
+### Paso 1 — Tipos generados del contrato, fixture y enums comprobados [HECHO]
 
 - **Archivos:** `frontend/src/types/api.ts`, `data/fixtures/opportunities.json`, `frontend/src/lib/radarQuery.ts`
 - **Cambio:**
@@ -358,7 +358,8 @@ visual del contexto verificado.
 
 - **Archivos:** `frontend/src/lib/opportunityFormat.ts`, `frontend/src/lib/lifecycle.ts`,
   `frontend/src/lib/__tests__/opportunityFormat.spec.ts`
-- **Cambio:** las funciones de "Diseño de módulos" con las reglas de D7 y D8.
+- **Cambio:** las funciones de "Diseño de módulos" con las reglas de D7 y D8. **`src/lib/lifecycle.ts` ya existe**
+  (se adelantó en la fase 0 para paralelizar): úsalo, no lo reescribas.
 - **Test primero** (`it.each` con nombres legibles; los valores esperados salen de D7, D8 y DESIGN.md, no del código):
   - `formatAcceleration`: `0.86` → "↑ +86 %", `-0.3` → "↓ −30 %", `0.004` → "→ 0 %".
   - `formatOutliers`: `(2, 6.1)` → "2 · máx. 6,1×", `(2, null)` → "2", `(0, 2.2)` → "0".

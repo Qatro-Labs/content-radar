@@ -4,6 +4,77 @@
  */
 
 export interface paths {
+  '/api/v1/opportunities': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Opportunities
+     * @description `null` si todavía no hay ninguna ejecución correcta de `analyze`.
+     */
+    get: operations['list_opportunities_api_v1_opportunities_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/opportunities/{opportunity_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Opportunity */
+    get: operations['get_opportunity_api_v1_opportunities__opportunity_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/opportunities/{opportunity_id}/evidence': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Evidence */
+    get: operations['get_evidence_api_v1_opportunities__opportunity_id__evidence_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/opportunities/{opportunity_id}/timeline': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Timeline */
+    get: operations['get_timeline_api_v1_opportunities__opportunity_id__timeline_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/sources/status': {
     parameters: {
       query?: never
@@ -43,10 +114,229 @@ export type webhooks = Record<string, never>
 export interface components {
   schemas: {
     /**
+     * AudienceMix
+     * @description Proporción de la evidencia por segmento (suma 1). Campos explícitos para que el
+     *     tipo TS generado conserve las claves.
+     */
+    AudienceMix: {
+      /** Tech */
+      tech: number
+      /** Business */
+      business: number
+      /** Latam Es */
+      latam_es: number
+    }
+    /**
+     * Confidence
+     * @enum {string}
+     */
+    Confidence: 'low' | 'medium' | 'high'
+    /** Evidence */
+    Evidence: {
+      /**
+       * Url
+       * Format: uri
+       */
+      url: string
+      /**
+       * Source
+       * @description Nombre público de la fuente (canal, medio, query)
+       */
+      source: string
+      platform: components['schemas']['Platform']
+      segment: components['schemas']['Segment']
+      /** Title */
+      title: string
+      /**
+       * Published At
+       * Format: date-time
+       */
+      published_at: string
+      /**
+       * Observed At
+       * Format: date-time
+       */
+      observed_at: string
+      /** Language */
+      language?: string | null
+      /** @description Tal cual la fuente; None = no la expone */
+      metrics: components['schemas']['Metrics']
+      /** @description None sin 2+ snapshots */
+      velocity?: components['schemas']['Rate'] | null
+      /**
+       * Outlier Ratio
+       * @description Rendimiento ajustado por edad / mediana de referencia
+       */
+      outlier_ratio?: number | null
+      /**
+       * Is Outlier
+       * @description outlier_ratio ≥ 3
+       */
+      is_outlier?: boolean | null
+    }
+    /**
+     * GrowthStatus
+     * @enum {string}
+     */
+    GrowthStatus: 'observed' | 'estimated' | 'preliminary'
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components['schemas']['ValidationError'][]
+    }
+    /**
+     * Lifecycle
+     * @enum {string}
+     */
+    Lifecycle: 'emerging' | 'accelerating' | 'peaking' | 'saturated' | 'unknown'
+    /**
+     * Metrics
+     * @description Métricas públicas tal como las da la fuente. None = la fuente no la expone.
+     */
+    Metrics: {
+      /** Views */
+      views?: number | null
+      /** Likes */
+      likes?: number | null
+      /** Comments */
+      comments?: number | null
+      /** Points */
+      points?: number | null
+      /** Shares */
+      shares?: number | null
+    }
+    /** Opportunity */
+    Opportunity: {
+      /** Id */
+      id: string
+      /** Topic */
+      topic: string
+      /** Description */
+      description: string
+      lifecycle: components['schemas']['Lifecycle']
+      /**
+       * Lifecycle Reason
+       * @description Regla de §7 que se cumplió, en texto
+       */
+      lifecycle_reason: string
+      growth_status: components['schemas']['GrowthStatus']
+      /**
+       * Velocity
+       * @description Piezas nuevas/día en la ventana actual
+       */
+      velocity: number
+      /**
+       * Acceleration
+       * @description Cambio relativo vs. ventana anterior (+0.8 = +80 %)
+       */
+      acceleration: number
+      /** Momentum Score */
+      momentum_score: number
+      /** Outlier Count */
+      outlier_count: number
+      /** Top Outlier Ratio */
+      top_outlier_ratio?: number | null
+      audience_mix: components['schemas']['AudienceMix']
+      /** Audience Fit Score */
+      audience_fit_score?: number | null
+      /** Cross Source Score */
+      cross_source_score: number
+      /** Saturation Score */
+      saturation_score: number
+      /** Actionability Score */
+      actionability_score?: number | null
+      /**
+       * Opportunity Score
+       * @description None sin audience fit
+       */
+      opportunity_score?: number | null
+      confidence: components['schemas']['Confidence']
+      /**
+       * Source Count
+       * @description Fuentes independientes
+       */
+      source_count: number
+      /**
+       * Evidence Strength
+       * @description Normalizado por fuente; no suma views entre plataformas
+       */
+      evidence_strength: number
+      /**
+       * Latam Gap
+       * @description None = sin datos suficientes para decidir
+       */
+      latam_gap: boolean | null
+      recommendation: components['schemas']['Recommendation']
+      /** Why It Matters */
+      why_it_matters: string
+      /** Limitations */
+      limitations: string[]
+      /**
+       * Last Updated
+       * Format: date-time
+       */
+      last_updated: string
+    }
+    /**
+     * OpportunityList
+     * @description Respuesta de GET /opportunities.
+     */
+    OpportunityList: {
+      /** Items */
+      items: components['schemas']['Opportunity'][]
+      period: components['schemas']['Period']
+      /**
+       * Generated At
+       * Format: date-time
+       */
+      generated_at: string
+      /**
+       * Monitoring Started At
+       * Format: date-time
+       * @description Inicio del monitoreo: los periodos anteriores no son históricos
+       */
+      monitoring_started_at: string
+    }
+    /**
+     * OpportunityTimeline
+     * @description Respuesta de GET /opportunities/{id}/timeline.
+     */
+    OpportunityTimeline: {
+      /** Opportunity Id */
+      opportunity_id: string
+      /** Window Days */
+      window_days: number
+      /** Points */
+      points: components['schemas']['TimelinePoint'][]
+    }
+    /**
+     * Period
+     * @enum {string}
+     */
+    Period: '24h' | '7d' | '30d'
+    /**
      * Platform
      * @enum {string}
      */
     Platform: 'youtube' | 'hackernews' | 'rss' | 'brave' | 'linkedin' | 'instagram' | 'tiktok'
+    /**
+     * Rate
+     * @description Tasa de crecimiento de una pieza entre snapshots.
+     */
+    Rate: {
+      /** Value */
+      value: number
+      /**
+       * Unit
+       * @description p. ej. 'views/h', 'points/h', 'comments/h'
+       */
+      unit: string
+    }
+    /**
+     * Recommendation
+     * @enum {string}
+     */
+    Recommendation: 'publish_now' | 'find_angle' | 'wait_for_case' | 'discard'
     /**
      * Segment
      * @description Para quién importa: quién publica/consume en esta fuente.
@@ -68,6 +358,38 @@ export interface components {
       /** Last Observed At */
       last_observed_at: string | null
     }
+    /** TimelinePoint */
+    TimelinePoint: {
+      /**
+       * Date
+       * Format: date
+       */
+      date: string
+      /**
+       * Count
+       * @description Piezas publicadas ese día (por published_at)
+       */
+      count: number
+      window: components['schemas']['TimelineWindow']
+    }
+    /**
+     * TimelineWindow
+     * @enum {string}
+     */
+    TimelineWindow: 'current' | 'previous'
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+      /** Input */
+      input?: unknown
+      /** Context */
+      ctx?: Record<string, never>
+    }
   }
   responses: never
   parameters: never
@@ -77,6 +399,135 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  list_opportunities_api_v1_opportunities_get: {
+    parameters: {
+      query?: {
+        /** @description Solo se calcula 7d; la respuesta indica el periodo real */
+        period?: components['schemas']['Period']
+        lifecycle?: components['schemas']['Lifecycle'] | null
+        confidence?: components['schemas']['Confidence'] | null
+        /** @description Subcadena del tema, sin mayúsculas */
+        topic?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OpportunityList'] | null
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_opportunity_api_v1_opportunities__opportunity_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        opportunity_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Opportunity']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_evidence_api_v1_opportunities__opportunity_id__evidence_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        opportunity_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Evidence'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_timeline_api_v1_opportunities__opportunity_id__timeline_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        opportunity_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OpportunityTimeline']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   sources_status_api_v1_sources_status_get: {
     parameters: {
       query?: never

@@ -1,15 +1,24 @@
 import type { LocationQuery, LocationQueryValue } from 'vue-router'
 
-// Replican los enums del contrato `Opportunity` (CLAUDE.md §6). Hacen falta en tiempo de
-// ejecución para validar la URL; cuando el contrato llegue a main (PR #7), se comprueban con
-// `satisfies` contra src/types/api.ts para que el compilador avise si divergen.
-export const PERIODS = ['24h', '7d', '30d'] as const
-export const LIFECYCLES = ['emerging', 'accelerating', 'peaking', 'saturated', 'unknown'] as const
-export const CONFIDENCES = ['low', 'medium', 'high'] as const
+import type { components } from '@/types/api'
 
-export type Period = (typeof PERIODS)[number]
-export type Lifecycle = (typeof LIFECYCLES)[number]
-export type Confidence = (typeof CONFIDENCES)[number]
+type Schemas = components['schemas']
+
+export type Period = Schemas['Period']
+export type Lifecycle = Schemas['Lifecycle']
+export type Confidence = Schemas['Confidence']
+
+// Los enums del contrato hacen falta en tiempo de ejecución para validar la URL; `satisfies`
+// hace que el compilador avise si el contrato (src/types/api.ts) cambia y estos no.
+export const PERIODS = ['24h', '7d', '30d'] as const satisfies readonly Period[]
+export const LIFECYCLES = [
+  'emerging',
+  'accelerating',
+  'peaking',
+  'saturated',
+  'unknown',
+] as const satisfies readonly Lifecycle[]
+export const CONFIDENCES = ['low', 'medium', 'high'] as const satisfies readonly Confidence[]
 
 export const DEFAULT_PERIOD: Period = '7d'
 const LIST_SEPARATOR = ','
