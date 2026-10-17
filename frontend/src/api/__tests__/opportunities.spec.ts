@@ -30,6 +30,17 @@ const SCORE_KEYS = [
   'opportunity_score',
 ] as const satisfies readonly (keyof Schemas['Opportunity'])[]
 const SCORE_MIN = 0
+const PLATFORMS = [
+  'youtube',
+  'hackernews',
+  'rss',
+  'brave',
+  'linkedin',
+  'instagram',
+  'tiktok',
+] as const satisfies readonly Schemas['Platform'][]
+// GET /timeline: dos ventanas de 3 periodos de 24 h, la anterior primero (CLAUDE.md §7).
+const TIMELINE_WINDOWS = ['previous', 'previous', 'previous', 'current', 'current', 'current']
 
 const items = fixture.opportunities.items
 
@@ -57,4 +68,17 @@ describe('opportunities fixture', () => {
       expect(score, key).toBeLessThanOrEqual(SCORE_MAX)
     }
   })
+
+  it.each(Object.entries(fixture.timeline))('orders the timeline windows of %s', (_, timeline) => {
+    expect(timeline.points.map((point) => point.window)).toEqual(TIMELINE_WINDOWS)
+  })
+
+  it.each(Object.entries(fixture.evidence))(
+    'keys the evidence of %s by unique url',
+    (_, pieces) => {
+      const urls = pieces.map((piece) => piece.url)
+      expect(new Set(urls).size).toBe(urls.length)
+      for (const piece of pieces) expect(PLATFORMS).toContain(piece.platform)
+    },
+  )
 })

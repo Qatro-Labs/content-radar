@@ -323,7 +323,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Split explore routes into overview and dossier`
 
-#### Paso 0.2 — Composables de datos del tema
+#### Paso 0.2 — Composables de datos del tema [HECHO]
 
 - **Archivos:** `src/api/opportunities.ts`
 - **Cambio:** factorías `opportunityQueryOptions(id)`, `evidenceQueryOptions(id)`, `timelineQueryOptions(id)` con
