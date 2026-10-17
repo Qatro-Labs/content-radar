@@ -68,6 +68,7 @@ def test_battery_loads_all_questions():
 
     assert list(battery.questions) == [
         "about_ai",
+        "ai_in_title",
         "business_use",
         "dev_audience",
         "injection",
@@ -183,15 +184,31 @@ def test_build_judge_without_key_is_none():
     assert build_judge(Settings(typesafe_api_key="")) is None
 
 
-def judged(item_id: int, about_ai: float) -> PieceJudgment:
-    return to_piece_judgment(item_id, {"about_ai": noul(about_ai)})
+def judged(item_id: int, about_ai: float, ai_in_title: float) -> PieceJudgment:
+    return to_piece_judgment(
+        item_id, {"about_ai": noul(about_ai), "ai_in_title": noul(ai_in_title)}
+    )
 
 
-def test_about_ai_filter_drops_only_pieces_judged_off_topic():
-    pieces = [replace(make_piece(), item_id=i) for i in range(1, 5)]
-    # 1 fuera de tema (seguro) · 2 sobre IA · 3 incierta · 4 sin clasificar.
-    judgments = {1: judged(1, 0.1), 2: judged(2, 0.9), 3: judged(3, 0.5)}
+def test_about_ai_filter_drops_only_pieces_off_topic_in_both_questions():
+    pieces = [replace(make_piece(), item_id=i) for i in range(1, 7)]
+    judgments = {
+        1: judged(1, 0.1, 0.05),  # fuera de tema en las dos: sale
+        2: judged(2, 0.9, 0.9),
+        # "La IA se compra. La gerencia para usarla, no": la descripción habla de otra cosa.
+        3: judged(3, 0.27, 0.98),
+        4: judged(4, 0.1, 0.5),  # título incierto
+        5: judged(5, 0.5, 0.1),  # about_ai incierto
+    }  # 6: sin clasificar
 
     kept = keep_about_ai(pieces, judgments)
 
-    assert [p.item_id for p in kept] == [2, 3, 4]
+    assert [p.item_id for p in kept] == [2, 3, 4, 5, 6]
+
+
+def test_about_ai_filter_keeps_pieces_judged_without_title_question():
+    # Un juicio sin `ai_in_title` (incompleto) no basta para quitar la pieza.
+    pieces = [make_piece()]
+    judgments = {1: to_piece_judgment(1, {"about_ai": noul(0.05)})}
+
+    assert keep_about_ai(pieces, judgments) == pieces

@@ -1,0 +1,77 @@
+version: 99
+questions:
+  # Control: about_ai y business_use de v2, tal cual (mide el ruido entre llamadas).
+  - id: about_ai
+    type: noul
+    instructions: ¿El tema principal de la pieza es la inteligencia artificial?
+    criteria:
+      "true": la pieza trata sobre todo de IA (modelos, productos, empresas de IA, usos o efectos de la IA)
+      "false": la IA aparece solo de pasada o el tema principal es otro
+  - id: business_use
+    type: noul
+    instructions: ¿La pieza trata del uso, la adopción o el impacto de la IA en empresas u organizaciones?
+    criteria:
+      "true": >-
+        habla de cómo empresas, gobiernos u otras organizaciones usan, compran, adoptan o se ven
+        afectadas por la IA (casos, costes, productividad, estrategia, empleo, regulación que les afecta)
+      "false": >-
+        trata de investigación, detalles técnicos para desarrolladores, herramientas de programación,
+        curiosidades, sucesos o polémicas de personas, sin explicar qué cambia para una organización
+  # B: "trata de IA", con el título como señal explícita y las herramientas para IA dentro.
+  - id: about_ai_b
+    type: noul
+    instructions: ¿La pieza trata de inteligencia artificial?
+    criteria:
+      "true": >-
+        el título o la descripción tratan de IA: modelos, asistentes o agentes de IA, empresas de IA,
+        el uso, la compra o los efectos de la IA, o herramientas para crear, ejecutar o controlar
+        sistemas de IA o el código que generan
+      "false": >-
+        ni el título ni la descripción tratan de IA; o la IA se nombra solo como contexto de una pieza
+        sobre otro tema
+  # C: como B pero sin la cláusula de herramientas (aísla el efecto de "título o descripción").
+  - id: about_ai_c
+    type: noul
+    instructions: ¿La pieza trata de inteligencia artificial?
+    criteria:
+      "true": >-
+        el título o la descripción tratan de IA: modelos, asistentes o agentes de IA, empresas de IA,
+        o el uso, la compra o los efectos de la IA
+      "false": >-
+        ni el título ni la descripción tratan de IA; o la IA se nombra solo como contexto de una pieza
+        sobre otro tema
+  # T: pregunta literal sobre el título.
+  - id: ai_title
+    type: noul
+    instructions: ¿El título de la pieza habla de inteligencia artificial?
+    criteria:
+      "true": >-
+        el título nombra la IA o algo de IA: inteligencia artificial, IA, AI, LLM, modelos, asistentes o
+        agentes de IA (ChatGPT, Claude, Gemini, Copilot…), aprendizaje automático, empresas de IA o
+        contenido generado por IA
+      "false": el título no nombra nada relacionado con la IA
+  # B para business_use: separa el negocio de los proveedores de IA del uso por organizaciones.
+  - id: business_use_b
+    type: noul
+    instructions: ¿La pieza explica qué cambia para las organizaciones que usan o compran IA?
+    criteria:
+      "true": >-
+        describe cómo empresas, gobiernos u otras organizaciones usan, compran o adoptan IA, o qué
+        efecto tiene la IA en su trabajo, sus costes, su empleo, su estrategia o sus riesgos
+      "false": >-
+        trata del negocio de las propias empresas de IA (lanzamientos, rondas, ingresos, polémicas),
+        de productos para consumidores, de investigación o de herramientas para desarrolladores, sin
+        decir qué cambia para una organización que usa la IA
+  # C: dos condiciones atómicas; Python las combina (sí si alguna es sí, no si las dos son no).
+  - id: org_adoption
+    type: noul
+    instructions: ¿La pieza habla de organizaciones que usan, compran o adoptan IA?
+    criteria:
+      "true": empresas, gobiernos u otras organizaciones que no venden IA la usan, la compran o la adoptan
+      "false": no aparece ninguna organización usando IA; un proveedor que lanza o vende su IA no cuenta
+  - id: org_impact
+    type: noul
+    instructions: ¿La pieza habla del efecto de la IA en el trabajo, el empleo, los costes o la estrategia de las organizaciones?
+    criteria:
+      "true": explica cómo la IA cambia el trabajo, el empleo, los costes, la productividad, los riesgos o la estrategia de empresas u organizaciones
+      "false": no dice nada de cómo la IA cambia a las organizaciones

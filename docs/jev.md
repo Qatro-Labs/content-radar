@@ -50,18 +50,20 @@ llamada** que lleva todas las preguntas que podamos necesitar: una *batería*. E
 Nunca lleva el segmento ni la región de la fuente: con ellos, Jev contesta a partir de la fuente y no
 del contenido (medido: `latam_context` salía sí en el 100 % de las piezas de fuentes LATAM).
 
-Batería `piece.v2.yaml`. Cada pregunta mide una sola condición observable; las preguntas compuestas
-de la v1 dejaban inciertas más de la mitad de las piezas.
+Batería `piece.v3.yaml`. Cada pregunta mide una sola condición observable; las preguntas compuestas
+de la v1 dejaban inciertas más de la mitad de las piezas. La v3 es la v2 más `ai_in_title`
+(validación en `data/evaluations/jev_piece_v3_eval.md`).
 
 | Pregunta | Tipo y criterio | Para qué |
 |---|---|---|
 | `about_ai` | `noul`: ¿el tema principal es la IA? | Filtrar ruido antes del clustering |
+| `ai_in_title` | `noul`: ¿el título habla de IA? | Segunda condición del filtro: una pieza sale solo si `about_ai` y `ai_in_title` son "no" seguros. Jev lee `about_ai` de forma literal sobre todo el texto y quitaba piezas con la IA en el título y una descripción sobre otra cosa (24 de 55 quitadas eran buenas; con v3, 9 de 36) |
 | `injection` | `noul`: ¿el texto contiene instrucciones dirigidas a un sistema de IA? | Regla 6: si supera 0,5, la pieza no entra en el contexto del LLM. Es una heurística, no la defensa principal |
 | `format`, `format_rev` | `choice` contrastivo (qué es y qué no): noticia · opinión · tutorial · caso de uso · entrevista · demo · pregunta a la comunidad · lista | "Temas y formatos" del reto |
 | `hook`, `hook_rev` | `choice`: pregunta · dato o cifra · contraintuitivo · historia · cómo hacer · noticia · lista | "Por qué funcionó" |
 | `launch` | `noul`: ¿anuncia un producto, modelo, función o versión nueva? | Distinguir un pico de noticia de una tendencia |
 | **Pistas para el LLM** | | El LLM decide el audience fit; estos conteos le llegan como datos y la UI los muestra como apoyo |
-| `business_use` | `noul`: ¿trata del uso, la adopción o el impacto de la IA en organizaciones? | Criterios "impacto en decisiones" y "aplicación real". Es un juicio de audiencia: ~30 % incierto con cualquier redacción, por eso no filtra |
+| `business_use` | `noul`: ¿trata del uso, la adopción o el impacto de la IA en organizaciones? | Criterios "impacto en decisiones" y "aplicación real". Es un juicio de audiencia: ~30 % incierto con cualquier redacción, por eso no filtra. Sobre 200 piezas, 26 % incierto y 95 % de acuerdo cuando está seguro; reformularla en la v3 no mejoró |
 | `dev_audience` | `noul`: ¿va dirigida sobre todo a desarrolladores o investigadores? | "Todavía no llegó a ejecutivos" |
 | `business_case` | `noul`: ¿describe cómo una organización concreta usa la IA? (no cuenta el lanzamiento de un proveedor) | Criterio "aplicación real" |
 | `tech_jargon` | `noul`: ¿usa jerga técnica de software o de IA? | Criterio "comprensible para directivos" |
@@ -165,6 +167,10 @@ pregunta. Solo texto (las imágenes son experimentales).
 
 En cuanto haya clave:
 
+> **Estado (17/10):** hecho con etiquetas de evaluadores LLM a ciegas, no humanas:
+> `jev_piece_v2_eval.md` (40 piezas) y `jev_piece_v3_eval.md` (200 piezas, comparación v2 → v3).
+> Faltan las etiquetas a mano; las hojas y los scripts de `data/evaluations/` sirven igual con ellas.
+
 - `data/evaluations/jev_pieces.yaml`: entre 30 y 50 piezas reales (ES y EN) etiquetadas a mano para
   las preguntas de la batería de pieza (`about_ai`, `format`, `hook`, `business_use`, `tech_jargon`,
   `business_case`, `latam_context`).
@@ -187,7 +193,7 @@ Es una estimación con los precios oficiales; el coste real lo mide `usage_event
 
 | Batería | Volumen | Tokens por llamada (aprox.) | Coste |
 |---|---|---|---|
-| Pieza (v2) | ~1.500 de backfill + ~200 al día | ~2.100 (medido) | ~0,13 $ el backfill; ~0,55 $/mes |
+| Pieza (v3) | ~1.500 de backfill + ~200 al día | ~2.260 (medido) | ~0,14 $ el backfill; ~0,57 $/mes |
 | Par | ~500 al día | ~800 | ~0,50 $/mes |
 | Verificación | ~100 afirmaciones al día | ~800 | ~0,10 $/mes |
 
