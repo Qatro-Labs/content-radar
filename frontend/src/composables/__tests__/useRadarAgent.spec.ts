@@ -185,6 +185,7 @@ describe('useRadarAgent', () => {
 
     expect(router.currentRoute.value.query).toEqual({})
     expect(agent.turns.value[0]?.status).toBe('stopped')
+    expect(agent.turns.value[0]?.steps.map((s) => s.status)).toEqual(['failed'])
     expect(agent.presence.value.visible).toBe(false)
     expect(agent.status.value).toBe('idle')
   })

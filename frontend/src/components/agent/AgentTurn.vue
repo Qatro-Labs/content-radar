@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import type { AgentTurnView, TurnStatus } from '@/lib/agentTypes'
+import { leadingWords } from '@/lib/answerWords'
 
 import AgentEnding from './AgentEnding.vue'
 import AgentSteps from './AgentSteps.vue'
@@ -14,19 +15,7 @@ const emit = defineEmits<{
   askFromAssistant: [question: string]
 }>()
 
-// Una palabra es un tramo entre blancos (espacios o saltos de línea).
-const WORD_PATTERN = /\S+/g
 const FINISHED_STATUSES: readonly TurnStatus[] = ['done', 'stopped', 'failed']
-
-// Corta el texto original tras la palabra `count` en lugar de unir palabras sueltas: así se
-// conservan los saltos de línea de los párrafos.
-function leadingWords(text: string, count: number): string {
-  const words = [...text.matchAll(WORD_PATTERN)]
-  if (count >= words.length) return text
-  const last = words[count - 1]
-  if (last === undefined) return ''
-  return text.slice(0, last.index + last[0].length)
-}
 
 // Con el cierre ya a la vista, la respuesta va entera aunque la cuenta de palabras se quede corta.
 const shownAnswer = computed(() => {

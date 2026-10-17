@@ -223,6 +223,8 @@ export const useRadarAgent = createSharedComposable(() => {
     controller?.abort()
     const turn = turns.value.at(-1)
     if (turn?.status === 'running' || turn?.status === 'answering') turn.status = 'stopped'
+    // Un paso cortado a medias no terminó: sin esto seguiría con el punto de «en curso».
+    for (const step of turn?.steps ?? []) if (step.status === 'running') step.status = 'failed'
     finishRun()
   }
 

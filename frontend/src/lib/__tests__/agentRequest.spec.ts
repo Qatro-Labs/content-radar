@@ -85,6 +85,22 @@ describe('viewContext', () => {
       filters: { lifecycle: ['emerging'], confidence: 'high' },
     })
   })
+
+  // La API rechaza con 422 un id que no es de oportunidad o una búsqueda de más de 60 caracteres.
+  it('leaves out ids the API would reject', () => {
+    expect(viewContext('radar', { ...RADAR_STATE, selected: 'not-an-id' })).toEqual({
+      screen: 'radar',
+    })
+    expect(viewContext('dossier', { ...RADAR_STATE, dossierId: '../etc' })).toEqual({
+      screen: 'dossier',
+    })
+  })
+
+  it('cuts a long search to what the API accepts', () => {
+    const search = 'agentes '.repeat(20)
+
+    expect(viewContext('explore', { ...RADAR_STATE, search })?.search).toBe(search.slice(0, 60))
+  })
 })
 
 // D9 del plan fe-radar-agent.

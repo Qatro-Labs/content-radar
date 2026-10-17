@@ -3,6 +3,7 @@ import { promiseTimeout } from '@vueuse/core'
 import { AGENT_TIMING } from '@/lib/agentMotion'
 import { takePlayable, type Playable, type PlayableStep } from '@/lib/agentPlayer'
 import type { AgentStreamEvent, AgentTurnView, AnswerEvent } from '@/lib/agentTypes'
+import { countWords } from '@/lib/answerWords'
 
 // D7 del plan fe-radar-agent: el ritmo de un turno. Los eventos se guardan en un búfer y se
 // reproducen de uno en uno: cada paso dura al menos `stepMs` y la respuesta espera a que la cola
@@ -10,10 +11,6 @@ import type { AgentStreamEvent, AgentTurnView, AnswerEvent } from '@/lib/agentTy
 
 const CONNECTION_LOST_MESSAGE =
   'Se cortó la conexión con el agente. Lo que ya cambió en la vista se queda'
-
-// AgentTurn.vue muestra las primeras `visibleWords` palabras separadas por espacios, conservando
-// los saltos de línea dentro de cada una.
-const WORD_SEPARATOR = ' '
 
 export interface PlaybackHost {
   // El turno reactivo que pinta la barra.
@@ -61,7 +58,7 @@ export function createAgentPlayback(host: PlaybackHost): AgentPlayback {
     host.onAnswerStart()
     turn.status = 'answering'
     turn.answer = answer
-    const total = answer.text.split(WORD_SEPARATOR).length
+    const total = countWords(answer.text)
     if (host.isReducedMotion()) turn.visibleWords = total
     while (turn.visibleWords < total) {
       await promiseTimeout(AGENT_TIMING.wordMs)

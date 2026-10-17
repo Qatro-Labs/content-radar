@@ -12,6 +12,15 @@ import { DEFAULT_RANKING_SORT, type RadarQuery } from './radarQuery'
 // `MAX_HISTORY` y `MAX_FOCUS_IDS` de backend/app/schemas/agent.py: con más, la API responde 422.
 const MAX_HISTORY = 4
 const MAX_FOCUS_IDS = 6
+// La URL la puede escribir cualquiera: lo que la API rechazaría (422) no se manda. Los mismos
+// `OPPORTUNITY_ID_PATTERN` (backend/app/schemas/opportunity.py) y `MAX_SEARCH_CHARS`
+// (backend/app/schemas/agent.py).
+const OPPORTUNITY_ID = /^opp_[A-Za-z0-9_]{1,64}$/
+const MAX_SEARCH_CHARS = 60
+
+function validOpportunityId(id: string | null): string | null {
+  return id !== null && OPPORTUNITY_ID.test(id) ? id : null
+}
 
 // D10: ningún cliente MCP de asistente está probado todavía (docs/mcp.md), así que el enlace lleva
 // a la guía de conexión en lugar de prometer uno concreto.
@@ -59,7 +68,8 @@ function changedFilters(query: RadarQuery): RadarPatch | null {
 
 function radarContext({ selected, radarQuery }: ViewState): AgentViewContext {
   const context: AgentViewContext = { screen: 'radar' }
-  if (selected) context.opportunity_id = selected
+  const opportunityId = validOpportunityId(selected)
+  if (opportunityId) context.opportunity_id = opportunityId
   const filters = changedFilters(radarQuery)
   if (filters !== null) context.filters = filters
   return context
@@ -68,9 +78,13 @@ function radarContext({ selected, radarQuery }: ViewState): AgentViewContext {
 export function viewContext(screen: AgentScreen | null, state: ViewState): AgentViewContext | null {
   if (screen === 'radar') return radarContext(state)
   if (screen === 'dossier') {
-    return state.dossierId ? { screen, opportunity_id: state.dossierId } : { screen }
+    const opportunityId = validOpportunityId(state.dossierId)
+    return opportunityId ? { screen, opportunity_id: opportunityId } : { screen }
   }
-  if (screen === 'explore') return state.search ? { screen, search: state.search } : { screen }
+  if (screen === 'explore') {
+    const search = state.search?.slice(0, MAX_SEARCH_CHARS)
+    return search ? { screen, search } : { screen }
+  }
   return null
 }
 
