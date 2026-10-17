@@ -1,0 +1,66 @@
+import { describe, expect, it } from 'vitest'
+
+import fixture from '@fixtures/opportunities.json'
+
+import type { Schemas } from '../client'
+
+// `satisfies` hace que el type-check avise si un valor deja de existir en el contrato
+// (src/types/api.ts); el test avisa si el fixture usa uno que no está en la lista.
+const LIFECYCLES = [
+  'emerging',
+  'accelerating',
+  'peaking',
+  'saturated',
+  'unknown',
+] as const satisfies readonly Schemas['Lifecycle'][]
+const RECOMMENDATIONS = [
+  'publish_now',
+  'find_angle',
+  'wait_for_case',
+  'discard',
+] as const satisfies readonly Schemas['Recommendation'][]
+const GROWTH_STATUSES = [
+  'observed',
+  'estimated',
+  'preliminary',
+] as const satisfies readonly Schemas['GrowthStatus'][]
+const CONFIDENCES = ['low', 'medium', 'high'] as const satisfies readonly Schemas['Confidence'][]
+
+const SCORE_KEYS = [
+  'momentum_score',
+  'audience_fit_score',
+  'cross_source_score',
+  'saturation_score',
+  'actionability_score',
+  'opportunity_score',
+] as const satisfies readonly (keyof Schemas['Opportunity'])[]
+const SCORE_MIN = 0
+const SCORE_MAX = 100
+
+const items = fixture.opportunities.items
+
+describe('opportunities fixture', () => {
+  it('declares itself as mock data', () => {
+    expect(fixture._fixture).toMatch(/^MOCK/)
+  })
+
+  it.each(items)('marks the topic of $id as mock', (item) => {
+    expect(item.topic).toMatch(/^\[MOCK\]/)
+  })
+
+  it.each(items)('uses only contract enum values in $id', (item) => {
+    expect(LIFECYCLES).toContain(item.lifecycle)
+    expect(RECOMMENDATIONS).toContain(item.recommendation)
+    expect(GROWTH_STATUSES).toContain(item.growth_status)
+    expect(CONFIDENCES).toContain(item.confidence)
+  })
+
+  it.each(items)('keeps every non-null score of $id between 0 and 100', (item) => {
+    for (const key of SCORE_KEYS) {
+      const score = item[key]
+      if (score === null) continue
+      expect(score, key).toBeGreaterThanOrEqual(SCORE_MIN)
+      expect(score, key).toBeLessThanOrEqual(SCORE_MAX)
+    }
+  })
+})
