@@ -75,6 +75,48 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/evidence': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List All Evidence
+     * @description Evidencia de todas las oportunidades, por `outlier_ratio` descendente (nulos al final; en
+     *     empate, la más reciente). `null` si todavía no hay ninguna ejecución correcta de `analyze`.
+     */
+    get: operations['list_all_evidence_api_v1_evidence_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/timelines': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Timelines
+     * @description Timelines de todas las oportunidades, en el orden del ranking. `null` si todavía no hay
+     *     ninguna ejecución correcta de `analyze`.
+     */
+    get: operations['list_timelines_api_v1_timelines_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/sources/status': {
     parameters: {
       query?: never
@@ -126,6 +168,27 @@ export interface paths {
      * @description Agente del Radar. Stream SSE: `step`, `action`, `answer`, `error` y siempre `done`.
      */
     post: operations['ask_agent_api_v1_agent_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/editorial/brief': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Create Brief
+     * @description Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
+     *     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM.
+     */
+    post: operations['create_brief_api_v1_editorial_brief_post']
     delete?: never
     options?: never
     head?: never
@@ -220,6 +283,39 @@ export interface components {
       /** Latam Es */
       latam_es: number
     }
+    /**
+     * BriefFormat
+     * @enum {string}
+     */
+    BriefFormat: 'post' | 'carousel' | 'short_video' | 'long_video' | 'article'
+    /**
+     * BriefGoal
+     * @enum {string}
+     */
+    BriefGoal: 'educate' | 'spark_conversation' | 'generate_leads'
+    /**
+     * BriefPlatform
+     * @enum {string}
+     */
+    BriefPlatform: 'linkedin' | 'instagram' | 'youtube' | 'newsletter'
+    /** BriefPoint */
+    BriefPoint: {
+      /** Text */
+      text: string
+      /**
+       * Evidence Urls
+       * @description Piezas que lo respaldan
+       */
+      evidence_urls: string[]
+    }
+    /** BriefRequest */
+    BriefRequest: {
+      /** Opportunity Id */
+      opportunity_id: string
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+    }
     /** CitedOpportunity */
     CitedOpportunity: {
       /** Id */
@@ -256,6 +352,54 @@ export interface components {
       data_steps: number
       /** View Steps */
       view_steps: number
+    }
+    /** EditorialBrief */
+    EditorialBrief: {
+      /** Opportunity Id */
+      opportunity_id: string
+      /** Topic */
+      topic: string
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      /** @description La de la oportunidad; el brief la respeta */
+      recommendation: components['schemas']['Recommendation']
+      /** Recommendation Reason */
+      recommendation_reason?: string | null
+      /**
+       * Angle
+       * @description Ángulo propio de 30X para el tema
+       */
+      angle: string
+      /**
+       * Hook
+       * @description None si no superó la comprobación
+       */
+      hook?: string | null
+      /**
+       * Structure
+       * @description Pasos de la pieza, en orden
+       */
+      structure: string[]
+      /**
+       * Key Points
+       * @description Datos de la evidencia
+       */
+      key_points: components['schemas']['BriefPoint'][]
+      /**
+       * Why It Fits
+       * @description Por qué encaja con la audiencia de 30X; None si no se comprobó
+       */
+      why_it_fits?: string | null
+      /**
+       * Evidence
+       * @description Las piezas que cita el brief
+       */
+      evidence: components['schemas']['Evidence'][]
+      /** Limitations */
+      limitations: string[]
+      /** Model */
+      model: string
     }
     /**
      * ErrorCode
@@ -554,13 +698,21 @@ export interface components {
      * Platform
      * @enum {string}
      */
-    Platform: 'youtube' | 'hackernews' | 'rss' | 'brave' | 'linkedin' | 'instagram' | 'tiktok'
+    Platform:
+      'youtube' | 'hackernews' | 'rss' | 'brave' | 'linkedin' | 'instagram' | 'tiktok' | 'reddit'
     /**
      * Provider
      * @description APIs externas con consumo medido. Cada valor es una clave de `variable` en pricing.yaml.
      * @enum {string}
      */
-    Provider: 'youtube' | 'hackernews' | 'rss' | 'brave_search' | 'typesafe_jev' | 'llm_text'
+    Provider:
+      | 'youtube'
+      | 'hackernews'
+      | 'rss'
+      | 'brave_search'
+      | 'scrapecreators'
+      | 'typesafe_jev'
+      | 'llm_text'
     /** ProviderCost */
     ProviderCost: {
       provider: components['schemas']['Provider']
@@ -737,6 +889,62 @@ export interface components {
      * @enum {string}
      */
     TimelineWindow: 'current' | 'previous'
+    /**
+     * TopicEvidence
+     * @description Elemento de GET /evidence: la evidencia de todas las oportunidades servidas.
+     */
+    TopicEvidence: {
+      /**
+       * Url
+       * Format: uri
+       */
+      url: string
+      /**
+       * Source
+       * @description Nombre público de la fuente (canal, medio, query)
+       */
+      source: string
+      platform: components['schemas']['Platform']
+      segment: components['schemas']['Segment']
+      /** Title */
+      title: string
+      /**
+       * Published At
+       * Format: date-time
+       */
+      published_at: string
+      /**
+       * Observed At
+       * Format: date-time
+       */
+      observed_at: string
+      /** Language */
+      language?: string | null
+      /** @description Tal cual la fuente; None = no la expone */
+      metrics: components['schemas']['Metrics']
+      /** @description None sin 2+ snapshots */
+      velocity?: components['schemas']['Rate'] | null
+      /**
+       * Outlier Ratio
+       * @description Rendimiento ajustado por edad / mediana de referencia
+       */
+      outlier_ratio?: number | null
+      /**
+       * Is Outlier
+       * @description outlier_ratio ≥ 3
+       */
+      is_outlier?: boolean | null
+      /**
+       * @description Sensor automático o curación manual
+       * @default automatic
+       */
+      collection: components['schemas']['Collection']
+      /**
+       * Opportunity Id
+       * @description Oportunidad a la que pertenece la pieza
+       */
+      opportunity_id: string
+    }
     /** ValidationError */
     ValidationError: {
       /** Location */
@@ -888,6 +1096,46 @@ export interface operations {
       }
     }
   }
+  list_all_evidence_api_v1_evidence_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TopicEvidence'][] | null
+        }
+      }
+    }
+  }
+  list_timelines_api_v1_timelines_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['OpportunityTimeline'][] | null
+        }
+      }
+    }
+  }
   sources_status_api_v1_sources_status_get: {
     parameters: {
       query?: never
@@ -969,6 +1217,74 @@ export interface operations {
         content: {
           'application/json': components['schemas']['HTTPValidationError']
         }
+      }
+    }
+  }
+  create_brief_api_v1_editorial_brief_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BriefRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['EditorialBrief']
+        }
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }
