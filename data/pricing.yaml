@@ -10,7 +10,7 @@ variable:
   youtube:
     unit: quota_units
     price_per_unit: 0
-    note: "Gratis dentro de la cuota de 10.000 unidades/día."
+    note: "Gratis: cupo propio de 100 llamadas/día a search.list (1 unidad cada una) y 10.000 unidades/día para el resto."
     source: https://developers.google.com/youtube/v3/getting-started#quota
   hackernews:
     unit: requests
@@ -29,10 +29,25 @@ variable:
     price_per_unit: 0.000000042 # 0,042 $ por millón de tokens de entrada; la salida es gratis
     source: https://docs.typesafe.ai/models
   llm_text:
-    # Pendiente: proveedor y modelo del LLM generativo (Melkin, CLAUDE.md §7).
+    # Pendiente: Melkin elige entre los finalistas probando 3–5 temas reales (CLAUDE.md §7).
     unit: tokens
     input_price_per_unit: null
     output_price_per_unit: null
+    candidates:
+      claude-haiku-5-5:
+        input_per_million: 0.10
+        output_per_million: 0.50
+        note: "Hasta 100K tokens de prompt; por encima, 0,50 / 2,50."
+        source: https://platform.claude.com/docs/en/about-claude/pricing
+      gpt-6-luna:
+        input_per_million: 0.10
+        output_per_million: 0.50
+        note: "Precio de agregadores; confirmar en la web de OpenAI antes de elegirlo."
+        source: https://benchlm.ai/openai/api-pricing
+      claude-sonnet-5-5:
+        input_per_million: 2.00
+        output_per_million: 10.00
+        source: https://platform.claude.com/docs/en/about-claude/pricing
 
 # Coste mensual de los planes. "demo" es lo que usamos en la hackathon; "production" es lo que
 # necesitaría 30X para uso comercial (Vercel Hobby no permite uso comercial).
@@ -40,7 +55,7 @@ fixed_monthly:
   demo:
     railway_hobby:
       monthly: 5.00
-      note: "Compromiso mínimo de uso; el exceso se paga aparte."
+      note: "Incluye 5 $ de uso al mes; el exceso se paga aparte."
       source: https://railway.com/pricing
     supabase_free:
       monthly: 0
@@ -57,7 +72,7 @@ fixed_monthly:
   production:
     railway_hobby:
       monthly: 5.00
-      note: "Compromiso mínimo de uso; el exceso se paga aparte."
+      note: "Incluye 5 $ de uso al mes; el exceso se paga aparte."
       source: https://railway.com/pricing
     supabase_pro:
       monthly: 25.00

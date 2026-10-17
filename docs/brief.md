@@ -68,7 +68,7 @@ y dónde la respondemos.
 | "ejecutivos y equipos de Latinoamérica aprendiendo IA" | Encaje con la audiencia evaluado contra el perfil de 30X | `audience_fit_score`, `audience_mix`, `latam_gap` |
 | "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. Sus términos tampoco permiten usar su contenido obtenido a través de buscadores sin consentimiento del dueño. LinkedIn entra por vías oficiales o con consentimiento: la API de portabilidad (DMA, "un clic = señal" del curador), los exports de analítica de 30X y de Andrés Bilbao, la curación de la comunidad, el embed oficial y los canales abiertos de sus referentes. Instagram y TikTok entran por curación. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
 | "la propia comunidad como sensor" | Sensor editorial: el equipo o la comunidad pega enlaces y los etiqueta | `POST /signals/manual` (P1) |
-| "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe).** Cuatro baterías de preguntas en paralelo: pieza (relevancia, formato, gancho…), par (notas replicadas), tema (audience fit) y verificación de lo que escribe el LLM. Python combina sus juicios y el LLM generativo solo redacta | CLAUDE.md §7 · [`jev.md`](jev.md) |
+| "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe)** para las decisiones atómicas sobre piezas: clasifica cada pieza (relevancia, formato, gancho…), detecta notas replicadas y verifica lo que escribe el LLM. Python prioriza, y el LLM evalúa cada tema y redacta | CLAUDE.md §7 · [`jev.md`](jev.md) |
 | "el mismo problema que tiene cualquier marca, medio o creador" | El perfil de audiencia es un archivo: cambiarlo adapta el radar a otra marca. En la demo basta con contarlo | `data/audiences/30x.yaml` · "varias audiencias" es P2 |
 | "un prototipo funcional que responda una pregunta concreta" | Una pregunta, respondida con datos reales y evidencia enlazada | La pregunta de CLAUDE.md §1 |
 
@@ -134,18 +134,18 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Outlier Detection | Detecta piezas que rinden ≥3× la mediana de su canal o fuente, indicando la referencia | 1of10 / vidIQ | `intelligence/outliers` | P0 |
 | Cross-Source Validation | Cuenta fuentes independientes; una republicación no cuenta como confirmación | BuzzSumo | `intelligence/ranking` (`cross_source_score`) | P0 |
 | Saturation Detection | Mide la cobertura parecida dentro de la muestra y avisa cuando conviene otro ángulo | Exploding Topics / BuzzSumo | `intelligence/saturation` | P0 |
-| Audience Fit Score | Rúbrica 0–5 × 6 criterios contra el perfil de 30X: 6 preguntas `score` de Jev combinadas en Python | SparkToro | `editorial/audience`, `intelligence/relevance` | P0 |
+| Audience Fit Score | Rúbrica 0–5 × 6 criterios contra el perfil de 30X: la evalúa el LLM con justificación y evidencia, con las etiquetas de Jev como pistas; Python combina | SparkToro | `editorial/audience`, `intelligence/relevance` | P0 |
 | Opportunity Score | Ordena oportunidades por señal, relevancia, evidencia y saturación | Propia | `intelligence/ranking` | P0 |
 | Explainable Insights | Une cada interpretación con su evidencia, su hipótesis y sus limitaciones | Feedly AI | `editorial/analyzer` (`why_it_matters`, `limitations`) | P0 |
-| Content Pattern Analysis | Jev clasifica gancho y formato; Python compara outliers con el resto del tema (también momento y autor) | vidIQ / 1of10 | `editorial/analyzer` | P0 |
+| Content Pattern Analysis | Jev clasifica gancho y formato; Python calcula el *lift* de los outliers frente al resto del tema (también momento y autor); el LLM redacta la hipótesis | vidIQ / 1of10 | `editorial/analyzer` | P0 · *lift* tras el núcleo |
 | Operating Cost | Registra el consumo de cada API y muestra el coste medido y la proyección mensual | Reto (§1) | `services/costs`, `GET /costs`, panel de coste | P0 |
 | Interactive Radar | Permite explorar, filtrar, seleccionar y abrir evidencias | Propia | `frontend/`: vistas Discover y Explore | P0 |
 | Historical Tracking | Guarda observaciones y muestra la evolución cuando hay historial | Exploding Topics | `metric_snapshots` (P0) · timeline (P1) | P0 / P1 |
 | Content Recommendations | Propone tema, ángulo y formato por plataforma | SparkToro / vidIQ | `recommendation` (P0) · `editorial/briefs` y vista Create (P1) | P0 / P1 |
 | Community Sensor | El equipo o la comunidad pega enlaces de redes cerradas y los etiqueta | Reto (§1) | `collectors/manual`, `POST /signals/manual` | P1 |
 | LinkedIn Sensor | Posts curados por reacción (API de portabilidad DMA) o por URL, con métricas reales de los exports de 30X y Bilbao, mostrados con el embed oficial | Propia | `collectors/linkedin_dma`, `jobs/import_linkedin_export` | P1 |
-| Claim Verification | Verifica cada afirmación del LLM contra la evidencia que cita; lo no respaldado no se publica | Cookbook de TypeSafe | Batería de verificación de Jev | P0 |
-| LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en español | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
+| Claim Verification | Verifica cada afirmación del LLM contra la evidencia que cita; lo no respaldado no se publica | Cookbook de TypeSafe | Batería de verificación de Jev | P1 · tras el núcleo (CLAUDE.md §12) |
+| LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en fuentes de Latinoamérica (España aparte, como contexto) | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
 | MCP Integration | Permite consultar oportunidades, temas y evidencias desde asistentes de IA | Propia | `mcp/` | P1 |
 
 ## 7. Qué podemos afirmar con los datos
@@ -159,8 +159,8 @@ respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
 | Estimación o señal preliminar | Hay una sola observación, o la pieza aparece sin aceleración demostrada (`estimated`, `preliminary`) | Con la etiqueta "estimado" o "preliminar"; es una señal, no crecimiento |
 | Outlier | Existe la referencia comparable (mediana del canal o de la búsqueda) | "6,1× la mediana de su canal". Si falta la referencia: "sin línea base" |
 | Saturación | Siempre, porque es relativa a la muestra | "en las fuentes que monitoreamos" |
-| LATAM Gap | Ambos grupos de fuentes tienen cobertura suficiente (CLAUDE.md §5) | "poca cobertura observada entre referentes en español". Es una hipótesis sobre la muestra |
-| Audience fit | Se aplicó la rúbrica al perfil de 30X | "evaluación editorial asistida por IA" |
+| LATAM Gap | Ambos grupos de fuentes tienen cobertura suficiente (CLAUDE.md §5) | "poca cobertura observada en fuentes latinoamericanas". Es una hipótesis sobre la muestra; España se muestra aparte |
+| Audience fit | Se aplicó la rúbrica al perfil de 30X | "evaluación editorial asistida por IA", en banda (bajo · medio · alto) con sus 6 niveles y sus justificaciones |
 | Por qué funcionó | Se comparó el outlier con el resto del tema | Como hipótesis, con su limitación al lado |
 | Gancho o estructura | Depende de lo que se haya podido leer | Distinguir "inferido del título" de "revisado en el contenido" |
 | Fuentes independientes | Tras quitar las republicaciones | Medios distintos, no copias de la misma nota |
@@ -206,8 +206,9 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
 - El prototipo responde la pregunta de CLAUDE.md §1 con datos reales.
 - El panel de coste (y `get_operating_cost` por MCP) muestra el coste medido y la proyección
   mensual por separado, con el desglose por proveedor y la fuente de cada precio.
-- Cada juicio de Jev guarda la versión del modelo y su `confidence`. Jev se validó con piezas
-  etiquetadas a mano en `data/evaluations/`.
+- Cada juicio de Jev guarda la versión del modelo y su `confidence`. Si hubo clave de Jev, se
+  validó con piezas etiquetadas a mano en `data/evaluations/`.
+- El audience fit del LLM coincide, a grandes rasgos, con el ranking que el equipo revisó a mano.
 - El pitch explica cómo entra LinkedIn (API de portabilidad, exports de 30X, curación y embed
   oficial), cómo entran
   Instagram y TikTok (curación), y por qué así (§2).
