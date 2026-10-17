@@ -62,6 +62,6 @@ data/            fixtures, evaluaciones y perfiles de audiencia
 | Esqueleto backend, DB y migración inicial | ✅ |
 | Tablas `sources`, `content_items`, `metric_snapshots`, `pipeline_runs` | ✅ |
 | `store_signals` (dedupe + historial de snapshots) y `GET /api/v1/sources/status` | ✅ |
-| Lista inicial de fuentes (`data/sources.yaml`: 38 YouTube · 7 HN · 34 RSS) + loader `app.jobs.seed_sources` | ✅ (YouTube pendiente de API key) |
-| Collectors HN / RSS / YouTube + backfill 14 días (`app.jobs.collect`) | ✅ HN y RSS con datos reales · YouTube listo, pendiente de API key |
+| Lista inicial de fuentes (`data/sources.yaml`: 38 YouTube · 7 HN · 34 RSS) + loader `app.jobs.seed_sources` | ✅ |
+| Collectors HN / RSS / YouTube + backfill 14 días (`app.jobs.collect`) | ✅ datos reales: 737 HN · 346 RSS · 405 YouTube (38 canales) |
 | Job periódico de snapshots | ⏳ |

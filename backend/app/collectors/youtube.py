@@ -20,6 +20,7 @@ from app.schemas.signal import ContentFormat, ContentSignal, Metrics, Platform
 API_BASE = "https://www.googleapis.com/youtube/v3"
 SHORT_MAX_SECONDS = 180  # los Shorts pueden durar hasta 3 min
 MAX_UPLOAD_PAGES = 4  # 200 vídeos por canal como máximo en un backfill
+FILTER_DESCRIPTION_CHARS = 200
 
 
 class YouTubeError(Exception):
@@ -145,9 +146,11 @@ class YouTubeCollector:
             if snippet.get("liveBroadcastContent") in ("live", "upcoming"):
                 continue
             title, description = snippet["title"], snippet.get("description")
-            if ai_filter and not is_ai_related(
-                title, description, " ".join(snippet.get("tags", []))
-            ):
+            # Solo el inicio de la descripción: el resto suele ser patrocinios y enlaces que
+            # mencionan IA aunque el vídeo no trate de IA.
+            intro = (description or "")[:FILTER_DESCRIPTION_CHARS]
+            tags = " ".join(snippet.get("tags", []))
+            if ai_filter and not is_ai_related(title, intro, tags):
                 continue
             duration = parse_duration(video.get("contentDetails", {}).get("duration"))
             language = snippet.get("defaultAudioLanguage") or snippet.get("defaultLanguage")

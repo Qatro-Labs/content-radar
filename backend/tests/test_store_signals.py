@@ -118,3 +118,12 @@ async def test_health_and_sources_status(session):
             "last_observed_at": "2026-10-16T20:00:00Z",
         }
     ]
+
+
+async def test_snapshots_closer_than_min_gap_are_skipped(session):
+    src = await make_source(session)
+    await store_signals(session, src, [signal(T0, 1000)])
+    result = await store_signals(session, src, [signal(T0 + timedelta(minutes=5), 1010)])
+    assert result.snapshots_inserted == 0
+    result = await store_signals(session, src, [signal(T0 + timedelta(minutes=45), 1300)])
+    assert result.snapshots_inserted == 1

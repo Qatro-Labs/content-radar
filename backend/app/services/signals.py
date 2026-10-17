@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
@@ -6,6 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import ContentItem, MetricSnapshot, Source
 from app.schemas.signal import ContentSignal, SourceStatus
+
+# Dos snapshots más juntos que esto no aportan velocidad (p. ej. dos ejecuciones seguidas).
+MIN_SNAPSHOT_GAP = timedelta(minutes=30)
 
 
 @dataclass
@@ -52,7 +56,8 @@ async def store_signals(
         item_id = (await session.execute(stmt)).scalar_one()
 
         m = s.metrics
-        if any(v is not None for v in (m.views, m.likes, m.comments, m.points, m.shares)):
+        has_metrics = any(v is not None for v in (m.views, m.likes, m.comments, m.points, m.shares))
+        if has_metrics and await _snapshot_due(session, item_id, s.observed_at):
             snap = (
                 insert(MetricSnapshot)
                 .values(content_item_id=item_id, observed_at=s.observed_at, **m.model_dump())
@@ -63,6 +68,15 @@ async def store_signals(
 
     await session.commit()
     return StoreResult(items_upserted=len(signals), snapshots_inserted=snapshots)
+
+
+async def _snapshot_due(session: AsyncSession, item_id: int, observed_at) -> bool:
+    last = await session.scalar(
+        select(func.max(MetricSnapshot.observed_at)).where(
+            MetricSnapshot.content_item_id == item_id
+        )
+    )
+    return last is None or abs(observed_at - last) >= MIN_SNAPSHOT_GAP
 
 
 async def sources_status(session: AsyncSession) -> list[SourceStatus]:
