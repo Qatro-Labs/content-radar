@@ -90,7 +90,8 @@ sigue preguntando o deja el gate en `BLOQUEADO` explicando qué falta.
 
 ## 7. Escribir el plan
 
-Plantilla: `.claude/templates/plan.md`. Rellena **todas** las secciones.
+Plantilla: `.claude/templates/plan.md`. Rellena todas las secciones; las marcadas como opcionales
+se omiten cuando no aplican.
 Destino: `.claude/plans/<slug>.plan.md`. Se commitea en la rama de trabajo junto con la
 implementación: es el handoff para el resto del equipo.
 

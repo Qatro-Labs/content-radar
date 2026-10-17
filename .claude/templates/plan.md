@@ -66,21 +66,18 @@ Cerradas en el interrogatorio. El implementador las ejecuta, no las reabre.
 - **Interfaz:** firma, invariantes, orden, modos de error. Qué devuelve cuando faltan datos.
 - **Ubicación (CLAUDE.md §10):** qué va en `services/`, `intelligence/`, `api/routes/`, `mcp/`, `src/…`.
 
-## Patrones de diseño evaluados
+## Patrones de diseño *(opcional: omitir si no hay patrón)*
 
-| Patrón | Veredicto | Razón |
-| --- | --- | --- |
-| sin patrón | elegido / descartado | … |
+Sin esta sección, no se usa ningún patrón. Si hay uno, decidido por el humano:
 
-El implementador no introduce patrones que no estén en esta tabla.
+- **<patrón>** — qué problema del plan resuelve y qué cuesta.
 
-## Acceso a datos
+## Acceso a datos *(opcional: omitir si no toca la DB)*
 
-Si el cambio lee o escribe la DB: qué queries, cómo se cargan las relaciones (`selectinload` /
-`joinedload`, sin lazy loading), si hay migración y qué pasa con los datos existentes. Si no aplica,
-"no aplica" y por qué.
+Qué queries, cómo se cargan las relaciones (`selectinload` / `joinedload`, sin lazy loading), si
+hay migración y qué pasa con los datos existentes.
 
-## Alternativas rechazadas
+## Alternativas rechazadas *(opcional)*
 
 - **<alternativa>** — rechazada porque …
 
@@ -114,11 +111,9 @@ Comandos exactos, en orden. El implementador los corre todos y pega la salida re
 <comando 1>
 ```
 
-## Riesgos
+## Riesgos *(opcional)*
 
-| Riesgo | Señal | Qué hacer |
-| --- | --- | --- |
-| … | … | … |
+- **<riesgo>** — señal de que ocurrió → qué hacer.
 
 ## Historial de intentos
 
