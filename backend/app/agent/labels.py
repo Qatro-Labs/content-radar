@@ -4,6 +4,7 @@ Las escribe Python, nunca el modelo: son texto de la UI. Los nombres de tema sal
 oportunidad leída de la DB, no de los argumentos del modelo. Etiquetas fijas de DESIGN.md §9.
 """
 
+from app.agent.sanitize import TITLE_MAX_CHARS, strip_invisible, truncate
 from app.schemas.agent import RadarSort
 from app.schemas.opportunity import Confidence, Lifecycle
 
@@ -45,20 +46,24 @@ def list_label(lifecycle: list[Lifecycle] | None) -> str:
     return LIST_LABEL
 
 
+def _quoted(topic: str) -> str:
+    return f"«{truncate(strip_invisible(topic), TITLE_MAX_CHARS)}»"
+
+
 def opportunity_label(topic: str) -> str:
-    return f"Revisando «{topic}»"
+    return f"Revisando {_quoted(topic)}"
 
 
 def evidence_label(topic: str) -> str:
-    return f"Revisando la evidencia de «{topic}»"
+    return f"Revisando la evidencia de {_quoted(topic)}"
 
 
 def timeline_label(topic: str) -> str:
-    return f"Revisando la evolución de «{topic}»"
+    return f"Revisando la evolución de {_quoted(topic)}"
 
 
 def select_label(topic: str) -> str:
-    return f"Abriendo «{topic}»"
+    return f"Abriendo {_quoted(topic)}"
 
 
 def highlight_label(count: int) -> str:

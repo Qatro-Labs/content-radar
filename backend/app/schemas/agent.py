@@ -78,6 +78,7 @@ class ErrorCode(StrEnum):
     LLM_UNAVAILABLE = "llm_unavailable"
     NO_DATA = "no_data"
     INTERNAL = "internal"
+    TIMEOUT = "timeout"
 
 
 class ErrorEvent(BaseModel):
