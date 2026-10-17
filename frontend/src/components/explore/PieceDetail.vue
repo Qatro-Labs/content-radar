@@ -13,6 +13,7 @@ import {
 import type { Piece } from '@/lib/exploreView'
 import { formatUtcDay } from '@/lib/format'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
+import { NOT_AVAILABLE } from '@/lib/opportunityFormat'
 import { RouteName } from '@/router'
 
 import StageDot from './StageDot.vue'
@@ -21,8 +22,6 @@ const { piece } = defineProps<{ piece: Piece }>()
 
 const emit = defineEmits<{ clear: [] }>()
 
-// DESIGN.md §9: un dato ausente se escribe así, nunca 0 ni guion.
-const NOT_AVAILABLE = 'no disponible'
 const META_SEPARATOR = ' · '
 // DESIGN.md §4: "Qué no sabemos" es obligatorio en todo detalle.
 const LIMITATION =

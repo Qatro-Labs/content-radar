@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
+import { NOT_AVAILABLE } from '@/lib/opportunityFormat'
 import type { components } from '@/types/api'
 
 type Schemas = components['schemas']
@@ -46,7 +47,9 @@ const accessibleLabel = computed(
     aria-label="Cargando piezas nuevas por periodo"
   />
   <!-- CLAUDE.md §2.3: sin timeline no se dibujan barras a 0. -->
-  <span v-else-if="points.length === 0" class="text-xs text-muted-foreground">no disponible</span>
+  <span v-else-if="points.length === 0" class="text-xs text-muted-foreground">
+    {{ NOT_AVAILABLE }}
+  </span>
   <span v-else role="img" :aria-label="accessibleLabel" class="flex h-6 items-end gap-[3px]">
     <span
       v-for="bar in bars"

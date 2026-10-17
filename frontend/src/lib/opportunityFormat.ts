@@ -12,7 +12,7 @@ type Confidence = Schemas['Confidence']
 export const SCORE_MAX = 100
 const PERCENT = 100
 // DESIGN.md §9: un dato ausente se escribe así, nunca 0 ni guion (CLAUDE.md §2, regla 3).
-const NOT_AVAILABLE = 'no disponible'
+export const NOT_AVAILABLE = 'no disponible'
 // DESIGN.md §9: el signo menos tipográfico (U+2212), no el guion.
 const MINUS_SIGN = '−'
 
