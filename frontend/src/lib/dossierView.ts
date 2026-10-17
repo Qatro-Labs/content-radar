@@ -1,10 +1,18 @@
 import type { components } from '@/types/api'
 
-import { PLATFORM_LABEL, shortSourceName } from './evidenceFormat'
-import { formatUtcDay, formatUtcTime } from './format'
-import { formatFit, formatScore, formatShare } from './opportunityFormat'
+import { formatCount, PLATFORM_LABEL, shortSourceName } from './evidenceFormat'
+import { formatUtcDay, formatUtcTime, formatUtcTimestamp } from './format'
+import {
+  CONFIDENCE_LABEL,
+  formatFit,
+  formatScore,
+  formatShare,
+  GROWTH_LABEL,
+  latamGapLabel,
+} from './opportunityFormat'
 
 type Schemas = components['schemas']
+type Opportunity = Schemas['Opportunity']
 type OpportunityList = Schemas['OpportunityList']
 type OpportunityTimeline = Schemas['OpportunityTimeline']
 type TimelinePoint = Schemas['TimelinePoint']
@@ -22,6 +30,21 @@ const MINUS_SIGN = '−'
 const RANGE_DASH = '–'
 const LIST_SEPARATOR = ' · '
 
+// "1 fuente independiente", "8 fuentes independientes".
+export function countLabel(count: number, singular: string, plural: string): string {
+  return `${formatCount(count)} ${count === 1 ? singular : plural}`
+}
+
+export function dossierStatusLine(opportunity: Opportunity): string {
+  return [
+    GROWTH_LABEL[opportunity.growth_status],
+    `confianza ${CONFIDENCE_LABEL[opportunity.confidence]}`,
+    countLabel(opportunity.source_count, 'fuente independiente', 'fuentes independientes'),
+    latamGapLabel(opportunity.latam_gap),
+    `actualizado el ${formatUtcTimestamp(opportunity.last_updated)}`,
+  ].join(LIST_SEPARATOR)
+}
+
 export interface TopicRank {
   rank: number
   total: number
@@ -32,6 +55,11 @@ export function rankOf(list: OpportunityList | null | undefined, id: string): To
   if (list == null) return null
   const index = list.items.findIndex((item) => item.id === id)
   return index < 0 ? null : { rank: index + 1, total: list.items.length }
+}
+
+// Un tema que ya no está en la lista servida no tiene puesto: se dice, no se inventa.
+export function rankLabel(rank: TopicRank | null): string {
+  return rank === null ? 'puesto no disponible' : `puesto ${rank.rank} de ${rank.total}`
 }
 
 export interface TimelineBar {
