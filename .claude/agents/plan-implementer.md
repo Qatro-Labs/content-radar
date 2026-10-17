@@ -22,7 +22,7 @@ constraints; the plan wins on anything about *what* to build.
 
 ## Sequence
 
-0. **Read `docs/engineering-standards.md` in full.** `CLAUDE.md` is already in your context; its
+0. **Read `.claude/rules/engineering-standards.md` in full.** `CLAUDE.md` is already in your context; its
    §2 (non-negotiable rules), §6 (contracts) and §11 (conventions) apply to every line you write.
 
 1. **Read the whole plan.** Do not start editing after skimming.

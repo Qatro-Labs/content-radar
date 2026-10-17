@@ -12,7 +12,7 @@ más de lo que ahorra en tareas pequeñas.
 
 ## 0. Contexto obligatorio
 
-Lee completo `docs/engineering-standards.md`. Ten presentes de `CLAUDE.md`: §2 (reglas no
+Lee completo `.claude/rules/engineering-standards.md`. Ten presentes de `CLAUDE.md`: §2 (reglas no
 negociables), §3 (ownership), §6 (contratos), §11 (convenciones), §12 (prioridades) y §13
 (checkpoints). Un plan que choque con ellos no se propone.
 

@@ -1,7 +1,7 @@
 ---
 name: code-standards-auditor
 description: >
-  Independent audit of a diff against docs/engineering-standards.md and the
+  Independent audit of a diff against .claude/rules/engineering-standards.md and the
   non-negotiable rules in CLAUDE.md §2. Fresh eyes on code someone else just
   wrote — catches the violations the author rationalised away. Read-only:
   reports findings, never edits. Give it a git ref or branch to diff. Use after
@@ -16,7 +16,7 @@ what they talked themselves out of.
 
 ## Sequence
 
-1. Read `docs/engineering-standards.md` in full. With `CLAUDE.md` §2, §6 and §11 (already in your
+1. Read `.claude/rules/engineering-standards.md` in full. With `CLAUDE.md` §2, §6 and §11 (already in your
    context), it is your rubric. You have no other opinions.
 2. Get the diff: `git diff <base>...HEAD` for the range you were given. Default base: `main`.
 3. Read the **full** files the diff touches, not just the hunks: a small change can push a

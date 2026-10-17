@@ -1,6 +1,13 @@
+---
+paths:
+  - "backend/**/*.py"
+  - "frontend/src/**"
+---
+
 # Estándares de ingeniería — 30X Signal
 
-Lectura obligatoria para `/spec`, `/build`, `plan-implementer` y `code-standards-auditor`.
+Claude Code carga este archivo automáticamente al leer o editar código del backend o del frontend,
+con o sin `/spec`. `/spec`, `plan-implementer` y `code-standards-auditor` lo leen entero.
 Complementa a `CLAUDE.md` (reglas de producto §2, ownership §3, contratos §6, convenciones §11);
 no la repite.
 
@@ -29,7 +36,22 @@ Si este documento y el código vecino chocan, gana el código vecino y lo anotas
 - **Regla de dos.** No abstraigas por una sola implementación: un adapter es un seam hipotético,
   dos son uno real. `SignalCollector` (`app/collectors/base.py`) es el ejemplo bueno: varias
   implementaciones reales detrás de un `Protocol`.
-- SOLID como diagnóstico de un dolor real, no como checklist.
+
+### SOLID, como diagnóstico
+
+SOLID es una herramienta para diagnosticar un dolor real, no una checklist que se rellena.
+
+- **SRP:** una razón para cambiar. Si al describir la clase o función usas "y", probablemente son
+  dos. Un colector recolecta y normaliza; no guarda en la DB.
+- **OCP:** se extiende sin editar, pero solo donde ya hay variación real. Un colector nuevo es una
+  implementación nueva de `SignalCollector`, no un `if platform == …` más.
+- **LSP:** un subtipo no endurece precondiciones ni relaja postcondiciones. En Python: misma firma
+  y ninguna excepción que la base no levante.
+- **ISP:** quien llama no depende de métodos que no usa. Mejor `Protocol` pequeños que clases base
+  gordas.
+- **DIP:** la lógica de negocio no depende de los detalles. La ruta no sabe de queries, el
+  service no sabe de HTTP ni de FastAPI, y el scoring no sabe de la DB (recibe datos y devuelve
+  resultados).
 
 ## 2. Patrones de diseño
 

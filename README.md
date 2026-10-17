@@ -18,7 +18,7 @@ Radar de inteligencia editorial: detecta qué temas de IA están acelerando, por
 8. **Estado:** pregunta a Claude "¿cómo vamos?"; lo calcula a partir de los planes, los PRs y `git log`.
 9. **Bloqueado más de 30 min:** avisa, propón una alternativa y cambia de tarea.
 
-Estándares de código: [`docs/engineering-standards.md`](docs/engineering-standards.md).
+Estándares de código: [`.claude/rules/engineering-standards.md`](.claude/rules/engineering-standards.md).
 
 ## Requisitos
 

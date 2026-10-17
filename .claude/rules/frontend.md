@@ -5,7 +5,7 @@ paths:
 
 # Frontend — vistas y dirección visual
 
-Complementa a `CLAUDE.md` §9 (stack) y a `docs/engineering-standards.md` §9 (código Vue).
+Complementa a `CLAUDE.md` §9 (stack) y a `.claude/rules/engineering-standards.md` §9 (código Vue).
 Antes de tocar UI, lee `DESIGN.md`.
 
 ## Tres vistas

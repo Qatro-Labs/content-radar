@@ -253,7 +253,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 .
 ├── CLAUDE.md · DESIGN.md · README.md · docker-compose.yml · .env.example
 ├── .claude/{commands,agents,templates,plans}   # flujo /spec → /build (§11)
-├── .claude/rules/frontend.md                   # se carga solo al tocar frontend/
+├── .claude/rules/{engineering-standards,frontend}.md   # se cargan al tocar código / frontend
 ├── backend/
 │   ├── app/
 │   │   ├── api/routes/          # FastAPI, delgado: solo llama a services
@@ -269,7 +269,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 │   └── src/{components/{ui,radar,opportunities,evidence,editorial},views,composables,lib,api,types,router}
 │       # components/ui = shadcn-vue · api = cliente openapi-fetch + composables de TanStack Vue Query · types/api.ts generado desde OpenAPI
 ├── data/{fixtures,evaluations,audiences}
-└── docs/{engineering-standards,architecture,scoring,sources,mcp}.md
+└── docs/{architecture,scoring,sources,mcp,design-resources}.md
 ```
 
 ---
@@ -283,7 +283,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 - Integrar en `main` pronto y a menudo; `main` siempre desplegable. Ramas cortas por área: `data/…`, `intel/…`, `fe/…`.
 - Cualquiera del equipo puede mergear a `main` (mismo poder de decisión), con los tests en verde. Los cambios de contrato se avisan en el canal antes de mergear. Claude nunca mergea: abre el PR y la persona decide.
 - Español en la UI y en el contenido editorial; inglés en el código.
-- **Estándares de código:** [`docs/engineering-standards.md`](docs/engineering-standards.md). Comentarios, los necesarios (el *porqué*, nunca el *qué*); docstrings no por defecto.
+- **Estándares de código:** [`.claude/rules/engineering-standards.md`](.claude/rules/engineering-standards.md). Comentarios, los necesarios (el *porqué*, nunca el *qué*); docstrings no por defecto.
 - **Flujo `/spec` → `/build`** (opcional, para tareas de 1 h o más con un contrato claro: módulos de scoring, endpoints, tools MCP, migraciones). `/spec` investiga, pregunta y escribe un plan en `.claude/plans/`; `/build` lo implementa con `plan-implementer` en contexto limpio y, si toca, lo audita `code-standards-auditor`; `/spec <slug>` retoma un plan bloqueado o a medias. El plan es el estado vivo de su tarea (decisiones, pasos `[HECHO]`, historial, preguntas abiertas). No compensa para iteración visual de UI ni para arreglos rápidos.
 
 ---
