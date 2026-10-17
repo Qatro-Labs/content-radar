@@ -19,6 +19,10 @@ export const PLATFORM_LABEL: Record<Platform, string> = {
   tiktok: 'TikTok',
 }
 
+// Tope de piezas por tema de GET /opportunities/{id}/evidence: con 25, puede haber más que no se
+// ven.
+export const EVIDENCE_LIMIT = 25
+
 // DESIGN.md §9: `latam_es` mezcla España y Latinoamérica, así que se rotula "En español".
 export const SEGMENT_LABEL: Record<Segment, string> = {
   tech: 'Tech',

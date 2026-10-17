@@ -230,9 +230,6 @@ export function filterByPlatform(
   return evidence.filter((item) => item.platform === filter)
 }
 
-// GET /evidence devuelve como mucho 25 piezas por tema: con 25, puede haber más que no se ven.
-export const EVIDENCE_LIMIT = 25
-
 // D11: con una pieza citada, esa se marca y el resto baja de opacidad sin desaparecer.
 export type RowEmphasis = 'cited' | 'dimmed' | 'none'
 

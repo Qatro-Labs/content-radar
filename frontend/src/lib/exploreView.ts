@@ -2,7 +2,7 @@ import type { LocationQuery } from 'vue-router'
 
 import type { components } from '@/types/api'
 
-import { countLabel, formatCount } from './evidenceFormat'
+import { countLabel, EVIDENCE_LIMIT, formatCount } from './evidenceFormat'
 import { formatUtcDay } from './format'
 
 type Schemas = components['schemas']
@@ -13,9 +13,6 @@ export const EXPLORE_FILTERS = ['outliers', 'youtube', 'hackernews'] as const
 export type ExploreFilter = (typeof EXPLORE_FILTERS)[number]
 export const EXPLORE_FILTER_PARAM = 'filter'
 
-// GET /opportunities/{id}/evidence sirve como mucho 25 piezas por tema: si un tema llega al
-// tope, la vista avisa de que puede haber más.
-export const EVIDENCE_LIMIT = 25
 // "Dónde está funcionando" muestra los cinco primeros temas y fuentes.
 const TOP_LIMIT = 5
 

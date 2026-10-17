@@ -5,13 +5,12 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import type { QueryState } from '@/api/opportunities'
 import {
   ALL_PLATFORMS,
-  EVIDENCE_LIMIT,
   filterByPlatform,
   type PlatformFilter,
   platformCounts,
   rowEmphasis,
 } from '@/lib/dossierView'
-import { countLabel, PERFORMANCE_LEGEND, VELOCITY_NOTE } from '@/lib/evidenceFormat'
+import { countLabel, EVIDENCE_LIMIT, PERFORMANCE_LEGEND, VELOCITY_NOTE } from '@/lib/evidenceFormat'
 import type { components } from '@/types/api'
 
 import AudienceMixBar from './AudienceMixBar.vue'
