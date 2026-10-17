@@ -10,7 +10,9 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.collectors.text import clean_html, is_ai_related
+from app.collectors.usage import UsageMeter
 from app.models import Source
+from app.schemas.cost import Provider
 from app.schemas.signal import ContentFormat, ContentSignal, Metrics, Platform
 
 API_URL = "https://hn.algolia.com/api/v1/search_by_date"
@@ -21,8 +23,9 @@ MAX_PAGES = 10
 
 
 class HackerNewsCollector:
-    def __init__(self, client: httpx.AsyncClient):
+    def __init__(self, client: httpx.AsyncClient, usage: UsageMeter | None = None):
         self._http = client
+        self.usage = usage or UsageMeter()
 
     @retry(
         retry=retry_if_exception_type(httpx.TransportError | httpx.HTTPStatusError),
@@ -41,6 +44,7 @@ class HackerNewsCollector:
                 "page": page,
             },
         )
+        self.usage.add(Provider.HACKERNEWS, "search_by_date")
         r.raise_for_status()
         return r.json()
 

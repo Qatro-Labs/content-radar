@@ -18,11 +18,13 @@ from pydantic import BaseModel, HttpUrl
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.collectors.usage import UsageMeter
 from app.collectors.youtube import YouTubeClient, YouTubeError
 from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import Source
 from app.schemas.signal import Platform, Segment, SourceKind
+from app.services.costs import record_meter
 
 DEFAULT_FILE = Path(__file__).resolve().parents[3] / "data" / "sources.yaml"
 
@@ -145,8 +147,9 @@ async def main(path: Path, dry_run: bool) -> int:
         return 0
 
     api_key = get_settings().youtube_api_key
+    usage = UsageMeter()
     async with httpx.AsyncClient(timeout=20) as http, SessionLocal() as session:
-        youtube = YouTubeClient(api_key, http) if api_key else None
+        youtube = YouTubeClient(api_key, http, usage) if api_key else None
         if youtube is None:
             print("⚠ YOUTUBE_API_KEY vacía: se omiten los canales de YouTube.")
         try:
@@ -154,6 +157,9 @@ async def main(path: Path, dry_run: bool) -> int:
         except YouTubeError as e:
             print(f"✗ YouTube: {e}", file=sys.stderr)
             return 1
+        finally:
+            # La cuota se gasta aunque la resolución de handles falle a medias.
+            await record_meter(session, usage)
 
     print(f"✓ cargadas: {report}")
     if report["youtube_unresolved"]:

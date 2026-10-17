@@ -8,6 +8,7 @@ Cada ejecución es un snapshot: las piezas que siguen dentro de la ventana vuelv
 sus métricas actuales. Así se construye el historial de velocidad.
 
 Un error en una fuente no detiene el resto: queda registrado en `pipeline_runs.stats`.
+El consumo de cada API (cuota de YouTube, requests) se guarda en `usage_events` (CLAUDE.md §4).
 """
 
 import argparse
@@ -24,11 +25,13 @@ from sqlalchemy import select, text
 from app.collectors.base import SignalCollector
 from app.collectors.hackernews import HackerNewsCollector
 from app.collectors.rss import RSSCollector
+from app.collectors.usage import UsageMeter
 from app.collectors.youtube import YouTubeClient, YouTubeCollector
 from app.core.config import get_settings
 from app.db.session import SessionLocal, engine
 from app.models import PipelineRun, Source
 from app.schemas.signal import Platform
+from app.services.costs import record_meter
 from app.services.signals import store_signals
 
 log = structlog.get_logger()
@@ -38,14 +41,14 @@ LOCK_KEY = 0x0C011EC7  # clave de pg_advisory_lock para este job
 CONCURRENCY = 8
 
 
-def build_collectors(http: httpx.AsyncClient) -> dict[str, SignalCollector]:
+def build_collectors(http: httpx.AsyncClient, usage: UsageMeter) -> dict[str, SignalCollector]:
     collectors: dict[str, SignalCollector] = {
-        Platform.HACKERNEWS.value: HackerNewsCollector(http),
-        Platform.RSS.value: RSSCollector(http),
+        Platform.HACKERNEWS.value: HackerNewsCollector(http, usage),
+        Platform.RSS.value: RSSCollector(http, usage),
     }
     api_key = get_settings().youtube_api_key
     if api_key:
-        collectors[Platform.YOUTUBE.value] = YouTubeCollector(YouTubeClient(api_key, http))
+        collectors[Platform.YOUTUBE.value] = YouTubeCollector(YouTubeClient(api_key, http, usage))
     return collectors
 
 
@@ -66,15 +69,16 @@ async def collect_source(
         return stat
 
 
-async def run(days: int, platforms: list[str] | None) -> dict[str, Any]:
+async def run(days: int, platforms: list[str] | None, run_id: int | None = None) -> dict[str, Any]:
     async with SessionLocal() as session:
         stmt = select(Source).where(Source.active.is_(True)).order_by(Source.id)
         if platforms:
             stmt = stmt.where(Source.platform.in_(platforms))
         sources = list((await session.scalars(stmt)).all())
 
+    usage = UsageMeter()
     async with httpx.AsyncClient(timeout=30) as http:
-        collectors = build_collectors(http)
+        collectors = build_collectors(http, usage)
         runnable = [s for s in sources if s.platform in collectors]
         skipped = sorted({s.platform for s in sources} - collectors.keys())
         if skipped:
@@ -84,6 +88,9 @@ async def run(days: int, platforms: list[str] | None) -> dict[str, Any]:
         stats = await asyncio.gather(
             *(collect_source(s, collectors[s.platform], days, sem) for s in runnable)
         )
+
+    async with SessionLocal() as session:
+        await record_meter(session, usage, pipeline_run_id=run_id)
 
     per_source = {f"{s.platform}:{s.name}": st for s, st in zip(runnable, stats, strict=True)}
     return {
@@ -111,7 +118,7 @@ async def main(days: int, platforms: list[str] | None) -> int:
             await session.commit()
 
             try:
-                summary = await run(days, platforms)
+                summary = await run(days, platforms, run_row.id)
                 run_row.status = "success" if summary["failed"] < summary["sources"] else "failed"
                 run_row.stats = summary
             except Exception as e:
