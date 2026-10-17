@@ -8,11 +8,13 @@ from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from enum import StrEnum
 
-MAX_STEPS = 8
+# Plan fe-radar-agent, D11: recorrer el expediente pide más pasos (abrirlo y 2–3 secciones).
+MAX_STEPS = 10
 # Lo que se lee de un vistazo en la barra del agente (DESIGN.md §7); el corte duro está en D13.
 MAX_ANSWER_WORDS = 120
 MAX_OUTPUT_TOKENS = 1500
-PER_IP_PER_HOUR = 20
+# D11: charlar con Rad y ensayar la demo desde una sola IP gastaba 20 preguntas en minutos.
+PER_IP_PER_HOUR = 60
 GLOBAL_PER_DAY = 300
 IP_WINDOW = timedelta(hours=1)
 GLOBAL_WINDOW = timedelta(days=1)
