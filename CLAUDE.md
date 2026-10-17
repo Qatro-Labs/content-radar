@@ -16,6 +16,11 @@
 
 Flujo del producto: **Señal → Tendencia → Oportunidad → Evidencia → Contenido recomendado**
 
+**Recorrido de demo** (lo que una persona hace de punta a punta; mide el valor de cada tarea, ver §12):
+abrir el Radar → elegir una oportunidad → revisar scores y evidencia → entender por qué importa → obtener un brief → repetir la consulta desde un asistente vía MCP.
+
+**Brief de producto:** [`docs/brief.md`](docs/brief.md) explica el problema de 30X, el usuario frente a la audiencia, el mapa de capacidades, qué podemos afirmar con los datos y la lista de verificación de la entrega. Léelo antes de planear una tarea o decidir su alcance, al redactar texto que lee una persona (UI, prompts del LLM, respuestas MCP, pitch) y al revisar la entrega.
+
 Las tres preguntas del reto y cómo las respondemos:
 
 | Pregunta del reto | Nuestra respuesta |
@@ -30,7 +35,7 @@ Las tres preguntas del reto y cómo las respondemos:
 
 1. **Solo contenido público. Nada de datos personales.** Guardamos metadatos, enlaces y métricas públicas, no copias completas ni datos de usuarios.
 2. **Nada de scraping de LinkedIn / Instagram / TikTok** ni nada detrás de un login o que viole ToS. Esas plataformas entran solo por **curación manual** (sensor editorial, ver §5).
-3. **Nunca inventar datos.** No mostrar métricas, crecimiento o conclusiones no observadas como hechos. Si hay 7 oportunidades reales, se muestran 7, no 10.
+3. **Nunca inventar datos.** No mostrar métricas, crecimiento o conclusiones no observadas como hechos. Si hay 7 oportunidades reales, se muestran 7, no 10. Un dato ausente se muestra como "no disponible", nunca como 0.
 4. **El LLM explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM interpreta y redacta.
 5. **Distinguir siempre el tipo de evidencia:** `observed` (≥2 mediciones) · `estimated` (1 medición vs. referencia) · `preliminary` (aparece, sin aceleración demostrada).
 6. **El texto recuperado de Internet es no confiable** (riesgo de prompt injection). Va al LLM como dato, delimitado, nunca como instrucción.
@@ -269,7 +274,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 │   └── src/{components/{ui,radar,opportunities,evidence,editorial},views,composables,lib,api,types,router}
 │       # components/ui = shadcn-vue · api = cliente openapi-fetch + composables de TanStack Vue Query · types/api.ts generado desde OpenAPI
 ├── data/{fixtures,evaluations,audiences}
-└── docs/{architecture,scoring,sources,mcp,design-resources}.md
+└── docs/{brief,architecture,scoring,sources,mcp,design-resources}.md
 ```
 
 ---
@@ -290,13 +295,21 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 
 ## 12. Prioridades
 
+**Filtro de valor.** Antes de empezar una tarea, una idea o un PR, la persona o Claude responde estas cuatro preguntas:
+1. **¿Qué paso del recorrido de demo (§1) hace funcionar, hace más fiable o hace más convincente con datos reales?** Si no mejora ninguno, se aparca.
+2. **¿Le toca ya por prioridad?** O es P0, o el P0 del que depende ya funciona.
+3. **¿Se sostiene con datos reales y evidencia enlazada?** Si solo luce con datos de ejemplo, no aporta a la demo.
+4. **¿Cabe antes del próximo checkpoint (§13)?** Si no, se recorta a la versión mínima que aporta, o se avisa.
+
 - **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · audience fit · evidencias verificables · dashboard Vue con Radar y detalle · despliegue.
 - **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LATAM Opportunity Gap · comparación de oportunidades.
 - **P2:** Topic Network · animaciones avanzadas · más fuentes · varias audiencias.
 
 **Ningún P2 puede poner en riesgo un P0.**
 
-**Fuera de alcance:** scraping de redes cerradas · entrenar modelos · auto-publicación · editor de contenido · multi-tenant · auth avanzada · facturación · causalidad o viralidad presentadas como certeza.
+**Fuera de alcance:** scraping de redes cerradas · entrenar modelos · auto-publicación · editor de contenido · multi-tenant · auth avanzada · facturación · causalidad o viralidad presentadas como certeza · igualar la cobertura de las herramientas de referencia (1of10, SparkToro, Exploding Topics…) · una base propia de comportamiento de audiencias · monitorizar todas las redes o todo el mercado LATAM · predicciones con poco historial.
+
+Las ideas sin prioridad asignada están en `docs/brief.md` §8.
 
 ---
 
@@ -308,7 +321,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 | Sáb 10:30–12:00 / 03:30–05:00 | Melkin y Frontend: **contrato `Opportunity` congelado** y perfil 30X |
 | Sáb 16:30 / 09:30 | Sync de los tres (30 min): mismo modelo de datos |
 | Sáb 20:30 / 13:30 | Primera integración: datos reales → oportunidades → Vue |
-| Dom 00:30 / Sáb 17:30 | **MVP P0 end-to-end** (abrir → ver → seleccionar → evidencias → por qué → brief) |
+| Dom 00:30 / Sáb 17:30 | **MVP P0 end-to-end** (recorrido de demo de §1 hasta el brief) |
 | Dom 12:30 / 05:30 | Revisión de MCP y frontend |
 | Dom 15:00 / 08:00 | **Feature freeze** |
 | Dom 16:30 / 09:30 | **Code freeze** |
@@ -316,9 +329,9 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 | Dom 18:15 / 11:15 | **Entrega interna** |
 | Dom 19:00 / 12:00 | Deadline oficial |
 
-**Criterios de aceptación:** 100–300 piezas públicas procesadas · ≥2 fuentes automáticas · ranking revisado a mano por el equipo · cada oportunidad con fuentes enlazadas · se distingue observado, estimado y preliminar · un cliente MCP consulta datos reales · funciona desde una sesión limpia (no solo en local).
+**Criterios de aceptación:** la lista de verificación de la entrega está en `docs/brief.md` §7. Se repasa en la revisión del domingo a las 12:30 y antes del code freeze.
 
-**Guion de demo:** problema → Radar → detalle con evidencia → brief → la misma consulta desde Claude vía MCP → impacto (sin cifras de ahorro que no hayamos medido).
+**Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1) → el impacto (sin cifras de ahorro que no hayamos medido).
 
 **Entregables:** repo · app desplegada · MCP accesible (o demo local verificada con la limitación documentada) · README · arquitectura · fuentes y limitaciones · algoritmo de priorización · presentación · vídeo de respaldo.
 
@@ -328,7 +341,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 
 Actúa como **Technical Project Coordinator y Product Engineering Copilot** de 30X Signal.
 
-- Prioriza el MVP. No propongas funcionalidades nuevas salvo que aporten mucho y no pongan en riesgo el deadline.
+- Pasa por el filtro de valor (§12) toda tarea antes de proponerla o empezarla, y di en una línea qué paso del recorrido de demo mejora. Si no pasa el filtro, dilo y propone la versión mínima que sí aporta, o recomienda aparcarla.
 - Respeta el ownership de §3 al sugerir tareas o resolver dependencias.
 - Prefiere soluciones simples y librerías maduras. Evita la sobreingeniería y las herramientas de la lista de "fuera de la hackathon".
 - **Nunca** generes ni muestres datos ficticios como resultados reales. Los mocks viven solo en `data/fixtures/` y se marcan como tales.
