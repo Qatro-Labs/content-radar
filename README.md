@@ -68,6 +68,21 @@ tail -f backend/logs/collect.log
 - **Local (ahora):** requiere el Mac encendido y Docker levantado. Si el Mac duerme, la ejecución pendiente corre al despertar, pero ese hueco no se recupera.
 - **Compartido (cuando exista Supabase):** `.github/workflows/collect.yml` corre cada 2 h al configurar los secrets `DATABASE_URL` (session pooler, puerto 5432) y `YOUTUBE_API_KEY`. Al activarlo, desinstalar el launchd local para tener una sola base de verdad.
 
+## Despliegue (Railway + Supabase)
+
+La API y el MCP van en una sola imagen (`backend/Dockerfile`, sin torch). `railway.json` la construye desde la raíz del repo, migra al arrancar y usa `/health` como healthcheck.
+
+1. **Supabase:** crear el proyecto en la misma región que Railway y activar `vector` (Database → Extensions). Copiar la URL del *session pooler* (puerto 5432) con el driver asyncpg: `postgresql+asyncpg://postgres.<ref>:<password>@<host>:5432/postgres`.
+2. **Llevar los datos locales** (conserva el historial de snapshots; no repetir el backfill):
+   ```bash
+   docker exec content-radar-db pg_dump -U radar -d radar -Fc --no-owner --no-acl > radar.dump
+   pg_restore --no-owner --no-acl -d "postgresql://postgres.<ref>:<password>@<host>:5432/postgres" radar.dump
+   ```
+3. **Railway:** New Project → Deploy from GitHub repo → este repo, rama `main`. Variables: `DATABASE_URL` (la de Supabase), `APP_ENV=production`, `CORS_ALLOWED_ORIGINS` (URL de Vercel), `MCP_PUBLIC_URL` y las claves de API. Railway inyecta `PORT`.
+4. **Recolección:** configurar los secrets del workflow `collect` (sección anterior) y desinstalar el launchd local.
+
+Imagen en local: `docker build -f backend/Dockerfile -t radar-api . && docker run -p 8000:8000 --env-file backend/.env radar-api` (dentro de Docker, la DB local es `host.docker.internal:5433`).
+
 ## Estructura
 
 ```
