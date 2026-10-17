@@ -4,21 +4,9 @@ import numpy as np
 
 from app.intelligence.clustering import cluster, cohesion, is_broad
 
-DIMS = 64
-
-
-def unit(v: np.ndarray) -> np.ndarray:
-    return v / np.linalg.norm(v)
-
-
-def group(center: np.ndarray, size: int, first_dim: int) -> list[np.ndarray]:
-    # Cada vector se desvía del centro por una dimensión propia: distancia coseno ≈ 0.005.
-    vectors = []
-    for k in range(size):
-        noise = np.zeros(DIMS)
-        noise[first_dim + k] = 0.1
-        vectors.append(unit(center + noise))
-    return vectors
+DIMS = 128
+CENTER_SIMILARITY = 0.52  # distancia 0.48: average linkage los une a 0.5, no a 0.4
+NOISE_DIMS = range(64, DIMS)
 
 
 def axis(i: int) -> np.ndarray:
@@ -27,25 +15,43 @@ def axis(i: int) -> np.ndarray:
     return v
 
 
-def test_large_cluster_is_split():
-    a = axis(0)
-    b = 0.55 * axis(0) + np.sqrt(1 - 0.55**2) * axis(1)  # distancia coseno 0.45 a `a`
-    embeddings = np.array(group(a, 15, 2) + group(b, 15, 17))
-    assert sorted(len(c) for c in cluster(embeddings)) == [15, 15]
+def unit(v: np.ndarray) -> np.ndarray:
+    return v / np.linalg.norm(v)
 
 
-def test_small_cohesive_cluster_is_kept():
-    embeddings = np.array(group(axis(0), 10, 2))
-    assert [len(c) for c in cluster(embeddings)] == [10]
+def center(i: int) -> np.ndarray:
+    # c_i = sqrt(0.52)·u + sqrt(0.48)·e_i, con u = eje 0 y e_i = eje i + 1: coseno 0.52 entre pares.
+    return np.sqrt(CENTER_SIMILARITY) * axis(0) + np.sqrt(1 - CENTER_SIMILARITY) * axis(i + 1)
+
+
+def near_copies(c: np.ndarray, size: int, offset: int = 0) -> list[np.ndarray]:
+    # Cada copia se desvía por una dimensión de ruido propia: distancia coseno ≈ 0.0099.
+    return [unit(c + 0.1 * axis(NOISE_DIMS[offset + k])) for k in range(size)]
+
+
+def test_large_incoherent_cluster_is_split():
+    embeddings = np.array([v for i in range(6) for v in near_copies(center(i), 5, offset=5 * i)])
+    assert cohesion(embeddings, list(range(30))) < 0.6
+    assert [len(c) for c in cluster(embeddings)] == [5] * 6
+
+
+def test_large_cohesive_cluster_is_kept():
+    embeddings = np.array(near_copies(center(0), 30))
+    assert [len(c) for c in cluster(embeddings)] == [30]
+
+
+def test_small_incoherent_cluster_is_kept():
+    embeddings = np.array([center(i) for i in range(8)])
+    assert [len(c) for c in cluster(embeddings)] == [8]
+
+
+def test_unsplittable_cluster_is_kept_and_broad():
+    embeddings = np.array([center(i) for i in range(30)])
+    clusters = cluster(embeddings)
+    assert [len(c) for c in clusters] == [30]
+    assert is_broad(embeddings, clusters[0])
 
 
 def test_cohesion_of_identical_vectors_is_one():
     embeddings = np.array([axis(0)] * 6)
     assert cohesion(embeddings, list(range(6))) == 1.0
-
-
-def test_is_broad():
-    orthogonal = np.eye(32)[:30]
-    assert is_broad(orthogonal, list(range(30)))
-    close = np.array(group(axis(0), 10, 2))
-    assert not is_broad(close, list(range(10)))

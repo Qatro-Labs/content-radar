@@ -37,18 +37,16 @@ def cohesion(embeddings: np.ndarray, members: list[int]) -> float:
     return float((similarities.sum() - np.trace(similarities)) / (n * (n - 1)))
 
 
-def _needs_split(embeddings: np.ndarray, members: list[int]) -> bool:
-    return len(members) > SPLIT_MIN_SIZE or cohesion(embeddings, members) < SPLIT_MIN_COHESION
-
-
 def is_broad(embeddings: np.ndarray, members: list[int]) -> bool:
-    """Grande y poco cohesionado incluso después de partir: categoría, no historia concreta."""
+    """Grande y poco cohesionado: se intenta partir, y si sigue así es categoría, no historia."""
     return len(members) > SPLIT_MIN_SIZE and cohesion(embeddings, members) < SPLIT_MIN_COHESION
 
 
 def _split(embeddings: np.ndarray, members: list[int]) -> list[list[int]]:
     subgroups = _agglomerate(embeddings[members], SPLIT_THRESHOLD)
-    return [[members[i] for i in sub] for sub in subgroups]
+    # Sin ningún subcluster ≥ MIN_CLUSTER_SIZE se conserva el original (D13): el tema no se
+    # pierde y `is_broad` lo marca como amplio.
+    return [[members[i] for i in sub] for sub in subgroups] or [members]
 
 
 def cluster(embeddings: np.ndarray, threshold: float = DISTANCE_THRESHOLD) -> list[list[int]]:
@@ -57,7 +55,7 @@ def cluster(embeddings: np.ndarray, threshold: float = DISTANCE_THRESHOLD) -> li
         return []
     result: list[list[int]] = []
     for members in _agglomerate(embeddings, threshold):
-        if _needs_split(embeddings, members):
+        if is_broad(embeddings, members):
             result.extend(_split(embeddings, members))
         else:
             result.append(members)
