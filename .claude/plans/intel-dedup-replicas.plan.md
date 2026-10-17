@@ -570,7 +570,7 @@ desde el `main` actual, y anótalo). Comprueba que las referencias de "Contexto 
 valiendo. Postgres de tests: `docker compose up -d db` desde la raíz (puerto 5433). Todos los
 comandos de backend se corren desde `backend/`.
 
-### Paso 1 — Contrato `Evidence` y fixture
+### Paso 1 — Contrato `Evidence` y fixture [HECHO]
 
 - **Archivos:** `backend/app/schemas/opportunity.py`, `data/fixtures/opportunities.json`,
   `backend/tests/test_opportunity_fixture.py`

@@ -642,7 +642,29 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 1
+      },
+      {
+        "url": "https://example.com/mock/10",
+        "source": "Fuente mock hackernews tech",
+        "platform": "hackernews",
+        "segment": "tech",
+        "title": "[MOCK] Empresas latinoamericanas adoptan bots de atención",
+        "published_at": "2026-10-15T11:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "es",
+        "metrics": {
+          "points": 12,
+          "comments": 4
+        },
+        "velocity": null,
+        "outlier_ratio": null,
+        "is_outlier": null,
+        "collection": "automatic",
+        "replica_of": "https://example.com/mock/7",
+        "replica_count": 0
       }
     ],
     "opp_004": [
