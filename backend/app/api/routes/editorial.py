@@ -1,10 +1,14 @@
+import asyncio
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agent.limits import GLOBAL_PER_DAY, PER_IP_PER_HOUR, LimitResult, RateLimiter
+from app.api.routes.agent import client_ip
 from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
 from app.db.session import get_session
@@ -23,6 +27,17 @@ ERROR_STATUS: dict[type[editorial.BriefError], int] = {
 }
 
 ERROR_DESCRIPTION = "`detail` explica el motivo, en un texto que se puede mostrar"
+LIMIT_MESSAGES = {
+    LimitResult.IP: "Has pedido demasiados briefs seguidos. Prueba en unos minutos.",
+    LimitResult.GLOBAL: "Se alcanzó el límite de briefs de hoy. Prueba mañana.",
+}
+BUSY_MESSAGE = "Se están generando otros briefs. Prueba en unos segundos."
+MAX_CONCURRENT_BRIEFS = 4
+
+# Un brief rechazado por la comprobación no se cachea y volver a pedirlo vuelve a llamar al LLM:
+# los mismos límites que el agente, con su propio cupo.
+_limiter = RateLimiter(per_ip_per_hour=PER_IP_PER_HOUR, global_per_day=GLOBAL_PER_DAY)
+_slots = asyncio.Semaphore(MAX_CONCURRENT_BRIEFS)
 
 
 @lru_cache
@@ -30,13 +45,37 @@ def get_briefer() -> Briefer | None:
     return build_briefer(get_settings())
 
 
+def get_brief_limiter() -> RateLimiter:
+    return _limiter
+
+
+async def admit_brief(
+    # Sin uso aquí: obliga a FastAPI a validar el cuerpo antes, así un 422 no gasta cupo.
+    body: BriefRequest,
+    request: Request,
+    limiter: Annotated[RateLimiter, Depends(get_brief_limiter)],
+) -> AsyncIterator[None]:
+    if _slots.locked():
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, BUSY_MESSAGE)
+    async with _slots:
+        result = limiter.check(client_ip(request), datetime.now(UTC))
+        if result is not LimitResult.OK:
+            raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LIMIT_MESSAGES[result])
+        yield
+
+
 @router.post(
     "/brief",
     response_model=EditorialBrief,
-    responses={code: {"description": ERROR_DESCRIPTION} for code in ERROR_STATUS.values()},
+    responses={
+        code: {"description": ERROR_DESCRIPTION}
+        for code in [*ERROR_STATUS.values(), status.HTTP_429_TOO_MANY_REQUESTS]
+    },
+    dependencies=[Depends(admit_brief)],
 )
 async def create_brief(
-    request: BriefRequest,
+    # Mismo nombre que en `admit_brief`: con otro, FastAPI esperaría dos cuerpos anidados.
+    body: BriefRequest,
     session: Annotated[AsyncSession, Depends(get_session)],
     briefer: Annotated[Briefer | None, Depends(get_briefer)],
 ):
@@ -45,7 +84,7 @@ async def create_brief(
     meter = UsageMeter()
     try:
         return await editorial.generate_brief(
-            session, request, briefer=briefer, meter=meter, now=datetime.now(UTC)
+            session, body, briefer=briefer, meter=meter, now=datetime.now(UTC)
         )
     except editorial.BriefError as e:
         raise HTTPException(ERROR_STATUS[type(e)], str(e)) from e

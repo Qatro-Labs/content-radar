@@ -7,7 +7,8 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 
-from app.api.routes.editorial import get_briefer
+from app.agent.limits import RateLimiter
+from app.api.routes.editorial import get_brief_limiter, get_briefer
 from app.collectors.usage import UsageMeter
 from app.db.session import get_session
 from app.editorial.briefs import BriefDraft, BriefInput, BriefResult, system_prompt, user_message
@@ -16,6 +17,7 @@ from app.editorial.explanation import Claim
 from app.intelligence.briefs import (
     FIT_DROPPED_NOTE,
     HOOK_DROPPED_NOTE,
+    STEPS_DROPPED_NOTE,
     BriefDraftParts,
     check_brief,
 )
@@ -34,6 +36,7 @@ from app.services.editorial import (
     generate_brief,
 )
 from app.services.opportunities import load_evidence_pieces
+from tests.test_audience_fit_service import two_topics
 from tests.test_explanation import fitted_topics
 from tests.test_opportunity_routes import FINISHED_AT, add_run
 from tests.test_topic_evaluation import INJECTION, noul, safe
@@ -105,7 +108,7 @@ def test_creative_parts_with_invented_numbers_are_dropped_with_a_note():
     assert brief.hook is None and brief.structure == ["El caso", "Qué preparar"]
     assert brief.why_it_fits is None
     assert HOOK_DROPPED_NOTE in brief.limitations and FIT_DROPPED_NOTE in brief.limitations
-    assert any("1 paso" in n for n in brief.limitations)
+    assert STEPS_DROPPED_NOTE in brief.limitations
 
 
 def test_numbers_from_the_data_are_allowed():
@@ -143,11 +146,13 @@ def test_external_text_goes_escaped_in_the_user_message_only():
 
 
 class FakeBriefer:
-    def __init__(self, *, angle: str = "Qué decidir antes de delegar en agentes.") -> None:
+    def __init__(
+        self, *, angle: str = "Qué decidir antes de delegar en agentes.", fail: bool = False
+    ) -> None:
         self.calls = 0
         self.sent: list[BriefInput] = []
         self.angle = angle
-        self.fail = False
+        self.fail = fail
 
     async def write(self, brief: BriefInput) -> BriefResult:
         self.calls += 1
@@ -177,9 +182,18 @@ class SafeJudge:
         return JudgeResult(model="jev-1.13.0", answers=answers, input_tokens=10, output_tokens=5)
 
 
-async def seed(session, *, unsafe_titles: frozenset[str] = frozenset(), judged: bool = True) -> str:
-    """Un tema con audience fit, sus piezas en la DB y sus juicios de Jev; devuelve su id."""
-    [result, _], _ = await fitted_topics(session)
+async def seed(
+    session,
+    *,
+    unsafe_titles: frozenset[str] = frozenset(),
+    judged: bool = True,
+    fitted: bool = True,
+    topic: str | None = None,
+) -> str:
+    """Un tema (con audience fit por defecto), sus piezas en la DB y sus juicios de Jev."""
+    [result, _], _ = await fitted_topics(session) if fitted else two_topics()
+    if topic:
+        result.opportunity = result.opportunity.model_copy(update={"topic": topic})
     source = Source(
         platform="hackernews", kind="query", external_id="llm", name="HN · LLM", segment="tech"
     )
@@ -239,14 +253,28 @@ async def test_brief_cites_only_sent_evidence_and_is_cached(session):
     assert cached.angle == brief.angle
 
 
-async def test_pieces_jev_did_not_mark_safe_stay_out_of_the_prompt(session):
-    opportunity_id = await seed(session, unsafe_titles=frozenset({"Agentes de IA 0"}))
+async def test_text_of_pieces_jev_did_not_mark_safe_stays_out_of_the_prompt(session):
+    unsafe = "Agentes de IA 0"
+    # Sin nombre del LLM, el tema se rotula con el título de su pieza representativa.
+    opportunity_id = await seed(session, unsafe_titles=frozenset({unsafe}), topic=unsafe)
     briefer = FakeBriefer()
 
     await brief_for(session, opportunity_id, briefer)
 
-    sent = [p.url for p in briefer.sent[0].pieces]
-    assert URL not in sent and len(sent) == 5
+    sent = briefer.sent[0]
+    assert URL not in [p.url for p in sent.pieces] and len(sent.pieces) == 5
+    assert unsafe not in user_message(sent)
+
+
+async def test_without_fit_the_brand_name_is_not_an_invented_number(session):
+    opportunity_id = await seed(session, fitted=False)
+    briefer = FakeBriefer(angle="El ángulo de 30X: qué decidir antes de delegar.")
+
+    brief = await brief_for(session, opportunity_id, briefer)
+
+    assert brief.angle.startswith("El ángulo de 30X")
+    # Sin fit, «por qué importa» es la plantilla: no se manda como texto comprobado.
+    assert briefer.sent[0].why_it_matters is None
 
 
 async def test_without_safe_pieces_there_is_no_llm_call(session):
@@ -264,7 +292,8 @@ async def test_rejected_brief_is_not_cached(session):
     with pytest.raises(BriefFailed):
         await brief_for(session, opportunity_id, FakeBriefer(angle="El 70 % ya delega."))
 
-    assert await session.scalar(select(func.count()).select_from(LlmEvaluation)) == 2  # solo fit
+    briefs = select(func.count()).where(LlmEvaluation.operation == EDITORIAL_BRIEF_OPERATION)
+    assert await session.scalar(briefs) == 0
 
 
 async def test_unknown_opportunity(session):
@@ -280,7 +309,9 @@ async def client(session):
     async def override():
         yield session
 
+    limiter = RateLimiter(per_ip_per_hour=20, global_per_day=300)
     app.dependency_overrides[get_session] = override
+    app.dependency_overrides[get_brief_limiter] = lambda: limiter
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
             yield c
@@ -306,25 +337,51 @@ async def test_route_returns_the_brief_and_records_usage(session, client):
     ]
 
 
+def no_briefer():
+    return None
+
+
 @pytest.mark.parametrize(
-    ("briefer", "judged", "expected"),
-    [(None, True, 503), (FakeBriefer, False, 409)],
-    ids=["sin LLM", "sin piezas seguras"],
+    ("briefer", "judged", "opportunity", "expected"),
+    [
+        (no_briefer, True, None, 503),
+        (FakeBriefer, False, None, 409),
+        (FakeBriefer, True, "opp_x", 404),
+        (lambda: FakeBriefer(fail=True), True, None, 502),
+    ],
+    ids=["sin LLM", "sin piezas seguras", "oportunidad desconocida", "fallo del LLM"],
 )
-async def test_route_errors_carry_a_status_and_a_message(
-    session, client, briefer, judged, expected
+async def test_route_errors_carry_status_and_message(
+    session, client, briefer, judged, opportunity, expected
 ):
     opportunity_id = await seed(session, judged=judged)
-    app.dependency_overrides[get_briefer] = briefer or (lambda: None)
+    app.dependency_overrides[get_briefer] = briefer
 
-    response = await client.post("/api/v1/editorial/brief", json=body(opportunity_id))
+    response = await client.post(
+        "/api/v1/editorial/brief", json=body(opportunity or opportunity_id)
+    )
 
     assert response.status_code == expected and response.json()["detail"]
 
 
-async def test_route_unknown_opportunity_is_404(session, client):
+async def test_route_rejected_brief_is_502_and_its_usage_is_recorded(session, client):
+    opportunity_id = await seed(session)
+    app.dependency_overrides[get_briefer] = lambda: FakeBriefer(angle="El 70 % ya delega.")
+
+    response = await client.post("/api/v1/editorial/brief", json=body(opportunity_id))
+
+    assert response.status_code == 502
+    operations = (await session.scalars(select(UsageEvent.operation))).all()
+    assert operations.count(EDITORIAL_BRIEF_OPERATION) == 1
+
+
+async def test_route_limits_briefs_per_client(session, client):
+    opportunity_id = await seed(session)
     app.dependency_overrides[get_briefer] = FakeBriefer
+    limiter = RateLimiter(per_ip_per_hour=1, global_per_day=300)
+    app.dependency_overrides[get_brief_limiter] = lambda: limiter
 
-    response = await client.post("/api/v1/editorial/brief", json=body("opp_x"))
+    first = await client.post("/api/v1/editorial/brief", json=body(opportunity_id))
+    second = await client.post("/api/v1/editorial/brief", json=body(opportunity_id))
 
-    assert response.status_code == 404
+    assert (first.status_code, second.status_code) == (200, 429)

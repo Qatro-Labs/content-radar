@@ -19,6 +19,7 @@ from app.intelligence.explanation import (
 
 HOOK_DROPPED_NOTE = "Se quitó el gancho propuesto: traía cifras que no están en la evidencia."
 FIT_DROPPED_NOTE = "Se quitó «por qué encaja»: no citaba evidencia o traía cifras no observadas."
+STEPS_DROPPED_NOTE = "Se quitaron pasos de la estructura que traían cifras no observadas."
 
 
 @dataclass(frozen=True)
@@ -36,8 +37,9 @@ class CheckedBrief:
     angle: str
     hook: str | None
     structure: list[str]
-    key_points: list[ClaimDraft]  # solo con las URLs enviadas
-    why_it_fits: str | None
+    # Solo con las URLs enviadas.
+    key_points: list[ClaimDraft]
+    why_it_fits: ClaimDraft | None
     limitations: list[str]
 
 
@@ -72,7 +74,8 @@ def check_brief(
     if not points or not draft.angle.strip() or not numbers_supported(draft.angle, numbers):
         return None
     hook = _clean(draft.hook) if numbers_supported(draft.hook, numbers) else None
-    steps = [_clean(s) for s in draft.structure if s.strip() and numbers_supported(s, numbers)]
+    written = [s for s in draft.structure if s.strip()]
+    steps = [_clean(s) for s in written if numbers_supported(s, numbers)]
     fit = _valid_claim(draft.why_it_fits, sent_urls, numbers)
 
     notes = [
@@ -81,7 +84,8 @@ def check_brief(
         if n.strip() and len(n) <= MAX_LIMITATION_CHARS and numbers_supported(n, numbers)
     ]
     notes += _dropped_note(len(draft.key_points) - len(points), "dato", "datos")
-    notes += _dropped_note(len(draft.structure) - len(steps), "paso", "pasos")
+    if len(steps) < len(written):
+        notes.append(STEPS_DROPPED_NOTE)
     if hook is None and draft.hook.strip():
         notes.append(HOOK_DROPPED_NOTE)
     if fit is None:
@@ -91,6 +95,6 @@ def check_brief(
         hook=hook or None,
         structure=steps,
         key_points=points,
-        why_it_fits=fit.text if fit else None,
+        why_it_fits=fit,
         limitations=notes,
     )

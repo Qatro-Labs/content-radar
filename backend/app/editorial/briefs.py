@@ -44,6 +44,8 @@ FORMAT_TEXT = {
     BriefFormat.ARTICLE: "artículo",
 }
 
+NO_EXPLANATION = "(sin explicación comprobada)"
+
 
 class BriefDraft(BaseModel):
     # En este orden: el modelo genera primero los datos y después lo creativo, apoyado en ellos.
@@ -62,7 +64,7 @@ class BriefInput:
     format: str
     label: str
     facts: list[str]
-    why_it_matters: str
+    why_it_matters: str | None  # None si no hay una explicación comprobada
     fit: list[FitNote]
     pieces: list[EvidencePiece]
 
@@ -84,7 +86,7 @@ def user_message(brief: BriefInput) -> str:
         f"Formato: {brief.format}\n</request>\n"
         f"<topic_label>{escape(brief.label)}</topic_label>\n"
         f"<facts>\n{facts}\n</facts>\n"
-        f"<why_it_matters>{escape(brief.why_it_matters)}</why_it_matters>\n"
+        f"<why_it_matters>{escape(brief.why_it_matters or NO_EXPLANATION)}</why_it_matters>\n"
         f"<fit>\n{fit_lines(brief.fit)}\n</fit>\n{evidence}"
     )
 

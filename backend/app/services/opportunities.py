@@ -67,7 +67,8 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
         kept = sorted(
             (s for s in item.snapshots if s.observed_at <= as_of), key=lambda s: s.observed_at
         )
-        pieces.append(_to_piece(item, source, [(s.observed_at, _metrics(s)) for s in kept], as_of))
+        snapshots = [(s.observed_at, _metrics(s)) for s in kept]
+        pieces.append(_to_piece(item, source, snapshots, as_of=as_of))
     return pieces
 
 
@@ -75,6 +76,7 @@ def _to_piece(
     item: ContentItem,
     source: Source,
     snapshots: list[tuple[datetime, Metrics]],
+    *,
     as_of: datetime,
 ) -> Piece:
     return Piece(
@@ -109,7 +111,7 @@ async def load_evidence_pieces(
     found = []
     for e in evidence:
         if match := by_key.get((str(e.url), e.source)):
-            found.append((_to_piece(*match, [], as_of), e))
+            found.append((_to_piece(*match, [], as_of=as_of), e))
     return found
 
 

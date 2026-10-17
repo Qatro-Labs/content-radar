@@ -1,13 +1,13 @@
-"""Contrato del brief editorial (`POST /editorial/brief`): lo consumen la vista Create y el MCP.
+"""Contrato del brief editorial (`POST /editorial/brief`): lo consume la vista Create.
 
 Cambiarlo rompe el trabajo de los demás: avisar en el canal antes. La petición solo lleva opciones
-cerradas: no hay texto libre del usuario que llegue al LLM, y el número de briefs distintos, y por
-tanto su coste, tiene techo (todos quedan cacheados).
+cerradas: no hay texto libre del usuario que llegue al LLM, y los briefs que se publican quedan
+cacheados.
 """
 
 from enum import StrEnum
 
-from pydantic import AwareDatetime, BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 from app.schemas.opportunity import Evidence, Recommendation
 
@@ -64,4 +64,3 @@ class EditorialBrief(BaseModel):
     evidence: list[Evidence] = Field(description="Las piezas que cita el brief")
     limitations: list[str]
     model: str
-    generated_at: AwareDatetime

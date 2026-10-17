@@ -1,8 +1,8 @@
 """Brief editorial de una oportunidad servida, cacheado en `llm_evaluations` (CLAUDE.md §6).
 
-Lo usan `POST /editorial/brief` y la tool MCP `generate_editorial_brief`. Lee la oportunidad de la
-ejecución servida (DEMO_RUN_ID o la última correcta) y solo manda al LLM las piezas que Jev marcó
-como seguras, igual que el audience fit (regla 6).
+Lo usa `POST /editorial/brief` y lo usará la tool MCP `generate_editorial_brief`. Lee la
+oportunidad de la ejecución servida (DEMO_RUN_ID o la última correcta) y solo manda al LLM texto de
+piezas que Jev marcó como seguras, igual que el audience fit (regla 6).
 """
 
 from dataclasses import dataclass
@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
-from app.editorial.audience import MAX_PIECES, evidence_piece
+from app.editorial.audience import MAX_PIECES, evidence_piece, safe_label
 from app.editorial.briefs import (
     PROMPT_VERSION,
     BriefDraft,
@@ -25,8 +25,14 @@ from app.editorial.briefs import (
 )
 from app.editorial.evaluator import EvaluationError
 from app.editorial.explanation import fit_notes, opportunity_facts
+from app.intelligence.audience_fit import EDITORIAL_PENDING_NOTE
 from app.intelligence.briefs import BriefDraftParts, CheckedBrief, check_brief
-from app.intelligence.explanation import ClaimDraft, known_numbers
+from app.intelligence.explanation import (
+    EXPLANATION_FAILED_NOTE,
+    NO_VALID_CLAIM_NOTE,
+    ClaimDraft,
+    known_numbers,
+)
 from app.intelligence.jev import excluded_from_llm
 from app.intelligence.opportunities import Piece
 from app.schemas.cost import Provider
@@ -39,6 +45,11 @@ from app.services.opportunities import ServedOpportunity, get_served, load_evide
 log = structlog.get_logger()
 
 EDITORIAL_BRIEF_OPERATION = "editorial_brief"
+# El prompt pide el ángulo "de 30X": el 30 de la marca no es una cifra inventada.
+BRAND_NAME = "30X"
+# `explain_opportunity` solo corre con audience fit; con fit y alguna de estas notas,
+# `why_it_matters` sigue siendo la plantilla y no un texto comprobado.
+UNCHECKED_EXPLANATION_NOTES = {EDITORIAL_PENDING_NOTE, EXPLANATION_FAILED_NOTE, NO_VALID_CLAIM_NOTE}
 
 
 class BriefError(Exception):
@@ -86,13 +97,17 @@ async def _prepare(session: AsyncSession, request: BriefRequest, now: datetime) 
         raise NoSafeEvidence("Esta oportunidad no tiene piezas comprobadas para escribir un brief")
     o = served.opportunity
     platform, goal, fmt = request_text(request.platform, request.goal, request.format)
+    checked_why = bool(o.audience_fit_criteria) and not UNCHECKED_EXPLANATION_NOTES & set(
+        o.limitations
+    )
     brief = BriefInput(
         platform=platform,
         goal=goal,
         format=fmt,
-        label=o.topic,
+        # El nombre del tema puede ser el título de una pieza que Jev no marcó como segura.
+        label=safe_label(o.topic, [p for p, _ in safe]),
         facts=opportunity_facts(o, served.timeline),
-        why_it_matters=o.why_it_matters,
+        why_it_matters=o.why_it_matters if checked_why else None,
         fit=fit_notes(o),
         pieces=[evidence_piece(p) for p, _ in safe],
     )
@@ -121,7 +136,7 @@ async def _draft(
 
 def _check(prepared: _Prepared, draft: BriefDraft) -> CheckedBrief | None:
     b = prepared.brief
-    texts = [*b.facts, b.why_it_matters, b.platform, b.goal, b.format]
+    texts = [*b.facts, b.why_it_matters or "", b.platform, b.goal, b.format, BRAND_NAME]
     texts += [f"{p.title} {p.description or ''}" for p in b.pieces]
     parts = BriefDraftParts(
         angle=draft.angle,
@@ -135,13 +150,12 @@ def _check(prepared: _Prepared, draft: BriefDraft) -> CheckedBrief | None:
 
 
 def _cited_evidence(checked: CheckedBrief, by_url: dict[str, Evidence]) -> list[Evidence]:
-    cited = {u for p in checked.key_points for u in p.cited_urls}
+    claims = [*checked.key_points, *([checked.why_it_fits] if checked.why_it_fits else [])]
+    cited = {u for c in claims for u in c.cited_urls}
     return [e for url, e in by_url.items() if url in cited]
 
 
-def _to_brief(
-    request: BriefRequest, prepared: _Prepared, checked: CheckedBrief, now: datetime
-) -> EditorialBrief:
+def _to_brief(request: BriefRequest, prepared: _Prepared, checked: CheckedBrief) -> EditorialBrief:
     o = prepared.served.opportunity
     points = [
         BriefPoint.model_validate({"text": p.text, "evidence_urls": p.cited_urls})
@@ -159,11 +173,10 @@ def _to_brief(
         hook=checked.hook,
         structure=checked.structure,
         key_points=points,
-        why_it_fits=checked.why_it_fits,
+        why_it_fits=checked.why_it_fits.text if checked.why_it_fits else None,
         evidence=_cited_evidence(checked, prepared.evidence_by_url),
         limitations=checked.limitations,
         model=get_settings().llm_model,
-        generated_at=now,
     )
 
 
@@ -192,4 +205,4 @@ async def generate_brief(
             prompt_version=PROMPT_VERSION,
             opportunity_ids={key: prepared.served.opportunity.id},
         )
-    return _to_brief(request, prepared, checked, now)
+    return _to_brief(request, prepared, checked)
