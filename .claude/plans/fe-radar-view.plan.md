@@ -260,6 +260,24 @@ Si al empezar `origin/intel/engine` o `origin/data/opportunity-routes` ya se mer
   filtro: "Filtro: etapa en pico o saturado · con hueco en LATAM." (las partes que haya).
 - **Contadores:** "acelerando", "emergentes" y "con hueco en LATAM", sobre lo filtrado.
 
+### D13 — Todas las burbujas en `scatter`; `effectScatter` solo para los anillos del latido
+
+- **Elegido** (añadido por el coordinador tras el paso 8, con las opciones b + a de su informe):
+  - Todas las burbujas, laten o no, van en la serie `scatter`. Entran con el `animationDelay` del barrido y se atenúan
+    cambiando `itemStyle.opacity`, con una transición de actualización de 320 ms (`animationDurationUpdate`).
+  - El latido es una serie `effectScatter` aparte, `silent: true`, con un símbolo transparente del mismo tamaño que la
+    burbuja. Solo lleva las burbujas que crecen y no están atenuadas.
+  - `buildRadarOption` recibe `entering: boolean`, que es `true` hasta que termina el barrido (retardo + duración de
+    `SWEEP`). Mientras dura, la serie de anillos no lleva datos y las etiquetas van ocultas. Al terminar aparecen los
+    anillos, con su periodo, y las etiquetas, salvo las de burbujas atenuadas o seleccionadas.
+  - Con movimiento reducido no hay serie de anillos y `entering` es siempre `false`.
+- **Por qué:** con D9 tal cual salieron tres fallos, medidos en Chrome headless:
+  - el `EffectSymbol` de ECharts rehace la entrada sin retardo, así que las burbujas que laten salen antes que el
+    barrido (G1);
+  - las etiquetas aparecían antes que su burbuja (G2);
+  - al atenuar, la burbuja pasaba de una serie a otra, se recreaba y volvía a entrar en vez de fundirse (G3).
+- **Descartado:** dos series de burbujas (causa G1–G3).
+
 ## Diseño de módulos
 
 - **Seam principal: `buildRadarView(list, query)`** en `src/lib/radarView.ts`, función pura. Entra la
@@ -443,7 +461,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check`
 - **Commit:** `Add the radar header, filter row and period control`
 
-### Paso 8 — El radar
+### Paso 8 — El radar [HECHO]
 
 - **Archivos:** `frontend/src/lib/radarChart.ts`, `frontend/src/lib/__tests__/radarChart.spec.ts`,
   `frontend/src/components/radar/{OpportunityRadar,RadarSelectionLayer,RadarSweep}.vue`, `frontend/src/lib/echarts.ts`
@@ -463,6 +481,32 @@ visual del contexto verificado.
   - `sweepDelaySeconds(100, 100)` → 0.35 s; `sweepDelaySeconds(0, 0)` → 1.26 s (φ ≈ 60.64°; redondeado a 2 decimales).
 - **Verificación:** `cd frontend && pnpm test radarChart && pnpm lint && pnpm type-check`
 - **Commit:** `Draw the opportunity radar with sweep, pulse and selection layers`
+
+### Paso 8b — Entrada sincronizada con el barrido y atenuado sin saltos (D13)
+
+- **Archivos:**
+  - `frontend/src/lib/radarChart.ts` y `frontend/src/lib/__tests__/radarChart.spec.ts`;
+  - `frontend/src/components/radar/OpportunityRadar.vue` y `RadarSelectionLayer.vue`;
+  - nuevo `frontend/src/components/radar/RadarFloatingCard.vue`, para dejar `RadarSelectionLayer` por debajo de las
+    200 líneas;
+  - `frontend/src/lib/radarView.ts`, solo el tipo: `hasAudienceFit` pasa a type guard y `plotted` a
+    `PlottedOpportunity[]`. El tipo vive en `radarView.ts` y `radarChart.ts` lo importa.
+- **Cambio:** D13. La interfaz de `OpportunityRadar` (props `view`, `hoveredId` y `sweepKey`; emits `select` y
+  `hover`) no cambia.
+- **Test primero:** actualiza `radarChart.spec.ts`:
+  - todas las burbujas, también las que crecen, van en `scatter`;
+  - la serie de anillos solo tiene las que crecen y no están atenuadas, es `silent` y su símbolo es transparente;
+  - con `entering: true`, la serie de anillos va vacía y no hay etiquetas;
+  - con `entering: false`, hay etiquetas (salvo atenuadas y seleccionada) y anillos con su `rippleEffect.period`;
+  - con `reducedMotion: true`, no hay serie de anillos;
+  - una burbuja atenuada sigue en `scatter`, con `opacity 0.16`.
+- **Verificación:**
+  - `cd frontend && pnpm test radarChart && pnpm lint && pnpm type-check`.
+  - Manual con `VITE_USE_FIXTURES=true pnpm dev` y un montaje temporal (sin commitear), en Chrome headless:
+    - a los ~350 ms no se ve ninguna burbuja que el haz no haya cruzado ni ninguna etiqueta;
+    - tras el barrido laten las que crecen;
+    - con `?lifecycle=peaking,saturated`, la burbuja que latía se atenúa en su sitio (~320 ms), sin desaparecer.
+- **Commit:** `Sync the bubble entry with the sweep and fade dimmed bubbles in place`
 
 ### Paso 9 — Panel de detalle y bento [HECHO]
 
@@ -501,6 +545,22 @@ visual del contexto verificado.
     DESIGN.md §5 (radar `flex: 999 1 680px`, panel `flex: 1 1 380px`, bento 1 : 2).
   - Estados de D12.
   - `RadarFootnote` con `monitoring_started_at` (`formatUtcTimestamp`) y las lecturas de DESIGN.md §9.
+- **Notas del coordinador** (salen de los informes de los pasos 7–10; se aplican tal cual):
+  - Con datos en carga o `null`, no montes `RadarHero` ni `RadarFilters`: "0 oportunidades esta semana" se leería como
+    un resultado real. En su lugar van los skeletons o el estado vacío.
+  - Lista no nula con `items: []` y sin filtros → tarjeta de vacío "El último análisis no encontró temas con datos
+    suficientes."
+  - Las bases flex van como clase en el padre:
+    - `flex-[999_1_680px]` en `OpportunityRadar`;
+    - `flex-[1_1_380px]` en `OpportunityDetail`;
+    - `flex-[1_1_360px]` en `AudienceMixCard` y `flex-[2_1_520px]` en `WhyItMattersCard`.
+  - Cableado:
+    - `<OpportunityRadar :view :hovered-id="hovered" :sweep-key="query.period" @select="(id) => update({ selected: id })" @hover="(id) => (hovered = id)">`
+    - `<OpportunityRanking :rows="view.visible" :total="view.total" :is-filtered="view.isFiltered" :selected-id="view.selected?.id ?? null" :hovered-id="hovered" @select … @hover …>`
+    - `OpportunityDetail`, `AudienceMixCard` y `WhyItMattersCard` reciben `:opportunity="view.selected"`;
+      `OpportunityDetail` recibe además `:total="view.total"`.
+    - `<RadarHero :view :query>` y `<RadarFilters :view>`.
+  - En modo fixtures, `DataStatus` dice "no disponible", porque `/sources/status` no tiene fixture. Se deja así.
 - **Test primero:** verificación manual con `cd frontend && VITE_USE_FIXTURES=true pnpm dev`. Comprueba:
   - criterios 1–15 con el fixture, incluido `opp_005` fuera del radar y en el ranking;
   - `?lifecycle=peaking,saturated&gap=1&sort=acceleration&selected=opp_003` reproduce la vista al recargar;
