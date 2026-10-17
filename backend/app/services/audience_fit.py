@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import structlog
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collectors.usage import UsageMeter
@@ -27,8 +25,8 @@ from app.editorial.audience import (
 from app.editorial.evaluator import EvaluationError, EvaluationResult, TopicEvaluator
 from app.intelligence.audience_fit import apply_fit, apply_topic_name, mark_fit_failed
 from app.intelligence.opportunities import TopicResult
-from app.models import LlmEvaluation
 from app.schemas.cost import Provider
+from app.services.llm_cache import load_cached, save_results
 
 log = structlog.get_logger()
 
@@ -60,40 +58,6 @@ async def _evaluate_one(evaluator: TopicEvaluator, pending: _Pending) -> Evaluat
         return None
 
 
-async def _cached_outputs(session: AsyncSession, keys: Sequence[str]) -> dict[str, TopicEvaluation]:
-    rows = await session.execute(
-        select(LlmEvaluation.cache_key, LlmEvaluation.output).where(
-            LlmEvaluation.cache_key.in_(keys)
-        )
-    )
-    return {key: TopicEvaluation.model_validate(output) for key, output in rows.all()}
-
-
-async def _save(
-    session: AsyncSession, evaluated: dict[str, EvaluationResult], pending: dict[str, _Pending]
-) -> None:
-    if not evaluated:
-        return
-    rows = [
-        {
-            "cache_key": key,
-            "operation": EVALUATE_TOPIC_OPERATION,
-            "prompt_version": PROMPT_VERSION,
-            "requested_model": get_settings().llm_model,
-            "response_model": result.model,
-            "opportunity_id": pending[key].opportunity_id,
-            "output": result.output.model_dump(mode="json"),
-            "input_tokens": result.input_tokens,
-            "output_tokens": result.output_tokens,
-        }
-        for key, result in evaluated.items()
-    ]
-    stmt = insert(LlmEvaluation).values(rows).on_conflict_do_nothing(index_elements=["cache_key"])
-    await session.execute(stmt)
-    # Commit en cuanto llegan: si el job falla después, las llamadas ya pagadas no se pierden.
-    await session.commit()
-
-
 def _pending_by_key(
     results: Sequence[TopicResult],
     *,
@@ -117,7 +81,13 @@ async def _evaluate_pending(
 ) -> dict[str, EvaluationResult]:
     outcomes = await asyncio.gather(*(_evaluate_one(evaluator, p) for p in pending.values()))
     evaluated = {key: r for key, r in zip(pending, outcomes, strict=True) if r is not None}
-    await _save(session, evaluated, pending)
+    await save_results(
+        session,
+        evaluated,
+        operation=EVALUATE_TOPIC_OPERATION,
+        prompt_version=PROMPT_VERSION,
+        opportunity_ids={key: p.opportunity_id for key, p in pending.items()},
+    )
     for r in evaluated.values():
         meter.add(
             Provider.LLM_TEXT,
@@ -149,7 +119,7 @@ async def evaluate_topics(
     model = get_settings().llm_model
     inputs = [build_topic_input(r, answers) for r in results]
     keys = [evaluation_cache_key(t, model) for t in inputs]
-    cached = await _cached_outputs(session, keys)
+    cached = await load_cached(session, keys, TopicEvaluation)
     pending = _pending_by_key(results, inputs=inputs, keys=keys, cached=cached)
     evaluated = await _evaluate_pending(session, evaluator, pending, meter=meter)
 

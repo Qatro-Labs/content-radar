@@ -178,18 +178,18 @@ def system_prompt() -> str:
     return template.replace("{{rubric}}", _rubric_text()).replace("{{profile}}", profile_text())
 
 
-def _escape(text: str) -> str:
+def escape(text: str) -> str:
     return html.escape(text, quote=True)
 
 
-def _evidence_block(index: int, p: EvidencePiece) -> str:
+def evidence_block(index: int, p: EvidencePiece) -> str:
     attrs = (
-        f'id="{index}" url="{_escape(p.url)}" source="{_escape(p.source)}" '
-        f'platform="{p.platform}" language="{_escape(p.language or "")}"'
+        f'id="{index}" url="{escape(p.url)}" source="{escape(p.source)}" '
+        f'platform="{p.platform}" language="{escape(p.language or "")}"'
     )
-    description = _escape(p.description) if p.description else "(sin descripción)"
+    description = escape(p.description) if p.description else "(sin descripción)"
     return (
-        f"<evidence {attrs}>\n<title>{_escape(p.title)}</title>\n"
+        f"<evidence {attrs}>\n<title>{escape(p.title)}</title>\n"
         f"<description>{description}</description>\n</evidence>"
     )
 
@@ -208,9 +208,9 @@ def _hints_block(topic: TopicInput) -> str:
 
 def user_message(topic: TopicInput) -> str:
     mix = topic.audience_mix
-    evidence = "\n".join(_evidence_block(i, p) for i, p in enumerate(topic.pieces, start=1))
+    evidence = "\n".join(evidence_block(i, p) for i, p in enumerate(topic.pieces, start=1))
     return (
-        f"<topic_label>{_escape(topic.label)}</topic_label>\n"
+        f"<topic_label>{escape(topic.label)}</topic_label>\n"
         f"<audience_mix>tecnología {mix['tech']:.0%} · negocio {mix['business']:.0%} · "
         f"en español {mix['latam_es']:.0%}</audience_mix>\n"
         f"<jev_hints>\n{_hints_block(topic)}\n</jev_hints>\n{evidence}"
