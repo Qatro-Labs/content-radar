@@ -455,7 +455,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_clustering.py tests/test_build_opportunities.py -q`
 - **Commit:** `Split catch-all clusters and flag broad topics`
 
-### Paso 11 — Temas en descenso
+### Paso 11 — Temas en descenso [HECHO]
 
 - **Archivos:** `backend/app/intelligence/lifecycle.py`, `backend/tests/test_intelligence.py`.
 - **Cambio:** D11.

@@ -179,6 +179,15 @@ def test_saturation_percentiles():
     assert saturation_scores([1, 5, 10]) == [0.0, 50.0, 100.0]
 
 
+def test_declining_topic_reason():
+    stage = classify(acceleration=-0.52, saturation=22, source_count=5, item_count=10)
+    assert stage.lifecycle is Lifecycle.UNKNOWN
+    assert stage.insufficient is False
+    assert stage.reason.startswith("En descenso: aceleración -52%")
+    rising = classify(acceleration=0.43, saturation=82, source_count=5, item_count=10)
+    assert rising.reason.startswith("Ninguna regla se cumple")
+
+
 # --- ranking ---
 
 
