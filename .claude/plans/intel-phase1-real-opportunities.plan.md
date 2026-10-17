@@ -344,7 +344,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_opportunity_fixture.py -q`
 - **Commit:** `Add score breakdown, fit criteria and collection to the Opportunity contract`
 
-### Paso 3 — Desglose del score en `ranking.py`
+### Paso 3 — Desglose del score en `ranking.py` [HECHO]
 
 - **Archivos:** `backend/app/intelligence/ranking.py`, `backend/app/intelligence/opportunities.py`,
   `backend/tests/test_intelligence.py`.

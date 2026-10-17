@@ -15,9 +15,17 @@ from app.intelligence.ranking import (
     momentum_score,
     opportunity_score,
     recommendation,
+    score_breakdown,
 )
 from app.intelligence.velocity import WindowCounts, piece_rate, topic_velocity, window_counts
-from app.schemas.opportunity import Confidence, GrowthStatus, Lifecycle, Recommendation
+from app.schemas.opportunity import (
+    Confidence,
+    GrowthStatus,
+    Lifecycle,
+    Recommendation,
+    ScoreComponentName,
+    ScorePenaltyName,
+)
 from app.schemas.signal import Segment
 
 NOW = datetime(2026, 10, 17, 12, tzinfo=UTC)
@@ -192,6 +200,32 @@ def test_opportunity_score_penalties_and_floor():
         source_count=1, item_count=3,
     )  # fmt: skip
     assert score == 0
+
+
+def test_score_breakdown_worked_example():
+    b = score_breakdown(
+        momentum=80, audience_fit=60, cross_source=50, saturation=30, actionability=40,
+        source_count=1, item_count=5,
+    )  # fmt: skip
+    assert b is not None
+    assert [(c.name, c.value, c.weight) for c in b.components] == [
+        (ScoreComponentName.MOMENTUM, 80, 0.30),
+        (ScoreComponentName.AUDIENCE_FIT, 60, 0.25),
+        (ScoreComponentName.CROSS_SOURCE, 50, 0.20),
+        (ScoreComponentName.FRESHNESS, 70, 0.15),
+        (ScoreComponentName.ACTIONABILITY, 40, 0.10),
+    ]
+    assert [(p.name, p.points) for p in b.penalties] == [
+        (ScorePenaltyName.SINGLE_SOURCE, 10),
+        (ScorePenaltyName.SMALL_SAMPLE, 10),
+    ]
+    assert b.total == 43.5  # 24 + 15 + 10 + 10.5 + 4 − 20
+
+
+def test_score_breakdown_is_none_without_fit():
+    kwargs = dict(momentum=80, cross_source=60, saturation=30, source_count=4, item_count=20)
+    assert score_breakdown(audience_fit=None, actionability=70, **kwargs) is None
+    assert score_breakdown(audience_fit=80, actionability=None, **kwargs) is None
 
 
 def test_evidence_strength():

@@ -18,8 +18,8 @@ from app.intelligence.ranking import (
     evidence_strength,
     growth_status,
     momentum_score,
-    opportunity_score,
     recommendation,
+    score_breakdown,
 )
 from app.intelligence.velocity import WINDOW, piece_rate, topic_velocity, window_counts
 from app.schemas.opportunity import (
@@ -195,6 +195,15 @@ def build_opportunities(
         conf = confidence(growth, len(outlets), len(group))
         momentum = momentum_score(velocity_pct[n - 1], vel.acceleration, outlier_count)
         cross = cross_source_score(outlets, {p.value for p in platforms})
+        breakdown = score_breakdown(
+            momentum=momentum,
+            audience_fit=None,
+            cross_source=cross,
+            saturation=saturation[n - 1],
+            actionability=None,
+            source_count=len(outlets),
+            item_count=len(group),
+        )
 
         opportunity = Opportunity(
             id=oid,
@@ -216,15 +225,8 @@ def build_opportunities(
             cross_source_score=cross,
             saturation_score=saturation[n - 1],
             actionability_score=None,
-            opportunity_score=opportunity_score(
-                momentum=momentum,
-                audience_fit=None,
-                cross_source=cross,
-                saturation=saturation[n - 1],
-                actionability=None,
-                source_count=len(outlets),
-                item_count=len(group),
-            ),
+            opportunity_score=None if breakdown is None else breakdown.total,
+            score_breakdown=breakdown,
             confidence=conf,
             source_count=len(outlets),
             evidence_strength=evidence_strength(len(group), len(outlets)),
