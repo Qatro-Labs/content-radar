@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import fixture from '../../../../data/fixtures/opportunities.json'
+import fixture from '@fixtures/opportunities.json'
 import type { components } from '@/types/api'
 
 import type { RadarQuery } from '../radarQuery'

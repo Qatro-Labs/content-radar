@@ -339,7 +339,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm type-check && pnpm test`
 - **Commit:** `Generate the Opportunity types and add the shared fixture`
 
-### Paso 2 — La URL del Radar admite varias etapas, hueco y orden
+### Paso 2 — La URL del Radar admite varias etapas, hueco y orden [HECHO]
 
 - **Archivos:** `frontend/src/lib/radarQuery.ts`, `frontend/src/composables/__tests__/useRadarQuery.spec.ts`
 - **Cambio:** D5. `lifecycle: Lifecycle[]` (lista separada por comas, descarta valores fuera del enum y duplicados),
@@ -351,7 +351,7 @@ visual del contexto verificado.
   - `?lifecycle=emerging,bogus,peaking,emerging` → `['emerging', 'peaking']`;
   - `?gap=1&sort=acceleration` se lee y se vuelve a escribir igual;
   - `update({ lifecycle: [], gap: false, sort: 'opportunity' })` quita los tres params y conserva los ajenos.
-- **Verificación:** `cd frontend && pnpm test -- useRadarQuery`
+- **Verificación:** `cd frontend && pnpm test useRadarQuery`
 - **Commit:** `Support several stages, the LATAM gap and sorting in the radar URL`
 
 ### Paso 3 — Formateo y estilos de etapa
@@ -372,7 +372,7 @@ visual del contexto verificado.
   - `audienceReading`: un caso por regla de D7, más el caso de frontera `tech 0.6 · business 0.3` (→ no cumple la
     regla 1).
   - `latamGapLabel`: `true` / `false` / `null`.
-- **Verificación:** `cd frontend && pnpm test -- opportunityFormat`
+- **Verificación:** `cd frontend && pnpm test opportunityFormat`
 - **Commit:** `Add opportunity formatting and lifecycle styles`
 
 ### Paso 4 — Datos: `useOpportunities` con fixtures explícitos [HECHO]
@@ -393,10 +393,10 @@ visual del contexto verificado.
   - el fixture está marcado (`_fixture` empieza por "MOCK" y todos los `topic` empiezan por "[MOCK]");
   - cada `lifecycle`, `recommendation`, `growth_status` y `confidence` del fixture está en su enum;
   - cada score no nulo está entre 0 y 100.
-- **Verificación:** `cd frontend && pnpm test -- opportunities && pnpm type-check`
+- **Verificación:** `cd frontend && pnpm test opportunities && pnpm type-check`
 - **Commit:** `Load opportunities from the API or from the marked fixture`
 
-### Paso 5 — View-model puro del Radar
+### Paso 5 — View-model puro del Radar [HECHO]
 
 - **Archivos:** `frontend/src/lib/radarView.ts`, `frontend/src/lib/__tests__/radarView.spec.ts`
 - **Cambio:** `buildRadarView` según "Diseño de módulos", más `radarHeadline(view, query)` y
@@ -413,7 +413,7 @@ visual del contexto verificado.
   - `list === null` → vacío, `selected: null`;
   - textos: "5 oportunidades esta semana", "2 de 5 temas", "Hay 5 temas con datos suficientes esta semana.", "Filtro:
     etapa en pico o saturado." y "1 oportunidad esta semana".
-- **Verificación:** `cd frontend && pnpm test -- radarView`
+- **Verificación:** `cd frontend && pnpm test radarView`
 - **Commit:** `Build the radar view model from the opportunity list and the URL`
 
 ### Paso 6 — Piezas: chips, anillo de score y barra de métrica
@@ -461,7 +461,7 @@ visual del contexto verificado.
   - `reducedMotion: true` → no hay serie `effectScatter` y `animation: false`;
   - `unknown` → relleno blanco con borde discontinuo;
   - `sweepDelaySeconds(100, 100)` → 0.35 s; `sweepDelaySeconds(0, 0)` → 1.26 s (φ ≈ 60.64°; redondeado a 2 decimales).
-- **Verificación:** `cd frontend && pnpm test -- radarChart && pnpm lint && pnpm type-check`
+- **Verificación:** `cd frontend && pnpm test radarChart && pnpm lint && pnpm type-check`
 - **Commit:** `Draw the opportunity radar with sweep, pulse and selection layers`
 
 ### Paso 9 — Panel de detalle y bento
