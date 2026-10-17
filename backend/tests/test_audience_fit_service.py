@@ -11,7 +11,7 @@ from app.intelligence.audience_fit import FIT_FAILED_NOTE
 from app.models import LlmEvaluation
 from app.schemas.cost import Provider
 from app.services.audience_fit import EVALUATE_TOPIC_OPERATION, evaluate_topics
-from tests.test_topic_evaluation import evaluation_json, safe, topic
+from tests.test_topic_evaluation import TOPIC_NAME, evaluation_json, safe, topic
 
 
 class FakeEvaluator:
@@ -51,6 +51,7 @@ async def test_topics_get_fit_and_usage_is_metered(session):
 
     assert (stats.evaluated, stats.cached, stats.failed) == (2, 0, 0)
     assert all(r.opportunity.audience_fit_score == 60.0 for r in fitted)  # nivel 3 en los seis
+    assert all(r.opportunity.topic == TOPIC_NAME for r in fitted)
     assert meter.counts[(Provider.LLM_TEXT, EVALUATE_TOPIC_OPERATION)] == UsageCount(
         calls=2, units=3600, output_units=1400
     )

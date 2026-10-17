@@ -24,7 +24,7 @@ from app.intelligence.opportunities import Piece, TopicResult
 from app.schemas.opportunity import FitCriterion
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 PROMPT_FILE = PROMPTS_DIR / f"evaluate_topic.v{PROMPT_VERSION}.md"
 RUBRIC_FILE = PROMPTS_DIR / "audience_fit_rubric.v1.yaml"
 PROFILE_FILE = Path(__file__).resolve().parents[3] / "data" / "audiences" / "30x.yaml"
@@ -61,6 +61,8 @@ class TopicEvaluation(BaseModel):
     latam_relevance: CriterionOutput
     pillar_fit: CriterionOutput
     actionable_content: CriterionOutput
+    # Al final: el nombre sale de haber leído la evidencia para los seis criterios.
+    topic_name: str
 
     def assessments(self) -> list[CriterionAssessment]:
         return [
