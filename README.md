@@ -92,6 +92,8 @@ Después de cada recolección correcta, `.github/workflows/analyze.yml` recalcul
 
 La API y el MCP van en una sola imagen (`backend/Dockerfile`, sin torch). `railway.json` la construye desde la raíz del repo, migra al arrancar y usa `/health` como healthcheck.
 
+El MCP queda en `<API>/mcp` y necesita `MCP_PUBLIC_URL` con el dominio público exacto (sin ella responde 421). Cómo conectar Claude Code, Claude y MCP Inspector: [`docs/mcp.md`](docs/mcp.md).
+
 1. **Supabase:** crear el proyecto en la misma región que Railway y activar `vector` (Database → Extensions). Copiar la URL del *session pooler* (puerto 5432) con el driver asyncpg: `postgresql+asyncpg://postgres.<ref>:<password>@<host>:5432/postgres`.
 2. **Llevar los datos locales** (conserva el historial de snapshots; no repetir el backfill):
    ```bash

@@ -680,7 +680,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest -q`
 - **Commit:** `Mount the MCP server at /mcp in the FastAPI app`
 
-### Paso 9 — Documentación de conexión (criterio 12)
+### Paso 9 — Documentación de conexión (criterio 12) [HECHO]
 
 - **Archivos:** `docs/mcp.md` (nuevo), `README.md` (una línea que enlace `docs/mcp.md` donde habla de
   MCP, `README.md:93-101`), `.env.example` (comentario sobre `MCP_PUBLIC_URL`, `:19`)
