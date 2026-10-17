@@ -1,11 +1,13 @@
 """Tools del agente del Radar (plan data-radar-agent, "Tools que ve el modelo").
 
 La lista es cerrada (D16): las de datos solo leen la ejecución servida a través de
-`app.services.opportunities`; las de vista devuelven un parche de la URL del Radar; `final_answer`
-y `decline` las resuelve el bucle. Ninguna escribe ni accede a red, archivos o SQL arbitrario, y
+`app.services.opportunities`; las de vista devuelven un parche de la URL del Radar o una navegación
+al expediente o a Explorar (plan fe-radar-agent, D3); `final_answer` y `decline` las resuelve el
+bucle. Ninguna escribe ni accede a red, archivos o SQL arbitrario, y
 añadir una exige revisar el plan.
 """
 
+import unicodedata
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -26,15 +28,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.agent import labels
 from app.agent.limits import MAX_ANSWER_WORDS
 from app.agent.sanitize import clean_external, wrap_data
-from app.schemas.agent import CitedOpportunity, RadarPatch, RadarSort, StepKind
+from app.schemas.agent import (
+    MAX_SEARCH_CHARS,
+    AgentScreen,
+    CitedOpportunity,
+    DossierSection,
+    Navigation,
+    OpportunityId,
+    RadarPatch,
+    RadarSort,
+    StepKind,
+)
 from app.schemas.opportunity import (
-    OPPORTUNITY_ID_PATTERN,
     AudienceMix,
     Confidence,
     GrowthStatus,
     Lifecycle,
     Opportunity,
     Recommendation,
+    TopicEvidence,
 )
 from app.schemas.signal import Platform
 from app.services import opportunities
@@ -43,6 +55,11 @@ MAX_LISTED = 10
 MAX_EVIDENCE = 5
 MAX_HIGHLIGHTED = 5
 MAX_TOPIC_ARG_CHARS = 60
+MAX_SEARCH_ROWS = 8
+# Con una sola letra casi todo coincide: la búsqueda no enseñaría nada.
+MIN_QUERY_CHARS = 2
+# Marcas diacríticas sin espacio propio: lo que NFD separa de su letra ("ó" → "o" + U+0301).
+COMBINING_MARK = "Mn"
 FINAL_ANSWER = "final_answer"
 DECLINE = "decline"
 OK_CONTENT = "ok"
@@ -51,8 +68,8 @@ NO_DATA_MESSAGE = "Todavía no hay oportunidades calculadas."
 INVALID_INPUT_MESSAGE = "Argumentos no válidos para esta tool."
 UNKNOWN_TOOL_MESSAGE = "Esa tool no existe."
 
-OpportunityId = Annotated[str, Field(pattern=OPPORTUNITY_ID_PATTERN)]
 TopicArg = Annotated[str, Field(max_length=MAX_TOPIC_ARG_CHARS), AfterValidator(clean_external)]
+SearchArg = Annotated[str, Field(max_length=MAX_SEARCH_CHARS), AfterValidator(clean_external)]
 
 
 @dataclass
@@ -75,6 +92,7 @@ class ToolOutcome:
     content: str
     is_error: bool = False
     patch: RadarPatch | None = None
+    navigate: Navigation | None = None
 
 
 class ToolInput(BaseModel):
@@ -99,8 +117,22 @@ class EvidenceInput(IdInput):
     limit: int = Field(default=MAX_EVIDENCE, ge=1, le=MAX_EVIDENCE)
 
 
+class DossierInput(IdInput):
+    section: DossierSection = DossierSection.SCORE
+
+
+class SearchInput(ToolInput):
+    query: SearchArg = Field(min_length=MIN_QUERY_CHARS)
+    limit: int = Field(default=MAX_SEARCH_ROWS, ge=1, le=MAX_SEARCH_ROWS)
+
+
+class ShowPiecesInput(ToolInput):
+    search: SearchArg = Field(min_length=1)
+
+
 class FiltersInput(ToolInput):
     lifecycle: list[Lifecycle] | None = None
+    recommendation: Recommendation | None = None
     confidence: Confidence | None = None
     topic: TopicArg | None = None
     gap: bool | None = Field(default=None, description="true = solo «Hueco en LATAM»")
@@ -171,6 +203,11 @@ class EvidenceRow(BaseModel):
     published_at: AwareDatetime
     is_outlier: bool | None
     outlier_ratio: float | None
+
+
+class SearchRow(EvidenceRow):
+    opportunity_id: str
+    topic: str
 
 
 def _as_data(payload: BaseModel | Sequence[BaseModel]) -> str:
@@ -249,6 +286,7 @@ async def _get_timeline(args: IdInput, session: AsyncSession, seen: Seen) -> Too
 async def _set_filters(args: FiltersInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
     label = labels.filters_label(
         lifecycle=args.lifecycle,
+        recommendation=args.recommendation,
         confidence=args.confidence,
         filters_topic=bool(args.topic),
         gap=args.gap,
@@ -280,10 +318,64 @@ async def _select(args: IdInput, session: AsyncSession, seen: Seen) -> ToolOutco
 
 
 async def _reset(args: NoInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
-    # El mismo parche que `resetViewPatch()` del front (D17): el agente usa los mismos controles
-    # que una persona, así que la selección, el periodo y el orden se conservan.
-    patch = RadarPatch(lifecycle=[], gap=False, highlight=[])
+    # El mismo parche que `resetViewPatch()` del front (D17; plan fe-radar-agent, D5): el agente
+    # usa los mismos controles que una persona, así que la selección, el periodo y el orden se
+    # conservan. Los None van explícitos para que `exclude_unset` los envíe y quiten el filtro.
+    patch = RadarPatch(
+        lifecycle=[], gap=False, highlight=[], recommendation=None, confidence=None, topic=None
+    )
     return ToolOutcome(StepKind.VIEW, labels.RESET_LABEL, OK_CONTENT, patch=patch)
+
+
+async def _show_in_dossier(args: DossierInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
+    o = await opportunities.get_opportunity(session, args.id)
+    if o is None:
+        return _error(StepKind.VIEW, labels.SECTION_PENDING_LABEL, _unknown_id(args.id))
+    navigate = Navigation(screen=AgentScreen.DOSSIER, opportunity_id=o.id, section=args.section)
+    label = labels.section_label(args.section, o.topic)
+    return ToolOutcome(StepKind.VIEW, label, OK_CONTENT, navigate=navigate)
+
+
+def _fold(text: str) -> str:
+    # Como `foldForSearch` de frontend/src/lib/exploreView.ts: el agente encuentra lo mismo que
+    # la persona en Explorar, con o sin tildes y mayúsculas.
+    decomposed = unicodedata.normalize("NFD", text)
+    return "".join(c for c in decomposed if unicodedata.category(c) != COMBINING_MARK).casefold()
+
+
+def _matching_pieces(evidence: list[TopicEvidence], query: str) -> list[TopicEvidence]:
+    needle = _fold(query)
+    # Una URL puede estar en la evidencia de varios temas: se queda la primera, como en Explorar.
+    by_url: dict[str, TopicEvidence] = {}
+    for e in evidence:
+        if needle in _fold(e.title) or needle in _fold(e.source):
+            by_url.setdefault(str(e.url), e)
+    return list(by_url.values())
+
+
+async def _search_pieces(args: SearchInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
+    evidence = await opportunities.list_all_evidence(session)
+    listed = await opportunities.list_opportunities(session)
+    if evidence is None or listed is None:
+        return _error(StepKind.DATA, labels.SEARCH_PENDING_LABEL, NO_DATA_MESSAGE)
+    by_id = {o.id: o for o in listed.items}
+    # Como Explorar: una pieza de un tema que no está en el listado no tiene tema al que atribuirla.
+    attributed = [e for e in evidence if e.opportunity_id in by_id]
+    found = _matching_pieces(attributed, args.query)
+    shown = found[: args.limit]
+    rows = [
+        SearchRow.model_validate({**e.model_dump(), "topic": by_id[e.opportunity_id].topic})
+        for e in shown
+    ]
+    for e in shown:
+        seen.add(by_id[e.opportunity_id])
+        seen.evidence_urls.add(str(e.url))
+    return ToolOutcome(StepKind.DATA, labels.search_label(len(found)), _as_data(rows))
+
+
+async def _show_pieces(args: ShowPiecesInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
+    navigate = Navigation(screen=AgentScreen.EXPLORE, search=args.search)
+    return ToolOutcome(StepKind.VIEW, labels.EXPLORE_LABEL, OK_CONTENT, navigate=navigate)
 
 
 @dataclass(frozen=True)
@@ -340,7 +432,8 @@ TOOLS: dict[str, Tool] = {
     "set_filters": Tool(
         StepKind.VIEW,
         "Cambia los filtros del Radar que ve el usuario. Solo cambian los campos que envíes; "
-        "null quita ese filtro. gap=true activa «Hueco en LATAM».",
+        "null quita ese filtro. gap=true activa «Hueco en LATAM» y recommendation=publish_now "
+        "pulsa «Publicar ya».",
         FiltersInput,
         labels.FILTERS_FALLBACK_LABEL,
         _set_filters,
@@ -361,10 +454,37 @@ TOOLS: dict[str, Tool] = {
     ),
     "reset_view": Tool(
         StepKind.VIEW,
-        "Quita los filtros de etapa, el hueco en LATAM y los resaltados. Conserva la selección.",
+        "Quita filtros (etapa, recomendación, confianza, tema y hueco en LATAM) y resaltados. "
+        "Conserva la selección y el orden.",
         NoInput,
         labels.RESET_LABEL,
         _reset,
+    ),
+    "show_in_dossier": Tool(
+        StepKind.VIEW,
+        "Abre el expediente de una oportunidad y lleva la vista a una sección: score (cómo se "
+        "compone), evolution, fit (encaje con la audiencia), evidence (piezas) o limits (qué no "
+        "sabemos).",
+        DossierInput,
+        labels.SECTION_PENDING_LABEL,
+        _show_in_dossier,
+    ),
+    "search_pieces": Tool(
+        StepKind.DATA,
+        "Busca piezas por título o fuente en la evidencia de todas las oportunidades, como el "
+        f"buscador de Explorar (sin distinguir tildes ni mayúsculas). Outliers primero; como "
+        f"mucho {MAX_SEARCH_ROWS}.",
+        SearchInput,
+        labels.SEARCH_PENDING_LABEL,
+        _search_pieces,
+    ),
+    "show_pieces": Tool(
+        StepKind.VIEW,
+        "Abre Explorar con una búsqueda para que el usuario vea las piezas. Usa la misma "
+        "búsqueda que en search_pieces.",
+        ShowPiecesInput,
+        labels.EXPLORE_LABEL,
+        _show_pieces,
     ),
 }
 

@@ -34,10 +34,13 @@ from app.models import UsageEvent
 from app.schemas.agent import (
     ActionEvent,
     AgentQuestion,
+    AgentScreen,
     AnswerEvent,
     DoneEvent,
+    DossierSection,
     ErrorCode,
     ErrorEvent,
+    Navigation,
     RadarPatch,
     StepKind,
 )
@@ -134,15 +137,87 @@ async def test_set_filters_label_and_patch(session, seeded):
     assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {"gap": True}
 
 
+@pytest.mark.parametrize(
+    ("args", "label"),
+    [
+        ({"recommendation": "publish_now"}, "Pulsando «Publicar ya»"),
+        ({"lifecycle": ["accelerating"]}, "Pulsando «Acelerando»"),
+        ({"lifecycle": ["peaking", "saturated"]}, "Filtrando por En pico, Saturado"),
+    ],
+    ids=["publish-now-counter", "accelerating-counter", "several-stages"],
+)
+async def test_set_filters_names_the_counter_it_presses(session, seeded, args, label):
+    outcome = await execute_tool("set_filters", args, session, Seen())
+
+    assert outcome.label == label
+    assert outcome.patch is not None
+    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == args
+
+
 async def test_reset_view_patch(session, seeded):
     outcome = await execute_tool("reset_view", {}, session, Seen())
 
     assert outcome.patch is not None
-    # El mismo parche que `resetViewPatch()` en frontend/src/lib/radarQuery.ts (D17).
+    # El mismo parche que `resetViewPatch()` en frontend/src/lib/radarQuery.ts (plan
+    # fe-radar-agent, D5).
     assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {
         "lifecycle": [],
         "gap": False,
         "highlight": [],
+        "recommendation": None,
+        "confidence": None,
+        "topic": None,
+    }
+
+
+SEEDED_TOPIC = "[MOCK] Agentes de IA en operaciones empresariales"
+
+
+async def test_show_in_dossier_navigates_to_the_section(session, seeded):
+    args = {"id": "opp_001", "section": "evidence"}
+
+    outcome = await execute_tool("show_in_dossier", args, session, Seen())
+
+    assert outcome.kind is StepKind.VIEW
+    assert not outcome.is_error
+    assert outcome.label == f"Mostrando la evidencia de «{SEEDED_TOPIC}»"
+    assert outcome.navigate == Navigation(
+        screen=AgentScreen.DOSSIER, opportunity_id="opp_001", section=DossierSection.EVIDENCE
+    )
+
+
+async def test_show_in_dossier_rejects_unknown_id(session, seeded):
+    outcome = await execute_tool("show_in_dossier", {"id": "opp_nope"}, session, Seen())
+
+    assert outcome.kind is StepKind.VIEW
+    assert outcome.is_error
+    assert outcome.navigate is None
+
+
+async def test_search_pieces_ignores_accents_and_case(session, seeded):
+    seen = Seen()
+    query = "AUTOMATIZO EL CIERRE"
+
+    outcome = await execute_tool("search_pieces", {"query": query}, session, seen)
+
+    assert outcome.kind is StepKind.DATA
+    assert not outcome.is_error
+    assert outcome.content.startswith("<datos>")
+    assert "Cómo un CFO automatizó el cierre mensual" in outcome.content
+    assert set(seen.opportunities) == {"opp_001"}
+    assert seen.evidence_urls == {"https://example.com/mock/1"}
+    assert outcome.label == "Buscando piezas: 1 encontrada"
+    assert "cierre" not in outcome.label.lower()
+
+
+async def test_show_pieces_opens_explore_with_a_clean_search(session, seeded):
+    outcome = await execute_tool("show_pieces", {"search": "<b>agentes</b>"}, session, Seen())
+
+    assert outcome.kind is StepKind.VIEW
+    assert outcome.navigate is not None
+    assert outcome.navigate.model_dump(mode="json", exclude_unset=True) == {
+        "screen": "explore",
+        "search": "＜b＞agentes＜/b＞",
     }
 
 
@@ -414,14 +489,24 @@ async def test_external_text_reaches_model_neutralized(session):
         ("list_opportunities", {"limit": 3, "sql": "select 1"}),
         ("set_filters", {"topic": "x" * 61}),
         ("select_opportunity", {"id": "../etc/passwd"}),
+        ("search_pieces", {"query": "a"}),
+        ("show_in_dossier", {"id": "opp_001", "section": "cover"}),
     ],
-    ids=["unknown-tool", "extra-field", "long-topic", "bad-id-format"],
+    ids=[
+        "unknown-tool",
+        "extra-field",
+        "long-topic",
+        "bad-id-format",
+        "one-char-search",
+        "unknown-section",
+    ],
 )
 async def test_invalid_tool_input_is_rejected(session, seeded, name, args):
     outcome = await execute_tool(name, args, session, Seen())
 
     assert outcome.is_error
     assert outcome.patch is None
+    assert outcome.navigate is None
     assert "drop_table" not in outcome.content
     assert "passwd" not in outcome.content
 
