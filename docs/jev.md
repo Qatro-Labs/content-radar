@@ -95,10 +95,13 @@ son un medio). Para cada par:
    palabras). Se juzgan de mayor a menor similitud, con un tope de 250 llamadas nuevas por
    ejecución.
 3. Un veredicto seguro de Jev manda en las dos direcciones: el nivel 3 es republicación y los
-   niveles 0–2 son independientes, aunque la regla diga otra cosa.
+   niveles 0–2 son independientes, aunque la regla diga otra cosa. También cuando la regla los une
+   a través de otras piezas: en la nota que contiene un par independiente se quitan las aristas de
+   la regla.
 4. **Regla de respaldo** (sin clave, fallo de Jev, veredicto incierto o fuera del tope): mismo
    título normalizado o similitud ≥ 0,90. Lo que decide la regla se marca en `limitations` como
-   no verificado con Jev.
+   no verificado con Jev. Una republicación cuenta como verificada solo si llega a su representante
+   por enlaces compartidos o síes de Jev, sin pasar por la regla.
 
 `state`: `{a: {title, description, source}, b: {title, description, source}}`, ordenado por
 `item_id` para que (A, B) y (B, A) compartan caché. La descripción se recorta a 500 caracteres; sin

@@ -862,6 +862,14 @@ No se corre `analyze` en ninguna DB. Melkin decide cuándo correrlo y si fija `D
 
 | Fecha | Qué bloqueó | Qué se decidió | Commits que quedaron |
 | --- | --- | --- | --- |
+| 2026-10-18 | Auditoría (MAJOR): `unverified` era por pieza; 1—SIM—2—JEV—3 daba las dos copias como verificadas | D13 se precisa por vínculo: una republicación es verificada solo si comparte componente de aristas `SAME_LINK`/`JEV` con su representante (más fino que "cualquier arista de regla en la nota", que marcaría también copias con enlace directo a la representante) | `1332c51` |
+| 2026-10-18 | Auditoría (MAJOR): una cadena de aristas de regla unía dos piezas que Jev juzgó independientes | D2 manda en las dos direcciones también por transitividad: `group_stories(..., independent=)` recibe los "no" seguros de Jev; en la nota que contiene un par independiente se quitan las aristas `SAME_TITLE`/`SIMILARITY` y se recalcula. Las cadenas de solo aristas verificadas siguen con el riesgo aceptado de D5. `_decided_edges` pasa a `_decide_pairs` (devuelve aristas y pares independientes) | `1332c51` |
+| 2026-10-18 | Auditoría (MAJOR): tests tautológicos en `test_build_opportunities.py` | Se borra `test_without_stories_nothing_changes` y la igualdad final de `test_single_source_with_stories_unchanged` (ahora `test_single_source_gives_no_pairs`) | `91931c9` |
+| 2026-10-18 | Auditoría (minor): `_description` listaba plataformas de las copias | La descripción usa las plataformas de las piezas originales | `91931c9` |
+| 2026-10-18 | Auditoría (minor): `ReplicaStats(0,…)` posicional y `detect_replicas`/`_stats` posicionales | Campos de `ReplicaStats` con default 0 (`ReplicaStats()`, sin instancia compartida porque `detect_replicas` la muta); keyword-only tras `session` / `keys` | `98b2165` |
+| 2026-10-18 | Auditoría (minor): `record_meter` tras `compute_opportunities` perdía el consumo de la batería de pieza si fallaba | D11 cambia: dos contadores; el de pieza se guarda (con commit) antes de `compute_opportunities` y el de pares después. Sin test: ningún test llama a `analyze._evaluate` | `7837f06` |
+| 2026-10-18 | Auditoría (minor): `opp_003` del fixture tenía una copia sin reflejo | Descripción y `limitations` mencionan la republicación, `source_count` 6 → 5; test nuevo en `test_opportunity_fixture.py` | `ca1cd89` |
+| 2026-10-18 | Auditoría (MAJOR): `opportunities.py` con 571 líneas | Movimiento puro a `app/intelligence/evidence.py` (`PERFORMANCE_METRIC`, `MAX_EVIDENCE`, evidencia por pieza, orden y timeline); `Piece` se queda en `opportunities`. `build_opportunities` delega la normalización entre temas en `_across_topics` | `4605b22` |
 
 ## Preguntas abiertas
 
