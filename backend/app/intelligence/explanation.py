@@ -32,7 +32,7 @@ def _numbers(text: str) -> set[str]:
     return {re.sub(r"[.,]", "", m) for m in NUMBER.findall(text)}
 
 
-def _supported(text: str, known_numbers: Set[str]) -> bool:
+def numbers_supported(text: str, known_numbers: Set[str]) -> bool:
     return _numbers(text) <= known_numbers
 
 
@@ -60,14 +60,14 @@ def apply_explanation(
     valid = [
         c
         for c in claims
-        if any(u in sent_urls for u in c.cited_urls) and _supported(c.text, numbers)
+        if any(u in sent_urls for u in c.cited_urls) and numbers_supported(c.text, numbers)
     ]
     if not valid:
         return _with_notes(result, None, [NO_VALID_CLAIM_NOTE])
     notes = [
         " ".join(n.split())
         for n in limitations[:MAX_LIMITATIONS]
-        if n.strip() and len(n) <= MAX_LIMITATION_CHARS and _supported(n, numbers)
+        if n.strip() and len(n) <= MAX_LIMITATION_CHARS and numbers_supported(n, numbers)
     ]
     if dropped := len(claims) - len(valid):
         what = "1 afirmación" if dropped == 1 else f"{dropped} afirmaciones"

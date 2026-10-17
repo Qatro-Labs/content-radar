@@ -105,7 +105,7 @@ class TopicInput:
     pieces: list[EvidencePiece]
 
 
-def _evidence_piece(p: Piece) -> EvidencePiece:
+def evidence_piece(p: Piece) -> EvidencePiece:
     return EvidencePiece(
         url=p.url,
         source=p.source_name,
@@ -150,7 +150,7 @@ def build_topic_input(result: TopicResult, answers: Mapping[int, dict[str, Any]]
         hints=_hint_counts(judgments),
         formats=dict(sorted(formats.items())),
         unclassified_formats=len(judgments) - formats.total(),
-        pieces=[_evidence_piece(p) for p in safe[:MAX_PIECES]],
+        pieces=[evidence_piece(p) for p in safe[:MAX_PIECES]],
     )
 
 
