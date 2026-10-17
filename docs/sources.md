@@ -8,7 +8,7 @@
 
 | Fuente | Acceso | Qué guardamos | Coste | Límites |
 |---|---|---|---|---|
-| YouTube | Data API v3 oficial | Metadatos, métricas públicas y snapshots | 0 $ (cuota de 10.000 unidades/día) | `search.list` cuesta 100 unidades; mejor `playlistItems` de canales conocidos |
+| YouTube | Data API v3 oficial | Metadatos, métricas públicas y snapshots | 0 $ (cupo propio de 100 llamadas/día a `search.list`, a 1 unidad cada una, y 10.000 unidades/día para el resto) | El cupo de `search.list` es pequeño: mejor `playlistItems` de canales conocidos |
 | Hacker News | Algolia HN Search API | Metadatos, puntos, comentarios y snapshots | 0 $ | Comunidad técnica: no representa a la audiencia de negocio |
 | RSS | `feedparser` + `httpx` | Título, enlace, fecha y descripción del feed | 0 $ | Sin métricas de engagement |
 | Brave Search | API oficial (cabecera `X-Subscription-Token`) | Solo agregados: sus resultados son transitorios | 5 $ por 1.000 consultas, con 5 $ de crédito gratis al mes (≈ 1.000 consultas) | Solo descubrimiento web, nunca LinkedIn |
@@ -20,7 +20,7 @@
 Los [términos de la API de Brave](https://api-dashboard.search.brave.com/terms-of-service), §3(b)(i),
 prohíben "store, cache, or create a database of Search Results, in whole or in part, other than
 transient storage" si el plan no incluye derechos de almacenamiento. Brave no publica el precio de
-ese plan; las reseñas hablan de unos 45 $ por 1.000 consultas.
+ese plan.
 
 Con el plan estándar:
 
@@ -73,8 +73,12 @@ oficial de LinkedIn, sí se puede.**
      con la cabecera `Linkedin-Version: 202312`, las devuelve: 28 días como máximo, `count` ≤ 50, y
      una consulta por hora. Cuando el curador reacciona a un post que funciona, un colector lee el
      evento y guarda el URN del post como señal curada.
+   - **Filtrado obligatorio (regla 1):** el changelog devuelve **toda** la actividad del curador,
+     mensajes privados incluidos. El colector filtra por `resourceName` y solo procesa reacciones a
+     posts; nunca guarda mensajes ni `processedActivity`, que trae contenido de terceros.
    - **Términos:** los [términos de portabilidad](https://www.linkedin.com/legal/l/portability-api-terms)
-     permiten guardar los datos con el consentimiento del miembro y no restringen el uso comercial.
+     permiten guardar los datos con el consentimiento del miembro, obligan a borrarlos si el miembro
+     lo pide y no restringen el uso comercial.
    - **A validar en la prueba:** que el evento de una reacción incluya el URN del post (la doc dice
      que los comentarios traen el post original en `processedActivity`), y si "guardar post" también
      genera evento. Si lo genera, sería una curación privada.
