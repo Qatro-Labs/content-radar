@@ -66,8 +66,8 @@ y dónde la respondemos.
 | "si es una tendencia que recién empieza o una que ya todos copiaron" | Etapa del ciclo de vida y saturación, no solo volumen | `lifecycle` (`emerging` … `saturated`), `saturation_score` |
 | "por qué funcionó: gancho, formato, tema, momento, quién" | Outliers frente a su referencia y contraste con el resto del tema, presentado como hipótesis | CLAUDE.md §7 (outliers y "por qué funcionó") |
 | "ejecutivos y equipos de Latinoamérica aprendiendo IA" | Encaje con la audiencia evaluado contra el perfil de 30X | `audience_fit_score`, `audience_mix`, `latam_gap` |
-| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. Sus términos tampoco permiten usar su contenido obtenido a través de buscadores sin consentimiento del dueño. LinkedIn entra por vías oficiales o con consentimiento: la API de portabilidad (DMA, "un clic = señal" del curador), los exports de analítica de 30X y de Andrés Bilbao, la curación de la comunidad, el embed oficial y los canales abiertos de sus referentes. Instagram y TikTok entran por curación. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
-| "la propia comunidad como sensor" | Sensor editorial: el equipo o la comunidad pega enlaces y los etiqueta | `POST /signals/manual` (P1) |
+| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. Sus términos tampoco permiten usar su contenido obtenido a través de buscadores sin consentimiento del dueño. **Decidido el 17/10: LinkedIn, Instagram y TikTok no entran en el MVP**, y la curación manual se descartó. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS). Las vías oficiales (API de portabilidad DMA, exports de analítica con consentimiento, embed) quedan en el roadmap. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
+| "la propia comunidad como sensor" | Descartado para el MVP (17/10): sin curación manual | — |
 | "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe)** para las decisiones atómicas sobre piezas: clasifica cada pieza (relevancia, formato, gancho…), detecta notas replicadas y verifica lo que escribe el LLM. Python prioriza, y el LLM evalúa cada tema y redacta | CLAUDE.md §7 · [`jev.md`](jev.md) |
 | "el mismo problema que tiene cualquier marca, medio o creador" | El perfil de audiencia es un archivo: cambiarlo adapta el radar a otra marca. En la demo basta con contarlo | `data/audiences/30x.yaml` · "varias audiencias" es P2 |
 | "un prototipo funcional que responda una pregunta concreta" | Una pregunta, respondida con datos reales y evidencia enlazada | La pregunta de CLAUDE.md §1 |
@@ -142,8 +142,7 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Interactive Radar | Permite explorar, filtrar, seleccionar y abrir evidencias | Propia | `frontend/`: vistas Discover y Explore | P0 |
 | Historical Tracking | Guarda observaciones y muestra la evolución cuando hay historial | Exploding Topics | `metric_snapshots` (P0) · timeline (P1) | P0 / P1 |
 | Content Recommendations | Propone tema, ángulo y formato por plataforma | SparkToro / vidIQ | `recommendation` (P0) · `editorial/briefs` y vista Create (P1) | P0 / P1 |
-| Community Sensor | El equipo o la comunidad pega enlaces de redes cerradas y los etiqueta | Reto (§1) | `collectors/manual`, `POST /signals/manual` | P1 |
-| LinkedIn Sensor | Posts curados por reacción (API de portabilidad DMA) o por URL, con métricas reales de los exports de 30X y Bilbao, mostrados con el embed oficial | Propia | `collectors/linkedin_dma`, `jobs/import_linkedin_export` | P1 |
+| LinkedIn Sensor | Posts de LinkedIn por vías oficiales (API de portabilidad DMA, exports de analítica de 30X y Bilbao), mostrados con el embed oficial | Propia | `collectors/linkedin_dma`, `jobs/import_linkedin_export` | Roadmap (fuera del MVP, 17/10) |
 | Claim Verification | Verifica cada afirmación del LLM contra la evidencia que cita; lo no respaldado no se publica | Cookbook de TypeSafe | Batería de verificación de Jev | P1 · tras el núcleo (CLAUDE.md §12) |
 | LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en fuentes de Latinoamérica (España aparte, como contexto) | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
 | MCP Integration | Permite consultar oportunidades, temas y evidencias desde asistentes de IA | Propia | `mcp/` | P1 |
@@ -164,7 +163,6 @@ respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
 | Por qué funcionó | Se comparó el outlier con el resto del tema | Como hipótesis, con su limitación al lado |
 | Gancho o estructura | Depende de lo que se haya podido leer | Distinguir "inferido del título" de "revisado en el contenido" |
 | Fuentes independientes | Tras quitar las republicaciones | Medios distintos, no copias de la misma nota |
-| Señal de LinkedIn | La marcó un curador (reacción o URL) o viene del export de su dueño | "Curado por el equipo". Métricas solo si vienen del export del dueño |
 | Afirmación del análisis | Jev la verificó contra la evidencia que cita | Se publica solo si está respaldada; si no, se elimina |
 | Juicio de Jev | Hay respuesta con `confidence` | Con su nivel de confianza; con `confidence < 0.5`, "incierto" |
 | Coste | Se midió nuestro gasto real (APIs, Jev, LLM, hosting) | Con la cifra medida y la proyección mensual etiquetada como estimación. El coste de los servicios pagos se cita como dato de 30X ("miles de dólares al año"); no calculamos ahorros |
@@ -180,7 +178,6 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
 - 100–300 piezas públicas procesadas, de ≥2 fuentes automáticas, YouTube entre ellas.
 - La recolección se puede repetir y conserva el historial de snapshots.
 - Cada evidencia lleva enlace original, fuente, fecha de publicación y fecha de observación.
-- Lo que entra por curación manual está marcado como tal.
 - Las republicaciones no inflan la diversidad de fuentes.
 - Ningún dato de ejemplo aparece como resultado real.
 
@@ -209,9 +206,9 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
 - Cada juicio de Jev guarda la versión del modelo y su `confidence`. Si hubo clave de Jev, se
   validó con piezas etiquetadas a mano en `data/evaluations/`.
 - El audience fit del LLM coincide, a grandes rasgos, con el ranking que el equipo revisó a mano.
-- El pitch explica cómo entra LinkedIn (API de portabilidad, exports de 30X, curación y embed
-  oficial), cómo entran
-  Instagram y TikTok (curación), y por qué así (§2).
+- El pitch explica por qué LinkedIn, Instagram y TikTok no entran en el MVP (sin login ni
+  scraping, por sus términos), cómo entran sus referentes (canales abiertos) y qué vías oficiales
+  quedan en el roadmap (§2).
 
 **Entrega**
 - La app está desplegada y funciona desde una sesión limpia, no solo en local.
