@@ -319,7 +319,7 @@
 - **Verificación:** número anotado.
 - **Commit:** ninguno.
 
-### Paso 2 — Contrato aditivo y fixture
+### Paso 2 — Contrato aditivo y fixture [HECHO]
 
 - **Archivos:** `backend/app/schemas/opportunity.py`, `data/fixtures/opportunities.json`,
   `backend/tests/test_opportunity_fixture.py`.

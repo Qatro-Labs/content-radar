@@ -65,6 +65,11 @@ class Rate(BaseModel):
     unit: str = Field(description="p. ej. 'views/h', 'points/h', 'comments/h'")
 
 
+class Collection(StrEnum):
+    AUTOMATIC = "automatic"
+    MANUAL = "manual"
+
+
 class Evidence(BaseModel):
     url: HttpUrl
     source: str = Field(description="Nombre público de la fuente (canal, medio, query)")
@@ -80,6 +85,61 @@ class Evidence(BaseModel):
         default=None, ge=0, description="Rendimiento ajustado por edad / mediana de referencia"
     )
     is_outlier: bool | None = Field(default=None, description="outlier_ratio ≥ 3")
+    collection: Collection = Field(
+        default=Collection.AUTOMATIC, description="Sensor automático o curación manual"
+    )
+
+
+class ScoreComponentName(StrEnum):
+    MOMENTUM = "momentum"
+    AUDIENCE_FIT = "audience_fit"
+    CROSS_SOURCE = "cross_source"
+    FRESHNESS = "freshness"
+    ACTIONABILITY = "actionability"
+
+
+class ScorePenaltyName(StrEnum):
+    SINGLE_SOURCE = "single_source"
+    SMALL_SAMPLE = "small_sample"
+
+
+class ScoreComponent(BaseModel):
+    name: ScoreComponentName
+    value: Score = Field(description="0–100; freshness = 100 − saturation")
+    weight: float = Field(ge=0, le=1)
+
+
+class ScorePenalty(BaseModel):
+    name: ScorePenaltyName
+    points: float = Field(ge=0)
+
+
+class ScoreBreakdown(BaseModel):
+    """Desglose del Opportunity Score, calculado en Python (CLAUDE.md §7)."""
+
+    components: list[ScoreComponent] = Field(description="Siempre los 5, en orden fijo")
+    penalties: list[ScorePenalty] = Field(description="Solo las aplicadas")
+    total: Score = Field(description="== Opportunity.opportunity_score")
+
+
+class FitCriterion(StrEnum):
+    BUSINESS_IMPACT = "business_impact"  # impacto en decisiones empresariales
+    ORG_APPLICATION = "org_application"  # aplicación real en organizaciones
+    EXEC_READABILITY = "exec_readability"  # comprensible para directivos no técnicos
+    LATAM_RELEVANCE = "latam_relevance"  # relevancia LATAM
+    PILLAR_FIT = "pillar_fit"  # encaje con pilares 30X
+    ACTIONABLE_CONTENT = "actionable_content"  # convertible en contenido accionable
+
+
+class AudienceFitCriterion(BaseModel):
+    criterion: FitCriterion
+    # Antes que `level` a propósito: es el orden en que el LLM los genera, para que razone
+    # antes de puntuar (CLAUDE.md §7).
+    justification: str = Field(description="Por qué ese nivel, citando la evidencia")
+    evidence_urls: list[HttpUrl] = Field(
+        description="Evidencias del tema que cita la justificación"
+    )
+    level: int = Field(ge=0, le=5, description="Nivel de la rúbrica 0–5 (LLM)")
 
 
 class Opportunity(BaseModel):
@@ -95,12 +155,19 @@ class Opportunity(BaseModel):
     outlier_count: int = Field(ge=0)
     top_outlier_ratio: float | None = Field(default=None, ge=0)
     audience_mix: AudienceMix
-    # Los calcula el LLM (rúbrica de §7). None = todavía sin evaluar; nunca un valor inventado.
+    # Los niveles los pone el LLM (rúbrica de §7) y Python los combina. None = todavía sin
+    # evaluar; nunca un valor inventado.
     audience_fit_score: Score | None = None
+    audience_fit_criteria: list[AudienceFitCriterion] | None = Field(
+        default=None, description="None = sin evaluar"
+    )
     cross_source_score: Score
     saturation_score: Score
     actionability_score: Score | None = None
     opportunity_score: Score | None = Field(default=None, description="None sin audience fit")
+    score_breakdown: ScoreBreakdown | None = Field(
+        default=None, description="None si opportunity_score es None"
+    )
     confidence: Confidence
     source_count: int = Field(ge=0, description="Fuentes independientes")
     evidence_strength: float = Field(
