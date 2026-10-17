@@ -9,10 +9,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.intelligence.clustering import cluster, representative
+from app.intelligence.clustering import cluster, is_broad, representative
 from app.intelligence.embeddings import embed, embedding_text
 from app.intelligence.opportunities import Piece, TopicResult, build_opportunities
-from app.models import ContentItem, OpportunityRecord, PipelineRun, Source
+from app.models import ContentItem, MetricSnapshot, OpportunityRecord, PipelineRun, Source
 from app.schemas.opportunity import (
     Confidence,
     Evidence,
@@ -22,7 +22,7 @@ from app.schemas.opportunity import (
     OpportunityTimeline,
     Period,
 )
-from app.schemas.signal import Metrics, Platform, Segment
+from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
 ANALYZE_JOB = "analyze"
 LOOKBACK = timedelta(days=14)
@@ -44,13 +44,25 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
     stmt = (
         select(ContentItem, Source)
         .join(Source)
-        .where(Source.active.is_(True), ContentItem.published_at > as_of - LOOKBACK)
-        .options(selectinload(ContentItem.snapshots))
+        # Solo lo publicado, recolectado y observado hasta `as_of`: el mismo `as_of` tiene que
+        # dar el mismo resultado. `Source.active` y los textos de cada pieza no tienen historial
+        # y se leen como están hoy; por eso la demo usa una ejecución guardada (CLAUDE.md §13).
+        .where(
+            Source.active.is_(True),
+            ContentItem.published_at > as_of - LOOKBACK,
+            ContentItem.published_at <= as_of,
+            ContentItem.first_observed_at <= as_of,
+        )
+        .options(selectinload(ContentItem.snapshots.and_(MetricSnapshot.observed_at <= as_of)))
         .order_by(ContentItem.id)
     )
     pieces = []
     for item, source in (await session.execute(stmt)).all():
-        snapshots = [(s.observed_at, _metrics(s)) for s in item.snapshots]
+        # El filtro del loader no se aplica a colecciones ya cargadas en la sesión: se repite aquí.
+        kept = sorted(
+            (s for s in item.snapshots if s.observed_at <= as_of), key=lambda s: s.observed_at
+        )
+        snapshots = [(s.observed_at, _metrics(s)) for s in kept]
         pieces.append(
             Piece(
                 item_id=item.id,
@@ -63,16 +75,18 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
                 segment=Segment(source.segment),
                 language=item.language or source.language,
                 published_at=item.published_at,
-                observed_at=item.last_observed_at,
+                observed_at=snapshots[-1][0] if snapshots else min(item.last_observed_at, as_of),
                 metrics=snapshots[-1][1] if snapshots else Metrics(),
+                source_kind=SourceKind(source.kind),
                 snapshots=snapshots,
+                region=source.region,
             )
         )
     return pieces
 
 
 async def compute_opportunities(
-    session: AsyncSession, run_id: int, as_of: datetime
+    session: AsyncSession, as_of: datetime
 ) -> tuple[int, list[TopicResult]]:
     """Devuelve (piezas analizadas, oportunidades). No escribe nada."""
     pieces = await load_pieces(session, as_of)
@@ -87,7 +101,7 @@ async def compute_opportunities(
         reps,
         as_of=as_of,
         monitoring_started_at=MONITORING_STARTED_AT,
-        id_prefix=f"opp_{run_id}",
+        broad=[is_broad(vectors, c) for c in clusters],
     )
     return len(pieces), results
 

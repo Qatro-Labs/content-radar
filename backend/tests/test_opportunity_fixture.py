@@ -5,7 +5,14 @@ from pathlib import Path
 
 import pytest
 
-from app.schemas.opportunity import Evidence, OpportunityList, OpportunityTimeline
+from app.schemas.opportunity import (
+    Collection,
+    Evidence,
+    FitCriterion,
+    Opportunity,
+    OpportunityList,
+    OpportunityTimeline,
+)
 
 FIXTURE = Path(__file__).resolve().parents[2] / "data" / "fixtures" / "opportunities.json"
 
@@ -39,3 +46,49 @@ def test_fixture_is_internally_consistent(raw):
         ]
         assert o.outlier_count >= sum(r >= 3 for r in ratios)
         assert o.top_outlier_ratio == (max(ratios) if ratios else None)
+
+
+def test_breakdown_matches_score(raw):
+    for o in OpportunityList.model_validate(raw["opportunities"]).items:
+        if o.opportunity_score is None:
+            assert o.score_breakdown is None
+            continue
+        b = o.score_breakdown
+        assert b is not None
+        weighted = sum(c.value * c.weight for c in b.components)
+        weighted -= sum(p.points for p in b.penalties)
+        assert b.total == o.opportunity_score
+        assert b.total == pytest.approx(max(0, min(100, weighted)), abs=0.1)
+
+
+def test_fit_criteria_match_fit_score(raw):
+    for o in OpportunityList.model_validate(raw["opportunities"]).items:
+        if o.audience_fit_criteria is None:
+            continue
+        assert o.audience_fit_score is not None
+        assert {c.criterion for c in o.audience_fit_criteria} == set(FitCriterion)
+        assert len(o.audience_fit_criteria) == len(FitCriterion)
+        mean_level = sum(c.level for c in o.audience_fit_criteria) / len(o.audience_fit_criteria)
+        assert mean_level / 5 * 100 == pytest.approx(o.audience_fit_score, abs=0.5)
+        # La accionabilidad sale del criterio 6 (CLAUDE.md §7).
+        [actionable] = [
+            c for c in o.audience_fit_criteria if c.criterion is FitCriterion.ACTIONABLE_CONTENT
+        ]
+        assert o.actionability_score == pytest.approx(actionable.level / 5 * 100)
+        urls = {e["url"] for e in raw["evidence"][o.id]}
+        assert all(str(u) in urls for c in o.audience_fit_criteria for u in c.evidence_urls)
+
+
+def test_old_payload_still_validates(raw):
+    old_opportunity = dict(raw["opportunities"]["items"][0])
+    for key in ("score_breakdown", "audience_fit_criteria"):
+        old_opportunity.pop(key, None)
+    old_evidence = dict(raw["evidence"]["opp_001"][0])
+    old_evidence.pop("collection", None)
+
+    o = Opportunity.model_validate(old_opportunity)
+    e = Evidence.model_validate(old_evidence)
+
+    assert o.score_breakdown is None
+    assert o.audience_fit_criteria is None
+    assert e.collection is Collection.AUTOMATIC

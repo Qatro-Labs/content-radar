@@ -64,6 +64,13 @@ def classify(
             f"(≤ {EMERGING_MAX_SOURCES}) y saturación {saturation:.0f} "
             f"< {EMERGING_MAX_SATURATION}.",
         )
+    if acceleration < 0:
+        # Sin etapa `declining` en el contrato: el texto explica que el tema se enfría.
+        return Stage(
+            Lifecycle.UNKNOWN,
+            f"En descenso: aceleración {acceleration:+.0%}, saturación {saturation:.0f}, "
+            f"{source_count} fuentes. Ninguna etapa aplica.",
+        )
     return Stage(
         Lifecycle.UNKNOWN,
         f"Ninguna regla se cumple (aceleración {acceleration:+.2f}, saturación {saturation:.0f}, "

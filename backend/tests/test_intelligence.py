@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.intelligence.audience_mix import audience_mix, latam_gap
+from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
 from app.intelligence.lifecycle import classify
 from app.intelligence.outliers import age_adjusted, is_outlier, outlier_ratio
@@ -15,9 +15,17 @@ from app.intelligence.ranking import (
     momentum_score,
     opportunity_score,
     recommendation,
+    score_breakdown,
 )
 from app.intelligence.velocity import WindowCounts, piece_rate, topic_velocity, window_counts
-from app.schemas.opportunity import Confidence, GrowthStatus, Lifecycle, Recommendation
+from app.schemas.opportunity import (
+    Confidence,
+    GrowthStatus,
+    Lifecycle,
+    Recommendation,
+    ScoreComponentName,
+    ScorePenaltyName,
+)
 from app.schemas.signal import Segment
 
 NOW = datetime(2026, 10, 17, 12, tzinfo=UTC)
@@ -125,16 +133,29 @@ def test_audience_mix_weighted_and_sums_to_one():
 
 def test_audience_mix_empty():
     assert audience_mix([]) is None
-    assert latam_gap(None) is None
+    assert latam_share([]) is None
+    assert latam_gap(None, None) is None
+
+
+def test_latam_share_counts_only_latin_american_regions():
+    # España (es) y global no cuentan; mx y latam sí: 1 + 3 de un peso total de 9.
+    share = latam_share([("es", 2), ("mx", 1), ("global", 3), (None, 0), ("latam", 3)])
+    assert share == pytest.approx(4 / 9, abs=0.001)
 
 
 def test_latam_gap():
     gap = audience_mix([(Segment.BUSINESS, 1), (Segment.TECH, 3)])
-    covered = audience_mix([(Segment.LATAM_ES, 1), (Segment.TECH, 1)])
     tech_only = audience_mix([(Segment.TECH, 1)])
-    assert latam_gap(gap) is True
-    assert latam_gap(covered) is False
-    assert latam_gap(tech_only) is None
+    assert latam_gap(gap, 0.0) is True
+    assert latam_gap(gap, 0.5) is False  # ya cubierto en la región
+    assert latam_gap(tech_only, 0.0) is None
+
+
+def test_spanish_coverage_does_not_close_the_latam_gap():
+    # Mucho latam_es, pero todo de España: el gap sigue abierto.
+    mix = audience_mix([(Segment.BUSINESS, 1), (Segment.LATAM_ES, 1)])
+    share = latam_share([("global", 1), ("es", 1)])
+    assert latam_gap(mix, share) is True
 
 
 # --- cross source / saturation ---
@@ -158,6 +179,15 @@ def test_saturation_percentiles():
     assert saturation_scores([1, 5, 10]) == [0.0, 50.0, 100.0]
 
 
+def test_declining_topic_reason():
+    stage = classify(acceleration=-0.52, saturation=22, source_count=5, item_count=10)
+    assert stage.lifecycle is Lifecycle.UNKNOWN
+    assert stage.insufficient is False
+    assert stage.reason.startswith("En descenso: aceleración -52%")
+    rising = classify(acceleration=0.43, saturation=82, source_count=5, item_count=10)
+    assert rising.reason.startswith("Ninguna regla se cumple")
+
+
 # --- ranking ---
 
 
@@ -179,6 +209,32 @@ def test_opportunity_score_penalties_and_floor():
         source_count=1, item_count=3,
     )  # fmt: skip
     assert score == 0
+
+
+def test_score_breakdown_worked_example():
+    b = score_breakdown(
+        momentum=80, audience_fit=60, cross_source=50, saturation=30, actionability=40,
+        source_count=1, item_count=5,
+    )  # fmt: skip
+    assert b is not None
+    assert [(c.name, c.value, c.weight) for c in b.components] == [
+        (ScoreComponentName.MOMENTUM, 80, 0.30),
+        (ScoreComponentName.AUDIENCE_FIT, 60, 0.25),
+        (ScoreComponentName.CROSS_SOURCE, 50, 0.20),
+        (ScoreComponentName.FRESHNESS, 70, 0.15),
+        (ScoreComponentName.ACTIONABILITY, 40, 0.10),
+    ]
+    assert [(p.name, p.points) for p in b.penalties] == [
+        (ScorePenaltyName.SINGLE_SOURCE, 10),
+        (ScorePenaltyName.SMALL_SAMPLE, 10),
+    ]
+    assert b.total == 43.5  # 24 + 15 + 10 + 10.5 + 4 − 20
+
+
+def test_score_breakdown_is_none_without_fit():
+    kwargs = dict(momentum=80, cross_source=60, saturation=30, source_count=4, item_count=20)
+    assert score_breakdown(audience_fit=None, actionability=70, **kwargs) is None
+    assert score_breakdown(audience_fit=80, actionability=None, **kwargs) is None
 
 
 def test_evidence_strength():

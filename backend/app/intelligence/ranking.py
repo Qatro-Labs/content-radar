@@ -1,7 +1,17 @@
 """Momentum, Opportunity Score, confianza y recomendación (CLAUDE.md §7). Heurísticas ajustables."""
 
 from app.intelligence.lifecycle import Stage
-from app.schemas.opportunity import Confidence, GrowthStatus, Lifecycle, Recommendation
+from app.schemas.opportunity import (
+    Confidence,
+    GrowthStatus,
+    Lifecycle,
+    Recommendation,
+    ScoreBreakdown,
+    ScoreComponent,
+    ScoreComponentName,
+    ScorePenalty,
+    ScorePenaltyName,
+)
 
 # Momentum: velocidad (percentil entre temas), aceleración y outliers.
 W_VELOCITY = 0.4
@@ -42,6 +52,42 @@ def evidence_strength(item_count: int, source_count: int) -> float:
     return round(volume * diversity, 1)
 
 
+def score_breakdown(
+    *,
+    momentum: float,
+    audience_fit: float | None,
+    cross_source: float,
+    saturation: float,
+    actionability: float | None,
+    source_count: int,
+    item_count: int,
+) -> ScoreBreakdown | None:
+    """None si falta el audience fit o la accionabilidad: no se rellena con un supuesto."""
+    if audience_fit is None or actionability is None:
+        return None
+    components = [
+        ScoreComponent(name=ScoreComponentName.MOMENTUM, value=momentum, weight=W_MOMENTUM),
+        ScoreComponent(name=ScoreComponentName.AUDIENCE_FIT, value=audience_fit, weight=W_FIT),
+        ScoreComponent(name=ScoreComponentName.CROSS_SOURCE, value=cross_source, weight=W_CROSS),
+        ScoreComponent(
+            name=ScoreComponentName.FRESHNESS, value=100 - saturation, weight=W_FRESHNESS
+        ),
+        ScoreComponent(name=ScoreComponentName.ACTIONABILITY, value=actionability, weight=W_ACTION),
+    ]
+    penalties = []
+    if source_count < 2:
+        penalties.append(
+            ScorePenalty(name=ScorePenaltyName.SINGLE_SOURCE, points=PENALTY_SINGLE_SOURCE)
+        )
+    if item_count < SMALL_SAMPLE:
+        penalties.append(
+            ScorePenalty(name=ScorePenaltyName.SMALL_SAMPLE, points=PENALTY_SMALL_SAMPLE)
+        )
+    score = sum(c.value * c.weight for c in components) - sum(p.points for p in penalties)
+    total = round(max(0.0, min(100.0, score)), 1)
+    return ScoreBreakdown(components=components, penalties=penalties, total=total)
+
+
 def opportunity_score(
     *,
     momentum: float,
@@ -52,21 +98,16 @@ def opportunity_score(
     source_count: int,
     item_count: int,
 ) -> float | None:
-    """None si falta el audience fit o la accionabilidad: no se rellena con un supuesto."""
-    if audience_fit is None or actionability is None:
-        return None
-    score = (
-        W_MOMENTUM * momentum
-        + W_FIT * audience_fit
-        + W_CROSS * cross_source
-        + W_FRESHNESS * (100 - saturation)
-        + W_ACTION * actionability
+    breakdown = score_breakdown(
+        momentum=momentum,
+        audience_fit=audience_fit,
+        cross_source=cross_source,
+        saturation=saturation,
+        actionability=actionability,
+        source_count=source_count,
+        item_count=item_count,
     )
-    if source_count < 2:
-        score -= PENALTY_SINGLE_SOURCE
-    if item_count < SMALL_SAMPLE:
-        score -= PENALTY_SMALL_SAMPLE
-    return round(max(0.0, min(100.0, score)), 1)
+    return None if breakdown is None else breakdown.total
 
 
 def growth_status(insufficient: bool, previous_count: int) -> GrowthStatus:

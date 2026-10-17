@@ -36,7 +36,7 @@ async def main() -> int:
 
             try:
                 as_of = datetime.now(UTC)
-                pieces, results = await compute_opportunities(session, run_row.id, as_of)
+                pieces, results = await compute_opportunities(session, as_of)
                 await save_opportunities(session, run_row.id, results)
                 lifecycles: dict[str, int] = {}
                 for r in results:
