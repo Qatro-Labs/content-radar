@@ -464,7 +464,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm test radarChart && pnpm lint && pnpm type-check`
 - **Commit:** `Draw the opportunity radar with sweep, pulse and selection layers`
 
-### Paso 9 — Panel de detalle y bento
+### Paso 9 — Panel de detalle y bento [HECHO]
 
 - **Archivos:** `frontend/src/components/radar/{OpportunityDetail,AudienceMixCard,WhyItMattersCard}.vue`
 - **Cambio:**
@@ -478,7 +478,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check`
 - **Commit:** `Add the opportunity detail panel and the audience and why cards`
 
-### Paso 10 — Ranking
+### Paso 10 — Ranking [HECHO]
 
 - **Archivos:** `frontend/src/components/radar/OpportunityRanking.vue`
 - **Cambio:** criterio 11.
