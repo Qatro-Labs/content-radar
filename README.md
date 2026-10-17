@@ -8,6 +8,8 @@ Convierte señales públicas de Internet (YouTube, Hacker News, medios y blogs p
 
 - **Por qué y para quién:** [docs/brief.md](docs/brief.md)
 - **Decisiones, reglas y contratos:** [CLAUDE.md](CLAUDE.md)
+- **Arquitectura y coste de operación medido:** [docs/architecture.md](docs/architecture.md) · [docs/costs.md](docs/costs.md)
+- **Algoritmo de priorización:** [docs/scoring.md](docs/scoring.md)
 
 ## En vivo
 
@@ -29,7 +31,7 @@ Servicios de dominio (Python) → API REST /api/v1 (dashboard Vue) y servidor MC
 
 - `collect` corre cada 2 h en GitHub Actions y `analyze` corre después de cada recolección correcta. La API y el MCP sirven la última ejecución correcta, o la fijada con `DEMO_RUN_ID`.
 - Los scores se calculan en Python, de forma determinista. El LLM evalúa y redacta; no calcula. Jev (TypeSafe) responde preguntas tipadas sobre cada pieza.
-- Detalle: [CLAUDE.md §4](CLAUDE.md#4-arquitectura) (arquitectura) y [§7](CLAUDE.md#7-motor-de-inteligencia-y-scoring) (motor).
+- Detalle: [docs/architecture.md](docs/architecture.md) (arquitectura) y [docs/scoring.md](docs/scoring.md) (motor).
 
 ## Fuentes
 
@@ -51,7 +53,7 @@ Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales.
 - **Etapa del tema** (emerging → saturated), validación entre fuentes independientes, saturación, **para quién importa** (tech, negocio, español) y **LATAM Opportunity Gap**.
 - **Opportunity Score** = 0,30·momentum + 0,25·audience fit + 0,20·cross-source + 0,15·(100 − saturación) + 0,10·accionabilidad. La confianza se muestra aparte. Cada oportunidad trae una recomendación (`publish_now`, `find_angle`, `wait_for_case` o `discard`) junto con la regla que la produjo.
 
-Fórmulas, umbrales y reglas: [CLAUDE.md §7](CLAUDE.md#7-motor-de-inteligencia-y-scoring). Jev: [docs/jev.md](docs/jev.md).
+Fórmulas, umbrales y reglas, tal como están en el código: [docs/scoring.md](docs/scoring.md). Jev: [docs/jev.md](docs/jev.md).
 
 ## Conectar el MCP
 
@@ -65,7 +67,7 @@ Claude web, MCP Inspector y otros clientes, qué clientes se han probado y sus l
 
 ## Coste de operación
 
-Cada llamada a una API externa (YouTube, ScrapeCreators, Jev, LLM) queda registrada en `usage_events`, con su coste calculado a partir de [`data/pricing.yaml`](data/pricing.yaml). Ahí está cada precio con su fuente y su fecha. `GET /api/v1/costs` y la tool MCP `get_operating_cost` dan el coste medido y la proyección mensual por separado. La proyección es una estimación.
+Cada llamada a una API externa (YouTube, ScrapeCreators, Jev, LLM) queda registrada en `usage_events`, con su coste calculado a partir de [`data/pricing.yaml`](data/pricing.yaml). Ahí está cada precio con su fuente y su fecha. `GET /api/v1/costs` y la tool MCP `get_operating_cost` dan el coste medido y la proyección mensual por separado. La proyección es una estimación. Coste medido y su lectura: [docs/costs.md](docs/costs.md).
 
 ## Limitaciones y pendiente
 
