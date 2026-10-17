@@ -10,7 +10,7 @@
 - **Owner (CLAUDE.md §3):** Steven | Melkin | Frontend lead
 - **Prioridad (CLAUDE.md §12):** P0 | P1 | P2 · **Checkpoint que desbloquea (§13):** <cuál>
 - **Valor (filtro de CLAUDE.md §12):** <paso del recorrido de demo que mejora> · **Pregunta de
-  `docs/brief.md` §3:** <#n>
+  `docs/brief.md` §4:** <#n>
 - **Repo:** <path absoluto>
 - **Rama base:** <rama> @ `<sha corto>`
 - **Rama de trabajo:** `<data|intel|fe|chore>/<slug>`

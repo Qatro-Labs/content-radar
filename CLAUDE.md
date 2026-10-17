@@ -12,6 +12,8 @@
 **Pregunta que el prototipo debe responder:**
 > "¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?"
 
+El reto pone como ejemplo "en LinkedIn". LinkedIn, Instagram y TikTok no tienen acceso sin login, así que entran por curación manual (§2, regla 2), y el pitch lo explica de frente (`docs/brief.md` §2).
+
 **Propuesta de valor:** 30X Signal convierte señales públicas de Internet en oportunidades editoriales **verificables y accionables**, accesibles desde un dashboard visual (Vue) o desde asistentes de IA (Claude, ChatGPT, Grok) vía **MCP**.
 
 Flujo del producto: **Señal → Tendencia → Oportunidad → Evidencia → Contenido recomendado**
@@ -19,7 +21,7 @@ Flujo del producto: **Señal → Tendencia → Oportunidad → Evidencia → Con
 **Recorrido de demo** (lo que una persona hace de punta a punta; mide el valor de cada tarea, ver §12):
 abrir el Radar → elegir una oportunidad → revisar scores y evidencia → entender por qué importa → obtener un brief → repetir la consulta desde un asistente vía MCP.
 
-**Brief de producto:** [`docs/brief.md`](docs/brief.md) explica el problema de 30X, el usuario frente a la audiencia, el mapa de capacidades, qué podemos afirmar con los datos y la lista de verificación de la entrega. Léelo antes de planear una tarea o decidir su alcance, al redactar texto que lee una persona (UI, prompts del LLM, respuestas MCP, pitch) y al revisar la entrega.
+**Brief de producto:** [`docs/brief.md`](docs/brief.md) recoge el reto oficial de 30X tal cual, cómo lo leemos, el usuario frente a la audiencia, el mapa de capacidades, qué podemos afirmar con los datos y la lista de verificación de la entrega. Léelo antes de planear una tarea o decidir su alcance, al redactar texto que lee una persona (UI, prompts del LLM, respuestas MCP, pitch) y al revisar la entrega.
 
 Las tres preguntas del reto y cómo las respondemos:
 
@@ -108,7 +110,7 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 
 **Dos niveles de sensores:**
 - **Automáticos:** YouTube, HN, RSS, Brave.
-- **Editoriales:** el equipo o la comunidad de 30X pegan enlaces y los etiquetan. Es el enfoque de "comunidad como sensor" que propone el brief.
+- **Editoriales:** el equipo o la comunidad de 30X pegan enlaces y los etiquetan. Es el enfoque de "comunidad como sensor" que sugiere el reto.
 
 Todos los conectores implementan el protocolo `SignalCollector` (`backend/app/collectors/base.py`) y no escriben en la DB: la persistencia la hace `services.signals.store_signals`.
 Cada `source` lleva un **`segment`** (`tech` | `business` | `latam_es`), además de `language` y `region`. Se asigna a mano al dar de alta la fuente o el canal; es lo que permite responder "para quién importa".
@@ -216,8 +218,8 @@ GET  /health
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
 - **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita.
-- **LLM:** vía el **SDK oficial del proveedor**, con salidas estructuradas (Pydantic). Sin capa multi-proveedor: un modelo y cuatro funciones no la justifican. El modelo se elige con `LLM_MODEL`. Proveedor y modelo: pendiente (Melkin). Funciones concretas (`classify_topic`, `evaluate_audience_fit`, `explain_opportunity`, `recommend_content_angles`). **Sin agentes autónomos.** Resultados cacheados en Postgres.
-- **Perfil editorial de 30X:** en `data/audiences/30x.yaml` (audiencia, pilares, tono, formatos, qué no encaja). Se define en la Fase 2 a partir de los Instagram de 30X y Andrés Bilbao.
+- **LLM:** vía el **SDK oficial del proveedor**, con salidas estructuradas (Pydantic). Sin capa multi-proveedor: un modelo y cuatro funciones no la justifican. El modelo se elige con `LLM_MODEL`. Proveedor y modelo: pendiente (Melkin). El reto sugiere JEV para clasificar y priorizar (ver `docs/brief.md` §2). Funciones concretas (`classify_topic`, `evaluate_audience_fit`, `explain_opportunity`, `recommend_content_angles`). **Sin agentes autónomos.** Resultados cacheados en Postgres.
+- **Perfil editorial de 30X:** en `data/audiences/30x.yaml` (audiencia, pilares, tono, formatos, qué no encaja). Se define en la Fase 2 revisando a mano los Instagram que compartió 30X: @crece30x y @andresbilbao.
 
 ---
 
@@ -309,7 +311,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 
 **Fuera de alcance:** scraping de redes cerradas · entrenar modelos · auto-publicación · editor de contenido · multi-tenant · auth avanzada · facturación · causalidad o viralidad presentadas como certeza · igualar la cobertura de las herramientas de referencia (1of10, SparkToro, Exploding Topics…) · una base propia de comportamiento de audiencias · monitorizar todas las redes o todo el mercado LATAM · predicciones con poco historial.
 
-Las ideas sin prioridad asignada están en `docs/brief.md` §8.
+Las ideas sin prioridad asignada están en `docs/brief.md` §9.
 
 ---
 
@@ -329,11 +331,11 @@ Las ideas sin prioridad asignada están en `docs/brief.md` §8.
 | Dom 18:15 / 11:15 | **Entrega interna** |
 | Dom 19:00 / 12:00 | Deadline oficial |
 
-**Criterios de aceptación:** la lista de verificación de la entrega está en `docs/brief.md` §7. Se repasa en la revisión del domingo a las 12:30 y antes del code freeze.
+**Criterios de aceptación:** la lista de verificación de la entrega está en `docs/brief.md` §8. Se repasa en la revisión del domingo a las 12:30 y antes del code freeze.
 
-**Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1) → el impacto (sin cifras de ahorro que no hayamos medido).
+**Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1) → el impacto: coste real medido de operar el radar (sin cifras de ahorro que no hayamos medido).
 
-**Entregables:** repo · app desplegada · MCP accesible (o demo local verificada con la limitación documentada) · README · arquitectura · fuentes y limitaciones · algoritmo de priorización · presentación · vídeo de respaldo.
+**Entregables:** repo · app desplegada · MCP accesible (o demo local verificada con la limitación documentada) · README · arquitectura · fuentes y limitaciones · algoritmo de priorización · coste de operación medido · presentación · vídeo de respaldo.
 
 ---
 

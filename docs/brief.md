@@ -1,68 +1,126 @@
 # 30X Signal — Brief de producto
 
-> **Qué es:** el *porqué* de 30X Signal. Recoge el problema de 30X, para quién lo construimos, qué
-> capacidades cuentan, qué podemos afirmar con los datos y cuándo está lista la entrega.
+> **Qué es:** el *porqué* de 30X Signal. Recoge el reto oficial de 30X, cómo lo interpretamos, para
+> quién lo construimos, qué capacidades cuentan, qué podemos afirmar con los datos y cuándo está
+> lista la entrega.
 > El *cómo* (reglas, contratos, scoring, stack y calendario) vive en [`CLAUDE.md`](../CLAUDE.md).
-> Si este archivo y `CLAUDE.md` se contradicen, manda `CLAUDE.md` y se corrige este.
+> Si este archivo y `CLAUDE.md` se contradicen, manda `CLAUDE.md` y se corrige este. La excepción
+> es §1: el reto es la fuente primaria y no se edita.
 
 ---
 
-## 1. El problema
+## 1. El reto oficial
 
-30X necesita convertir la conversación sobre IA en contenido útil para líderes y equipos de empresa
-de Latinoamérica. Las señales están repartidas entre plataformas, idiomas y formatos, y lo más
-popular no siempre es lo que más le sirve a esa audiencia.
+Es el enunciado que entregó 30X, copiado tal cual. Es lo único que 30X compartió además de los
+perfiles de referencia.
 
-Reunir enlaces no resuelve nada. Hay que convertir señales sueltas en **una decisión editorial
-respaldada por fuentes**. El producto gira en torno a esa diferencia entre *popularidad* y
-*oportunidad editorial*.
+> **Reto 30X: Radar de contenido** · Área: Media · Tipo: Explorar una oportunidad.
+>
+> **El reto en una frase:** ¿Cómo puede un equipo de contenido descubrir, de forma confiable y sin
+> gastar una fortuna, qué temas y formatos están despegando en redes, por qué funcionan y si encajan
+> con su audiencia?
+>
+> **El problema:** 30X produce contenido sobre IA para líderes y equipos en Latinoamérica, y para
+> decidir qué producir el equipo de media busca referentes y piezas que estén funcionando en
+> LinkedIn, Instagram, TikTok y YouTube. Hoy eso depende de servicios de scraping pagos que cuestan
+> miles de dólares al año y que solo resuelven la mitad de la pregunta: traen datos, pero no dicen
+> por qué algo funcionó, si es una tendencia que recién empieza o una que ya todos copiaron, ni si
+> le sirve a nuestra audiencia. Es el mismo problema que tiene cualquier marca, medio o creador que
+> hace contenido continuamente.
+>
+> **Preguntas que queremos explorar:**
+> 1. ¿Cómo se detecta una tendencia cuando apenas está empezando a crecer?
+> 2. ¿Cómo se explica por qué una pieza funcionó: el gancho, el formato, el tema, el momento, quién
+>    la publicó?
+> 3. ¿Cómo se filtra lo que es relevante para una audiencia concreta, como ejecutivos y equipos de
+>    Latinoamérica aprendiendo IA?
+>
+> **Caminos posibles (no obligatorios):** agentes que navegan y resumen, combinaciones de fuentes
+> abiertas, modelos que clasifican y priorizan (JEV puede ser un buen aliado aquí), enfoques que
+> usan a la propia comunidad como sensor, o algo que todavía no se nos ha ocurrido.
+>
+> **Qué entra y qué no.** Entra: cualquier enfoque para descubrir y entender contenido público en
+> redes. No entra: datos privados, contenido detrás de un login de terceros, ni técnicas que
+> dependan de violar términos de servicio.
+>
+> **Entregable esperado:** un prototipo funcional que responda una pregunta concreta, por ejemplo:
+> "¿cuáles son los 10 temas de IA que más están creciendo esta semana en LinkedIn, por qué y cómo
+> lo adaptamos?"
+>
+> **Qué compartimos:** perfiles de referencia del contenido que hacemos: el Instagram de 30X
+> ([@crece30x](https://www.instagram.com/crece30x/)) y el de Andrés Bilbao
+> ([@andresbilbao](https://www.instagram.com/andresbilbao/)).
+>
+> **Restricciones:** solo contenido público y nada de datos personales.
 
-## 2. Para quién
+## 2. Cómo leemos el reto
+
+Cada frase del reto marca algo que 30X va a mirar en la demo. Esta tabla dice qué implica cada una
+y dónde la respondemos.
+
+| El reto dice | Qué implica para nosotros | Dónde lo respondemos |
+|---|---|---|
+| "de forma confiable" | Cada afirmación lleva su evidencia y dice si es dato observado, estimado o preliminar | CLAUDE.md §2 (reglas 3 y 5) · §7 de este brief |
+| "sin gastar una fortuna" (hoy pagan miles de USD al año) | Solo fuentes gratuitas o con API oficial y un LLM económico. El coste real de operar el radar se mide y se enseña | CLAUDE.md §5 y §8 · §8 de este brief |
+| "temas **y formatos**" | El formato es una dimensión más: se analiza qué formato funciona y se recomienda formato por plataforma | `ContentSignal.format` · "por qué funcionó" · `recommendation` |
+| "si es una tendencia que recién empieza o una que ya todos copiaron" | Etapa del ciclo de vida y saturación, no solo volumen | `lifecycle` (`emerging` … `saturated`), `saturation_score` |
+| "por qué funcionó: gancho, formato, tema, momento, quién" | Outliers frente a su referencia y contraste con el resto del tema, presentado como hipótesis | CLAUDE.md §7 (outliers y "por qué funcionó") |
+| "ejecutivos y equipos de Latinoamérica aprendiendo IA" | Encaje con la audiencia evaluado contra el perfil de 30X | `audience_fit_score`, `audience_mix`, `latam_gap` |
+| "en redes" y el ejemplo "en LinkedIn" | LinkedIn, Instagram y TikTok no tienen acceso sin login, y el reto prohíbe saltárselo. YouTube entra por API oficial, las fuentes abiertas (HN, medios) muestran las tendencias de IA antes de que lleguen a LinkedIn, y el resto entra por curación de la comunidad. El pitch lo explica de frente: es la respuesta legítima a la restricción | CLAUDE.md §2 (regla 2) y §5 |
+| "la propia comunidad como sensor" | Sensor editorial: el equipo o la comunidad pega enlaces y los etiqueta | `POST /signals/manual` (P1) |
+| "modelos que clasifican y priorizan (JEV)" | [Jev](https://openrouter.ai/typesafe) (TypeSafe) es un modelo de decisión: devuelve elecciones, scores y probabilidades tipados en lugar de texto, con API compatible con OpenAI. Es candidato para `classify_topic`, la rúbrica de audience fit y `recommendation` | Decisión de LLM pendiente (CLAUDE.md §7) |
+| "el mismo problema que tiene cualquier marca, medio o creador" | El perfil de audiencia es un archivo: cambiarlo adapta el radar a otra marca. En la demo basta con contarlo | `data/audiences/30x.yaml` · "varias audiencias" es P2 |
+| "un prototipo funcional que responda una pregunta concreta" | Una pregunta, respondida con datos reales y evidencia enlazada | La pregunta de CLAUDE.md §1 |
+
+## 3. Para quién
 
 | Rol | Quién | Qué necesita |
 |---|---|---|
-| **Usuario del producto** | Quien investiga y decide los contenidos de 30X | Saber qué publicar, con qué ángulo y por qué, con fuentes que pueda abrir y comprobar |
-| **Audiencia editorial** | Ejecutivos, líderes, fundadores y equipos de LATAM que quieren aplicar IA en su negocio | Contenido con utilidad empresarial y comprensible sin perfil técnico |
+| **Usuario del producto** | El equipo de media de 30X, que investiga y decide qué producir | Saber qué publicar, con qué ángulo y por qué, con fuentes que pueda abrir y comprobar |
+| **Audiencia editorial** | Ejecutivos, líderes, fundadores y equipos de LATAM que están aprendiendo a aplicar IA en su negocio | Contenido con utilidad empresarial y comprensible sin perfil técnico |
 
 **Criterio de valor:** pesa más la utilidad empresarial y el encaje con la línea editorial de 30X
 que la atención acumulada. Una pieza con menos views puede valer más para 30X.
 
 El perfil detallado (pilares, tono, formatos y qué no encaja) se define en
-`data/audiences/30x.yaml` (CLAUDE.md §7). No tenemos datos propios sobre el comportamiento real de
-esa audiencia. Por eso el audience fit es una evaluación editorial y no una medición.
+`data/audiences/30x.yaml` (CLAUDE.md §7), revisando a mano los perfiles de @crece30x y
+@andresbilbao. No tenemos datos propios sobre el comportamiento real de esa audiencia. Por eso el
+audience fit es una evaluación editorial y no una medición.
 
-## 3. Las preguntas que responde el producto
+## 4. Las preguntas que responde el producto
 
-Son las preguntas del usuario. Cada una se enlaza con la pregunta del reto a la que contribuye
-(CLAUDE.md §1) y con los campos del contrato `Opportunity` que la responden (CLAUDE.md §6).
+Son las preguntas del usuario. Cada una se enlaza con la pregunta del reto a la que contribuye (§1)
+y con los campos del contrato `Opportunity` que la responden (CLAUDE.md §6).
 
 | # | Pregunta del usuario | Pregunta del reto | La responde | Prioridad |
 |---|---|---|---|---|
-| 1 | ¿Qué temas y piezas empiezan a destacar? | Tendencia temprana · Por qué funcionó | `acceleration`, `lifecycle`, `outlier_count`, `top_outlier_ratio` | P0 |
-| 2 | ¿Qué está creciendo y con qué evidencia? | Tendencia temprana | `velocity`, `growth_status`, `confidence`, evidencias | P0 |
-| 3 | ¿Qué encaja con la audiencia de 30X? | Relevancia | `audience_fit_score`, `audience_mix` | P0 |
-| 4 | ¿Qué tema ya tiene demasiada cobertura parecida? | Tendencia temprana | `saturation_score`, etapas `peaking` y `saturated` | P0 |
-| 5 | ¿Qué tema internacional se puede adaptar al contexto empresarial latinoamericano? | Relevancia | `latam_gap` | P1 |
-| 6 | ¿Qué publicar, con qué ángulo y formato, y cuándo? | Por qué funcionó · Relevancia | `recommendation` y `why_it_matters` (P0) · brief de Content Studio (P1) | P0 / P1 |
+| 1 | ¿Qué temas y piezas empiezan a destacar? | 1 (tendencia temprana) · 2 (por qué funcionó) | `acceleration`, `lifecycle`, `outlier_count`, `top_outlier_ratio` | P0 |
+| 2 | ¿Qué está creciendo y con qué evidencia? | 1 | `velocity`, `growth_status`, `confidence`, evidencias | P0 |
+| 3 | ¿Qué encaja con la audiencia de 30X? | 3 (relevancia) | `audience_fit_score`, `audience_mix` | P0 |
+| 4 | ¿Qué tema ya tiene demasiada cobertura parecida? | 1 | `saturation_score`, etapas `peaking` y `saturated` | P0 |
+| 5 | ¿Qué tema internacional se puede adaptar al contexto empresarial latinoamericano? | 3 | `latam_gap` | P1 |
+| 6 | ¿Qué publicar, con qué ángulo y formato, y cuándo? | 2 · 3 | `recommendation` y `why_it_matters` (P0) · brief de Content Studio (P1) | P0 / P1 |
 
-## 4. Propuesta de valor
+## 5. Propuesta de valor
 
-30X Signal junta descubrimiento, evaluación y recomendación editorial en un solo recorrido. Cada
-oportunidad deja claro qué está pasando, por qué le importa a 30X, qué datos la respaldan y cómo
-convertirla en contenido.
+Los servicios de scraping que usa 30X hoy traen datos, pero se quedan en la mitad de la pregunta.
+30X Signal responde la otra mitad: por qué funciona algo, en qué etapa está y si le sirve a la
+audiencia. Además, junta descubrimiento, evaluación y recomendación editorial en un solo recorrido.
 
 Lo que la demo tiene que demostrar:
 
-- **Relevancia para 30X por encima de la popularidad:** el ranking premia el encaje con la audiencia,
-  no el volumen.
-- **Evidencia visible:** fuentes originales, fechas, métricas tal como las da la fuente y límites de
-  interpretación.
+- **Relevancia para 30X por encima de la popularidad:** el ranking premia el encaje con la
+  audiencia, no el volumen.
+- **Evidencia visible:** fuentes originales, fechas, métricas tal como las da la fuente y límites
+  de interpretación.
+- **Coste bajo y medido:** fuentes abiertas y APIs oficiales, con el coste real de operación
+  documentado.
 - **LATAM Opportunity Gap:** temas con tracción internacional y poca cobertura observada entre
   referentes empresariales en español.
 - **Inteligencia accionable:** ángulo, gancho, estructura y formato por plataforma.
 - **Acceso dual:** el mismo análisis en el dashboard y en asistentes de IA vía MCP.
 
-## 5. Mapa de capacidades
+## 6. Mapa de capacidades
 
 Las herramientas de la columna "Inspiración" son una referencia conceptual. No copiamos sus datos,
 sus algoritmos propietarios ni su alcance comercial. Las rutas son relativas a `backend/app/` y
@@ -79,14 +137,15 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Audience Fit Score | Rúbrica 0–5 × 6 criterios contra el perfil de 30X, con justificación por criterio | SparkToro | `editorial/audience`, `intelligence/relevance` | P0 |
 | Opportunity Score | Ordena oportunidades por señal, relevancia, evidencia y saturación | Propia | `intelligence/ranking` | P0 |
 | Explainable Insights | Une cada interpretación con su evidencia, su hipótesis y sus limitaciones | Feedly AI | `editorial/analyzer` (`why_it_matters`, `limitations`) | P0 |
-| Content Pattern Analysis | Compara los outliers con el resto del tema: gancho, formato, estructura y timing | vidIQ / 1of10 | `editorial/analyzer` | P0 |
+| Content Pattern Analysis | Compara los outliers con el resto del tema: gancho, formato, estructura, momento y autor | vidIQ / 1of10 | `editorial/analyzer` | P0 |
 | Interactive Radar | Permite explorar, filtrar, seleccionar y abrir evidencias | Propia | `frontend/`: vistas Discover y Explore | P0 |
 | Historical Tracking | Guarda observaciones y muestra la evolución cuando hay historial | Exploding Topics | `metric_snapshots` (P0) · timeline (P1) | P0 / P1 |
 | Content Recommendations | Propone tema, ángulo y formato por plataforma | SparkToro / vidIQ | `recommendation` (P0) · `editorial/briefs` y vista Create (P1) | P0 / P1 |
+| Community Sensor | El equipo o la comunidad pega enlaces de redes cerradas y los etiqueta | Reto (§1) | `collectors/manual`, `POST /signals/manual` | P1 |
 | LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en español | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
 | MCP Integration | Permite consultar oportunidades, temas y evidencias desde asistentes de IA | Propia | `mcp/` | P1 |
 
-## 6. Qué podemos afirmar con los datos
+## 7. Qué podemos afirmar con los datos
 
 Este es el vocabulario para todo texto que lea una persona: la UI, las salidas del LLM, las
 respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
@@ -102,10 +161,11 @@ respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
 | Por qué funcionó | Se comparó el outlier con el resto del tema | Como hipótesis, con su limitación al lado |
 | Gancho o estructura | Depende de lo que se haya podido leer | Distinguir "inferido del título" de "revisado en el contenido" |
 | Fuentes independientes | Tras quitar las republicaciones | Medios distintos, no copias de la misma nota |
+| Coste | Se midió nuestro gasto real (APIs, LLM, hosting) | Con la cifra medida. El coste de los servicios pagos se cita como dato de 30X ("miles de dólares al año"); no calculamos ahorros |
 | Clientes MCP | Se probó la conexión | Solo los clientes que se probaron de verdad |
 | Dato ausente | No hay dato | "No disponible" (CLAUDE.md §2) |
 
-## 7. Lista de verificación de la entrega
+## 8. Lista de verificación de la entrega
 
 La entrega está lista cuando se cumple todo lo siguiente con datos reales. Se repasa en la revisión
 del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
@@ -136,6 +196,12 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
   probaron.
 - Dashboard y MCP usan los mismos servicios, así que muestran el mismo ranking.
 
+**Respuesta al reto**
+- El prototipo responde la pregunta de CLAUDE.md §1 con datos reales.
+- Están documentados el coste real de operación y su desglose (APIs, LLM, hosting).
+- El pitch explica cómo entran LinkedIn, Instagram y TikTok (curación de la comunidad) y por qué
+  así (§2).
+
 **Entrega**
 - La app está desplegada y funciona desde una sesión limpia, no solo en local.
 - El recorrido de demo (CLAUDE.md §1) funciona de punta a punta.
@@ -144,11 +210,11 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
   lo que quedó pendiente (entregables de CLAUDE.md §13).
 - Se entrega antes de la entrega interna (dom 18:15 ESP / 11:15 COL).
 
-## 8. Ideas sin prioridad asignada
+## 9. Ideas sin prioridad asignada
 
 Salieron en las conversaciones de producto, pero no tienen prioridad en CLAUDE.md §12. Para que
-entren tienen que pasar el filtro de valor (§12) y el equipo tiene que acordarlo en el canal. Si se
-aprueban, se anotan en `CLAUDE.md`.
+entren tienen que pasar el filtro de valor (CLAUDE.md §12) y el equipo tiene que acordarlo en el
+canal. Si se aprueban, se anotan en `CLAUDE.md`.
 
 - Feedback editorial con tres respuestas: «Me interesa», «No es relevante» y «Ya publicamos sobre
   esto». El endpoint `POST /editorial/feedback` ya figura en CLAUDE.md §6.

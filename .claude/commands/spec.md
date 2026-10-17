@@ -30,7 +30,7 @@ ellos no se propone.
 Antes de investigar, deja claro:
 
 - **Valor:** pasa la tarea por el filtro de valor (§12). Di qué paso del recorrido de demo mejora y
-  qué pregunta de `docs/brief.md` §3 responde. Si no pasa, dilo y propone la versión mínima que sí
+  qué pregunta de `docs/brief.md` §4 responde. Si no pasa, dilo y propone la versión mínima que sí
   aporta, o recomienda no planearla. Un plan sin valor claro no se escribe.
 - **Owner** según §3. Si la tarea es de otra persona, dilo y pregunta si seguir.
 - **Prioridad** P0/P1/P2 según §12 y qué checkpoint de §13 desbloquea. Si es P2 y hay P0 abiertos
