@@ -116,6 +116,7 @@ Solo se afirma en la demo lo que está como "probado" (`docs/brief.md` §7).
 | Cliente | Contra | Estado |
 | --- | --- | --- |
 | Cliente Python del SDK (`mcp` 2.3.0) | `localhost` con la DB local | Probado (2026-10-17, Claude Code para Melkin): las seis tools en `tools/list`, el listado en el mismo orden que `GET /api/v1/opportunities`, búsqueda y coste; `Host` ajeno → 421 |
+| Cliente Python del SDK (`mcp` 2.3.0) | Railway (`https://content-radar-production-9453.up.railway.app/mcp`) | Probado (2026-10-18 ~00:40 ESP): las seis tools en `tools/list`; `get_trending_opportunities` con el mismo orden que `GET /api/v1/opportunities` (opp_1272, opp_1157, opp_519) y `top_evidence` con URLs; `analyze_opportunity` con 13 evidencias; `get_operating_cost` y `search_content_signals` responden. `generate_editorial_brief` no se llamó (gasta LLM) |
 | Claude Code | Railway | Documentado, sin probar |
 | Claude (conector personalizado) | Railway | Documentado, sin probar |
 | MCP Inspector | `localhost` | Documentado, sin probar |
