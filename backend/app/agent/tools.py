@@ -3,8 +3,8 @@
 La lista es cerrada (D16): las de datos solo leen la ejecución servida a través de
 `app.services.opportunities`; las de vista devuelven un parche de la URL del Radar o una navegación
 al expediente o a Explorar (plan fe-radar-agent, D3); `final_answer` y `decline` las resuelve el
-bucle. Ninguna escribe ni accede a red, archivos o SQL arbitrario, y
-añadir una exige revisar el plan.
+bucle. Ninguna escribe ni accede a red, archivos o SQL arbitrario, y añadir una exige revisar el
+plan.
 """
 
 import unicodedata
@@ -472,7 +472,7 @@ TOOLS: dict[str, Tool] = {
     "search_pieces": Tool(
         StepKind.DATA,
         "Busca piezas por título o fuente en la evidencia de todas las oportunidades, como el "
-        f"buscador de Explorar (sin distinguir tildes ni mayúsculas). Outliers primero; como "
+        "buscador de Explorar (sin distinguir tildes ni mayúsculas). Outliers primero; como "
         f"mucho {MAX_SEARCH_ROWS}.",
         SearchInput,
         labels.SEARCH_PENDING_LABEL,
