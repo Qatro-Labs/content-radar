@@ -12,9 +12,10 @@ más de lo que ahorra en tareas pequeñas.
 
 ## 0. Contexto obligatorio
 
-Lee completo `.claude/rules/engineering-standards.md`. Ten presentes de `CLAUDE.md`: §2 (reglas no
-negociables), §3 (ownership), §6 (contratos), §11 (convenciones), §12 (prioridades) y §13
-(checkpoints). Un plan que choque con ellos no se propone.
+Lee completos `.claude/rules/engineering-standards.md` y `docs/brief.md`. Ten presentes de
+`CLAUDE.md`: §1 (recorrido de demo), §2 (reglas no negociables), §3 (ownership), §6 (contratos),
+§11 (convenciones), §12 (filtro de valor y prioridades) y §13 (checkpoints). Un plan que choque con
+ellos no se propone.
 
 ## 1. Resolver la entrada
 
@@ -28,6 +29,9 @@ negociables), §3 (ownership), §6 (contratos), §11 (convenciones), §12 (prior
 
 Antes de investigar, deja claro:
 
+- **Valor:** pasa la tarea por el filtro de valor (§12). Di qué paso del recorrido de demo mejora y
+  qué pregunta de `docs/brief.md` §4 responde. Si no pasa, dilo y propone la versión mínima que sí
+  aporta, o recomienda no planearla. Un plan sin valor claro no se escribe.
 - **Owner** según §3. Si la tarea es de otra persona, dilo y pregunta si seguir.
 - **Prioridad** P0/P1/P2 según §12 y qué checkpoint de §13 desbloquea. Si es P2 y hay P0 abiertos
   de la misma persona, avisa: ningún P2 puede poner en riesgo un P0.
