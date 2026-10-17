@@ -38,6 +38,18 @@ uv run alembic revision --autogenerate -m "descripcion"
 uv run alembic upgrade head
 ```
 
+## Recolección periódica
+
+Cada ejecución de `collect` es un snapshot de métricas; el historial de velocidad depende de que corra cada 2 h.
+
+```bash
+scripts/schedule-local.sh install    # launchd en macOS, cada 2 h (status / uninstall)
+tail -f backend/logs/collect.log
+```
+
+- **Local (ahora):** requiere el Mac encendido y Docker levantado. Si el Mac duerme, la ejecución pendiente corre al despertar, pero ese hueco no se recupera.
+- **Compartido (cuando exista Supabase):** `.github/workflows/collect.yml` corre cada 2 h al configurar los secrets `DATABASE_URL` (session pooler, puerto 5432) y `YOUTUBE_API_KEY`. Al activarlo, desinstalar el launchd local para tener una sola base de verdad.
+
 ## Estructura
 
 ```
@@ -64,4 +76,4 @@ data/            fixtures, evaluaciones y perfiles de audiencia
 | `store_signals` (dedupe + historial de snapshots) y `GET /api/v1/sources/status` | ✅ |
 | Lista inicial de fuentes (`data/sources.yaml`: 38 YouTube · 7 HN · 34 RSS) + loader `app.jobs.seed_sources` | ✅ |
 | Collectors HN / RSS / YouTube + backfill 14 días (`app.jobs.collect`) | ✅ datos reales: 737 HN · 346 RSS · 405 YouTube (38 canales) |
-| Job periódico de snapshots | ⏳ |
+| Job periódico de snapshots: launchd local cada 2 h (`scripts/schedule-local.sh`) · GitHub Actions listo para Supabase | ✅ |

@@ -26,3 +26,6 @@ dist/
 # Data local (los fixtures sí se versionan)
 data/raw/
 *.sqlite
+
+# Logs del collector
+backend/logs/
