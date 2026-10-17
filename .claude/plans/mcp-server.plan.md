@@ -523,7 +523,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest tests/test_agent.py -q && uv run pyright app/db/session.py app/api/routes/agent.py app/schemas/opportunity.py app/agent/tools.py app/agent/sanitize.py`
 - **Commit:** `Move shared session factory, id pattern and sanitizer to common modules`
 
-### Paso 2 — Lectura en bloque de la ejecución servida (D7)
+### Paso 2 — Lectura en bloque de la ejecución servida (D7) [HECHO]
 
 - **Archivos:** `backend/app/services/opportunities.py`, `backend/tests/test_opportunity_routes.py`
 - **Cambio:** `ServedRun`, `list_served(session, *, lifecycle, confidence, topic)` y `_matches`, usado

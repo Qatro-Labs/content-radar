@@ -158,3 +158,31 @@ async def test_detail_evidence_and_timeline(seeded, client):
 async def test_missing_opportunity_is_404(seeded, client, suffix):
     response = await client.get(f"/api/v1/opportunities/opp_999{suffix}")
     assert response.status_code == 404
+
+
+async def test_list_served_keeps_rank_and_carries_evidence_and_timeline(session):
+    expected = fixture_results()
+    await add_run(session, fixture_results())
+
+    served = await opportunities.list_served(session)
+
+    assert served is not None
+    assert served.generated_at == FINISHED_AT
+    assert [s.opportunity.id for s in served.items] == [r.opportunity.id for r in expected]
+    assert [s.evidence for s in served.items] == [r.evidence for r in expected]
+    assert [s.timeline for s in served.items] == [r.timeline for r in expected]
+
+
+async def test_list_served_applies_the_same_filters_as_the_list(session):
+    await add_run(session, fixture_results())
+
+    served = await opportunities.list_served(session, lifecycle=Lifecycle.ACCELERATING)
+    listed = await opportunities.list_opportunities(session, lifecycle=Lifecycle.ACCELERATING)
+
+    assert served is not None and listed is not None
+    assert [s.opportunity.id for s in served.items] == ["opp_001"]
+    assert [o.id for o in listed.items] == ["opp_001"]
+
+
+async def test_list_served_is_none_before_any_analyze_run(session):
+    assert await opportunities.list_served(session) is None
