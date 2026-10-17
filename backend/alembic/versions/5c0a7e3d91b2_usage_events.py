@@ -1,7 +1,7 @@
 """usage_events
 
 Revision ID: 5c0a7e3d91b2
-Revises: 2f18521b1184
+Revises: aebe360930be
 Create Date: 2026-10-17 10:00:00.000000
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "5c0a7e3d91b2"
-down_revision: str | None = "2f18521b1184"
+down_revision: str | None = "aebe360930be"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
