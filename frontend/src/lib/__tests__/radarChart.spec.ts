@@ -109,18 +109,22 @@ describe('buildRadarOption', () => {
   })
 
   it('leaves the rings empty and hides every label while the sweep enters', () => {
-    const option = buildRadarOption(input({ entering: true }))
+    const option = buildRadarOption(input({ entering: true, selectedId: null }))
 
     expect(seriesOfType(option, 'effectScatter')?.data).toEqual([])
     expect(labelledNames(option)).toEqual([])
   })
 
-  it('shows labels and beats the rings at the pace of their acceleration once the sweep ends', () => {
-    // DESIGN.md §7: +86 % → 2,0 s; +6 % → 3,6 s. Sin etiqueta: la seleccionada (opp_001) y la
-    // atenuada (opp_002).
+  it('labels only the topics to publish now, and only without a selection', () => {
+    // DESIGN.md §8 y D2 del plan fe-dashboard-v2. En el fixture solo opp_001 es «Publicar ya».
+    expect(labelledNames(buildRadarOption(input({ selectedId: null })))).toEqual(['opp_001'])
+    expect(labelledNames(buildRadarOption(input({ selectedId: 'opp_003' })))).toEqual([])
+  })
+
+  it('beats the rings at the pace of their acceleration once the sweep ends', () => {
+    // DESIGN.md §7: +86 % → 2,0 s; +6 % → 3,6 s. La atenuada (opp_002) no late.
     const option = buildRadarOption(input({ dimmedIds: new Set(['opp_002']) }))
 
-    expect(labelledNames(option)).toEqual(['opp_003', 'opp_004'])
     expect(seriesOfType(option, 'effectScatter')?.data).toEqual([
       expect.objectContaining({
         name: 'opp_001',

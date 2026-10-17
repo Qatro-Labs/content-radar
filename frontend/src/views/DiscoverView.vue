@@ -5,7 +5,6 @@ import { useOpportunities } from '@/api/opportunities'
 import AudienceMixCard from '@/components/radar/AudienceMixCard.vue'
 import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
 import OpportunityRanking from '@/components/radar/OpportunityRanking.vue'
-import RadarFilters from '@/components/radar/RadarFilters.vue'
 import RadarFootnote from '@/components/radar/RadarFootnote.vue'
 import RadarHero from '@/components/radar/RadarHero.vue'
 import RadarSidePanel from '@/components/radar/RadarSidePanel.vue'
@@ -45,7 +44,6 @@ function hover(id: string | null) {
 
   <div v-else-if="data && view.selected" class="flex flex-col gap-4">
     <RadarHero :view :query class="pt-5 pb-1" />
-    <RadarFilters :view />
 
     <div class="flex flex-wrap items-stretch gap-4">
       <OpportunityRadar
