@@ -1,0 +1,4002 @@
+{
+ "https://news.ycombinator.com/item?id=50023433": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2192,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.5,
+    "probabilities": {
+     "news": 0.56,
+     "opinion": 0.4,
+     "tutorial": 0.02,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.01,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.77,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.01,
+     "opinion": 0.19,
+     "news": 0.8
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.96,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.02,
+     "how_to": 0.01,
+     "news": 0.97,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.96,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.97,
+     "how_to": 0.02,
+     "story": 0.01,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50058903": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2194,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 0.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 1.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 1.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.85,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.01,
+     "counterintuitive": 0.06,
+     "story": 0.02,
+     "how_to": 0.04,
+     "news": 0.87,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.86,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.88,
+     "how_to": 0.01,
+     "story": 0.07,
+     "counterintuitive": 0.03,
+     "data": 0.01,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49969813": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2204,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.44,
+    "probabilities": {
+     "news": 0.31,
+     "opinion": 0.51,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.18,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.38,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.17,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.37,
+     "news": 0.46
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 0.43,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.51,
+     "counterintuitive": 0.33,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.16,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 0.42,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.1,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.4,
+     "data": 0.5,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/7/openai-rogue-agents-wikimedia/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2390,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.97,
+    "probabilities": {
+     "news": 0.97,
+     "opinion": 0.03,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.01,
+     "news": 0.99
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.01,
+     "how_to": 0.0,
+     "news": 0.99,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.99,
+     "how_to": 0.0,
+     "story": 0.01,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50016572": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2186,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.4
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 1.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 1.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 1.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "news": 1.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://elpais.com/tecnologia/2026-10-13/alvise-perez-y-novelas-romanticas-autoeditadas-cuanta-ia-hay-en-los-libros-mas-vendidos-de-espana.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2269,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.86,
+    "probabilities": {
+     "news": 0.88,
+     "opinion": 0.12,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.87,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.11,
+     "news": 0.89
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 0.99,
+    "probabilities": {
+     "question": 0.99,
+     "data": 0.01,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 0.98,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.02,
+     "question": 0.98
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.37
+   }
+  }
+ },
+ "https://hipertextual.com/inteligencia-artificial/como-detectar-fotos-videos-y-audios-creados-con-ia-usando-synthid-detector/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2296,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "tutorial",
+    "confidence": 0.93,
+    "probabilities": {
+     "news": 0.06,
+     "opinion": 0.0,
+     "tutorial": 0.94,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "tutorial",
+    "confidence": 0.94,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.95,
+     "opinion": 0.0,
+     "news": 0.05
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 1.0,
+     "news": 0.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.0,
+     "how_to": 1.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://www.wired.com/story/uncanny-valley-podcast-we-got-hot-and-heavy-with-metas-muse-and-underwhelmed-by-apples-homeview/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2244,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "interview",
+    "confidence": 0.55,
+    "probabilities": {
+     "news": 0.02,
+     "opinion": 0.03,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.61,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.34
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "list",
+    "confidence": 0.43,
+    "probabilities": {
+     "list": 0.5,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.45,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.03,
+     "news": 0.02
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.8,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.13,
+     "story": 0.83,
+     "how_to": 0.0,
+     "news": 0.03,
+     "list": 0.01
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.73,
+    "probabilities": {
+     "list": 0.03,
+     "news": 0.04,
+     "how_to": 0.0,
+     "story": 0.77,
+     "counterintuitive": 0.16,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50076605": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2188,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "format": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 0.57,
+    "probabilities": {
+     "news": 0.02,
+     "opinion": 0.35,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.01,
+     "question": 0.62,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.5,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.4,
+     "demo": 0.01,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.56,
+     "news": 0.02
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 1.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 1.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://es.wired.com/articulos/internet-enseno-a-la-ia-a-hablar-los-videojuegos-podrian-ensenarle-a-actuar": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2236,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.43,
+    "probabilities": {
+     "news": 0.5,
+     "opinion": 0.03,
+     "tutorial": 0.0,
+     "use_case": 0.47,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.58,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.34,
+     "tutorial": 0.0,
+     "opinion": 0.03,
+     "news": 0.63
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.73,
+    "probabilities": {
+     "question": 0.02,
+     "data": 0.0,
+     "counterintuitive": 0.77,
+     "story": 0.07,
+     "how_to": 0.01,
+     "news": 0.13,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.7,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.18,
+     "how_to": 0.0,
+     "story": 0.07,
+     "counterintuitive": 0.74,
+     "data": 0.0,
+     "question": 0.01
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.58
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://www.larepublica.co/analisis/santiago-jimenez-londono-4353436/la-ia-se-compra-la-gerencia-para-usarla-no-4505001": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2221,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.98,
+    "probabilities": {
+     "news": 0.02,
+     "opinion": 0.98,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.97,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.97,
+     "news": 0.03
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.99,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.99,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.01,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.01,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.99,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.88
+   }
+  }
+ },
+ "https://openai.com/index/stack-overflow-chatgpt-plugin": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2225,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.8
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.9,
+    "probabilities": {
+     "news": 0.91,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.09,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.95,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.04,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.96
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 0.94,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.95,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.05,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.01,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.99,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://arstechnica.com/ai/2026/10/gemini-4-argon-begins-rolling-out-in-gemini-app-and-antigravity-but-only-if-you-pay/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2220,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.47
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 1.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 1.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.84,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.14,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.86,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.73,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.77,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.22,
+     "data": 0.01,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://elpais.com/tecnologia/2026-10-15/los-trabajadores-europeos-que-entrenan-las-ia-ya-sabia-que-me-metia-en-unas-condiciones-que-no-eran-las-mejores.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2232,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.86,
+    "probabilities": {
+     "news": 0.88,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.12,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.95,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.04,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.96
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.73,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.07,
+     "story": 0.77,
+     "how_to": 0.0,
+     "news": 0.16,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.73,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.18,
+     "how_to": 0.0,
+     "story": 0.77,
+     "counterintuitive": 0.05,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50064868": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2187,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.8
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.46
+   },
+   "format": {
+    "type": "choice",
+    "choice": "tutorial",
+    "confidence": 0.5,
+    "probabilities": {
+     "news": 0.09,
+     "opinion": 0.15,
+     "tutorial": 0.56,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.19,
+     "list": 0.01
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "tutorial",
+    "confidence": 0.59,
+    "probabilities": {
+     "list": 0.01,
+     "question": 0.06,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.64,
+     "opinion": 0.19,
+     "news": 0.1
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 1.0,
+     "news": 0.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.0,
+     "how_to": 0.99,
+     "story": 0.0,
+     "counterintuitive": 0.01,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://www.exponentialview.co/p/what-is-left-to-do": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2205,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "list",
+    "confidence": 0.34,
+    "probabilities": {
+     "news": 0.01,
+     "opinion": 0.34,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.05,
+     "demo": 0.0,
+     "question": 0.18,
+     "list": 0.42
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.33,
+    "probabilities": {
+     "list": 0.4,
+     "question": 0.11,
+     "demo": 0.0,
+     "interview": 0.07,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.41,
+     "news": 0.01
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 0.98,
+    "probabilities": {
+     "question": 0.98,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.0,
+     "list": 0.02
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 0.98,
+    "probabilities": {
+     "list": 0.02,
+     "news": 0.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.98
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://www.expansion.com/economia/financial-times/2026/10/14/dura-batalla-china-depender-chips-nvidia.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2238,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.86,
+    "probabilities": {
+     "news": 0.88,
+     "opinion": 0.12,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.92,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.07,
+     "news": 0.93
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.67,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.01,
+     "story": 0.27,
+     "how_to": 0.0,
+     "news": 0.72,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.48,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.44,
+     "how_to": 0.0,
+     "story": 0.55,
+     "counterintuitive": 0.01,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://es.wired.com/articulos/logre-que-muse-sexteara-conmigo-y-meta-dice-que-eso-esta-bien": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2258,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "format": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.63,
+    "probabilities": {
+     "news": 0.26,
+     "opinion": 0.68,
+     "tutorial": 0.0,
+     "use_case": 0.02,
+     "interview": 0.03,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.62,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.01,
+     "interview": 0.02,
+     "use_case": 0.02,
+     "tutorial": 0.0,
+     "opinion": 0.67,
+     "news": 0.28
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.82,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.14,
+     "story": 0.85,
+     "how_to": 0.0,
+     "news": 0.01,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.8,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.01,
+     "how_to": 0.0,
+     "story": 0.83,
+     "counterintuitive": 0.16,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.48
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.17
+   }
+  }
+ },
+ "https://www.xataka.com/robotica-e-ia/openai-pidio-a-ia-que-terminara-tarea-programacion-acabo-entrando-cartera-ajena-para-conseguirlo": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2418,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.55
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "news": 0.99,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.01,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.98,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.02,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.98
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.49,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.34,
+     "story": 0.56,
+     "how_to": 0.0,
+     "news": 0.1,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "story",
+    "confidence": 0.46,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.1,
+     "how_to": 0.0,
+     "story": 0.54,
+     "counterintuitive": 0.36,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49969988": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2425,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 0.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 1.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 1.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.78,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.01,
+     "how_to": 0.0,
+     "news": 0.81,
+     "list": 0.18
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.74,
+    "probabilities": {
+     "list": 0.21,
+     "news": 0.78,
+     "how_to": 0.0,
+     "story": 0.01,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50047422": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2188,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.98,
+    "probabilities": {
+     "news": 0.01,
+     "opinion": 0.98,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.01,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.99,
+     "news": 0.01
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.5,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.41,
+     "story": 0.02,
+     "how_to": 0.0,
+     "news": 0.57,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.59,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.65,
+     "how_to": 0.0,
+     "story": 0.01,
+     "counterintuitive": 0.33,
+     "data": 0.01,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.1
+   }
+  }
+ },
+ "https://techcrunch.com/2026/10/15/ai-agents-are-coming-to-rivians-cars/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2218,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "news": 0.99,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.01,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.01,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.99
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 1.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "news": 1.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://expansion.mx/tecnologia/2026/10/13/mercado-ads-ia-publicidad-netflix": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2237,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "use_case",
+    "confidence": 0.49,
+    "probabilities": {
+     "news": 0.45,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.55,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.59,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.35,
+     "tutorial": 0.0,
+     "opinion": 0.01,
+     "news": 0.64
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 0.0,
+     "data": 1.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 1.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.7
+   }
+  }
+ },
+ "https://www.technologyreview.com/2026/10/08/1144020/building-a-safer-path-to-autonomous-industrial-ai/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2253,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.92,
+    "probabilities": {
+     "news": 0.05,
+     "opinion": 0.93,
+     "tutorial": 0.01,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.93,
+    "probabilities": {
+     "list": 0.01,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.94,
+     "news": 0.05
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 0.92,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.01,
+     "how_to": 0.93,
+     "news": 0.06,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 0.91,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.05,
+     "how_to": 0.92,
+     "story": 0.02,
+     "counterintuitive": 0.01,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.74
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49949988": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2192,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.53
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.79,
+    "probabilities": {
+     "news": 0.8200000000000001,
+     "opinion": 0.18,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.9,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.09,
+     "news": 0.91
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.98,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.02,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.98,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.95,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.96,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.04,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.74
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://www.theverge.com/tech/1011996/microsoft-windows-rtx-spark-platform-changes-notepad": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2253,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.92,
+    "probabilities": {
+     "news": 0.93,
+     "opinion": 0.06,
+     "tutorial": 0.01,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.95,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.04,
+     "news": 0.96
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 0.57,
+    "probabilities": {
+     "question": 0.2,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.63,
+     "news": 0.17,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "how_to",
+    "confidence": 0.39,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.17,
+     "how_to": 0.48,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.35
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.65
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50093435": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2420,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 0.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 1.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 1.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.43,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.02,
+     "story": 0.02,
+     "how_to": 0.45,
+     "news": 0.51,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.54,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.61,
+     "how_to": 0.31,
+     "story": 0.03,
+     "counterintuitive": 0.05,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/7/anti-patterns-in-software-blogging/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2399,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.86,
+    "probabilities": {
+     "news": 0.01,
+     "opinion": 0.88,
+     "tutorial": 0.02,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.09
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.82,
+    "probabilities": {
+     "list": 0.14,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.01,
+     "opinion": 0.84,
+     "news": 0.01
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "list",
+    "confidence": 0.46,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.41,
+     "story": 0.01,
+     "how_to": 0.02,
+     "news": 0.02,
+     "list": 0.54
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.53,
+    "probabilities": {
+     "list": 0.32,
+     "news": 0.06,
+     "how_to": 0.02,
+     "story": 0.0,
+     "counterintuitive": 0.6,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://techcrunch.com/2026/10/16/india-becomes-the-latest-country-to-report-rogue-ai-agent-activity/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2220,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.6
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.38
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 1.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 1.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 1.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "news": 1.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50018070": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2281,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.76,
+    "probabilities": {
+     "news": 0.2,
+     "opinion": 0.79,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.01,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "opinion",
+    "confidence": 0.82,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.01,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.84,
+     "news": 0.15
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.98,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.01,
+     "story": 0.01,
+     "how_to": 0.0,
+     "news": 0.98,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.95,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.96,
+     "how_to": 0.0,
+     "story": 0.02,
+     "counterintuitive": 0.02,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://expansion.mx/tecnologia/2026/10/12/ia-empleo-programadores-experiencia": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2251,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.53
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.67,
+    "probabilities": {
+     "news": 0.71,
+     "opinion": 0.29,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.82,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.16,
+     "news": 0.84
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.95,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.96,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.04,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.96,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.03,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.97,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.2
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50045311": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2192,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.62,
+    "probabilities": {
+     "news": 0.67,
+     "opinion": 0.07,
+     "tutorial": 0.0,
+     "use_case": 0.01,
+     "interview": 0.0,
+     "demo": 0.02,
+     "question": 0.22,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.6,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.2,
+     "demo": 0.01,
+     "interview": 0.0,
+     "use_case": 0.02,
+     "tutorial": 0.0,
+     "opinion": 0.12,
+     "news": 0.65
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 0.98,
+    "probabilities": {
+     "question": 0.98,
+     "data": 0.02,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "question",
+    "confidence": 0.96,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.03,
+     "question": 0.97
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/7/claude-haiku-5-5/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2499,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.76,
+    "probabilities": {
+     "news": 0.79,
+     "opinion": 0.21,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.75,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.22,
+     "news": 0.78
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.01,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.99,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.99,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.01,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50049388": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2197,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 0.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 1.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 1.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.96,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.01,
+     "how_to": 0.02,
+     "news": 0.97,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.98,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.98,
+     "how_to": 0.0,
+     "story": 0.02,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://www.latent.space/p/ainews-modals-1b-arr-16b-series-d": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2238,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 1.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 1.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 0.66,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.71,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.29,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "data",
+    "confidence": 0.85,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.13,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.87,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.6
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49968377": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2400,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 0.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 1.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 1.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.92,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.04,
+     "story": 0.03,
+     "how_to": 0.0,
+     "news": 0.93,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.89,
+    "probabilities": {
+     "list": 0.01,
+     "news": 0.91,
+     "how_to": 0.0,
+     "story": 0.02,
+     "counterintuitive": 0.06,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50122749": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2188,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.46
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 1.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 1.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.98,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.02,
+     "how_to": 0.0,
+     "news": 0.98,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.98,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.98,
+     "how_to": 0.0,
+     "story": 0.02,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49967408": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2435,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "format": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "news": 0.0,
+     "opinion": 0.0,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 1.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "demo",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 1.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 0.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.89,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.09,
+     "news": 0.91,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.92,
+    "probabilities": {
+     "list": 0.01,
+     "news": 0.9299999999999999,
+     "how_to": 0.04,
+     "story": 0.01,
+     "counterintuitive": 0.01,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.lanacion.com.ar/tecnologia/en-la-guardia-la-ia-ya-diagnostica-mejor-que-los-medicos-nid09102026/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2237,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 1.0
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "news": 0.99,
+     "opinion": 0.01,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.0,
+     "news": 1.0
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.86,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.88,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 0.12,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "counterintuitive",
+    "confidence": 0.87,
+    "probabilities": {
+     "list": 0.0,
+     "news": 0.1,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.89,
+     "data": 0.01,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.37
+   }
+  }
+ },
+ "https://dplnews.com/eretail-day-ecommerce-institute-nueva-era-comercio/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 2227,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "ai_in_title": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "dev_audience": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "injection": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "format": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.99,
+    "probabilities": {
+     "news": 0.99,
+     "opinion": 0.01,
+     "tutorial": 0.0,
+     "use_case": 0.0,
+     "interview": 0.0,
+     "demo": 0.0,
+     "question": 0.0,
+     "list": 0.0
+    }
+   },
+   "format_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 0.98,
+    "probabilities": {
+     "list": 0.0,
+     "question": 0.0,
+     "demo": 0.0,
+     "interview": 0.0,
+     "use_case": 0.0,
+     "tutorial": 0.0,
+     "opinion": 0.02,
+     "news": 0.98
+    }
+   },
+   "hook": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "question": 0.0,
+     "data": 0.0,
+     "counterintuitive": 0.0,
+     "story": 0.0,
+     "how_to": 0.0,
+     "news": 1.0,
+     "list": 0.0
+    }
+   },
+   "hook_rev": {
+    "type": "choice",
+    "choice": "news",
+    "confidence": 1.0,
+    "probabilities": {
+     "list": 0.0,
+     "news": 1.0,
+     "how_to": 0.0,
+     "story": 0.0,
+     "counterintuitive": 0.0,
+     "data": 0.0,
+     "question": 0.0
+    }
+   },
+   "launch": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_case": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "tech_jargon": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "latam_context": {
+    "type": "noul",
+    "noul": 0.97
+   }
+  }
+ }
+}

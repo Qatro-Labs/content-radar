@@ -12,7 +12,7 @@
 **Pregunta que el prototipo debe responder:**
 > "¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?"
 
-El reto pone como ejemplo "en LinkedIn". LinkedIn, Instagram y TikTok no tienen acceso sin login ni scraping, así que **no entran en el MVP** (decidido el 17/10; §2, regla 2; §5). Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS), y el pitch lo explica de frente (`docs/brief.md` §2).
+El reto pone como ejemplo "en LinkedIn". TikTok y Reddit entran vía ScrapeCreators (§2, regla 2; §5), e Instagram por perfiles concretos, como los canales de YouTube. LinkedIn y X **no entran en el MVP**: sin login no se puede buscar su contenido, y lo que se obtiene por Google llega poco y tarde para detectar tendencias (decidido el 17/10). Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS), y el pitch lo explica de frente (`docs/brief.md` §2).
 
 **Propuesta de valor:** 30X Signal convierte señales públicas de Internet en oportunidades editoriales **verificables y accionables**, accesibles desde un dashboard visual (Vue) o desde asistentes de IA (Claude, ChatGPT, Grok) vía **MCP**.
 
@@ -36,7 +36,7 @@ Las tres preguntas del reto y cómo las respondemos:
 ## 2. Reglas no negociables
 
 1. **Solo contenido público. Nada de datos personales.** Guardamos metadatos, enlaces y métricas públicas, no copias completas ni datos de usuarios.
-2. **Nada de scraping de LinkedIn / Instagram / TikTok** ni nada detrás de un login o que viole ToS. Esas plataformas quedan fuera del MVP; si entran después, será por **APIs oficiales de la propia plataforma, dentro de sus términos** (§5). El contenido de LinkedIn tampoco se lee a través de buscadores: su User Agreement (§8.2) lo prohíbe sin consentimiento del dueño.
+2. **Redes sociales solo con contenido público y sin login propio.** Nada detrás de un login nuestro ni de cuentas falsas. Desde el 17/10 (los organizadores del reto se mostraron flexibles), TikTok, Reddit e Instagram (solo perfiles concretos, sin búsqueda) entran vía **ScrapeCreators**, un proveedor de datos públicos (§5); el pitch dice de dónde vienen esos datos. LinkedIn y X siguen fuera hasta que el equipo decida lo contrario: su búsqueda depende de lo que indexa Google (poco y tarde), y el radar necesita datos a tiempo.
 3. **Nunca inventar datos.** No mostrar métricas, crecimiento o conclusiones no observadas como hechos. Si hay 7 oportunidades reales, se muestran 7, no 10. Un dato ausente se muestra como "no disponible", nunca como 0.
 4. **El LLM evalúa y explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM emite niveles de rúbrica justificados y redacta; Jev emite juicios atómicos tipados sobre cada pieza (sí/no, opción). Python combina ambos con pesos en código (§7).
 5. **Distinguir siempre el tipo de evidencia:** `observed` (≥2 mediciones) · `estimated` (1 medición vs. referencia) · `preliminary` (aparece, sin aceleración demostrada).
@@ -69,7 +69,7 @@ Responsable: · Estado: · Completado: · Pendiente: · Bloqueos: · Disponible 
 **Modular monolith.** Una sola capa de servicios de dominio que consumen la API REST y el servidor MCP. El frontend **no** calcula tendencias y el MCP **no** recalcula ni hace scraping: los dos leen oportunidades ya procesadas.
 
 ```
-Collectors (YouTube, HN, RSS, Brave)
+Collectors (YouTube, HN, RSS, TikTok, Reddit, Instagram, Brave)
         │  normalize + dedupe + snapshots
         ▼
 PostgreSQL + pgvector  ◄──  Intelligence (embeddings → clustering → scores → LLM insights)
@@ -108,7 +108,8 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 | RSS / medios tech y LATAM | `feedparser` + `httpx` | Artículos y lanzamientos | P0 |
 | Brave Search | API oficial (5 $/1.000 consultas, 5 $ de crédito gratis al mes). Sus términos solo permiten guardar resultados de forma **transitoria**: se persisten agregados, no resultados | Descubrimiento web (nunca LinkedIn) | P1 |
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
-| LinkedIn · Instagram · TikTok | **Fuera del MVP** (decidido el 17/10): sin login ni scraping no hay acceso, y la curación manual se descartó. Roadmap: vías oficiales (API de portabilidad DMA, exports de analítica con consentimiento del dueño, Business Discovery API de Instagram) | — | Roadmap |
+| TikTok · Reddit · Instagram | **ScrapeCreators** (pago por crédito: 1 crédito por fuente y ejecución, ~1,9 $/1.000; el cron solo lo consulta dos veces al día). TikTok: búsqueda por palabra clave de la semana, por región. Reddit: top de la semana por subreddit. Instagram: últimos reels de perfiles elegidos a mano (no descubre temas, sirve para outliers) | Vídeos cortos (views, likes, comentarios, shares) y conversación (score, comentarios) | P1 (17/10) |
+| LinkedIn · X | **Fuera del MVP.** ScrapeCreators los cubre, pero su búsqueda depende de lo que indexa Google (incompleta y con poco de lo reciente). Roadmap: vías oficiales (API de portabilidad DMA, API de X) | — | Roadmap |
 
 **Límites de cada fuente y vías oficiales para el roadmap:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
 
@@ -202,6 +203,9 @@ GET  /health
   - `momentum_score` = combinación normalizada de velocidad del tema, aceleración y outliers. Pesos en `intelligence/momentum.py`.
 - **Outliers (por pieza, estilo 1of10).** `outlier_ratio = rendimiento ajustado por edad / mediana de su referencia`.
   - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
+  - TikTok: `views / días desde la publicación` vs. la mediana de los vídeos de la misma búsqueda.
+  - Reddit: score vs. la mediana de los posts del mismo subreddit.
+  - Instagram: `views / días desde la publicación` vs. la mediana de los reels del mismo perfil (sin colaboraciones de otras cuentas).
   - HN: puntos vs. el **p90** de las stories de la misma búsqueda y el mismo periodo. HN tiene cola larga: con la mediana (~4 puntos) un 22 % de las stories salía como outlier; con el p90, un 3–6 %.
   - `≥ 3×` = outlier, `≥ 2×` = destacado. Con una sola observación es `estimated`.
   - Los outliers alimentan el "por qué funcionó": se comparan con las piezas normales **del mismo tema** (análisis contrastivo, ver "Por qué funcionó" más abajo) en lugar de describir una pieza aislada.
@@ -245,7 +249,7 @@ GET  /health
 - **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita. Jev clasifica el gancho y el formato de cada pieza, y Python calcula el *lift* de cada rasgo entre los outliers y el resto del tema (lift ≥ 2 en ≥ 2 outliers = "patrón observado"; si no, "anecdótico"). El LLM redacta la hipótesis a partir de esa tabla. Con pocos outliers por tema casi todo saldrá "anecdótico", y se dice así.
 - **Los embeddings agrupan, Jev clasifica cada pieza, Python calcula, el LLM evalúa cada tema y redacta, y Jev verifica lo que escribe el LLM.** Cada modelo usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Excepción: el agente del Radar (`POST /agent`) lo arranca el usuario, solo lee la ejecución servida, sus acciones solo cambian la vista (máx. 8 pasos) y sus citas se validan en Python contra lo que devolvieron sus tools; no pasa por Jev. Ámbito cerrado con `decline`, entradas y salidas saneadas, datos externos delimitados, canario y límites de tiempo, pasos y concurrencia. Resultados cacheados en Postgres.
 - **Jev (TypeSafe; lo sugiere el reto): decisiones atómicas sobre piezas.** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel) con probabilidades y, en `choice` y `score`, `confidence`. Las preguntas de una llamada corren en paralelo y el `state` se paga una vez, así que cada entidad se evalúa en **una llamada con todas sus preguntas** (una *batería*):
-  - **Pieza** (`piece.v2.yaml`, una condición por pregunta): trata de IA, formato, gancho, lanzamiento e inyección de instrucciones, más pistas para el LLM (uso en organizaciones, público desarrollador, caso real, jerga técnica, contexto LATAM sin España, pilar de 30X). Formato y gancho van repetidos con las opciones en orden inverso para detectar el sesgo hacia la primera opción.
+  - **Pieza** (`piece.v3.yaml`, una condición por pregunta): trata de IA (y si el título habla de IA: el filtro de ruido exige "no" en las dos), formato, gancho, lanzamiento e inyección de instrucciones, más pistas para el LLM (uso en organizaciones, público desarrollador, caso real, jerga técnica, contexto LATAM sin España, pilar de 30X). Formato y gancho van repetidos con las opciones en orden inverso para detectar el sesgo hacia la primera opción.
   - **Par:** ¿es la misma nota replicada? → fuentes independientes y saturación.
   - **Verificación:** cada afirmación del LLM contra la evidencia que cita; solo se publica lo respaldado con `confidence` ≥ 0,8 (regla 3). Como la evidencia es título y descripción, el LLM debe ceñirse a lo que dicen.
   - El juicio de conjunto sobre un tema (audience fit) no es de Jev: lee de forma literal, sus niveles de `score` no están calibrados como números y pierde precisión con contextos grandes.
@@ -274,7 +278,7 @@ GET  /health
 **Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, LiteLLM, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
 
 **Variables de entorno** (solo en el backend; ver `.env.example`):
-`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
+`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `SCRAPECREATORS_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
 
 ---
 

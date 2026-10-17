@@ -39,7 +39,9 @@ async def store_signals(
 ) -> StoreResult:
     """Upsert de contenidos (dedupe por platform + external_id) y un snapshot por observación."""
     snapshots = 0
-    for s in signals:
+    # Orden fijo de bloqueo: dos fuentes que comparten piezas (búsquedas de TikTok en MX y CO) se
+    # guardan en paralelo, y en distinto orden cada transacción esperaba a la otra (deadlock).
+    for s in sorted(signals, key=lambda s: s.external_id):
         values = {
             "source_id": source.id,
             "platform": s.platform.value,

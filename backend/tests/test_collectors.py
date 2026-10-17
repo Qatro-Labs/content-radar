@@ -8,9 +8,18 @@ import respx
 from app.collectors.hackernews import API_URL as HN_URL
 from app.collectors.hackernews import HackerNewsCollector
 from app.collectors.rss import RSSCollector
+from app.collectors.scrapecreators import API_BASE as SC_API
+from app.collectors.scrapecreators import (
+    InstagramCollector,
+    RedditCollector,
+    ScrapeCreatorsClient,
+    TikTokCollector,
+)
 from app.collectors.text import clean_html, is_ai_related
+from app.collectors.usage import UsageMeter
 from app.collectors.youtube import API_BASE, YouTubeClient, YouTubeCollector, parse_duration
 from app.models import Source
+from app.schemas.cost import Provider
 from app.schemas.signal import ContentFormat
 
 NOW = datetime.now(UTC)
@@ -204,3 +213,196 @@ async def test_youtube_collects_recent_uploads_with_metrics():
     assert by_id["short1"].metrics.comments is None  # oculto ≠ 0
     assert by_id["long1"].format is ContentFormat.LONG_VIDEO
     assert by_id["long1"].metrics.views == 12000
+
+
+# --- ScrapeCreators: TikTok, Reddit e Instagram ----------------------------------------
+
+
+def tiktok_video(video_id: str, desc: str, *, plays: int = 5000, region: str = "MX", **extra):
+    return {
+        "aweme_id": video_id,
+        "desc": desc,
+        "desc_language": "es",
+        "region": region,
+        "create_time": int((NOW - timedelta(days=1)).timestamp()),
+        "author": {"unique_id": "creadora", "nickname": "Creadora"},
+        "statistics": {
+            "play_count": plays,
+            "digg_count": 300,
+            "comment_count": 12,
+            "share_count": 40,
+        },
+        "video": {"duration": 45300},
+        **extra,
+    }
+
+
+@respx.mock
+async def test_tiktok_maps_videos_and_filters_noise():
+    route = respx.get(f"{SC_API}/v1/tiktok/search/keyword").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "search_item_list": [
+                    tiktok_video("1", "Agentes de IA en la empresa\n#ia #negocios"),
+                    tiktok_video("1", "Agentes de IA en la empresa"),  # repetido
+                    tiktok_video("2", "La IA en pymes", region="ES"),  # fuera de LATAM
+                    tiktok_video("3", "Promo de IA", plays=3),  # sin tracción
+                    tiktok_video("4", "Disturbios en el centro"),  # no es IA
+                    tiktok_video("5", "IA para ventas", is_ad=True),  # anuncio
+                ]
+            },
+        )
+    )
+    source = make_source(
+        "tiktok",
+        "agentes de IA|CO",
+        query="agentes de IA",
+        search_region="CO",
+        item_regions=["MX", "CO"],
+        ai_filter=True,
+    )
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        collector = TikTokCollector(ScrapeCreatorsClient("k", http, usage))
+        signals = await collector.collect(source)
+
+    params = route.calls[0].request.url.params
+    assert (params["query"], params["region"]) == ("agentes de IA", "CO")
+    assert route.calls[0].request.headers["x-api-key"] == "k"
+    assert usage.counts[(Provider.SCRAPECREATORS, "/v1/tiktok/search/keyword")].calls == 1
+    assert [s.external_id for s in signals] == ["1"]
+    s = signals[0]
+    assert str(s.url) == "https://www.tiktok.com/@creadora/video/1"
+    assert s.title == "Agentes de IA en la empresa"
+    assert s.author_name == "@creadora"
+    assert s.format is ContentFormat.SHORT_VIDEO
+    assert s.duration_seconds == 45
+    assert (s.metrics.views, s.metrics.likes, s.metrics.comments, s.metrics.shares) == (
+        5000,
+        300,
+        12,
+        40,
+    )
+
+
+def instagram_reel(
+    code: str,
+    caption: str | None,
+    *,
+    owner: str = "creadora",
+    days_ago: float = 1,
+    plays: int | None = 20000,
+):
+    return {
+        "id": f"{code}_1",
+        "code": code,
+        "caption": {"text": caption} if caption is not None else None,
+        "taken_at": int((NOW - timedelta(days=days_ago)).timestamp()),
+        "user": {"username": owner},
+        "play_count": plays,
+        "like_count": 900,
+        "comment_count": 30,
+    }  # fmt: skip
+
+
+@respx.mock
+async def test_instagram_keeps_own_recent_reels_with_views():
+    route = respx.get(f"{SC_API}/v1/instagram/user/reels").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "items": [
+                    instagram_reel("A1", "Cómo usar agentes de IA en ventas\n#ia #negocios"),
+                    instagram_reel("A2", "Agentes de IA para equipos", owner="otra.marca"),  # colab
+                    instagram_reel(
+                        "A3", "La IA que lo cambió todo", days_ago=200
+                    ),  # fijado y viejo
+                    instagram_reel("A4", "Mi peor error de inversión"),  # no es IA
+                    instagram_reel("A5", "Prompts de IA para directivos", plays=None),  # sin views
+                    instagram_reel("A6", None),  # sin caption
+                ]
+            },
+        )
+    )
+    source = make_source("instagram", "creadora", ai_filter=True)
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        collector = InstagramCollector(ScrapeCreatorsClient("k", http, usage))
+        signals = await collector.collect(source, backfill_days=14)
+
+    assert route.calls[0].request.url.params["handle"] == "creadora"
+    assert usage.counts[(Provider.SCRAPECREATORS, "/v1/instagram/user/reels")].calls == 1
+    assert [s.external_id for s in signals] == ["A1"]
+    s = signals[0]
+    assert str(s.url) == "https://www.instagram.com/reel/A1/"
+    assert s.title == "Cómo usar agentes de IA en ventas"
+    assert s.author_name == "@creadora"
+    assert s.format is ContentFormat.SHORT_VIDEO
+    assert (s.metrics.views, s.metrics.likes, s.metrics.comments) == (20000, 900, 30)
+
+
+@respx.mock
+async def test_reddit_maps_posts_without_personal_data():
+    created = int((NOW - timedelta(hours=10)).timestamp())
+    respx.get(f"{SC_API}/v1/reddit/subreddit").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "posts": [
+                    {
+                        "id": "abc",
+                        "title": "Claude ships computer use for teams",
+                        "selftext": "",
+                        "author": "someone",
+                        "subreddit": "OpenAI",
+                        "score": 812,
+                        "num_comments": 140,
+                        "created_utc": created,
+                        "url": "https://www.anthropic.com/news/teams",
+                    },
+                    {
+                        "id": "img",
+                        "title": "Meme sobre GPT",
+                        "subreddit": "OpenAI",
+                        "score": 300,
+                        "num_comments": 5,
+                        "created_utc": created,
+                        "url": "https://i.redd.it/x.jpeg",
+                    },
+                    {
+                        "id": "low",
+                        "title": "Pregunta sobre LLMs",
+                        "subreddit": "OpenAI",
+                        "score": 2,
+                        "created_utc": created,
+                    },
+                ]
+            },
+        )
+    )
+    async with httpx.AsyncClient() as http:
+        collector = RedditCollector(ScrapeCreatorsClient("k", http, UsageMeter()))
+        signals = await collector.collect(make_source("reddit", "OpenAI"))
+
+    assert [s.external_id for s in signals] == ["abc", "img"]
+    post, image = signals
+    assert str(post.url) == "https://www.reddit.com/r/OpenAI/comments/abc/"
+    assert str(post.target_url) == "https://www.anthropic.com/news/teams"
+    assert image.target_url is None  # contenido alojado en Reddit: no une fuentes
+    assert post.author_name is None
+    assert post.description is None
+    assert (post.metrics.points, post.metrics.comments) == (812, 140)
+
+
+@respx.mock
+async def test_scrapecreators_does_not_retry_paid_errors():
+    route = respx.get(f"{SC_API}/v1/reddit/subreddit").mock(return_value=httpx.Response(402))
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        collector = RedditCollector(ScrapeCreatorsClient("k", http, usage))
+        with pytest.raises(httpx.HTTPStatusError):
+            await collector.collect(make_source("reddit", "OpenAI"))
+
+    assert route.call_count == 1
+    assert not usage.counts  # un error no gasta crédito: no cuenta como coste medido

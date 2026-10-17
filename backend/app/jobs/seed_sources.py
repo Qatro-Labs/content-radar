@@ -3,7 +3,8 @@
     uv run python -m app.jobs.seed_sources            # carga todo
     uv run python -m app.jobs.seed_sources --dry-run  # solo valida el YAML
 
-Sin YOUTUBE_API_KEY se cargan HN y RSS y se omiten los canales de YouTube (aviso, no error).
+Sin YOUTUBE_API_KEY se cargan HN, RSS, TikTok, Reddit e Instagram y se omiten los canales de
+YouTube (aviso, no error). TikTok, Reddit e Instagram no llaman a ninguna API al darse de alta.
 """
 
 import argparse
@@ -50,10 +51,27 @@ class RSSSeed(_Common):
     url: HttpUrl
 
 
+class TikTokSeed(_Common):
+    query: str
+    search_region: str | None = None  # país de la búsqueda (ISO, p. ej. MX)
+    item_regions: list[str] = []  # solo vídeos de estos países; vacío = todos
+
+
+class RedditSeed(_Common):
+    subreddit: str
+
+
+class InstagramSeed(_Common):
+    handle: str
+
+
 class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
     hackernews: list[HackerNewsSeed] = []
     rss: list[RSSSeed] = []
+    tiktok: list[TikTokSeed] = []
+    reddit: list[RedditSeed] = []
+    instagram: list[InstagramSeed] = []
 
 
 def load_seed_file(path: Path) -> SeedFile:
@@ -77,10 +95,8 @@ def _common(seed: _Common) -> dict[str, Any]:
     }
 
 
-async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | None) -> dict:
-    report: dict[str, Any] = {"hackernews": 0, "rss": 0, "youtube": 0, "youtube_unresolved": []}
-
-    for s in data.hackernews:
+async def _seed_hackernews(session: AsyncSession, seeds: list[HackerNewsSeed]) -> int:
+    for s in seeds:
         await upsert_source(
             session,
             platform=Platform.HACKERNEWS.value,
@@ -91,9 +107,11 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
             config={"ai_filter": s.ai_filter},
             **_common(s),
         )
-        report["hackernews"] += 1
+    return len(seeds)
 
-    for s in data.rss:
+
+async def _seed_rss(session: AsyncSession, seeds: list[RSSSeed]) -> int:
+    for s in seeds:
         await upsert_source(
             session,
             platform=Platform.RSS.value,
@@ -104,35 +122,106 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
             config={"ai_filter": s.ai_filter},
             **_common(s),
         )
-        report["rss"] += 1
+    return len(seeds)
 
-    # HN y RSS quedan guardados aunque YouTube falle después (cuota, key inválida).
+
+async def _seed_tiktok(session: AsyncSession, seeds: list[TikTokSeed]) -> int:
+    for s in seeds:
+        await upsert_source(
+            session,
+            platform=Platform.TIKTOK.value,
+            kind=SourceKind.QUERY.value,
+            external_id=f"{s.query}|{s.search_region or 'global'}",
+            name=f"TikTok · {s.query}" + (f" ({s.search_region})" if s.search_region else ""),
+            url=f"https://www.tiktok.com/search?q={s.query.replace(' ', '+')}",
+            config={
+                "query": s.query,
+                "search_region": s.search_region,
+                "item_regions": s.item_regions,
+                "ai_filter": s.ai_filter,
+            },
+            **_common(s),
+        )
+    return len(seeds)
+
+
+async def _seed_reddit(session: AsyncSession, seeds: list[RedditSeed]) -> int:
+    for s in seeds:
+        await upsert_source(
+            session,
+            platform=Platform.REDDIT.value,
+            kind=SourceKind.CHANNEL.value,
+            external_id=s.subreddit,
+            name=f"r/{s.subreddit}",
+            url=f"https://www.reddit.com/r/{s.subreddit}/",
+            config={"ai_filter": s.ai_filter},
+            **_common(s),
+        )
+    return len(seeds)
+
+
+async def _seed_instagram(session: AsyncSession, seeds: list[InstagramSeed]) -> int:
+    for s in seeds:
+        handle = s.handle.removeprefix("@")
+        await upsert_source(
+            session,
+            platform=Platform.INSTAGRAM.value,
+            kind=SourceKind.CHANNEL.value,
+            external_id=handle,
+            name=f"Instagram · @{handle}",
+            url=f"https://www.instagram.com/{handle}/",
+            config={"ai_filter": s.ai_filter},
+            **_common(s),
+        )
+    return len(seeds)
+
+
+async def _seed_youtube(
+    session: AsyncSession, seeds: list[YouTubeSeed], youtube: YouTubeClient
+) -> tuple[int, list[str]]:
+    """Devuelve los canales cargados y los handles que no resolvieron a un canal."""
+    unresolved: list[str] = []
+    for s in seeds:
+        channel = await youtube.channel_by_handle(s.handle)
+        if channel is None:
+            unresolved.append(s.handle)
+            continue
+        await upsert_source(
+            session,
+            platform=Platform.YOUTUBE.value,
+            kind=SourceKind.CHANNEL.value,
+            external_id=channel.id,
+            name=channel.title,
+            url=channel.url,
+            config={
+                "handle": s.handle,
+                "uploads_playlist_id": channel.uploads_playlist_id,
+                "ai_filter": s.ai_filter,
+            },
+            **_common(s),
+        )
+    return len(seeds) - len(unresolved), unresolved
+
+
+async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | None) -> dict:
+    report: dict[str, Any] = {
+        "hackernews": await _seed_hackernews(session, data.hackernews),
+        "rss": await _seed_rss(session, data.rss),
+        "tiktok": await _seed_tiktok(session, data.tiktok),
+        "reddit": await _seed_reddit(session, data.reddit),
+        "instagram": await _seed_instagram(session, data.instagram),
+        "youtube": 0,
+        "youtube_unresolved": [],
+    }
+    # Lo anterior queda guardado aunque YouTube falle después (cuota, key inválida).
     await session.commit()
 
     if youtube is None:
         report["youtube_skipped"] = len(data.youtube)
     else:
-        for s in data.youtube:
-            channel = await youtube.channel_by_handle(s.handle)
-            if channel is None:
-                report["youtube_unresolved"].append(s.handle)
-                continue
-            await upsert_source(
-                session,
-                platform=Platform.YOUTUBE.value,
-                kind=SourceKind.CHANNEL.value,
-                external_id=channel.id,
-                name=channel.title,
-                url=channel.url,
-                config={
-                    "handle": s.handle,
-                    "uploads_playlist_id": channel.uploads_playlist_id,
-                    "ai_filter": s.ai_filter,
-                },
-                **_common(s),
-            )
-            report["youtube"] += 1
-
+        report["youtube"], report["youtube_unresolved"] = await _seed_youtube(
+            session, data.youtube, youtube
+        )
     await session.commit()
     return report
 
@@ -141,7 +230,8 @@ async def main(path: Path, dry_run: bool) -> int:
     data = load_seed_file(path)
     print(
         f"{path.name}: {len(data.youtube)} YouTube · {len(data.hackernews)} HN · "
-        f"{len(data.rss)} RSS"
+        f"{len(data.rss)} RSS · {len(data.tiktok)} TikTok · {len(data.reddit)} Reddit · "
+        f"{len(data.instagram)} Instagram"
     )
     if dry_run:
         return 0

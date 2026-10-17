@@ -121,3 +121,39 @@ rss:
   - { name: "Diario Financiero (CL)", url: "https://www.df.cl/noticias/site/list/port/rss.xml", segment: latam_es, language: es, region: cl, ai_filter: true }
   - { name: "Gestión (PE)", url: "https://gestion.pe/arc/outboundfeeds/rss/?outputType=xml", segment: latam_es, language: es, region: pe, ai_filter: true }
   - { name: "LatamList", url: "https://latamlist.com/feed/", segment: latam_es, language: en, region: latam, ai_filter: true }
+
+# --- TikTok y Reddit vía ScrapeCreators (1 crédito por fuente y ejecución; requiere
+# SCRAPECREATORS_API_KEY). Probados el 17/10. ---
+tiktok:
+  # query = búsqueda de la última semana. search_region = país de la búsqueda; item_regions deja
+  # solo vídeos de esos países (la búsqueda desde MX también trae vídeos de España).
+  - { query: "AI agents", segment: tech, language: en, region: global, ai_filter: true }
+  - { query: "AI for business", segment: business, language: en, region: global, ai_filter: true }
+  - query: "inteligencia artificial empresas"
+    search_region: MX
+    item_regions: &latam [MX, CO, AR, PE, CL, EC, VE, UY, PY, BO, GT, CR, DO, PA, SV, HN, NI, CU, PR]
+    segment: latam_es
+    language: es
+    region: latam
+    ai_filter: true
+  - { query: "agentes de IA", search_region: CO, item_regions: *latam, segment: latam_es, language: es, region: latam, ai_filter: true }
+
+reddit:
+  # Posts top de la semana de cada subreddit. ai_filter: true en los que no sean solo de IA.
+  - { subreddit: "artificial", segment: tech, language: en, region: global }
+  - { subreddit: "OpenAI", segment: tech, language: en, region: global }
+  - { subreddit: "ClaudeAI", segment: tech, language: en, region: global }
+  - { subreddit: "LocalLLaMA", segment: tech, language: en, region: global }
+  - { subreddit: "AI_Agents", segment: tech, language: en, region: global }
+  # Probado y descartado el 17/10: r/Entrepreneur (1 pieza de IA en la semana por crédito).
+
+instagram:
+  # Últimos reels de cada perfil (como un canal de YouTube): el outlier se mide contra la mediana
+  # del mismo perfil. Verificados el 17/10 con el endpoint de reels: publican cada semana y traen
+  # views. ai_filter: true en los que no son solo de IA.
+  - { handle: "evolving.ai", segment: tech, language: en, region: global }
+  - { handle: "therundownai", segment: tech, language: en, region: global }
+  - { handle: "platzi", segment: latam_es, language: es, region: latam, ai_filter: true }
+  # Probados y descartados el 17/10: @andresbilbao (reels de negocio: ninguno pasa el filtro de IA),
+  # @crece30x (casi todo carruseles y colaboraciones),
+  # @futurepedia.io (sin reels en la última semana), @mreflow (sin reels).

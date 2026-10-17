@@ -14,10 +14,10 @@ class Platform(StrEnum):
     HACKERNEWS = "hackernews"
     RSS = "rss"
     BRAVE = "brave"
-    # Solo vía sensor editorial (curación manual), nunca scraping.
     LINKEDIN = "linkedin"
     INSTAGRAM = "instagram"
-    TIKTOK = "tiktok"
+    TIKTOK = "tiktok"  # vía ScrapeCreators
+    REDDIT = "reddit"  # vía ScrapeCreators
 
 
 class Segment(StrEnum):

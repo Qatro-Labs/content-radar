@@ -7,6 +7,7 @@
 #   DATABASE_URL     postgresql+asyncpg://… del *session pooler* de Supabase (puerto 5432).
 #                    No usar el transaction pooler (6543): rompe el advisory lock del job.
 #   YOUTUBE_API_KEY
+#   SCRAPECREATORS_API_KEY   TikTok y Reddit; se paga por llamada (ver el paso Collect).
 #
 # Los secrets van en el env de cada paso que los usa, nunca en el del job: así ninguna acción de
 # terceros los recibe. Las acciones se fijan por SHA, con la versión en un comentario.
@@ -86,5 +87,14 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SCRAPECREATORS_API_KEY: ${{ secrets.SCRAPECREATORS_API_KEY }}
           DAYS: ${{ inputs.days || '7' }}
-        run: uv run --no-sync python -m app.jobs.collect --days "$DAYS"
+        # ScrapeCreators cobra cada llamada y su top semanal apenas cambia en 2 h: solo se consulta
+        # en las ejecuciones de las 00 y las 12 UTC (01 y 13 si GitHub las retrasa) y en las
+        # manuales. Sin la key, collect omite TikTok y Reddit y sigue con el resto.
+        run: |
+          case "$(date -u +%H)" in
+            00|01|12|13) ;;
+            *) [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || unset SCRAPECREATORS_API_KEY ;;
+          esac
+          uv run --no-sync python -m app.jobs.collect --days "$DAYS"

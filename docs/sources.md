@@ -12,7 +12,9 @@
 | Hacker News | Algolia HN Search API | Metadatos, puntos, comentarios y snapshots | 0 $ | Comunidad técnica: no representa a la audiencia de negocio |
 | RSS | `feedparser` + `httpx` | Título, enlace, fecha y descripción del feed | 0 $ | Sin métricas de engagement |
 | Brave Search | API oficial (cabecera `X-Subscription-Token`) | Solo agregados: sus resultados son transitorios | 5 $ por 1.000 consultas, con 5 $ de crédito gratis al mes (≈ 1.000 consultas) | Solo descubrimiento web, nunca LinkedIn |
-| LinkedIn · Instagram · TikTok | **Fuera del MVP** (decidido el 17/10). Roadmap: vías oficiales (abajo) | Nada | — | Sin login ni scraping no hay acceso; la curación manual se descartó |
+| TikTok · Reddit | **ScrapeCreators** (desde el 17/10; los organizadores fueron flexibles con la regla 2): `/v1/tiktok/search/keyword` y `/v1/reddit/subreddit` | Metadatos, enlace y métricas públicas; nunca el autor de Reddit | 1 crédito por llamada; 47 $ por 25.000 créditos (~1,9 $/1.000), 100 gratis | TikTok: solo la semana en curso y hasta 30 vídeos por búsqueda. Reddit: top de la semana. Re-medir una pieza depende de que vuelva a salir en la búsqueda |
+| Instagram | **ScrapeCreators** (desde el 17/10): `/v1/instagram/user/reels` por perfil | Metadatos, enlace y métricas públicas de los reels del perfil (sin colaboraciones de otras cuentas) | 1 crédito por perfil y ejecución | Solo perfiles elegidos a mano: no descubre temas. Trae los últimos 12 reels; un perfil que publica poco no llega a 5 reels de referencia y no da outliers. El endpoint de posts no trae views en todos los perfiles |
+| LinkedIn · X | **Fuera del MVP.** Roadmap: vías oficiales (abajo) | Nada | — | ScrapeCreators los cubre, pero su búsqueda depende de lo que indexa Google |
 
 ## Brave: uso transitorio
 
@@ -62,8 +64,9 @@ oficial de LinkedIn, sí se puede.**
 
 ### Vías legítimas (roadmap)
 
-> **Decidido el 17/10:** LinkedIn, Instagram y TikTok no entran en el MVP, y la curación manual se
-> descartó. Sus referentes entran por sus canales abiertos (punto 4). El resto queda como roadmap.
+> **Decidido el 17/10:** LinkedIn y X no entran en el MVP, y la curación manual se descartó. Sus
+> referentes entran por sus canales abiertos (punto 4). El resto queda como roadmap. TikTok, Reddit e
+> Instagram (por perfiles) entraron después vía ScrapeCreators (tabla de arriba).
 
 1. **"Un clic = señal" con la API de portabilidad (DMA). Requiere una prueba previa de 30 minutos.**
    Es self-serve para miembros del EEE y Suiza; David y Melkin están en España.
@@ -121,7 +124,7 @@ oficial de LinkedIn, sí se puede.**
 
 ## Instagram: Business Discovery (roadmap)
 
-La
+Hoy Instagram entra vía ScrapeCreators (tabla de arriba). La vía oficial para sustituirlo es la
 [Business Discovery API](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login/business-discovery)
 oficial de Instagram devuelve, por nombre de usuario, los datos públicos de otras cuentas business o
 creator: seguidores, publicaciones y, según conectores de terceros, likes y comentarios. Requiere

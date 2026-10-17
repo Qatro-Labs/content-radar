@@ -1,6 +1,8 @@
 """Outliers por pieza (estilo 1of10): rendimiento frente a la mediana de su referencia.
 
 - YouTube: views/día desde la publicación vs. los vídeos del mismo canal.
+- TikTok: views/día vs. los vídeos de la misma búsqueda. Reddit: score vs. el mismo subreddit.
+- Instagram: views/día vs. los reels del mismo perfil.
 - HN: puntos vs. el p90 de las stories de la misma búsqueda y el mismo periodo. Con la mediana
   (~4 puntos) un 22 % de las stories salía como outlier; con el p90, un 3–6 %.
 """
@@ -19,7 +21,13 @@ MEDIAN = 0.5
 HN_REFERENCE_QUANTILE = 0.9  # HN tiene cola larga: la mediana no separa nada
 # Las piezas recién publicadas aún no han acumulado métricas: dentro de la referencia hunden la
 # mediana (o el p90) y disparan los ratios del resto. Solo salen de la referencia; sí se puntúan.
-MIN_REFERENCE_AGE = {Platform.YOUTUBE: timedelta(days=2), Platform.HACKERNEWS: timedelta(hours=6)}
+MIN_REFERENCE_AGE = {
+    Platform.YOUTUBE: timedelta(days=2),
+    Platform.TIKTOK: timedelta(days=2),
+    Platform.INSTAGRAM: timedelta(days=2),
+    Platform.HACKERNEWS: timedelta(hours=6),
+    Platform.REDDIT: timedelta(hours=6),
+}
 
 
 def age_adjusted(value: int, published_at: datetime, observed_at: datetime) -> float:

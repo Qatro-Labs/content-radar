@@ -1,0 +1,7602 @@
+{
+ "https://simonwillison.net/2026/Oct/7/openai-rogue-agents-wikimedia/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1297,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.25
+   }
+  }
+ },
+ "https://elpais.com/tecnologia/2026-10-13/alvise-perez-y-novelas-romanticas-autoeditadas-cuanta-ia-hay-en-los-libros-mas-vendidos-de-espana.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1176,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.15
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50016572": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1093,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.71
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.43
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50023433": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.16
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49969813": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1111,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50058903": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1101,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://es.wired.com/articulos/internet-enseno-a-la-ia-a-hablar-los-videojuegos-podrian-ensenarle-a-actuar": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1143,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.1
+   }
+  }
+ },
+ "https://hipertextual.com/inteligencia-artificial/como-detectar-fotos-videos-y-audios-creados-con-ia-usando-synthid-detector/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1203,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://www.wired.com/story/uncanny-valley-podcast-we-got-hot-and-heavy-with-metas-muse-and-underwhelmed-by-apples-homeview/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1151,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.47
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.58
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50076605": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1095,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.23
+   }
+  }
+ },
+ "https://openai.com/index/stack-overflow-chatgpt-plugin": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1132,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.48
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.25
+   }
+  }
+ },
+ "https://www.larepublica.co/analisis/santiago-jimenez-londono-4353436/la-ia-se-compra-la-gerencia-para-usarla-no-4505001": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1128,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.62
+   }
+  }
+ },
+ "https://elpais.com/tecnologia/2026-10-15/los-trabajadores-europeos-que-entrenan-las-ia-ya-sabia-que-me-metia-en-unas-condiciones-que-no-eran-las-mejores.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1139,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.51
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.55
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.79
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50064868": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1094,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.35
+   }
+  }
+ },
+ "https://arstechnica.com/ai/2026/10/gemini-4-argon-begins-rolling-out-in-gemini-app-and-antigravity-but-only-if-you-pay/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1127,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.47
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.23
+   }
+  }
+ },
+ "https://www.expansion.com/economia/financial-times/2026/10/14/dura-batalla-china-depender-chips-nvidia.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1145,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.41
+   }
+  }
+ },
+ "https://es.wired.com/articulos/logre-que-muse-sexteara-conmigo-y-meta-dice-que-eso-esta-bien": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1165,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.47
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://www.exponentialview.co/p/what-is-left-to-do": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1112,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.24
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49969988": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1332,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50047422": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1095,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.4
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.27
+   }
+  }
+ },
+ "https://www.technologyreview.com/2026/10/08/1144020/building-a-safer-path-to-autonomous-industrial-ai/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1160,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.61
+   }
+  }
+ },
+ "https://www.xataka.com/robotica-e-ia/openai-pidio-a-ia-que-terminara-tarea-programacion-acabo-entrando-cartera-ajena-para-conseguirlo": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1325,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.23
+   }
+  }
+ },
+ "https://expansion.mx/tecnologia/2026/10/13/mercado-ads-ia-publicidad-netflix": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1144,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.42
+   }
+  }
+ },
+ "https://techcrunch.com/2026/10/15/ai-agents-are-coming-to-rivians-cars/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1125,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.16
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49949988": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.27
+   }
+  }
+ },
+ "https://www.theverge.com/tech/1011996/microsoft-windows-rtx-spark-platform-changes-notepad": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1160,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.71
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://techcrunch.com/2026/10/16/india-becomes-the-latest-country-to-report-rogue-ai-agent-activity/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1127,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.59
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.22
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50093435": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1327,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.71
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/7/anti-patterns-in-software-blogging/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1306,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.15
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50018070": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1188,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.02
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50045311": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://expansion.mx/tecnologia/2026/10/12/ia-empleo-programadores-experiencia": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1158,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.46
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.87
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/7/claude-haiku-5-5/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1406,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.4
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.71
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.52
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49968377": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1307,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://www.latent.space/p/ainews-modals-1b-arr-16b-series-d": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1145,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.34
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.1
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50049388": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1104,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50122749": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1095,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.51
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.41
+   }
+  }
+ },
+ "https://dplnews.com/eretail-day-ecommerce-institute-nueva-era-comercio/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1134,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.47
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.53
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.17
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49967408": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1342,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.57
+   }
+  }
+ },
+ "https://www.lanacion.com.ar/tecnologia/en-la-guardia-la-ia-ya-diagnostica-mejor-que-los-medicos-nid09102026/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1144,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.35
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=z_sXLlLVUls": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1244,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.12
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49968703": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1096,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=hKV5oAQlp2M": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1388,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.57
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.77
+   }
+  }
+ },
+ "https://www.genbeta.com/inteligencia-artificial/investigadores-espanoles-demuestran-que-chatgpt-gemini-claude-otras-ia-filtran-datos-chats-a-anunciantes": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1364,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50047502": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1102,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.12
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49997073": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1102,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.2
+   }
+  }
+ },
+ "https://gestion.pe/economia/empresas/plataformas-de-educacion-online-como-evoluciona-el-negocio-en-peru-impulsado-por-la-inteligencia-artificial-edtech-noticia/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1155,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.63
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.47
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=FGCP2F_7rQk": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1366,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.19
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50114512": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1210,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.77
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=yrn7FqgVOW8": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1245,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=gAa2oY3gdts": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1169,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.15
+   }
+  }
+ },
+ "https://www.eltiempo.com/tecnosfera/inteligencia-artificial/una-inteligencia-artificial-habria-borrado-la-segunda-temporada-del-reality-show-the-challenge-sverige-antes-de-su-estreno-en-suecia-3594091": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1144,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.63
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://dplnews.com/asus-20-anos-rog-con-premium-xbox-ally/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1141,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.4
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.55
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50080703": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.56
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.6
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.wired.com/story/katie-zacharia-was-linked-to-an-ai-rare-earths-startup-its-even-weirder-than-it-sounds/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1155,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.55
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.09
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=oWTEiYpxl80": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1315,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://www.eltiempo.com/tecnosfera/inteligencia-artificial/mas-del-35-de-tutelas-en-colombia-responden-a-fallas-en-tramites-plantean-mejorarlas-con-ia-para-dejar-uso-de-papel-3593803": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1155,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.53
+   }
+  }
+ },
+ "https://expansion.mx/tecnologia/2026/10/07/refrigerador-ia-ahorro-energia-40000-pesos": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1168,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://www.larepublica.co/globoeconomia/eee-uu-insta-a-estar-alerta-ante-enganos-basados-en-ia-de-cara-a-elecciones-de-medio-termino-4504446": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1144,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.4
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50057678": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1100,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.09
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50122800": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1109,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50100623": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1095,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.55
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.24
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50013902": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1095,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.71
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50119894": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.59
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.66
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50109846": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1314,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.46
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=T41MG_Xo-tg": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1283,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.89
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/9/matthew-green/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1264,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.22
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50097811": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1104,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.58
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.1
+   }
+  }
+ },
+ "https://www.expansion.com/empresas/banca/2026/10/06/6ac3ed14468aebe66e8b459d.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1161,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.98
+   }
+  }
+ },
+ "https://www.bloomberglinea.com/latinoamerica/argentina/la-invitacion-de-marcelo-mindlin-a-los-hyperscalers-de-la-ia-instalen-sus-datacenters-en-vaca-muerta/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1174,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.3
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50105740": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1094,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.34
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.28
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49971594": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.64
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.64
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50043948": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1175,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.02
+   }
+  }
+ },
+ "https://www.infobae.com/tecno/2026/10/16/volvo-y-nvidia-ampliaron-su-alianza-para-lanzar-autos-con-manejo-sin-manos-antes-de-2030/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1146,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.66
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.31
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50002144": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1094,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.66
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.16
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50039051": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1107,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.46
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.39
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50008412": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1094,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://www.expansion.com/tecnologia/2026/10/16/amazon-pasa-android-tabletas-claves-nueva-alexa-tablets.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1135,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.51
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.77
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.32
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50002215": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1093,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.37
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49979793": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1322,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.12
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50123065": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1375,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=wajoP_5Cpw8": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1198,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50087289": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1096,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.47
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.2
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50086422": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1097,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.38
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.55
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49982763": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.46
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=7J9SfCboBp0": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1220,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.55
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.53
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.25
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49993551": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1309,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.49
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.36
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.65
+   }
+  }
+ },
+ "https://expansion.mx/tecnologia/2026/10/16/china-limita-exportacion-tecnologias-ia": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1148,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.48
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.theverge.com/tech/1012748/nvidia-rtx-spark-windows-arm-laptops-asus-hp-lenovo-impressions": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1185,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=KGFyOtl5ktI": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1315,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.38
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/7/jake-boggan/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1289,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.53
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=7b9tov5Uc5s": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1299,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.6
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.63
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=wdXF-5nn-T4": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1245,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 1.0
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.71
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.89
+   }
+  }
+ },
+ "https://www.expansion.com/catalunya/2026/10/09/abb-robotics-softbank-abriran-gran-centro-robotica-sabadell.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1168,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.64
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.19
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50012543": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1087,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.34
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.38
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.41
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50007993": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1354,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49974436": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1122,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=_KhlazpW9d8": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1143,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=BKuK0M6oDTI": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1298,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://www.xataka.com/robotica-e-ia/han-pillado-a-flota-agentes-ia-rebeldes-campando-internet-primera-vez-han-sido-creados-activados-china": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1357,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.53
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.09
+   }
+  }
+ },
+ "https://www.lanacion.com.ar/tecnologia/las-nueve-frases-que-usan-los-jefes-inteligentes-para-delegar-tareas-a-la-ia-sin-perder-el-control-nid16102026/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1128,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.63
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.58
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49999930": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1190,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.59
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.41
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50057383": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1095,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.94
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50009330": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1307,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://www.xataka.com/magnet/rusia-puso-motores-a-reaccion-a-sus-drones-para-volar-a-600-km-h-respuesta-ucrania-ha-sido-darle-ojos-cerebro-a-ametralladora": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1379,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.6
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.16
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50076388": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1338,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://www.infobae.com/tecno/2026/10/15/mientras-22-empresarios-cenaban-en-nueva-york-sus-agentes-de-ia-organizaron-una-fiesta-en-un-chat/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1153,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.8
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.37
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=5QsADHyOU2w": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1098,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.01
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.01
+   }
+  }
+ },
+ "https://www.eleconomista.com.mx/internacionales/corea-norte-prueba-nuevo-tipo-sistema-torpedo-precision-inteligencia-artificial-20261016-839070.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1146,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.77
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://www.bloomberglinea.com/estilo-de-vida/que-es-el-apple-homeview-y-cuanto-costara-el-nuevo-dispositivo-para-el-hogar/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1142,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.66
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=cJsHel27Z6M": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1314,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.77
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.64
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.93
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49995763": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1170,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=huWizSgmRf0": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1395,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.57
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.5
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=XEl4ZQKKxig": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1200,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://openai.com/index/legalon-halves-codex-costs": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1133,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.95
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50102977": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1104,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.59
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.8
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.19
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50025131": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1100,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.47
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50113790": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1098,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.44
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=uKUA1a0Kdfc": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1307,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.49
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.27
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=_zUp6y9bDU8": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1282,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50079942": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1097,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.66
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.72
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=I1uDvnz9Q3Y": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1149,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.15
+   }
+  }
+ },
+ "https://www.larepublica.co/globoeconomia/anthropic-inicia-conversaciones-con-el-contralor-de-nueva-york-tras-carta-de-la-salida-a-bolsa-4504683": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1154,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.iproup.com/innovacion/72158-la-startup-soybot-gana-un-premio-por-una-desarrollo-de-ia": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1136,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.65
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.52
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=WXWFmwfo1JA": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1109,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=3Q1mdn5ZGvM": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1292,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://stratechery.com/2026/a-conversation-with-ari-emanuel-about-entertainment-and-ai/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1124,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.34
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.51
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.81
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50126612": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1097,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.16
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49969680": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1371,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.02
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.01
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=YUeCN4kLpY4": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1150,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.64
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.57
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.51
+   }
+  }
+ },
+ "https://arstechnica.com/tech-policy/2026/10/anthropics-claude-ai-submitted-false-murder-tip-to-philadelphia-police/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1117,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.63
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/8/carson-gross/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1183,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.56
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50039633": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1104,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://jack-clark.net/2026/10/12/import-ai-476-creativity-and-rsi-worse-than-china-open-weight-models-ai-goes-to-space/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1187,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.47
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.31
+   }
+  }
+ },
+ "https://es.wired.com/articulos/tu-cerebro-y-chatgpt-tienen-mas-en-comun-de-lo-que-crees-al-menos-cuando-se-trata-de-interpretar-palabras": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1150,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.8
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.03
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49990764": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1101,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=KhRjivBSwiw": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1289,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.1
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50088628": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.6
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.61
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49980872": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1100,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://www.infobae.com/tecno/2026/10/14/google-reforzo-la-deteccion-de-estafas-en-android-con-un-nuevo-modo-de-inteligencia-artificial/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1147,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.51
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.64
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49953734": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1365,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.19
+   }
+  }
+ },
+ "https://www.xataka.com/empresas-y-economia/getty-primera-gran-empresa-pasado-caer-culpa-ia-otras-no-aprenden-no-sera-ultima": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1356,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.88
+   }
+  }
+ },
+ "https://www.infobae.com/tecno/2026/10/15/amazon-lanzo-dos-dispositivos-de-ia-que-escuchan-conversaciones-y-sugieren-que-comprar/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1141,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50058046": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1109,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.58
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://techcrunch.com/2026/10/16/elorians-first-ai-model-wants-to-reason-with-images-not-just-about-them/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1143,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://openai.com/index/sentinelone": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1124,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.59
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.9
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=8804JYm81cc": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1145,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.4
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.18
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=Zf_e45GiNCE": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1334,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.58
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49966293": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1093,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.57
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.16
+   }
+  }
+ },
+ "https://www.mckinsey.com/capabilities/operations/our-insights/rewiring-capital-projects-to-boost-construction-productivity": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1126,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.74
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.94
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50054305": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1141,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50019173": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1101,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49984311": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1096,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.48
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.54
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50005024": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1322,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.48
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.8
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50077703": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1096,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://www.infobae.com/tecno/2026/10/14/por-que-apple-no-puede-vender-su-pantalla-homeview-en-la-union-europea/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1132,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.27
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.18
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=fTGIV3e8dTU": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1356,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.17
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=YXiLj4tJt5A": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1291,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.66
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.1
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50068405": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1097,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.06
+   }
+  }
+ },
+ "https://www.portafolio.co/tecnologia/como-postularse-a-las-15-000-becas-de-google-en-colombia-requisitos-y-fecha-limite-de-inscripcion-504572": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1136,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.66
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.69
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.expansion.com/tecnologia/2026/10/08/samsung-anticipa-80-000-millones-dolares-beneficio-trimestral-auge-ia.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1143,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://arstechnica.com/ai/2026/10/inside-amazons-robotic-arms-race-and-what-it-means-for-the-future-of-human-work/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1120,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.94
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.34
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.53
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.93
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49954015": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1316,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.03
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.04
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.02
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=3IVo-MNwk2I": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1206,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.76
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.93
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50008914": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1092,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.12
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49985180": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1229,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50078582": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1097,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.46
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.06
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=N58CCnPqNoo": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1135,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.32
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.17
+   }
+  }
+ },
+ "https://www.therundown.ai/articles/fired-openai-safety-researchers-hit-back": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1107,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.21
+   }
+  }
+ },
+ "https://openai.com/index/jump-trading": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1123,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.79
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.87
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50031461": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1116,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.82
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.68
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.41
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50109477": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1098,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.13
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50122009": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1097,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.38
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.7
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.52
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=spxoDAfh5ig": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1313,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.88
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.39
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.34
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.08
+   }
+  }
+ },
+ "https://www.expansion.com/tecnologia/2026/10/15/batalla-ia-juega-margen-openai.html": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1164,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.24
+   }
+  }
+ },
+ "https://es.wired.com/articulos/los-hombres-fingen-saber-mas-sobre-ia-de-lo-que-realmente-conocen": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1139,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.75
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.04
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50089144": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1089,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.34
+   }
+  }
+ },
+ "https://www.infobae.com/tecno/2026/10/15/que-diferencia-hay-entre-google-ai-pro-y-google-ai-ultra-precio-limite-y-funciones/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1133,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.07
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50118876": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1100,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=IkhmdTqSvJw": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1303,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.05
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50030849": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1337,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.24
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.09
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.8
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.16
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.23
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=hiM299frstQ": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1456,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.67
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.95
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.37
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.55
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50106062": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1101,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.11
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=ORVh4GivEU0": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1309,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.48
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.42
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.4
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.7
+   }
+  }
+ },
+ "https://simonwillison.net/2026/Oct/13/redesigning-source-control-at-anthropic/": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1331,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.6
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.78
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.74
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.26
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.59
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=YIxzNZDDy1A": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1296,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.92
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.18
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.05
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50038054": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1101,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.12
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.19
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=sw1N_CZfczY": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1148,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.28
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.31
+   }
+  }
+ },
+ "https://www.therundown.ai/articles/openai-math-avalanche-continues": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1110,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.2
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.25
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.16
+   }
+  }
+ },
+ "https://www.latent.space/p/ainews-typesafejev-at-100m-arr-75b": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1118,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.08
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.17
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.09
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50041861": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1099,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.31
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.29
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.09
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50000676": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1103,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.21
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.07
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.58
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.63
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.87
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.1
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.14
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=4n08JHb90hI": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1301,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.91
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.52
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.43
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.12
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50111769": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1101,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.81
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.34
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.86
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.23
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.33
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.3
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50112925": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1102,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.93
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.62
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.97
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.22
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.1
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=swm8KeXAuc0": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1421,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.45
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.5
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.35
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.28
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=50033517": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1095,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.9
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.73
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.44
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.48
+   }
+  }
+ },
+ "https://news.ycombinator.com/item?id=49982478": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1089,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.89
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.3
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.38
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.41
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.44
+   }
+  }
+ },
+ "https://www.youtube.com/watch?v=XkKdbPhIvbY": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1141,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.96
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.11
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.85
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.14
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.15
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.17
+   }
+  }
+ },
+ "https://www.theverge.com/tech/1012846/meta-business-terms-scrape-news-publishers": {
+  "model": "jev-1.13.0",
+  "input_tokens": 1177,
+  "answers": {
+   "about_ai": {
+    "type": "noul",
+    "noul": 0.83
+   },
+   "business_use": {
+    "type": "noul",
+    "noul": 0.84
+   },
+   "about_ai_b": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "about_ai_c": {
+    "type": "noul",
+    "noul": 0.98
+   },
+   "ai_title": {
+    "type": "noul",
+    "noul": 0.99
+   },
+   "business_use_b": {
+    "type": "noul",
+    "noul": 0.13
+   },
+   "org_adoption": {
+    "type": "noul",
+    "noul": 0.56
+   },
+   "org_impact": {
+    "type": "noul",
+    "noul": 0.32
+   }
+  }
+ }
+}

@@ -48,8 +48,17 @@ from app.schemas.opportunity import (
 )
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
-# Métrica que mide el rendimiento de cada plataforma. RSS no expone métricas.
-PERFORMANCE_METRIC = {Platform.YOUTUBE: "views", Platform.HACKERNEWS: "points"}
+# Métrica que mide el rendimiento de cada plataforma. RSS no expone métricas. El score de Reddit
+# se guarda en `points`, como el de HN.
+PERFORMANCE_METRIC = {
+    Platform.YOUTUBE: "views",
+    Platform.TIKTOK: "views",
+    Platform.INSTAGRAM: "views",
+    Platform.HACKERNEWS: "points",
+    Platform.REDDIT: "points",
+}
+# Plataformas cuyas views se acumulan con los días: su rendimiento se ajusta por edad.
+CUMULATIVE_VIEWS = {Platform.YOUTUBE, Platform.TIKTOK, Platform.INSTAGRAM}
 MIN_RECENT_ITEMS = 3  # piezas en las dos últimas ventanas para considerar el tema activo
 MIX_WEIGHT_MIN, MIX_WEIGHT_MAX = 0.5, 3.0
 MAX_EVIDENCE = 25
@@ -103,7 +112,7 @@ def _performance(p: Piece) -> float | None:
     value = getattr(p.metrics, metric) if metric else None
     if value is None:
         return None
-    if p.platform is Platform.YOUTUBE:  # views se acumulan: se ajusta por edad
+    if p.platform in CUMULATIVE_VIEWS:
         return out.age_adjusted(value, p.published_at, p.observed_at)
     return float(value)
 
