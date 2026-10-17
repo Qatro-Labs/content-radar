@@ -60,12 +60,19 @@ Cómo se calcula y por qué hay que leerla con cuidado:
   proveedor (`backend/app/services/costs.py:153`). Con menos de un día de registro, el servicio
   toma un día como mínimo (`backend/app/services/costs.py:27`). Aquí hubo unas 5 horas, así que los
   20,53 $ son **5 horas de consumo contadas como un día y multiplicadas por 30**.
-- **Lo medido incluye carga que no se repite cada día.** Jev hizo 3.353 llamadas, más del doble de
-  las ~1.600 piezas del corpus: la clasificación inicial de todo el backfill y, lo más probable, una
-  segunda pasada al cambiar de versión de batería (la caché va por versión). Con la caché llena,
-  cada `analyze` solo clasifica las piezas nuevas. Lo mismo vale para el LLM, que también cachea
-  cada tema. Además, en el momento de la medición había un `analyze` en curso.
+- **Lo medido de Jev es casi todo carga que no se repite.** Las 3.353 llamadas coinciden con las
+  filas de `jev_judgments`: 1.550 con la batería v2 y 1.803 con la v3. Es decir, el corpus se
+  clasificó una vez con cada versión (la caché va por versión de batería). Con la caché llena,
+  cada `analyze` solo clasifica las piezas nuevas.
+- **Lo medido del LLM sí se repite.** `evaluate_topic` y `explain_opportunity` también tienen caché,
+  pero su clave incluye las piezas, el audience mix y las pistas del tema, que cambian con cada
+  recolección: en la práctica casi cada tema se vuelve a evaluar en cada ejecución (unas 40
+  explicaciones por ejecución). Cuánto se reutiliza la caché entre ejecuciones no está medido.
+- En el momento de la medición había un `analyze` en curso.
 - No hacemos una proyección "corregida" a mano: haría falta medir varios días con la caché llena.
+- **Por proveedor** (derivado aquí con la misma fórmula, × 30; el servicio solo devuelve el total):
+  Jev ≈ 9,43 $ · LLM ≈ 10,19 $ · ScrapeCreators ≈ 0,90 $ · YouTube, HN y RSS 0 $. Suman los
+  20,53 $. La cifra de Jev es la que más sobreestima, por lo dicho arriba.
 - **Fijo:** suma de los precios de lista de los planes de `data/pricing.yaml`. El uso real de
   Railway, Supabase, Vercel y GitHub Actions **no se mide**; tampoco el exceso sobre los 5 $ de uso
   que incluye Railway Hobby.

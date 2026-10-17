@@ -1,7 +1,7 @@
 # Arquitectura
 
 > Cómo está montado 30X Signal: componentes, pipeline, dónde corre cada pieza, qué hace cada modelo
-> y cómo se protege. Describe el código de `main` a 18/10/2026. Las decisiones viven en
+> y cómo se protege. Describe el código de `main` en el commit `d6b833b` (18/10/2026). Las decisiones viven en
 > [`CLAUDE.md`](../CLAUDE.md) §4; el algoritmo de priorización, en [`scoring.md`](scoring.md); el
 > coste medido, en [`costs.md`](costs.md).
 
@@ -49,7 +49,7 @@ flowchart TD
 | **Intelligence** | Funciones puras: embeddings, clustering, velocidad, outliers, etapa, scores, recomendación | `backend/app/intelligence/` |
 | **Editorial** | Entradas y salidas del LLM (audience fit, «por qué importa», briefs) y prompts versionados | `backend/app/editorial/` |
 | **Services** | La única lógica de negocio: la usan la API, el MCP y el agente | `backend/app/services/` |
-| **API REST** | Rutas delgadas bajo `/api/v1` | `backend/app/api/routes/`, `backend/app/main.py:38` |
+| **API REST** | Rutas delgadas bajo `/api/v1`: oportunidades (listado, detalle, evidencia, timeline y lecturas en bloque `/evidence` y `/timelines`), fuentes, coste, briefs y agente | `backend/app/api/routes/`, `backend/app/main.py:38` |
 | **Servidor MCP** | Las mismas consultas desde un asistente de IA. Detalle: [`mcp.md`](mcp.md) | `backend/app/mcp/` |
 | **Agente del Radar** | Responde preguntas del usuario sobre la ejecución servida y propone cambios de vista | `backend/app/agent/`, `backend/app/api/routes/agent.py` |
 | **Dashboard** | Vue 3 + TypeScript. Habla solo con la API REST | `frontend/` |
@@ -83,7 +83,7 @@ ser la servida. Un `pg_try_advisory_lock` impide que corran dos a la vez
 
 | Paso | Qué pasa | Quién |
 |---|---|---|
-| 1. Cargar | Piezas de fuentes activas publicadas en los últimos 14 días, con sus snapshots hasta `as_of` | Python (`backend/app/services/opportunities.py:50`) |
+| 1. Cargar | Piezas de fuentes activas publicadas en los últimos 14 días, con sus snapshots hasta `as_of` | Python (`backend/app/services/opportunities.py:51`) |
 | 2. Clasificar | Una llamada a Jev por pieza nueva con la batería `piece.v3`; lo ya clasificado sale de la caché `jev_judgments` | **Jev** |
 | 3. Filtrar | Sale una pieza solo si Jev dice con seguridad que ni el tema ni el título son de IA | Python |
 | 4. Agrupar | Embeddings multilingües (ES y EN en el mismo espacio) y clustering aglomerativo por coseno | sentence-transformers + scikit-learn |
@@ -102,7 +102,7 @@ Los umbrales y fórmulas de los pasos 3, 5 y 7 están en [`scoring.md`](scoring.
 | Pieza | Dónde | Notas |
 |---|---|---|
 | `collect` y `analyze` | GitHub Actions | Secrets solo en el `env` del paso que los usa; acciones fijadas por SHA. `analyze` instala el grupo `ml` (torch CPU) y cachea el modelo de embeddings |
-| API REST + MCP + agente | Railway, una sola imagen (`backend/Dockerfile`, sin torch) | Migra al arrancar; healthcheck en `/health`. El MCP se monta en la misma app ASGI (`backend/app/main.py:60`) |
+| API REST + MCP + agente | Railway, una sola imagen (`backend/Dockerfile`, sin torch) | Migra al arrancar; healthcheck en `/health`. El MCP se monta en la misma app ASGI (`backend/app/main.py:61`) |
 | Base de datos | Supabase (PostgreSQL + pgvector), session pooler | El transaction pooler rompería el advisory lock |
 | Dashboard | Build estático de Vite, configurado para Vercel (`frontend/vercel.json`) | Solo llama a la API REST |
 
@@ -125,7 +125,7 @@ verificación de cada afirmación con Jev que describe CLAUDE.md §7 no está im
 
 Cada `analyze` correcto es una ejecución con su propio ranking; los clusters cambian entre
 ejecuciones. La API, el MCP y el agente leen siempre la misma, elegida en
-`backend/app/services/opportunities.py:170`:
+`backend/app/services/opportunities.py:171`:
 
 - Con `DEMO_RUN_ID` fijado en Railway, esa ejecución. Si no existe o no terminó bien, **no se sirve
   nada**: una demo fijada a una ejecución inexistente tiene que notarse.
@@ -140,7 +140,7 @@ dice el periodo real.
 | Riesgo | Cómo se cubre |
 |---|---|
 | Datos personales | Solo metadatos, enlaces y métricas públicas; nunca el autor de Reddit (CLAUDE.md §2, regla 1) |
-| Prompt injection en texto de Internet | El texto externo va solo en el mensaje del usuario, escapado y dentro de bloques `<evidence>` (`backend/app/editorial/audience.py:185`). El system prompt solo lleva texto nuestro. Jev marca cada pieza con la pregunta `injection`, y una pieza con probabilidad > 0,5, o sin respuesta, no entra en el contexto del LLM (`backend/app/intelligence/jev.py:197`). En Jev, el texto va en `state` y nuestras instrucciones en las preguntas |
+| Prompt injection en texto de Internet | El texto externo va solo en el mensaje del usuario, escapado y dentro de bloques `<evidence>` (`backend/app/editorial/audience.py:185`). El system prompt solo lleva texto nuestro. Jev marca cada pieza con la pregunta `injection`: una pieza con probabilidad > 0,5, o sin respuesta, no se envía al LLM en el audience fit, «por qué importa» ni los briefs (`backend/app/intelligence/jev.py:197`). El agente del Radar sí lee los títulos de la evidencia servida; a él lo protegen el saneado, los delimitadores y el canario (fila de abajo). En Jev, el texto va en `state` y nuestras instrucciones en las preguntas |
 | Salida del LLM no fiable | Pydantic, `stop_reason`, citas solo a piezas enviadas, cifras solo observadas (`backend/app/intelligence/explanation.py:52`, `backend/app/intelligence/briefs.py`) |
 | Agente del Radar | Ámbito cerrado con `decline`; solo lee la ejecución servida y sus acciones solo cambian la vista. Máx. 8 pasos (`backend/app/agent/limits.py:11`), 45 s por pregunta (`backend/app/agent/runner.py:57`), 4 preguntas a la vez (`backend/app/api/routes/agent.py:41`), 20 por IP y hora y 300 al día (`backend/app/agent/limits.py:15`). Entradas y salidas saneadas: se quitan caracteres invisibles, `<` y `>` externos se cambian por sus formas de ancho completo y un canario detecta si el modelo filtra el prompt (`backend/app/agent/sanitize.py`) |
 | Coste de las llamadas públicas al LLM | Briefs por REST: 20 por IP y hora, 300 al día y 4 a la vez (`backend/app/api/routes/editorial.py:33`). Briefs por MCP: 20 por hora y 100 al día compartidos y 2 a la vez (`backend/app/mcp/server.py:35`) |

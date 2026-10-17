@@ -1,7 +1,7 @@
 # Algoritmo de priorización
 
 > Cómo `analyze` convierte piezas en oportunidades ordenadas: qué se mide, con qué umbrales y en qué
-> orden. Describe el código de `main` a 18/10/2026; cada constante lleva su `ruta:línea`. Si el
+> orden. Describe el código de `main` en el commit `d6b833b` (18/10/2026); cada constante lleva su `ruta:línea`. Si el
 > código y [`CLAUDE.md`](../CLAUDE.md) §7 no coinciden, aquí manda el código y la diferencia se
 > anota al final. La arquitectura está en [`architecture.md`](architecture.md) y la batería de Jev,
 > en [`jev.md`](jev.md).
@@ -28,9 +28,9 @@ piezas de 14 días → filtro de Jev → embeddings → clusters → temas activ
 
 | Qué | Valor | Dónde |
 |---|---|---|
-| Ventana de piezas | Publicadas en los últimos 14 días hasta `as_of`, de fuentes activas | `backend/app/services/opportunities.py:33` |
-| Inicio del monitoreo (texto de las limitaciones) | 16/10/2026 | `backend/app/services/opportunities.py:35` |
-| Periodo servido | Solo `7d` (ventanas de 3 + 3 días) | `backend/app/services/opportunities.py:37` |
+| Ventana de piezas | Publicadas en los últimos 14 días hasta `as_of`, de fuentes activas | `backend/app/services/opportunities.py:34` |
+| Inicio del monitoreo (texto de las limitaciones) | 16/10/2026 | `backend/app/services/opportunities.py:36` |
+| Periodo servido | Solo `7d` (ventanas de 3 + 3 días) | `backend/app/services/opportunities.py:38` |
 
 Antes de llegar aquí, las fuentes con `ai_filter: true` ya descartaron en el colector las piezas sin
 términos de IA (`backend/app/collectors/text.py:25`).
@@ -44,7 +44,7 @@ las probabilidades en decisiones:
 |---|---|---|
 | `noul` (sí/no) | ≥ 0,7 es sí; ≤ 0,3 es no; en medio, incierto | `backend/app/intelligence/jev.py:32`, `:33` |
 | `choice` (formato, gancho) | Probabilidad máxima ≥ 0,6 **y** la misma respuesta con las opciones en orden inverso (`_rev`); si no, incierto | `backend/app/intelligence/jev.py:31`, `:171` |
-| Inyección | Probabilidad > 0,5, o sin respuesta: la pieza no entra en el contexto del LLM (sí cuenta en los scores) | `backend/app/intelligence/jev.py:35`, `:197` |
+| Inyección | Probabilidad > 0,5, o sin respuesta: la pieza no se envía al LLM en el audience fit, «por qué importa» ni los briefs (sí cuenta en los scores) | `backend/app/intelligence/jev.py:35`, `:197` |
 
 **Qué sale del corpus:** solo las piezas en las que Jev dice con seguridad "no" a `about_ai` **y** a
 `ai_in_title`. Lo incierto o sin clasificar se queda, para no perder temas por un fallo de Jev
@@ -229,7 +229,7 @@ descripción cortada a 500 caracteres, el audience mix y las pistas de Jev
 
 Para cada criterio devuelve primero la justificación y las URLs que cita, y después un nivel entero
 de 0 a 5 (`backend/app/editorial/audience.py:47`). Los seis criterios
-(`backend/app/schemas/opportunity.py:128`):
+(`backend/app/schemas/opportunity.py:134`):
 
 | Criterio | Pregunta |
 |---|---|
