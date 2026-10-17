@@ -196,7 +196,12 @@ function bubbleSeries(bubbles: Bubble[], input: RadarChartInput): ScatterSeriesO
     clip: false,
     // El hover agranda la burbuja desde `shownBubbleSize`, igual desde el radar que desde el ranking.
     emphasis: { scale: false },
-    animationDelay: (index) => delays[index],
+    // Entre dos etiquetas que chocan, ECharts deja la de la burbuja más grande (su prioridad es el
+    // área), que es la de más evidencia. Solo compara etiquetas entre sí, no con burbujas.
+    labelLayout: { hideOverlap: true },
+    // El retardo es solo para la entrada: `LabelLayout` lo reutiliza al fundir cada etiqueta nueva,
+    // y tras el barrido las retrasaría hasta 1,3 s más.
+    animationDelay: input.entering ? (index) => delays[index] : 0,
     data: bubbles.map((bubble) => bubbleItem(bubble, input)),
   }
 }

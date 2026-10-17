@@ -127,6 +127,25 @@ describe('buildRadarOption', () => {
     ])
   })
 
+  it('hides the bubble labels that overlap another label', () => {
+    // Con datos reales (37 temas) las etiquetas se pisaban en el radar.
+    const option = buildRadarOption(input())
+
+    expect(seriesOfType(option, 'scatter')?.labelLayout).toEqual(
+      expect.objectContaining({ hideOverlap: true }),
+    )
+  })
+
+  it('delays the bubble entry only while the sweep enters', () => {
+    // Con `LabelLayout`, ECharts funde cada etiqueta nueva con el `animationDelay` de su burbuja:
+    // tras el barrido, las etiquetas tardaban 1,1–1,3 s más en salir.
+    const entering = seriesOfType(buildRadarOption(input({ entering: true })), 'scatter')
+    const settled = seriesOfType(buildRadarOption(input()), 'scatter')
+
+    expect(entering?.animationDelay).toBeTypeOf('function')
+    expect(settled?.animationDelay).toBe(0)
+  })
+
   it('keeps a dimmed bubble in the scatter series, faded and without label', () => {
     // DESIGN.md §8: lo que no entra baja a 0,16 en su sitio, sin pasar a otra serie.
     const option = buildRadarOption(input({ dimmedIds: new Set(['opp_002']) }))
