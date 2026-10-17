@@ -313,6 +313,8 @@ P2: Topic Network con Vue Flow (`@vue-flow/core`) y animaciones avanzadas.
 - Prompts versionados en archivos. Salidas del LLM validadas con Pydantic. El contenido externo va delimitado en el prompt.
 - Integrar en `main` pronto y a menudo; `main` siempre desplegable. Ramas cortas por área: `data/…`, `intel/…`, `fe/…`.
 - Español en la UI y en el contenido editorial; inglés en el código.
+- **Estándares de código:** [`docs/engineering-standards.md`](docs/engineering-standards.md). Comentarios, los necesarios (el *porqué*, nunca el *qué*); docstrings no por defecto.
+- **Flujo `/spec` → `/build`** (opcional, para tareas de 1 h o más con un contrato claro: módulos de scoring, endpoints, tools MCP, migraciones). `/spec` investiga, pregunta y escribe un plan en `.claude/plans/`; `/build` lo implementa con `plan-implementer` en contexto limpio y, si toca, lo audita `code-standards-auditor`; `/replan` cierra los bloqueos. No compensa para iteración visual de UI ni para arreglos rápidos.
 
 ---
 
