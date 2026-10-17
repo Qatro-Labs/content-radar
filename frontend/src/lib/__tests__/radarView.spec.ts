@@ -321,6 +321,12 @@ describe('radar texts', () => {
     expect(subline(query(), ten)).toBe(HOW_TO_READ)
   })
 
+  it('names the order the agent chose when it sorts by acceleration', () => {
+    expect(subline(query({ sort: 'acceleration' }))).toBe(
+      'Hay 5 temas analizados esta semana. Ordenados por aceleración. Elija una burbuja o una fila para ver el tema.',
+    )
+  })
+
   it.each([
     {
       case: 'stages only',

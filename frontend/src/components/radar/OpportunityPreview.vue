@@ -56,7 +56,7 @@ const tiles = computed<StatTile[]>(() => [
 
 // DESIGN.md §4.
 const BUTTON_CLASS =
-  'flex min-h-[46px] items-center justify-center gap-2 rounded-xl px-4 font-semibold transition-[background-color,scale] duration-150 ease-out active:scale-[0.98]'
+  'flex min-h-[46px] items-center justify-center gap-2 rounded-xl px-4 font-semibold whitespace-nowrap transition-[background-color,scale] duration-150 ease-out active:scale-[0.98]'
 </script>
 
 <template>

@@ -47,7 +47,7 @@ function showMore() {
       <h2 class="font-display text-[22px] font-semibold tracking-[-0.02em]">
         Piezas
         <span class="ml-1 font-sans text-sm font-medium tracking-normal text-muted-foreground">
-          mostrando {{ formatCount(rows.length) }} de {{ formatCount(total) }}
+          mostrando {{ formatCount(shownRows.length) }} de {{ formatCount(rows.length) }}
         </span>
       </h2>
       <label

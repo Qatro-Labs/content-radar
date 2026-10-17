@@ -222,16 +222,25 @@ export function radarHeadline(view: RadarView, query: RadarQuery): string {
   return `${formatCount(view.total, TOPIC_NOUN)} esta semana`
 }
 
-const HOW_TO_READ = 'Ordenados por oportunidad. Elija una burbuja o una fila para ver el tema.'
+// El agente puede ordenar por aceleración (`sort` en la URL) aunque no haya botón de orden.
+const SORT_PHRASE: Record<RadarQuery['sort'], string> = {
+  opportunity: 'Ordenados por oportunidad.',
+  acceleration: 'Ordenados por aceleración.',
+}
+const HOW_TO_SELECT = 'Elija una burbuja o una fila para ver el tema.'
+
+function howToRead(query: RadarQuery): string {
+  return `${SORT_PHRASE[query.sort]} ${HOW_TO_SELECT}`
+}
 
 export function radarSubline(view: RadarView, query: RadarQuery): string {
   if (hasFilters(query)) {
     return `Filtro: ${describeFilters(query)}. El resto queda atenuado en el radar.`
   }
   if (view.total < EXPECTED_OPPORTUNITIES) {
-    return `Hay ${formatCount(view.total, ANALYZED_TOPIC_NOUN)} esta semana. ${HOW_TO_READ}`
+    return `Hay ${formatCount(view.total, ANALYZED_TOPIC_NOUN)} esta semana. ${howToRead(query)}`
   }
-  return HOW_TO_READ
+  return howToRead(query)
 }
 
 // D9 del plan fe-dashboard-v2.
