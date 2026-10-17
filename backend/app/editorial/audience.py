@@ -125,6 +125,14 @@ def _hint_counts(judgments: Sequence[PieceJudgment | None]) -> list[HintCount]:
     return counts
 
 
+def _safe_label(label: str, safe: Sequence[Piece]) -> str:
+    # El rótulo es el título de la pieza representativa: si esa pieza no es segura, no entra en
+    # el prompt y se rotula con la primera pieza segura (regla 6).
+    if any(p.title == label for p in safe):
+        return label
+    return safe[0].title if safe else ""
+
+
 def build_topic_input(result: TopicResult, answers: Mapping[int, dict[str, Any]]) -> TopicInput:
     """Piezas en el orden de la evidencia, sin las que Jev no marca como seguras."""
     judgments = [
@@ -135,7 +143,7 @@ def build_topic_input(result: TopicResult, answers: Mapping[int, dict[str, Any]]
     formats = Counter(j.format for j in judgments if j and j.format)
     mix = result.opportunity.audience_mix.model_dump()
     return TopicInput(
-        label=result.opportunity.topic,
+        label=_safe_label(result.opportunity.topic, safe),
         audience_mix={k: round(v, MIX_DECIMALS) for k, v in mix.items()},
         hints=_hint_counts(judgments),
         formats=dict(sorted(formats.items())),
