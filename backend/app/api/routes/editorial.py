@@ -9,13 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.limits import GLOBAL_PER_DAY, PER_IP_PER_HOUR, LimitResult, RateLimiter
 from app.api.routes.agent import client_ip
-from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.editorial.briefs import Briefer, build_briefer
 from app.schemas.editorial import BriefRequest, EditorialBrief
 from app.services import editorial
-from app.services.costs import record_meter
 
 router = APIRouter(prefix="/editorial", tags=["editorial"])
 
@@ -81,14 +79,9 @@ async def create_brief(
 ):
     """Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM."""
-    meter = UsageMeter()
     try:
-        return await editorial.generate_brief(
-            session, body, briefer=briefer, meter=meter, now=datetime.now(UTC)
+        return await editorial.generate_metered_brief(
+            session, body, briefer=briefer, now=datetime.now(UTC)
         )
     except editorial.BriefError as e:
         raise HTTPException(ERROR_STATUS[type(e)], str(e)) from e
-    finally:
-        # El LLM cobra aunque el brief no supere la comprobación.
-        if meter.counts:
-            await record_meter(session, meter)

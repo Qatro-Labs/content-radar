@@ -563,7 +563,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest tests/test_search_signals.py -q`
 - **Commit:** `Add text search over collected signals`
 
-### Paso 4 — El registro del consumo del brief pasa al service (D10)
+### Paso 4 — El registro del consumo del brief pasa al service (D10) [HECHO]
 
 - **Archivos:** `backend/app/services/editorial.py`, `backend/app/api/routes/editorial.py`,
   `backend/tests/test_editorial_brief.py`
