@@ -305,7 +305,7 @@ class JudgeResult:
 - **Verificación:** `cd backend && uv run alembic upgrade head && uv run alembic downgrade -1 && uv run alembic upgrade head`
 - **Commit:** `Add the jev_judgments table`
 
-### Paso 5 — Servicio de clasificación con caché
+### Paso 5 — Servicio de clasificación con caché [HECHO]
 
 - **Archivos:** `backend/app/services/classification.py`, `backend/tests/test_classification.py`.
 - **Cambio:** D6 (servicio).
