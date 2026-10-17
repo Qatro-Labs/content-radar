@@ -2,14 +2,12 @@
 import { computed, ref } from 'vue'
 
 import { useOpportunities } from '@/api/opportunities'
-import AudienceMixCard from '@/components/radar/AudienceMixCard.vue'
 import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
 import OpportunityRanking from '@/components/radar/OpportunityRanking.vue'
 import RadarFootnote from '@/components/radar/RadarFootnote.vue'
 import RadarHero from '@/components/radar/RadarHero.vue'
 import RadarSidePanel from '@/components/radar/RadarSidePanel.vue'
 import RadarStates, { RadarPlaceholder } from '@/components/radar/RadarStates.vue'
-import WhyItMattersCard from '@/components/radar/WhyItMattersCard.vue'
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import { buildRadarView } from '@/lib/radarView'
 
@@ -17,11 +15,11 @@ const { query, update } = useRadarQuery()
 const { data, isPending, isError, refetch } = useOpportunities(() => query.value.period)
 
 const view = computed(() => buildRadarView(data.value ?? null, query.value))
-// El hover enlaza radar y ranking, pero no va en la URL: no es un estado que se comparta.
+// El hover enlaza radar, ranking y panel, pero no va en la URL: no es un estado que se comparta.
 const hovered = ref<string | null>(null)
 
-// Sin una lista con temas no se monta la cabecera: "0 oportunidades esta semana" se leería como
-// un resultado real (CLAUDE.md §2.3).
+// Sin una lista con temas no se monta la cabecera: "0 temas esta semana" se leería como un
+// resultado real (CLAUDE.md §2.3).
 const placeholder = computed<RadarPlaceholder | null>(() => {
   if (isPending.value) return RadarPlaceholder.Loading
   if (isError.value) return RadarPlaceholder.Error
@@ -30,8 +28,20 @@ const placeholder = computed<RadarPlaceholder | null>(() => {
   return null
 })
 
-function select(id: string) {
+// El hover se suelta al cambiar la selección: el panel cambia de estado bajo el cursor y la
+// fila de «Esta semana» desaparece sin `mouseleave`, así que su tarjeta flotante se quedaría.
+function changeSelection(id: string | null) {
+  hovered.value = null
   update({ selected: id })
+}
+
+// D7: elegir el tema ya seleccionado lo deselecciona.
+function select(id: string) {
+  changeSelection(view.value.selected?.id === id ? null : id)
+}
+
+function clearSelection() {
+  changeSelection(null)
 }
 
 function hover(id: string | null) {
@@ -42,41 +52,36 @@ function hover(id: string | null) {
 <template>
   <RadarStates v-if="placeholder" :state="placeholder" @retry="refetch()" />
 
-  <div v-else-if="data && view.selected" class="flex flex-col gap-4">
+  <div v-else-if="data" class="flex flex-col gap-4">
     <RadarHero :view :query class="pt-5 pb-1" />
 
-    <div class="flex flex-wrap items-stretch gap-4">
-      <OpportunityRadar
-        class="flex-[999_1_680px]"
-        :view
-        :hovered-id="hovered"
-        :sweep-key="query.period"
-        @select="select"
-        @hover="hover"
-      />
+    <div class="flex flex-wrap items-start gap-4">
+      <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-4">
+        <OpportunityRadar
+          :view
+          :hovered-id="hovered"
+          :sweep-key="query.period"
+          @select="select"
+          @hover="hover"
+        />
+        <OpportunityRanking
+          :rows="view.visible"
+          :is-filtered="view.isFiltered"
+          :selected-id="view.selected?.id ?? null"
+          :hovered-id="hovered"
+          @select="select"
+          @hover="hover"
+        />
+        <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
+      </div>
+
       <RadarSidePanel
         :view
         :monitoring-started-at="data.monitoring_started_at"
         @select="select"
         @hover="hover"
-        @clear="update({ selected: null })"
+        @clear="clearSelection"
       />
     </div>
-
-    <div class="flex flex-wrap gap-4">
-      <AudienceMixCard class="flex-[1_1_360px]" :opportunity="view.selected" />
-      <WhyItMattersCard class="flex-[2_1_520px]" :opportunity="view.selected" />
-    </div>
-
-    <OpportunityRanking
-      :rows="view.visible"
-      :is-filtered="view.isFiltered"
-      :selected-id="view.selected.id"
-      :hovered-id="hovered"
-      @select="select"
-      @hover="hover"
-    />
-
-    <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
   </div>
 </template>
