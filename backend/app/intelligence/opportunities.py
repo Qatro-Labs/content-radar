@@ -409,7 +409,7 @@ def _score_fields(
 
 
 def _description(group: Sequence[Piece], facts: _TopicFacts) -> str:
-    platforms = ", ".join(sorted(p.value for p in facts.platforms))
+    platforms = ", ".join(sorted(p.value for p in facts.original_platforms))
     replicas = ""
     if facts.replica_count == 1:
         replicas = " (1 republicación)"

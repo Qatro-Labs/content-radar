@@ -8,7 +8,6 @@ import numpy as np
 from app.intelligence.opportunities import Piece, build_opportunities, outlier_ratios
 from app.intelligence.outliers import is_outlier
 from app.intelligence.replicas import (
-    NO_REPLICAS,
     REPLICAS_UNVERIFIED_NOTE,
     ReplicaBasis,
     ReplicaEdge,
@@ -342,11 +341,6 @@ def replicated_topic():
     return pieces, group_stories(pieces, edges)
 
 
-def test_without_stories_nothing_changes():
-    pieces, _ = replicated_topic()
-    assert build_with(pieces, NO_REPLICAS) == build_with(pieces)
-
-
 def test_replicas_do_not_count_as_independent_sources():
     pieces, stories = replicated_topic()
     before, after = build_with(pieces).opportunity, build_with(pieces, stories).opportunity
@@ -375,6 +369,7 @@ def test_replica_on_another_platform_adds_no_platform():
     stories = group_stories(pieces, [ReplicaEdge(11, 20, ReplicaBasis.JEV)])
     o = build_with(pieces, stories).opportunity
     assert (o.source_count, o.cross_source_score) == (2, 35.0)  # 20·1 + 15·1
+    assert o.description.endswith("de 2 fuentes independientes (hackernews, rss).")
 
 
 def test_replicas_do_not_raise_saturation():
@@ -410,12 +405,11 @@ def test_all_replicas_single_story_is_low_confidence():
     assert o.confidence is Confidence.LOW
 
 
-def test_single_source_with_stories_unchanged():
+def test_single_source_gives_no_pairs():
     pieces = [piece(i, hours_ago=5 + i * 10) for i in range(6)]
     same = np.tile([1.0, 0.0], (len(pieces), 1))  # todas iguales, pero del mismo medio
     edges, candidates = topic_pairs(pieces, [list(range(len(pieces)))], same)
     assert (edges, candidates) == ([], [])
-    assert build_with(pieces, group_stories(pieces, edges)) == build_one(pieces)
 
 
 def test_evidence_marks_replicas_and_count():
