@@ -509,7 +509,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 
 ### Parte 1 — Radar (`fe/dashboard-v2-radar`)
 
-#### Paso 1.1 — URL y view-model: sin selección por defecto, contadores fijos y «Publicar ya»
+#### Paso 1.1 — URL y view-model: sin selección por defecto, contadores fijos y «Publicar ya» [HECHO]
 
 - **Archivos:** `src/lib/radarQuery.ts`, `src/lib/radarView.ts`, sus tests y
   `src/composables/__tests__/useRadarQuery.spec.ts`
@@ -533,7 +533,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm test -- radar`
 - **Commit:** `Drop default selection and add fixed counter filters`
 
-#### Paso 1.2 — Panel lateral: «Esta semana» y vista previa
+#### Paso 1.2 — Panel lateral: «Esta semana» y vista previa [HECHO]
 
 - **Archivos:** `src/components/radar/RadarSidePanel.vue`, `src/components/radar/WeekSummary.vue`,
   `src/components/radar/OpportunityPreview.vue` (sustituye a `OpportunityDetail.vue`, que se borra),
@@ -550,7 +550,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Add radar side panel with weekly summary and preview`
 
-#### Paso 1.3 — Cabecera con contadores-filtro y tarjeta del radar
+#### Paso 1.3 — Cabecera con contadores-filtro y tarjeta del radar [HECHO]
 
 - **Archivos:** `src/components/radar/RadarHero.vue`, `src/components/radar/CounterFilter.vue` (nuevo),
   `src/components/radar/OpportunityRadar.vue`, `src/components/radar/RadarSelectionLayer.vue`,
@@ -571,7 +571,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm test -- radarChart && pnpm type-check && pnpm lint`
 - **Commit:** `Add counter filters and stage legend to the radar`
 
-#### Paso 1.4 — Ranking con mini barras de 6 días
+#### Paso 1.4 — Ranking con mini barras de 6 días [HECHO]
 
 - **Archivos:** `src/components/radar/OpportunityRanking.vue`, `src/components/radar/RankingRow.vue`,
   `src/components/radar/RankingSparkline.vue` (nuevo)
@@ -587,7 +587,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Add six-day sparklines to the ranking`
 
-#### Paso 1.5 — Composición de la vista y estados
+#### Paso 1.5 — Composición de la vista y estados [HECHO]
 
 - **Archivos:** `src/views/DiscoverView.vue`, `src/components/radar/RadarStates.vue`,
   `src/components/radar/RadarFootnote.vue`, borrar `src/components/radar/AudienceMixCard.vue` y
