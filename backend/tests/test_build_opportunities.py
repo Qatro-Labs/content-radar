@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from app.intelligence.opportunities import Piece, build_opportunities, outlier_ratios
+from app.intelligence.outliers import is_outlier
 from app.schemas.opportunity import Collection, Confidence, GrowthStatus, Lifecycle
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
@@ -84,6 +85,19 @@ def test_tiktok_ratio_uses_views_per_day_against_same_search():
     reference = [video(i, 4, 4000) for i in range(5)]  # 1.000 views/día cada uno
     hit = video(99, 2, 12000)  # 6.000 views/día
     assert outlier_ratios([*reference, hit], AS_OF)[99] == 6.0
+
+
+def test_tiktok_reference_is_the_p90_of_the_search():
+    def video(i, views):
+        p = piece(i, hours_ago=24 * 4, platform=Platform.TIKTOK, source="TikTok · AI")
+        return replace(p, metrics=Metrics(views=views))
+
+    # 1.000 views/día la mayoría y 4.000 los dos de arriba: mediana 1.000, p90 4.000.
+    reference = [video(i, 4000) for i in range(8)] + [video(10 + i, 16000) for i in range(2)]
+    hit = video(99, 24000)  # 6.000 views/día: 6× la mediana, 1,5× el p90
+    ratios = outlier_ratios([*reference, hit], AS_OF)
+    assert ratios[99] == 1.5
+    assert is_outlier(ratios[99]) is False
 
 
 def test_instagram_ratio_uses_views_per_day_against_same_profile():
@@ -234,4 +248,60 @@ def test_broad_topic_has_limitation():
     assert any(note.startswith("Tema amplio") for note in r.opportunity.limitations)
     assert not any(
         note.startswith("Tema amplio") for note in build_one(pieces).opportunity.limitations
+    )
+
+
+def _reel(i, days_ago, views):
+    p = piece(i, hours_ago=24 * days_ago, platform=Platform.INSTAGRAM, source="@amplia")
+    return replace(p, metrics=Metrics(views=views))
+
+
+def test_off_topic_pieces_complete_the_reference():
+    on_topic = [_reel(i, 5, 10000) for i in range(3)]  # 2.000 views/día
+    off_topic = [_reel(10 + i, 5, 10000) for i in range(3)]
+    hit = _reel(99, 3, 30000)  # 10.000 views/día
+    assert outlier_ratios([*on_topic, hit], AS_OF)[99] is None  # referencia de 3 < 5
+    ratios = outlier_ratios([*on_topic, hit], AS_OF, reference=[*on_topic, *off_topic, hit])
+    assert ratios[99] == 5.0
+    assert set(ratios) == {0, 1, 2, 99}  # las de fuera de tema no reciben ratio
+
+
+def test_off_topic_pieces_never_become_evidence():
+    # Menos de dos días: no entran en la referencia, que es solo la de fuera de tema.
+    on_topic = [_reel(i, 1.2 + i * 0.1, 10000) for i in range(3)]
+    off_topic = [_reel(10 + i, 5, 1000) for i in range(5)]  # 200 views/día
+    hit = _reel(99, 1, 30000)
+    pieces = [*on_topic, hit]
+    [r] = build_opportunities(
+        pieces,
+        [list(range(len(pieces)))],
+        [0],
+        as_of=AS_OF,
+        monitoring_started_at=STARTED,
+        reference=[*pieces, *off_topic],
+    )
+    assert {str(e.url) for e in r.evidence} == {f"https://example.com/{p.item_id}" for p in pieces}
+    assert {p.item_id for p in r.pieces} == {0, 1, 2, 99}
+    assert r.opportunity.outlier_count == 4  # todas rinden ≥3× la referencia de 200 views/día
+
+
+def test_reference_without_off_topic_pieces_changes_nothing():
+    pieces = [piece(i, hours_ago=5 + i * 6, points=10 + i) for i in range(6)]
+    pieces.append(piece(99, hours_ago=8, points=200))
+    clusters, reps = [list(range(len(pieces)))], [0]
+    before = build_opportunities(pieces, clusters, reps, as_of=AS_OF, monitoring_started_at=STARTED)
+    after = build_opportunities(
+        pieces, clusters, reps, as_of=AS_OF, monitoring_started_at=STARTED, reference=pieces
+    )
+    assert after == before
+
+
+def test_empty_pieces_with_reference():
+    off_topic = [_reel(i, 5, 10000) for i in range(6)]
+    assert outlier_ratios([], AS_OF, reference=off_topic) == {}
+    assert (
+        build_opportunities(
+            [], [], [], as_of=AS_OF, monitoring_started_at=STARTED, reference=off_topic
+        )
+        == []
     )

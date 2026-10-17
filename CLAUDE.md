@@ -201,9 +201,9 @@ GET  /health
   - *Aceleración:* `(v_actual − v_anterior) / max(v_anterior, 1)`. Ventanas por defecto de 3 días (actual) vs. 3 días (anterior), configurables. Es la señal principal de tendencia temprana.
     **Ajustada por volumen:** `v_anterior` se escala por `corpus_actual / corpus_anterior` antes de aplicar la fórmula. Los feeds RSS solo guardan sus últimas N piezas y los días recientes tienen más volumen en todas partes; sin el ajuste, casi todo parecería acelerar. Ventanas móviles de 72 h desde `as_of`, no días naturales.
   - `momentum_score` = combinación normalizada de velocidad del tema, aceleración y outliers. Pesos en `intelligence/momentum.py`.
-- **Outliers (por pieza, estilo 1of10).** `outlier_ratio = rendimiento ajustado por edad / mediana de su referencia`.
+- **Outliers (por pieza, estilo 1of10).** `outlier_ratio = rendimiento ajustado por edad / mediana de su referencia`. La referencia usa todas las piezas de la cuenta, también las que Jev quita por fuera de tema; esas no son evidencia ni entran en el clustering.
   - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
-  - TikTok: `views / días desde la publicación` vs. la mediana de los vídeos de la misma búsqueda.
+  - TikTok: `views / días desde la publicación` vs. el **p90** de los vídeos de la misma búsqueda. Una búsqueda mezcla muchos autores, como HN: con la mediana un 33 % de los vídeos salía como outlier; con el p90, un 6 % (n = 72, 17/10).
   - Reddit: score vs. la mediana de los posts del mismo subreddit.
   - Instagram: `views / días desde la publicación` vs. la mediana de los reels del mismo perfil (sin colaboraciones de otras cuentas).
   - HN: puntos vs. el **p90** de las stories de la misma búsqueda y el mismo periodo. HN tiene cola larga: con la mediana (~4 puntos) un 22 % de las stories salía como outlier; con el p90, un 3–6 %.

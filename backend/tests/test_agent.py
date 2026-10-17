@@ -106,6 +106,18 @@ async def test_list_tool_filters_and_records_seen_ids(session, seeded):
     assert set(seen.opportunities) == {"opp_002"}
 
 
+async def test_list_tool_filters_by_recommendation_before_the_limit(session, seeded):
+    # En producción, 2 de los 4 «publicar ya» quedaban fuera del top 10 y el agente decía que
+    # había solo dos: el filtro tiene que ir antes del corte.
+    args = {"recommendation": ["find_angle"], "limit": 1}
+
+    outcome = await execute_tool("list_opportunities", args, session, Seen())
+
+    assert not outcome.is_error
+    assert '"opp_001"' not in outcome.content  # publish_now, primero por score
+    assert '"opp_002"' in outcome.content or '"opp_003"' in outcome.content
+
+
 async def test_view_tool_rejects_unknown_id(session, seeded):
     outcome = await execute_tool("select_opportunity", {"id": "opp_nope"}, session, Seen())
 
