@@ -115,6 +115,17 @@ def apply_fit(
     return replace(result, opportunity=opportunity)
 
 
+# Un nombre más largo es un titular o una frase: se queda el título de la pieza representativa.
+MAX_TOPIC_NAME_CHARS = 80
+
+
+def apply_topic_name(result: TopicResult, name: str) -> TopicResult:
+    name = " ".join(name.split())
+    if not name or len(name) > MAX_TOPIC_NAME_CHARS:
+        return result
+    return replace(result, opportunity=result.opportunity.model_copy(update={"topic": name}))
+
+
 def mark_fit_failed(result: TopicResult) -> TopicResult:
     o = result.opportunity
     notes = _limitations(o.limitations, FIT_FAILED_NOTE, dropped_citations=0)

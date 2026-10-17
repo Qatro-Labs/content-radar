@@ -12,7 +12,7 @@
 **Pregunta que el prototipo debe responder:**
 > "¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?"
 
-El reto pone como ejemplo "en LinkedIn". LinkedIn, Instagram y TikTok no tienen acceso sin login, así que entran por curación manual o por APIs oficiales con consentimiento del dueño (§2, regla 2; §5), y el pitch lo explica de frente (`docs/brief.md` §2).
+El reto pone como ejemplo "en LinkedIn". LinkedIn, Instagram y TikTok no tienen acceso sin login ni scraping, así que **no entran en el MVP** (decidido el 17/10; §2, regla 2; §5). Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS), y el pitch lo explica de frente (`docs/brief.md` §2).
 
 **Propuesta de valor:** 30X Signal convierte señales públicas de Internet en oportunidades editoriales **verificables y accionables**, accesibles desde un dashboard visual (Vue) o desde asistentes de IA (Claude, ChatGPT, Grok) vía **MCP**.
 
@@ -36,7 +36,7 @@ Las tres preguntas del reto y cómo las respondemos:
 ## 2. Reglas no negociables
 
 1. **Solo contenido público. Nada de datos personales.** Guardamos metadatos, enlaces y métricas públicas, no copias completas ni datos de usuarios.
-2. **Nada de scraping de LinkedIn / Instagram / TikTok** ni nada detrás de un login o que viole ToS. Esas plataformas entran por **curación manual** (sensor editorial) o por **APIs oficiales de la propia plataforma, dentro de sus términos** (§5). El contenido de LinkedIn tampoco se lee a través de buscadores: su User Agreement (§8.2) lo prohíbe sin consentimiento del dueño.
+2. **Nada de scraping de LinkedIn / Instagram / TikTok** ni nada detrás de un login o que viole ToS. Esas plataformas quedan fuera del MVP; si entran después, será por **APIs oficiales de la propia plataforma, dentro de sus términos** (§5). El contenido de LinkedIn tampoco se lee a través de buscadores: su User Agreement (§8.2) lo prohíbe sin consentimiento del dueño.
 3. **Nunca inventar datos.** No mostrar métricas, crecimiento o conclusiones no observadas como hechos. Si hay 7 oportunidades reales, se muestran 7, no 10. Un dato ausente se muestra como "no disponible", nunca como 0.
 4. **El LLM evalúa y explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM emite niveles de rúbrica justificados y redacta; Jev emite juicios atómicos tipados sobre cada pieza (sí/no, opción). Python combina ambos con pesos en código (§7).
 5. **Distinguir siempre el tipo de evidencia:** `observed` (≥2 mediciones) · `estimated` (1 medición vs. referencia) · `preliminary` (aparece, sin aceleración demostrada).
@@ -69,7 +69,7 @@ Responsable: · Estado: · Completado: · Pendiente: · Bloqueos: · Disponible 
 **Modular monolith.** Una sola capa de servicios de dominio que consumen la API REST y el servidor MCP. El frontend **no** calcula tendencias y el MCP **no** recalcula ni hace scraping: los dos leen oportunidades ya procesadas.
 
 ```
-Collectors (YouTube, HN, RSS, Brave, Manual)
+Collectors (YouTube, HN, RSS, Brave)
         │  normalize + dedupe + snapshots
         ▼
 PostgreSQL + pgvector  ◄──  Intelligence (embeddings → clustering → scores → LLM insights)
@@ -108,14 +108,9 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 | RSS / medios tech y LATAM | `feedparser` + `httpx` | Artículos y lanzamientos | P0 |
 | Brave Search | API oficial (5 $/1.000 consultas, 5 $ de crédito gratis al mes). Sus términos solo permiten guardar resultados de forma **transitoria**: se persisten agregados, no resultados | Descubrimiento web (nunca LinkedIn) | P1 |
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
-| LinkedIn | API de portabilidad (DMA, self-serve para miembros del EEE): el curador reacciona a un post y el colector lee el evento (solo reacciones a posts; nunca mensajes privados ni `processedActivity`) · exports oficiales de analítica de 30X y de Andrés Bilbao (con su consentimiento) · curación manual · embed oficial para mostrarlo | Posts curados; métricas reales solo de los exports | P1 |
-| Instagram / TikTok | **Curación manual** (pegar URL + etiquetas + métricas vistas) · TikTok Creative Center como referencia · Business Discovery API oficial de Instagram (P2) | Referencias editoriales y formatos | P1 |
+| LinkedIn · Instagram · TikTok | **Fuera del MVP** (decidido el 17/10): sin login ni scraping no hay acceso, y la curación manual se descartó. Roadmap: vías oficiales (API de portabilidad DMA, exports de analítica con consentimiento del dueño, Business Discovery API de Instagram) | — | Roadmap |
 
-**LinkedIn sin scraping y límites de cada fuente:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
-
-**Dos niveles de sensores:**
-- **Automáticos:** YouTube, HN, RSS, Brave.
-- **Editoriales:** el equipo o la comunidad de 30X pegan enlaces y los etiquetan. Es el enfoque de "comunidad como sensor" que sugiere el reto.
+**Límites de cada fuente y vías oficiales para el roadmap:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
 
 Todos los conectores implementan el protocolo `SignalCollector` (`backend/app/collectors/base.py`) y no escriben en la DB: la persistencia la hace `services.signals.store_signals`.
 Cada `source` lleva un **`segment`** (`tech` | `business` | `latam_es`), además de `language` y `region`. Se asigna a mano al dar de alta la fuente o el canal; es lo que permite responder "para quién importa".
@@ -187,7 +182,6 @@ GET  /costs                      ?period=7d|30d  (coste medido + proyección men
 GET  /topics · GET /signals · GET /sources/status
 POST /editorial/brief            {opportunity_id, platform, goal, format}
 POST /editorial/feedback
-POST /signals/manual             (sensor editorial: URL + etiquetas)
 GET  /health
 ```
 
@@ -235,6 +229,7 @@ GET  /health
   − penalizaciones (datos pobres, fuentes duplicadas, muestra pequeña)
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
+  El ranking (API y MCP) ordena por `opportunity_score`; los `discard` van después y los temas sin score al final; momentum desempata.
 - **`recommendation` (implementada en `intelligence/ranking.py`).** Primera regla que se cumple; `recommendation_reason` guarda en texto la regla cumplida, para que la UI y el MCP la expliquen:
   | Etiqueta | Regla |
   |---|---|
@@ -256,7 +251,7 @@ GET  /health
   - Python convierte probabilidades en decisiones con umbrales, y lo incierto se muestra como tal. El texto externo va en `state` y nuestras instrucciones en `questions` (regla 6).
   - SDK `typesafe-sdk` (`AsyncTypeSafeClient`, concurrencia acotada), `JEV_MODEL=jev-1.13.0` fijado, y caché por hash del `state` + versión de la batería + versión del modelo en `jev_judgments`. Cuesta alrededor de 1 $ al mes. En cuanto haya clave, validarlo con 30–50 piezas etiquetadas a mano en `data/evaluations/`. **Acceso:** confirmar hoy la clave; si no la hay antes de las 19:00 ESP, el LLM hace la batería de pieza en lote con el mismo modelo Pydantic, y Jev la sustituye cuando llegue.
   - Preguntas, umbrales, paralelismo, validación y coste: [`docs/jev.md`](docs/jev.md).
-- **LLM (evalúa cada tema y redacta):** salidas estructuradas validadas con Pydantic. Funciones: `evaluate_topic` (los 6 criterios del audience fit), `name_cluster`, `explain_opportunity` (`why_it_matters`, `limitations` y la hipótesis de "por qué funcionó"), `recommend_content_angles` y briefs. Devuelve afirmaciones con el id de la evidencia que las respalda: Python comprueba que cada id pertenece al tema y Jev verifica el contenido. Recibe como datos los resultados de Python y Jev. Antes de leer la respuesta hay que comprobar `stop_reason` (rechazo o `max_tokens`). Modelo con `LLM_MODEL`; finalistas: Claude Haiku 5.5 y GPT-6 Luna (mismo precio), con Claude Sonnet 5.5 como techo de calidad para los briefs. Lo decide Melkin probando 3–5 temas reales.
+- **LLM (evalúa cada tema y redacta):** salidas estructuradas validadas con Pydantic. Funciones: `evaluate_topic` (los 6 criterios del audience fit y, en la misma llamada, el nombre del tema: campo `topic_name`, prompt v2; si falta o pasa de 80 caracteres, el tema conserva el título de su pieza representativa), `explain_opportunity` (`why_it_matters`, `limitations` y la hipótesis de "por qué funcionó"), `recommend_content_angles` y briefs. Devuelve afirmaciones con el id de la evidencia que las respalda: Python comprueba que cada id pertenece al tema y Jev verifica el contenido. Recibe como datos los resultados de Python y Jev. Antes de leer la respuesta hay que comprobar `stop_reason` (rechazo o `max_tokens`). Modelo con `LLM_MODEL`; finalistas: Claude Haiku 5.5 y GPT-6 Luna (mismo precio), con Claude Sonnet 5.5 como techo de calidad para los briefs. Lo decide Melkin probando 3–5 temas reales.
 - **Perfil editorial de 30X:** en `data/audiences/30x.yaml` (audiencia, pilares, tono, formatos, qué no encaja). Se define en la Fase 2 revisando a mano los Instagram que compartió 30X: @crece30x y @andresbilbao.
 
 ---
@@ -278,7 +273,7 @@ GET  /health
 **Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, LiteLLM, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
 
 **Variables de entorno** (solo en el backend; ver `.env.example`):
-`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`.
+`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
 
 ---
 
@@ -303,7 +298,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 ├── backend/
 │   ├── app/
 │   │   ├── api/routes/          # FastAPI, delgado: solo llama a services
-│   │   ├── collectors/          # youtube.py, hackernews.py, rss.py, brave.py, manual.py
+│   │   ├── collectors/          # youtube.py, hackernews.py, rss.py, brave.py
 │   │   ├── intelligence/        # embeddings, clustering, velocity, outliers, momentum, lifecycle, saturation, audience_mix, relevance, ranking
 │   │   ├── editorial/           # audience.py, analyzer.py, briefs.py, prompts/ (versionados)
 │   │   ├── services/            # opportunities, signals, editorial, costs  ← lógica de negocio ÚNICA
@@ -343,7 +338,7 @@ Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia,
 4. **¿Cabe antes del próximo checkpoint (§13)?** Si no, se recorta a la versión mínima que aporta, o se avisa.
 
 - **P0:** datos reales de YouTube y al menos otra fuente · persistencia, snapshots y backfill de 14 días · clustering · velocidad y aceleración · outliers · etapa de la tendencia · audience mix por segmento · ranking · clasificación por pieza con Jev · audience fit con el LLM · evidencias verificables · dashboard Vue con Radar y detalle · despliegue.
-- **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · sensor editorial manual · LinkedIn vía API de portabilidad, exports de analítica y embed oficial · LATAM Opportunity Gap · comparación de oportunidades · coste de operación bajo demanda (`GET /costs` y `get_operating_cost`, sin panel).
+- **P1:** servidor MCP con conexión demostrada · Content Studio (briefs) · timeline · LATAM Opportunity Gap · comparación de oportunidades · coste de operación bajo demanda (`GET /costs` y `get_operating_cost`, sin panel).
 - **P2:** Topic Network · animaciones avanzadas · más fuentes · varias audiencias.
 
 **Ningún P2 puede poner en riesgo un P0.**
@@ -378,7 +373,7 @@ Las ideas sin prioridad asignada están en `docs/brief.md` §9.
 
 **Guion de demo:** el problema (`docs/brief.md` §1) → el recorrido de demo (§1). El coste medido de operar el radar no es un paso del guion: se responde si alguien lo pregunta, por MCP o con `GET /costs` (sin cifras de ahorro que no hayamos medido).
 
-**La demo usa una ejecución de `analyze` congelada:** los clusters cambian entre ejecuciones, así que el ranking que se enseña es el de una ejecución fijada y revisada a mano.
+**La demo usa una ejecución de `analyze` congelada:** los clusters cambian entre ejecuciones, así que el ranking que se enseña es el de una ejecución fijada y revisada a mano. Se fija con `DEMO_RUN_ID` en Railway: la API y el MCP sirven esa ejecución (listado y detalle) aunque el cron siga corriendo `analyze`. Sin valor, sirven la última correcta.
 
 **Entregables:** repo · app desplegada · MCP accesible (o demo local verificada con la limitación documentada) · README · arquitectura · fuentes y limitaciones · algoritmo de priorización · coste de operación medido · presentación · vídeo de respaldo.
 

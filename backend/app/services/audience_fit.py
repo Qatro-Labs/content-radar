@@ -25,7 +25,7 @@ from app.editorial.audience import (
     evaluation_cache_key,
 )
 from app.editorial.evaluator import EvaluationError, EvaluationResult, TopicEvaluator
-from app.intelligence.audience_fit import apply_fit, mark_fit_failed
+from app.intelligence.audience_fit import apply_fit, apply_topic_name, mark_fit_failed
 from app.intelligence.opportunities import TopicResult
 from app.models import LlmEvaluation
 from app.schemas.cost import Provider
@@ -128,6 +128,14 @@ async def _evaluate_pending(
     return evaluated
 
 
+def _with_evaluation(
+    result: TopicResult, evaluation: TopicEvaluation, topic: TopicInput
+) -> TopicResult:
+    sent_urls = {p.url for p in topic.pieces}
+    fitted = apply_fit(result, evaluation.assessments(), sent_urls=sent_urls)
+    return apply_topic_name(fitted, evaluation.topic_name)
+
+
 async def evaluate_topics(
     session: AsyncSession,
     results: Sequence[TopicResult],
@@ -147,9 +155,7 @@ async def evaluate_topics(
 
     outputs = {**cached, **{key: r.output for key, r in evaluated.items()}}
     fitted = [
-        apply_fit(result, outputs[key].assessments(), sent_urls={p.url for p in topic.pieces})
-        if key in outputs
-        else mark_fit_failed(result)
+        _with_evaluation(result, outputs[key], topic) if key in outputs else mark_fit_failed(result)
         for result, topic, key in zip(results, inputs, keys, strict=True)
     ]
     without_evidence = sum(not t.pieces for t in inputs)

@@ -12,8 +12,7 @@
 | Hacker News | Algolia HN Search API | Metadatos, puntos, comentarios y snapshots | 0 $ | Comunidad técnica: no representa a la audiencia de negocio |
 | RSS | `feedparser` + `httpx` | Título, enlace, fecha y descripción del feed | 0 $ | Sin métricas de engagement |
 | Brave Search | API oficial (cabecera `X-Subscription-Token`) | Solo agregados: sus resultados son transitorios | 5 $ por 1.000 consultas, con 5 $ de crédito gratis al mes (≈ 1.000 consultas) | Solo descubrimiento web, nunca LinkedIn |
-| LinkedIn | API de portabilidad (DMA) + exports del dueño + curación + embed oficial | URN y metadatos de lo curado; métricas solo de los exports del dueño | 0 $ | Sin descubrimiento automático de posts de terceros |
-| Instagram / TikTok | Curación manual; para Instagram, Business Discovery API oficial (P2) | Lo curado: URL, etiquetas y métricas vistas | 0 $ | Sin acceso automático salvo la API oficial |
+| LinkedIn · Instagram · TikTok | **Fuera del MVP** (decidido el 17/10). Roadmap: vías oficiales (abajo) | Nada | — | Sin login ni scraping no hay acceso; la curación manual se descartó |
 
 ## Brave: uso transitorio
 
@@ -61,9 +60,12 @@ versión anterior de este documento.
 La misma cláusula marca la salida: **con el consentimiento del dueño del contenido, o por una API
 oficial de LinkedIn, sí se puede.**
 
-### Vías legítimas
+### Vías legítimas (roadmap)
 
-1. **"Un clic = señal" con la API de portabilidad (DMA). P1, con una prueba previa de 30 minutos.**
+> **Decidido el 17/10:** LinkedIn, Instagram y TikTok no entran en el MVP, y la curación manual se
+> descartó. Sus referentes entran por sus canales abiertos (punto 4). El resto queda como roadmap.
+
+1. **"Un clic = señal" con la API de portabilidad (DMA). Requiere una prueba previa de 30 minutos.**
    Es self-serve para miembros del EEE y Suiza; David y Melkin están en España.
    - **Alta:** crear la app con la página "Member Data Portability (Member) Default Company", pedir
      el producto y generar el token con el scope `r_dma_portability_self_serve` en el OAuth Token
@@ -88,13 +90,11 @@ oficial de LinkedIn, sí se puede.**
    (Creator analytics). Es la única fuente de métricas reales de LinkedIn, viene de su propia
    audiencia y los dueños consienten. Un job (`jobs/import_linkedin_export`) los carga como señales
    `observed`. Si llegan, son la mejor validación del audience fit.
-3. **Curación manual** (`POST /signals/manual`): pegar la URL con etiquetas. Copiar el enlace es la
-   forma de compartir que ofrece el propio LinkedIn.
-4. **Embed oficial** para mostrar cualquiera de las anteriores: el
+3. **Embed oficial** para mostrar cualquiera de las anteriores: el
    ["Embed this post"](https://www.linkedin.com/help/linkedin/answer/a529065) de los posts públicos.
    El User Agreement (§3.1) contempla que otro miembro embeba un post. No funciona con posts de
    varias fotos ni con reposts con comentario.
-5. **Los canales abiertos de los referentes:** muchos referentes de negocio e IA en LATAM publican lo
+4. **Los canales abiertos de los referentes (en el MVP):** muchos referentes de negocio e IA en LATAM publican lo
    mismo en newsletters con RSS, blogs o YouTube. Se dan de alta en `data/sources.yaml` con su
    `segment`.
 
@@ -119,9 +119,9 @@ oficial de LinkedIn, sí se puede.**
 | Google Custom Search JSON API | [Cerrada a clientes nuevos; se apaga el 1 de enero de 2027](https://brave.com/learn/google-api-shutdown/) |
 | Bing Web Search API | Microsoft la retiró en 2025 |
 
-## Instagram: Business Discovery (P2)
+## Instagram: Business Discovery (roadmap)
 
-Además de la curación, la
+La
 [Business Discovery API](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login/business-discovery)
 oficial de Instagram devuelve, por nombre de usuario, los datos públicos de otras cuentas business o
 creator: seguidores, publicaciones y, según conectores de terceros, likes y comentarios. Requiere

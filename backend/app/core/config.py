@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +22,16 @@ class Settings(BaseSettings):
     # Separados por coma en el .env
     cors_allowed_origins: str = "http://localhost:5173"
     mcp_public_url: str = ""
+
+    # Ejecución de `analyze` revisada a mano para la demo (CLAUDE.md §13). Sin valor, la API y el
+    # MCP sirven la última ejecución correcta, que cambia con cada recolección.
+    demo_run_id: int | None = None
+
+    @field_validator("demo_run_id", mode="before")
+    @classmethod
+    def _empty_is_unset(cls, value: object) -> object:
+        # `DEMO_RUN_ID=` vacío en el .env o en Railway significa "sin fijar", no un error.
+        return None if value == "" else value
 
     @property
     def cors_origins(self) -> list[str]:

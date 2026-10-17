@@ -1,6 +1,7 @@
 """Oportunidades: cálculo (lo usa `app.jobs.analyze`) y lectura (la usan la API y el MCP).
 
-La lectura siempre sirve la última ejecución correcta de `analyze`; nunca recalcula.
+La lectura sirve la ejecución fijada en DEMO_RUN_ID o, sin ella, la última correcta de `analyze`;
+nunca recalcula.
 """
 
 from collections.abc import Mapping
@@ -11,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config import get_settings
 from app.intelligence.clustering import cluster, is_broad, representative
 from app.intelligence.embeddings import embed, embedding_text
 from app.intelligence.jev import PieceJudgment, keep_about_ai
@@ -138,13 +140,15 @@ async def save_opportunities(session: AsyncSession, run_id: int, results: list[T
         )
 
 
-async def _latest_run(session: AsyncSession) -> PipelineRun | None:
-    return await session.scalar(
-        select(PipelineRun)
-        .where(PipelineRun.job == ANALYZE_JOB, PipelineRun.status == "success")
-        .order_by(PipelineRun.finished_at.desc())
-        .limit(1)
+async def _served_run(session: AsyncSession) -> PipelineRun | None:
+    successful = select(PipelineRun).where(
+        PipelineRun.job == ANALYZE_JOB, PipelineRun.status == "success"
     )
+    demo_run_id = get_settings().demo_run_id
+    if demo_run_id is not None:
+        # Sin caer a la última: una demo fijada a una ejecución que no existe tiene que notarse.
+        return await session.scalar(successful.where(PipelineRun.id == demo_run_id))
+    return await session.scalar(successful.order_by(PipelineRun.finished_at.desc()).limit(1))
 
 
 async def list_opportunities(
@@ -155,7 +159,7 @@ async def list_opportunities(
     topic: str | None = None,
 ) -> OpportunityList | None:
     """None si todavía no hay ninguna ejecución de `analyze`."""
-    run = await _latest_run(session)
+    run = await _served_run(session)
     if run is None or run.finished_at is None:
         return None
     rows = await session.scalars(
@@ -179,11 +183,15 @@ async def list_opportunities(
 
 
 async def _record(session: AsyncSession, opportunity_id: str) -> OpportunityRecord | None:
+    # De la misma ejecución que el listado: los ids y los scores cambian entre ejecuciones.
+    run = await _served_run(session)
+    if run is None:
+        return None
     return await session.scalar(
-        select(OpportunityRecord)
-        .where(OpportunityRecord.opportunity_id == opportunity_id)
-        .order_by(OpportunityRecord.run_id.desc())
-        .limit(1)
+        select(OpportunityRecord).where(
+            OpportunityRecord.run_id == run.id,
+            OpportunityRecord.opportunity_id == opportunity_id,
+        )
     )
 
 

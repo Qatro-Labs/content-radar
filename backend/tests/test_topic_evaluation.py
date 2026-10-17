@@ -41,13 +41,16 @@ def topic(n: int = 6) -> TopicResult:
     return build_one(pieces)
 
 
+TOPIC_NAME = "Agentes de IA en operaciones"
+
+
 def evaluation_json(url: str = "https://example.com/0") -> dict:
     criterion = {"justification": "Una pieza muestra un caso.", "evidence_urls": [url], "level": 3}
-    return {c.value: criterion for c in FitCriterion}
+    return {**{c.value: criterion for c in FitCriterion}, "topic_name": TOPIC_NAME}
 
 
-def test_output_model_has_one_field_per_criterion():
-    assert set(TopicEvaluation.model_fields) == {c.value for c in FitCriterion}
+def test_output_model_has_one_field_per_criterion_and_the_name():
+    assert set(TopicEvaluation.model_fields) == {c.value for c in FitCriterion} | {"topic_name"}
 
 
 def test_pieces_without_safe_injection_answer_stay_out_of_the_prompt():
