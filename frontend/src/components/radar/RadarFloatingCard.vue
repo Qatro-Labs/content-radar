@@ -11,9 +11,9 @@ const { opportunity, point } = defineProps<{
   point: PlotPoint
 }>()
 
-// Artboard E: la tarjeta va a 26 px de la burbuja y, con encaje > 62, a su izquierda, porque a la
+// Artboard D2: la tarjeta va a 22 px de la burbuja y, con encaje > 62, a su izquierda, porque a la
 // derecha ya no cabe.
-const CARD_GAP_PX = 26
+const CARD_GAP_PX = 22
 const CARD_FLIP_FIT_MIN = 62
 
 const placement = computed(() => {

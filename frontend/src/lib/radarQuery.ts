@@ -7,6 +7,7 @@ type Schemas = components['schemas']
 export type Period = Schemas['Period']
 export type Lifecycle = Schemas['Lifecycle']
 export type Confidence = Schemas['Confidence']
+export type Recommendation = Schemas['Recommendation']
 
 // Los enums del contrato hacen falta en tiempo de ejecución para validar la URL; `satisfies`
 // hace que el compilador avise si el contrato (src/types/api.ts) cambia y estos no.
@@ -19,6 +20,12 @@ export const LIFECYCLES = [
   'unknown',
 ] as const satisfies readonly Lifecycle[]
 export const CONFIDENCES = ['low', 'medium', 'high'] as const satisfies readonly Confidence[]
+export const RECOMMENDATIONS = [
+  'publish_now',
+  'find_angle',
+  'wait_for_case',
+  'discard',
+] as const satisfies readonly Recommendation[]
 
 export const RANKING_SORTS = ['opportunity', 'acceleration'] as const
 export type RankingSort = (typeof RANKING_SORTS)[number]
@@ -39,6 +46,7 @@ export interface RadarQuery {
   highlight: string[]
   gap: boolean
   sort: RankingSort
+  recommendation: Recommendation | null
 }
 
 export const RADAR_QUERY_KEYS = [
@@ -50,6 +58,7 @@ export const RADAR_QUERY_KEYS = [
   'highlight',
   'gap',
   'sort',
+  'recommendation',
 ] as const satisfies readonly (keyof RadarQuery)[]
 
 function firstValue(value: LocationQueryValue | LocationQueryValue[] | undefined): string | null {
@@ -73,7 +82,7 @@ function uniqueOf<T extends string>(allowed: readonly T[], values: string[]): T[
 
 // Quita filtros y resaltados; la selección, el periodo y el orden se conservan.
 export function resetViewPatch(): Partial<RadarQuery> {
-  return { lifecycle: [], gap: false, highlight: [] }
+  return { lifecycle: [], gap: false, highlight: [], recommendation: null }
 }
 
 export function parseRadarQuery(query: LocationQuery): RadarQuery {
@@ -86,6 +95,7 @@ export function parseRadarQuery(query: LocationQuery): RadarQuery {
     highlight: listValue(query.highlight),
     gap: firstValue(query.gap) === GAP_PARAM_ON,
     sort: oneOf(RANKING_SORTS, firstValue(query.sort)) ?? DEFAULT_RANKING_SORT,
+    recommendation: oneOf(RECOMMENDATIONS, firstValue(query.recommendation)),
   }
 }
 
@@ -99,5 +109,6 @@ export function serializeRadarQuery(state: RadarQuery): Record<string, string> {
   if (state.highlight.length > 0) params.highlight = state.highlight.join(LIST_SEPARATOR)
   if (state.gap) params.gap = GAP_PARAM_ON
   if (state.sort !== DEFAULT_RANKING_SORT) params.sort = state.sort
+  if (state.recommendation) params.recommendation = state.recommendation
   return params
 }

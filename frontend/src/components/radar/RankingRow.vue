@@ -1,32 +1,34 @@
 <script lang="ts">
-// DESIGN.md §6: por debajo de 1000 px la tabla hace scroll dentro de su tarjeta. Las columnas en
-// px del artboard E suman unos 1300 px; estos mínimos suman 1000 con los huecos y el padding.
-// La cabecera de OpportunityRanking comparte la rejilla.
+// D6 del plan fe-dashboard-v2 (artboard D2): por debajo de 780 px la tabla hace scroll dentro de
+// su tarjeta. La cabecera de OpportunityRanking comparte la rejilla.
 export const RANKING_GRID_CLASS =
-  'grid grid-cols-[56px_minmax(152px,2.4fr)_minmax(120px,1fr)_minmax(92px,0.8fr)_minmax(112px,1fr)_minmax(60px,0.5fr)_minmax(140px,1.3fr)_minmax(124px,1fr)] items-center gap-x-4 px-4'
+  'grid grid-cols-[52px_minmax(240px,2fr)_128px_84px_104px_150px] items-center gap-x-3.5 px-3.5'
 </script>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import type { QueryState } from '@/api/opportunities'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
-import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import {
   formatAcceleration,
-  formatOutliers,
   formatScore,
   GROWTH_LABEL,
   isDeclining,
   SCORE_MAX,
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
+import type { components } from '@/types/api'
 
-const { row, index, selected, hovered } = defineProps<{
+import RankingSparkline from './RankingSparkline.vue'
+
+const { row, index, selected, hovered, timeline } = defineProps<{
   row: RankedOpportunity
   // Posición en la tabla: escalona la entrada.
   index: number
   selected: boolean
   hovered: boolean
+  timeline: QueryState<components['schemas']['OpportunityTimeline'] | null>
 }>()
 
 const emit = defineEmits<{
@@ -75,23 +77,19 @@ const toneClass = computed(() => {
       :title="row.lifecycle_reason"
       class="justify-self-start"
     />
-    <!-- CLAUDE.md §2.5 y DESIGN.md §4: sin dos mediciones, el tipo de evidencia va junto a la
-         aceleración. -->
-    <span class="flex flex-wrap items-baseline gap-x-1">
+    <RankingSparkline :timeline />
+    <!-- CLAUDE.md §2.5 y DESIGN.md §4: el tipo de evidencia va siempre junto a la aceleración. -->
+    <span class="flex flex-col py-2">
       <span
         class="font-medium whitespace-nowrap"
         :class="{ 'text-destructive': isDeclining(row.acceleration) }"
       >
         {{ formatAcceleration(row.acceleration) }}
       </span>
-      <span v-if="row.growth_status !== 'observed'" class="whitespace-nowrap text-muted-foreground">
-        · {{ GROWTH_LABEL[row.growth_status] }}
+      <span class="text-[13px] whitespace-nowrap text-muted-foreground">
+        {{ GROWTH_LABEL[row.growth_status] }}
       </span>
     </span>
-    <span class="text-ink-soft">
-      {{ formatOutliers(row.outlier_count, row.top_outlier_ratio) }}
-    </span>
-    <span class="text-ink-soft">{{ row.source_count }}</span>
     <span class="flex items-center gap-2.5">
       <span class="h-1.5 grow overflow-hidden rounded-full bg-track" aria-hidden="true">
         <span
@@ -110,12 +108,6 @@ const toneClass = computed(() => {
         {{ formatScore(row.opportunity_score) }}
       </span>
     </span>
-    <RecommendationChip
-      :recommendation="row.recommendation"
-      :title="row.recommendation_reason ?? undefined"
-      size="sm"
-      class="justify-self-start"
-    />
   </button>
 </template>
 

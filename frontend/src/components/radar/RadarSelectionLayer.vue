@@ -15,10 +15,11 @@ import { hasAudienceFit, type PlottedOpportunity, type RankedOpportunity } from 
 
 import RadarFloatingCard from './RadarFloatingCard.vue'
 
-const { selected, hovered, size } = defineProps<{
+const { selected, hovered, size, sweeping } = defineProps<{
   selected: RankedOpportunity | null
   hovered: RankedOpportunity | null
   size: PlotSize
+  sweeping: boolean
 }>()
 
 // DESIGN.md §7: tres ondas del trazo de la etapa, separadas 160 ms.
@@ -53,17 +54,18 @@ function spotOf(opportunity: RankedOpportunity | null): Spot | null {
   }
 }
 
-// El radar se remonta con cada barrido (al cargar y al cambiar de periodo). La primera selección
-// espera a que el haz detecte su burbuja (DESIGN.md §7): la mira, las lecturas, el anillo y la
-// tarjeta. Las siguientes responden al instante.
-const isFirstSelection = ref(true)
+// El radar se remonta con cada barrido (al cargar y al cambiar de periodo). Una selección que
+// llega mientras el haz barre (`?selected=` al cargar) espera a que detecte su burbuja
+// (DESIGN.md §7): la mira, las lecturas, el anillo y el ping. Fuera del barrido responde al
+// instante; sin esto, la primera selección tras el barrido también esperaba.
+const waitsForSweep = ref(sweeping)
 watch(
   () => selected?.id,
-  (_, previousId) => {
-    if (previousId) isFirstSelection.value = false
+  () => {
+    waitsForSweep.value = sweeping
   },
 )
-const entryClass = computed(() => ({ 'radar-entry': isFirstSelection.value }))
+const entryClass = computed(() => ({ 'radar-entry': waitsForSweep.value }))
 
 function ringBox({ point, diameter }: Spot) {
   return { width: `${diameter}px`, height: `${diameter}px`, transform: translateTo(point) }
@@ -73,9 +75,7 @@ const layout = computed(() => {
   const spot = spotOf(selected)
   if (!spot) return null
   const { x, y } = spot.point
-  const delayMs = isFirstSelection.value
-    ? detectionDelayMs(spot.opportunity) + AFTER_DETECTION_MS
-    : 0
+  const delayMs = waitsForSweep.value ? detectionDelayMs(spot.opportunity) + AFTER_DETECTION_MS : 0
   const entry = { animationDelay: `${delayMs}ms` }
   return {
     spot,
@@ -88,13 +88,12 @@ const layout = computed(() => {
     momentumReading: { ...entry, transform: `translateY(calc(${y}px - 50%))` },
     fitReading: { ...entry, transform: `translateX(calc(${x}px - 50%))` },
     ring: { ...entry, ...ringBox(spot) },
-    // La tarjeta se coloca sola (RadarFloatingCard); aquí solo espera al haz.
-    card: entry,
     pingColor: `var(${LIFECYCLE_STYLE[spot.opportunity.lifecycle].cssVar.stroke})`,
   }
 })
 
-// La seleccionada ya lleva su anillo: el de hover sería redundante.
+// DESIGN.md §7: la tarjeta flotante sigue al cursor, no a la selección. La seleccionada ya lleva
+// su anillo y su tema está en el panel lateral: sobre ella no hay anillo de hover ni tarjeta.
 const hoverSpot = computed(() => (hovered?.id === selected?.id ? null : spotOf(hovered)))
 </script>
 
@@ -141,19 +140,15 @@ const hoverSpot = computed(() => (hovered?.id === selected?.id ? null : spotOf(h
           }"
         />
       </div>
+    </template>
+    <template v-if="hoverSpot">
+      <span :class="[RING, SLIDE, 'ring-foreground/30']" :style="ringBox(hoverSpot)" />
       <RadarFloatingCard
-        :opportunity="layout.spot.opportunity"
-        :point="layout.spot.point"
+        :opportunity="hoverSpot.opportunity"
+        :point="hoverSpot.point"
         class="absolute top-0 left-0 z-[4]"
-        :class="[SLIDE, entryClass]"
-        :style="layout.card"
       />
     </template>
-    <span
-      v-if="hoverSpot"
-      :class="[RING, SLIDE, 'ring-foreground/30']"
-      :style="ringBox(hoverSpot)"
-    />
   </div>
 </template>
 

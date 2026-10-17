@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from app.intelligence.opportunities import Piece, build_opportunities, outlier_ratios
+from app.intelligence.outliers import is_outlier
 from app.schemas.opportunity import Collection, Confidence, GrowthStatus, Lifecycle
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
@@ -84,6 +85,19 @@ def test_tiktok_ratio_uses_views_per_day_against_same_search():
     reference = [video(i, 4, 4000) for i in range(5)]  # 1.000 views/día cada uno
     hit = video(99, 2, 12000)  # 6.000 views/día
     assert outlier_ratios([*reference, hit], AS_OF)[99] == 6.0
+
+
+def test_tiktok_reference_is_the_p90_of_the_search():
+    def video(i, views):
+        p = piece(i, hours_ago=24 * 4, platform=Platform.TIKTOK, source="TikTok · AI")
+        return replace(p, metrics=Metrics(views=views))
+
+    # 1.000 views/día la mayoría y 4.000 los dos de arriba: mediana 1.000, p90 4.000.
+    reference = [video(i, 4000) for i in range(8)] + [video(10 + i, 16000) for i in range(2)]
+    hit = video(99, 24000)  # 6.000 views/día: 6× la mediana, 1,5× el p90
+    ratios = outlier_ratios([*reference, hit], AS_OF)
+    assert ratios[99] == 1.5
+    assert is_outlier(ratios[99]) is False
 
 
 def test_instagram_ratio_uses_views_per_day_against_same_profile():

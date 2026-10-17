@@ -3,8 +3,10 @@ import { useElementSize, usePreferredReducedMotion, useTimeoutFn } from '@vueuse
 import type { ECElementEvent } from 'echarts/core'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
+import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import { VChart } from '@/lib/echarts'
 import { buildRadarOption, PLOT_ASPECT, resolveRadarPalette, SWEEP } from '@/lib/radarChart'
+import { LIFECYCLES } from '@/lib/radarQuery'
 import type { RadarView } from '@/lib/radarView'
 
 import RadarSelectionLayer from './RadarSelectionLayer.vue'
@@ -96,7 +98,12 @@ const leaveBubble = () => emit('hover', null)
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h2 class="font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]">Radar</h2>
-      <span class="text-[13.5px] text-muted-foreground">Las que laten están creciendo</span>
+      <!-- La leyenda es HTML para que sea accesible (DESIGN.md §8); no filtra. -->
+      <ul aria-label="Etapas" class="flex flex-wrap gap-1.5">
+        <li v-for="lifecycle in LIFECYCLES" :key="lifecycle">
+          <LifecycleChip :lifecycle size="sm" />
+        </li>
+      </ul>
     </div>
     <div class="relative pt-1 pb-[30px] pl-[30px]">
       <span
@@ -138,10 +145,20 @@ const leaveBubble = () => emit('hover', null)
             @mouseover="hoverBubble"
             @mouseout="leaveBubble"
           />
-          <RadarSelectionLayer :selected="view.selected" :hovered="hovered" :size="plotSize" />
+          <RadarSelectionLayer
+            :selected="view.selected"
+            :hovered="hovered"
+            :size="plotSize"
+            :sweeping="isSweeping"
+          />
         </div>
       </div>
     </div>
+    <!-- DESIGN.md §7: el latido codifica la aceleración, y la nota lo dice. -->
+    <p class="text-[13.5px] text-muted-foreground">
+      Las burbujas que laten están creciendo: cuanto más rápido laten, más aceleran. El tamaño es la
+      fuerza de la evidencia.
+    </p>
     <p v-if="unevaluatedNote" class="text-[13.5px] text-muted-foreground">{{ unevaluatedNote }}</p>
   </section>
 </template>

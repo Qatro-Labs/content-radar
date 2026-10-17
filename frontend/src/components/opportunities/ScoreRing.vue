@@ -4,16 +4,23 @@ import { computed } from 'vue'
 
 import { formatScore, SCORE_MAX } from '@/lib/opportunityFormat'
 
-const { score } = defineProps<{ score: number | null }>()
+// DESIGN.md §4: anillo de 112 px; la vista previa del Radar lo usa a 104 px (D8 del plan
+// fe-dashboard-v2).
+const DEFAULT_RING_SIZE_PX = 112
 
-// DESIGN.md §4 y §7: anillo de 112 px con trazo de 9 px; la cifra cuenta en 450 ms con la
-// curva ease-out de la UI (`easeOutExpo` es la misma cubic-bezier(0.16, 1, 0.3, 1)).
-const RING_SIZE = 112
+const { score, sizePx = DEFAULT_RING_SIZE_PX } = defineProps<{
+  score: number | null
+  sizePx?: number
+}>()
+
+// DESIGN.md §4 y §7: trazo de 9 px; la cifra cuenta en 450 ms con la curva ease-out de la UI
+// (`easeOutExpo` es la misma cubic-bezier(0.16, 1, 0.3, 1)).
 const STROKE_WIDTH = 9
 const COUNT_DURATION_MS = 450
-const CENTER = RING_SIZE / 2
-const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+
+const center = computed(() => sizePx / 2)
+const radius = computed(() => (sizePx - STROKE_WIDTH) / 2)
+const circumference = computed(() => 2 * Math.PI * radius.value)
 
 const reducedMotion = usePreferredReducedMotion()
 
@@ -25,7 +32,7 @@ const animatedScore = useTransition(() => score ?? 0, {
 })
 
 const shownScore = computed(() => formatScore(score === null ? null : animatedScore.value))
-const dashOffset = computed(() => CIRCUMFERENCE * (1 - animatedScore.value / SCORE_MAX))
+const dashOffset = computed(() => circumference.value * (1 - animatedScore.value / SCORE_MAX))
 const accessibleLabel = computed(() =>
   score === null
     ? `Puntuación ${formatScore(null)}`
@@ -34,29 +41,34 @@ const accessibleLabel = computed(() =>
 </script>
 
 <template>
-  <div class="relative size-28 shrink-0" role="img" :aria-label="accessibleLabel">
-    <svg :viewBox="`0 0 ${RING_SIZE} ${RING_SIZE}`" class="block size-full" aria-hidden="true">
+  <div
+    class="relative shrink-0"
+    :style="{ width: `${sizePx}px`, height: `${sizePx}px` }"
+    role="img"
+    :aria-label="accessibleLabel"
+  >
+    <svg :viewBox="`0 0 ${sizePx} ${sizePx}`" class="block size-full" aria-hidden="true">
       <circle
-        :cx="CENTER"
-        :cy="CENTER"
-        :r="RADIUS"
+        :cx="center"
+        :cy="center"
+        :r="radius"
         fill="none"
         class="stroke-track"
         :stroke-width="STROKE_WIDTH"
       />
       <circle
         v-if="score !== null"
-        :cx="CENTER"
-        :cy="CENTER"
-        :r="RADIUS"
+        :cx="center"
+        :cy="center"
+        :r="radius"
         fill="none"
         class="score-ring-arc stroke-foreground"
         :stroke-width="STROKE_WIDTH"
         stroke-linecap="round"
-        :stroke-dasharray="CIRCUMFERENCE"
+        :stroke-dasharray="circumference"
         :stroke-dashoffset="dashOffset"
-        :transform="`rotate(-90 ${CENTER} ${CENTER})`"
-        :style="{ '--ring-length': `${CIRCUMFERENCE}px` }"
+        :transform="`rotate(-90 ${center} ${center})`"
+        :style="{ '--ring-length': `${circumference}px` }"
       />
     </svg>
     <div class="absolute inset-0 flex flex-col items-center justify-center" aria-hidden="true">

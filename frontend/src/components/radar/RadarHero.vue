@@ -2,54 +2,103 @@
 import { computed } from 'vue'
 
 import ViewHeader from '@/components/layout/ViewHeader.vue'
+import { useRadarQuery } from '@/composables/useRadarQuery'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
-import type { RadarQuery } from '@/lib/radarQuery'
-import { radarHeadline, radarSubline, type RadarView } from '@/lib/radarView'
+import { RECOMMENDATION_LABEL } from '@/lib/opportunityFormat'
+import { resetViewPatch, type RadarQuery } from '@/lib/radarQuery'
+import {
+  counterPatch,
+  radarHeadline,
+  radarSubline,
+  type CounterFilter as CounterFilterName,
+  type RadarView,
+} from '@/lib/radarView'
 
-const props = defineProps<{ view: RadarView; query: RadarQuery }>()
+import CounterFilter, { type CounterSwatch } from './CounterFilter.vue'
 
-const counters = computed(() => [
+const { view, query } = defineProps<{ view: RadarView; query: RadarQuery }>()
+
+const { update } = useRadarQuery()
+
+interface Counter {
+  filter: CounterFilterName
+  label: string
+  count: number
+  swatch: CounterSwatch
+  // Objetivo del agente del Radar: el mismo control que pulsa una persona.
+  agentTarget: string
+}
+
+const counters = computed<Counter[]>(() => [
   {
-    key: 'accelerating',
-    value: props.view.counts.accelerating,
-    label: 'acelerando',
-    dotVar: LIFECYCLE_STYLE.accelerating.cssVar.fill,
+    filter: 'publish_now',
+    label: RECOMMENDATION_LABEL.publish_now,
+    count: view.counts.publishNow,
+    swatch: 'signal',
+    agentTarget: 'filter-rec-publish_now',
   },
   {
-    key: 'emerging',
-    value: props.view.counts.emerging,
-    label: 'emergentes',
-    dotVar: LIFECYCLE_STYLE.emerging.cssVar.fill,
+    filter: 'accelerating',
+    label: LIFECYCLE_STYLE.accelerating.label,
+    count: view.counts.accelerating,
+    swatch: 'accelerating',
+    agentTarget: 'filter-lc-accelerating',
   },
-  { key: 'latamGap', value: props.view.counts.latamGap, label: 'con hueco en LATAM', dotVar: null },
+  {
+    filter: 'emerging',
+    // En plural: cuenta temas, y el chip de etapa dice «Emergente».
+    label: 'Emergentes',
+    count: view.counts.emerging,
+    swatch: 'emerging',
+    agentTarget: 'filter-lc-emerging',
+  },
+  {
+    filter: 'unknown',
+    label: LIFECYCLE_STYLE.unknown.label,
+    count: view.counts.unknown,
+    swatch: 'unknown',
+    agentTarget: 'filter-lc-unknown',
+  },
 ])
+
+// Los resaltados también atenúan el radar, así que cuentan como vista cambiada y se
+// restablecen con los filtros (artboard E).
+const isViewChanged = computed(() => view.isFiltered || query.highlight.length > 0)
 </script>
 
 <template>
-  <section class="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+  <section class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
     <ViewHeader :title="radarHeadline(view, query)">
       {{ radarSubline(view, query) }}
     </ViewHeader>
 
-    <ul class="flex flex-wrap gap-2" aria-label="Contadores">
-      <li
-        v-for="counter in counters"
-        :key="counter.key"
-        class="flex min-w-[150px] flex-col gap-0.5 rounded-2xl bg-card px-5 py-4"
+    <div class="flex flex-wrap items-center gap-2">
+      <div role="group" aria-label="Filtrar por" class="flex flex-wrap gap-2">
+        <CounterFilter
+          v-for="counter in counters"
+          :key="counter.filter"
+          :data-agent="counter.agentTarget"
+          :count="counter.count"
+          :label="counter.label"
+          :swatch="counter.swatch"
+          :pressed="view.activeCounter === counter.filter"
+          @click="update(counterPatch(counter.filter, query))"
+        />
+      </div>
+
+      <Transition
+        enter-from-class="translate-y-1 opacity-0"
+        enter-active-class="transition duration-300 ease-out motion-reduce:transition-none"
       >
-        <span class="font-display text-4xl leading-[1.05] font-semibold tracking-[-0.03em]">
-          {{ counter.value }}
-        </span>
-        <span class="flex items-center gap-[7px] text-sm text-ink-soft">
-          <span
-            v-if="counter.dotVar"
-            aria-hidden="true"
-            class="size-2.5 rounded-[3px]"
-            :style="{ backgroundColor: `var(${counter.dotVar})` }"
-          />
-          {{ counter.label }}
-        </span>
-      </li>
-    </ul>
+        <button
+          v-if="isViewChanged"
+          type="button"
+          class="min-h-11 rounded-xl bg-card px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
+          @click="update(resetViewPatch())"
+        >
+          Restablecer vista
+        </button>
+      </Transition>
+    </div>
   </section>
 </template>

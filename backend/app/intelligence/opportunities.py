@@ -125,7 +125,7 @@ def outlier_ratios(
     pieces: Sequence[Piece], as_of: datetime, *, reference: Sequence[Piece] | None = None
 ) -> dict[int, float | None]:
     """Ratio de cada pieza de `pieces` frente a las otras de su fuente (canal o query) en
-    `reference` (por defecto, `pieces`) con edad suficiente: mediana, o p90 en HN.
+    `reference` (por defecto, `pieces`) con edad suficiente: mediana, o p90 en HN y TikTok.
     """
     by_source: dict[int, list[tuple[int, float]]] = defaultdict(list)
     for p in pieces if reference is None else reference:
@@ -139,8 +139,7 @@ def outlier_ratios(
             ratios[p.item_id] = None
             continue
         others = [v for item_id, v in by_source[p.source_id] if item_id != p.item_id]
-        quantile = out.HN_REFERENCE_QUANTILE if p.platform is Platform.HACKERNEWS else out.MEDIAN
-        ratios[p.item_id] = out.outlier_ratio(value, others, quantile)
+        ratios[p.item_id] = out.outlier_ratio(value, others, out.reference_quantile(p.platform))
     return ratios
 
 

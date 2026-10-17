@@ -26,6 +26,7 @@ from app.schemas.opportunity import (
     OpportunityList,
     OpportunityTimeline,
     Period,
+    TopicEvidence,
 )
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
@@ -300,3 +301,31 @@ async def get_evidence(session: AsyncSession, opportunity_id: str) -> list[Evide
 async def get_timeline(session: AsyncSession, opportunity_id: str) -> OpportunityTimeline | None:
     r = await _record(session, opportunity_id)
     return None if r is None else OpportunityTimeline.model_validate(r.timeline)
+
+
+def _strongest_outlier_first(e: Evidence) -> tuple[bool, float, datetime]:
+    # Para ordenar con reverse=True: primero las piezas con ratio, de mayor a menor; en empate
+    # y entre las que no tienen ratio, la más reciente.
+    return (e.outlier_ratio is not None, e.outlier_ratio or 0, e.published_at)
+
+
+async def list_all_evidence(session: AsyncSession) -> list[TopicEvidence] | None:
+    """None si todavía no hay ninguna ejecución de `analyze`."""
+    run = await _served_run(session)
+    if run is None:
+        return None
+    evidence = [
+        TopicEvidence.model_validate({**e, "opportunity_id": r.opportunity_id})
+        for r in await _ranked_records(session, run)
+        for e in r.evidence
+    ]
+    return sorted(evidence, key=_strongest_outlier_first, reverse=True)
+
+
+async def list_timelines(session: AsyncSession) -> list[OpportunityTimeline] | None:
+    """En el orden del ranking; None si todavía no hay ninguna ejecución de `analyze`."""
+    run = await _served_run(session)
+    if run is None:
+        return None
+    records = await _ranked_records(session, run)
+    return [OpportunityTimeline.model_validate(r.timeline) for r in records]
