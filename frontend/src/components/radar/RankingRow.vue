@@ -110,7 +110,12 @@ const toneClass = computed(() => {
         {{ formatScore(row.opportunity_score) }}
       </span>
     </span>
-    <RecommendationChip :recommendation="row.recommendation" size="sm" class="justify-self-start" />
+    <RecommendationChip
+      :recommendation="row.recommendation"
+      :title="row.recommendation_reason ?? undefined"
+      size="sm"
+      class="justify-self-start"
+    />
   </button>
 </template>
 

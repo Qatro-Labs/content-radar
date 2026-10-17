@@ -83,6 +83,15 @@ const BUTTON_CLASS =
           Oportunidad · puesto {{ opportunity.rank }} de {{ total }}
         </span>
         <RecommendationChip :recommendation="opportunity.recommendation" />
+        <!-- Ejecuciones anteriores a #23 no traen la regla: sin texto, no "no disponible". -->
+        <p
+          v-if="opportunity.recommendation_reason"
+          :key="opportunity.id"
+          class="text-[13px] text-ink-soft"
+          :class="TEXT_ENTER_CLASS"
+        >
+          {{ opportunity.recommendation_reason }}
+        </p>
       </div>
     </div>
 

@@ -407,6 +407,11 @@ export interface components {
        */
       latam_gap: boolean | null
       recommendation: components['schemas']['Recommendation']
+      /**
+       * Recommendation Reason
+       * @description Regla de §7 que se cumplió, en texto; None en ejecuciones anteriores
+       */
+      recommendation_reason?: string | null
       /** Why It Matters */
       why_it_matters: string
       /** Limitations */
