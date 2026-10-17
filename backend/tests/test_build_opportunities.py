@@ -94,12 +94,11 @@ def test_build_opportunities_end_to_end():
         [0],
         as_of=AS_OF,
         monitoring_started_at=STARTED,
-        id_prefix="opp_t",
     )
     assert len(results) == 1
     r = results[0]
     o = r.opportunity
-    assert o.id == "opp_t_001"
+    assert o.id == "opp_5"  # la pieza HN más antigua
     assert o.source_count == 4  # HN cuenta como una sola fuente
     assert o.audience_fit_score is None and o.opportunity_score is None
     assert o.lifecycle is not Lifecycle.UNKNOWN
@@ -115,9 +114,7 @@ def test_build_opportunities_end_to_end():
 def test_inactive_topics_are_skipped():
     old = [piece(i, hours_ago=24 * 10) for i in range(6)]
     assert (
-        build_opportunities(
-            old, [list(range(6))], [0], as_of=AS_OF, monitoring_started_at=STARTED, id_prefix="x"
-        )
+        build_opportunities(old, [list(range(6))], [0], as_of=AS_OF, monitoring_started_at=STARTED)
         == []
     )
 
@@ -133,7 +130,6 @@ def test_manual_source_is_marked_manual_in_evidence():
         [0],
         as_of=AS_OF,
         monitoring_started_at=STARTED,
-        id_prefix="opp_t",
     )
     by_url = {str(e.url): e.collection for e in r.evidence}
     assert by_url.pop("https://example.com/9") is Collection.MANUAL
@@ -147,7 +143,6 @@ def build_one(pieces):
         [0],
         as_of=AS_OF,
         monitoring_started_at=STARTED,
-        id_prefix="opp_t",
     )
     return r
 
@@ -185,3 +180,12 @@ def test_missing_metric():
     ratios = {str(e.url): e.outlier_ratio for e in build_one(pieces).evidence}
     assert ratios.pop("https://example.com/9") is None
     assert None not in ratios.values()
+
+
+def test_id_is_anchored_to_the_oldest_piece():
+    pieces = [piece(i, hours_ago=5 + i * 10) for i in range(1, 7)]  # la más antigua es la 6
+    assert build_one(pieces).opportunity.id == "opp_6"
+    newer = piece(7, hours_ago=1)
+    assert build_one([*pieces, newer]).opportunity.id == "opp_6"
+    tie = piece(0, hours_ago=5 + 6 * 10)  # mismo published_at que la 6, item_id menor
+    assert build_one([*pieces, tie]).opportunity.id == "opp_0"

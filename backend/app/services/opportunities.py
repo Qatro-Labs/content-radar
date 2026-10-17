@@ -95,7 +95,6 @@ async def compute_opportunities(
         reps,
         as_of=as_of,
         monitoring_started_at=MONITORING_STARTED_AT,
-        id_prefix=f"opp_{run_id}",
     )
     return len(pieces), results
 

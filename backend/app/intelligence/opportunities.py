@@ -160,6 +160,13 @@ def _limitations(
     return notes
 
 
+def _stable_id(group: Sequence[Piece]) -> str:
+    # Anclado a la pieza más antigua: el frontend y el MCP guardan el id entre ejecuciones, y
+    # sigue igual mientras esa pieza esté en el cluster y dentro del LOOKBACK.
+    anchor = min(group, key=lambda p: (p.published_at, p.item_id))
+    return f"opp_{anchor.item_id}"
+
+
 def build_opportunities(
     pieces: Sequence[Piece],
     clusters: Sequence[Sequence[int]],
@@ -167,7 +174,6 @@ def build_opportunities(
     *,
     as_of: datetime,
     monitoring_started_at: datetime,
-    id_prefix: str,
 ) -> list[TopicResult]:
     corpus = window_counts([p.published_at for p in pieces], as_of)
     ratios = outlier_ratios(pieces, as_of)
@@ -188,7 +194,7 @@ def build_opportunities(
 
     results = []
     for n, (group, rep, counts, vel) in enumerate(topics, start=1):
-        oid = f"{id_prefix}_{n:03d}"
+        oid = _stable_id(group)
         outlets = {outlet_key(p.platform.value, p.source_name) for p in group}
         platforms = {p.platform for p in group}
         group_ratios = [ratios[p.item_id] for p in group]

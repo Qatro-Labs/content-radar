@@ -425,7 +425,7 @@
 - Solo comprobar que sus tests siguen en verde tras los pasos 2 y 9 (el fixture conserva los ids
   `opp_001…`).
 
-### Paso 9 — Ids estables
+### Paso 9 — Ids estables [HECHO]
 
 - **Archivos:** `backend/app/intelligence/opportunities.py`, `backend/app/services/opportunities.py`,
   `backend/tests/test_build_opportunities.py`.
