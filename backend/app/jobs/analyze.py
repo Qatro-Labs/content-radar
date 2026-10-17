@@ -59,15 +59,17 @@ class _Evaluated:
 async def _evaluate(session: AsyncSession, run_id: int, as_of: datetime) -> _Evaluated:
     settings = get_settings()
     loaded = await load_pieces(session, as_of)
-    # Un solo cliente y un solo contador de Jev para las baterías de pieza y de par.
-    judge, meter = build_judge(settings), UsageMeter()
-    jev = await classify_pieces(session, loaded, judge=judge, meter=meter)
+    # Un solo cliente de Jev para las dos baterías. El consumo de la de pieza se guarda antes de
+    # seguir: si falla lo que viene después, ese gasto ya está hecho y debe constar.
+    judge, piece_meter, pair_meter = build_judge(settings), UsageMeter(), UsageMeter()
+    jev = await classify_pieces(session, loaded, judge=judge, meter=piece_meter)
+    await record_meter(session, piece_meter, pipeline_run_id=run_id)
     answers = await load_judgments(session, loaded)
     judgments = {item_id: to_piece_judgment(item_id, a) for item_id, a in answers.items()}
     computed = await compute_opportunities(
-        session, as_of, pieces=loaded, judgments=judgments, judge=judge, meter=meter
+        session, as_of, pieces=loaded, judgments=judgments, judge=judge, meter=pair_meter
     )
-    await record_meter(session, meter, pipeline_run_id=run_id)
+    await record_meter(session, pair_meter, pipeline_run_id=run_id)
     llm_meter = UsageMeter()
     results, fit, explain = await _fit_and_explain(
         session, computed.results, answers=answers, settings=settings, meter=llm_meter
