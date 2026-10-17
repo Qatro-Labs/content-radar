@@ -66,11 +66,7 @@ describe('splitTimeline', () => {
       date: `2026-${date}`,
     }))
 
-    // El cero a la izquierda de cada día lo pone `formatUtcDay` y depende de la versión de ICU
-    // («2/10» en ICU 78): aquí se comprueba que el rango escriba los dos meses.
-    expect(splitTimeline(crossing, LAST_UPDATED).currentLabel).toMatch(
-      /^Ventana actual · 30\/0?9–0?2\/10$/,
-    )
+    expect(splitTimeline(crossing, LAST_UPDATED).currentLabel).toBe('Ventana actual · 30/09–02/10')
   })
 })
 
