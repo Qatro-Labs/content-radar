@@ -150,7 +150,13 @@ Grupos para el **LATAM Opportunity Gap**:
   "last_updated": "ISO-8601"
 }
 ```
-`Evidence`: `url`, `source`, `platform`, `segment`, `title`, `published_at`, `metrics` (tal cual la fuente), `observed_at`, `language`, `velocity` (tasa por hora con su unidad, p. ej. `views/h` o `points/h`; `null` sin 2 snapshots), `outlier_ratio`, `is_outlier`.
+`Evidence`: `url`, `source`, `platform`, `segment`, `title`, `published_at`, `metrics` (tal cual la fuente), `observed_at`, `language`, `velocity` (`{"value": 950.0, "unit": "views/h"}`; `null` sin 2 snapshots), `outlier_ratio` (`null` sin referencia), `is_outlier` (`null` si no hay ratio).
+
+**Implementación:** `backend/app/schemas/opportunity.py`. Además de lo anterior: `top_outlier_ratio` es `null` si ninguna pieza tiene ratio; `audience_mix` es un objeto con las tres claves fijas (suma 1).
+- `GET /opportunities` → `OpportunityList`: `{items, period, generated_at, monitoring_started_at}`.
+- `GET /opportunities/{id}/evidence` → `Evidence[]`.
+- `GET /opportunities/{id}/timeline` → `OpportunityTimeline`: `{opportunity_id, window_days, points: [{date, count, window: "current" | "previous"}]}`.
+- Fixture para el frontend (MOCK): `data/fixtures/opportunities.json`. `tests/test_opportunity_fixture.py` comprueba que sigue cumpliendo el contrato.
 
 **Fuente de verdad de tipos:** modelos Pydantic → OpenAPI → `openapi-typescript` → `frontend/src/types/api.ts`. No escribir tipos TS a mano para la API.
 
@@ -193,7 +199,7 @@ GET  /health
   | `accelerating` | aceleración ≥ 0.5 y ≥ 3 fuentes independientes |
   | `emerging` | aceleración > 0, ≤ 3 fuentes independientes y saturation < 40 |
   | `unknown` | datos insuficientes (menos de 5 piezas o una sola fuente) |
-  Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
+  `unknown` se evalúa **antes** que las demás: con datos insuficientes no se asigna etapa aunque otra regla se cumpla. Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
 - **Para quién importa (estilo SparkToro).** `audience_mix` = proporción de la evidencia de cada `segment`, ponderada por el engagement normalizado. Lectura editorial:
   - Mucho `tech`, poco `business` y fit alto → "todavía no llegó a ejecutivos: traducirlo a negocio".
   - `business` presente y `latam_es` bajo → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
