@@ -61,7 +61,9 @@ export function fitBand(fit: number): FitBand {
 
 export function formatFit(fit: number | null | undefined): string {
   if (fit == null) return NOT_AVAILABLE
-  return `${fitBand(fit)} · ${formatScore(fit)}`
+  // La banda se calcula sobre la cifra que se muestra: 66,6 se lee "67" y tiene que decir "Alto".
+  const shown = Math.round(fit)
+  return `${fitBand(shown)} · ${shown}`
 }
 
 interface PulseTier {

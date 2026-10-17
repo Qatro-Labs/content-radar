@@ -57,6 +57,7 @@ describe('formatFit', () => {
     { name: 'Medio just below 67', fit: 66, expected: 'Medio · 66' },
     { name: 'Medio from 34', fit: 34, expected: 'Medio · 34' },
     { name: 'Bajo below 34', fit: 33, expected: 'Bajo · 33' },
+    { name: 'the band of the number it shows', fit: 66.6, expected: 'Alto · 67' },
     { name: '"no disponible" without a fit', fit: null, expected: 'no disponible' },
   ])('writes $name', ({ fit, expected }) => {
     expect(formatFit(fit)).toBe(expected)

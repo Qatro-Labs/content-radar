@@ -354,7 +354,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm test useRadarQuery`
 - **Commit:** `Support several stages, the LATAM gap and sorting in the radar URL`
 
-### Paso 3 — Formateo y estilos de etapa
+### Paso 3 — Formateo y estilos de etapa [HECHO]
 
 - **Archivos:** `frontend/src/lib/opportunityFormat.ts`, `frontend/src/lib/lifecycle.ts`,
   `frontend/src/lib/__tests__/opportunityFormat.spec.ts`
@@ -416,7 +416,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm test radarView`
 - **Commit:** `Build the radar view model from the opportunity list and the URL`
 
-### Paso 6 — Piezas: chips, anillo de score y barra de métrica
+### Paso 6 — Piezas: chips, anillo de score y barra de métrica [HECHO]
 
 - **Archivos:** `frontend/src/components/opportunities/{LifecycleChip,RecommendationChip,ScoreRing,MetricBar}.vue`
 - **Cambio:** DESIGN.md §4. `ScoreRing` recibe `score: number | null`, cuenta hasta el valor con `useTransition` de
