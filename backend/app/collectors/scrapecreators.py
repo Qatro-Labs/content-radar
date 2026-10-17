@@ -15,7 +15,7 @@ import httpx
 from pydantic import HttpUrl
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from app.collectors.text import is_ai_related
+from app.collectors.text import clean_html, is_ai_related
 from app.collectors.usage import UsageMeter
 from app.models import Source
 from app.schemas.cost import Provider
@@ -29,7 +29,6 @@ REDDIT_HOSTS = ("reddit.com", "redd.it")
 MIN_TIKTOK_VIEWS = 100  # descarta spam y vídeos sin ninguna tracción
 MIN_REDDIT_SCORE = 10
 TITLE_CHARS = 140
-DESCRIPTION_CHARS = 5000  # límite de ContentSignal.description
 
 
 class ScrapeCreatorsClient:
@@ -48,9 +47,10 @@ class ScrapeCreatorsClient:
         r = await self._http.get(
             f"{API_BASE}{path}", params=params, headers={"x-api-key": self._key}
         )
-        # Sin reintentar errores HTTP: un 402 (sin créditos) o 4xx no mejora y cada intento cuesta.
-        self.usage.add(Provider.SCRAPECREATORS, path)
+        # Sin reintentar errores HTTP: un 402 (sin créditos) o un 4xx no mejora reintentando.
+        # Solo se cobran las respuestas correctas (los errores no gastan crédito, según sus docs).
         r.raise_for_status()
+        self.usage.add(Provider.SCRAPECREATORS, path)
         return r.json()
 
 
@@ -60,7 +60,8 @@ def _title(text: str) -> str:
 
 
 class TikTokCollector:
-    """`config.query` = palabra clave y `config.region` (ISO, p. ej. MX) el país de la búsqueda.
+    """`config.query` = palabra clave y `config.search_region` (ISO, p. ej. MX) el país de la
+    búsqueda.
     `config.item_regions` descarta vídeos de otros países: la misma búsqueda desde México trae
     vídeos de España, que no cuentan para el LATAM Gap (CLAUDE.md §5).
     """
@@ -71,8 +72,8 @@ class TikTokCollector:
     async def collect(self, source: Source, *, backfill_days: int = 14) -> list[ContentSignal]:
         # La API solo filtra por periodos fijos; la semana cubre el ciclo periódico (--days 7).
         params = {"query": source.config["query"], "date_posted": "this-week", "trim": "true"}
-        if region := source.config.get("region"):
-            params["region"] = region
+        if search_region := source.config.get("search_region"):
+            params["region"] = search_region
         data = await self._api.get("/v1/tiktok/search/keyword", params)
 
         observed_at = datetime.now(UTC)
@@ -107,7 +108,7 @@ def _video_signal(video: dict, source: Source, observed_at: datetime) -> Content
         external_id=video["aweme_id"],
         url=HttpUrl(TIKTOK_VIDEO_URL.format(handle, video["aweme_id"])),
         title=_title(desc),
-        description=desc[:DESCRIPTION_CHARS],
+        description=clean_html(desc),
         # Cuenta pública que publica (como un canal de YouTube), no un usuario.
         author_name=f"@{handle}",
         published_at=datetime.fromtimestamp(video["create_time"], UTC),
@@ -137,32 +138,40 @@ class RedditCollector:
         )
         observed_at = datetime.now(UTC)
         ai_filter = source.config.get("ai_filter", False)
-        signals: list[ContentSignal] = []
-        for post in data.get("posts") or []:
-            title = (post.get("title") or "").strip()
-            body = (post.get("selftext") or "").strip() or None
-            if not (title and post.get("id")) or (post.get("score") or 0) < MIN_REDDIT_SCORE:
-                continue
-            if ai_filter and not is_ai_related(title, body):
-                continue
-            link = post.get("url") or ""
-            external = link.startswith("http") and not any(h in link for h in REDDIT_HOSTS)
-            subreddit = post.get("subreddit") or source.external_id
-            signals.append(
-                ContentSignal(
-                    platform=Platform.REDDIT,
-                    external_id=post["id"],
-                    url=HttpUrl(REDDIT_POST_URL.format(subreddit, post["id"])),
-                    target_url=HttpUrl(link) if external else None,
-                    title=title,
-                    description=body[:DESCRIPTION_CHARS] if body else None,
-                    # El autor en Reddit es un particular: no se guarda (sin datos personales).
-                    author_name=None,
-                    published_at=datetime.fromtimestamp(post["created_utc"], UTC),
-                    observed_at=observed_at,
-                    format=ContentFormat.DISCUSSION,
-                    language=source.language,
-                    metrics=Metrics(points=post.get("score"), comments=post.get("num_comments")),
-                )
-            )
-        return signals
+        return [
+            _post_signal(post, source, observed_at)
+            for post in data.get("posts") or []
+            if _keep_post(post, ai_filter=ai_filter)
+        ]
+
+
+def _keep_post(post: dict, *, ai_filter: bool) -> bool:
+    title = (post.get("title") or "").strip()
+    return bool(
+        title
+        and post.get("id")
+        and (post.get("score") or 0) >= MIN_REDDIT_SCORE
+        and (not ai_filter or is_ai_related(title, post.get("selftext")))
+    )
+
+
+def _post_signal(post: dict, source: Source, observed_at: datetime) -> ContentSignal:
+    link = post.get("url") or ""
+    external = link.startswith("http") and not any(h in link for h in REDDIT_HOSTS)
+    subreddit = post.get("subreddit") or source.external_id
+    return ContentSignal(
+        platform=Platform.REDDIT,
+        external_id=post["id"],
+        url=HttpUrl(REDDIT_POST_URL.format(subreddit, post["id"])),
+        target_url=HttpUrl(link) if external else None,
+        title=post["title"].strip(),
+        # Texto de un particular: solo un extracto, como el de HN (sin copias completas).
+        description=clean_html(post.get("selftext")),
+        # El autor en Reddit es un particular: no se guarda (sin datos personales).
+        author_name=None,
+        published_at=datetime.fromtimestamp(post["created_utc"], UTC),
+        observed_at=observed_at,
+        format=ContentFormat.DISCUSSION,
+        language=source.language,
+        metrics=Metrics(points=post.get("score"), comments=post.get("num_comments")),
+    )

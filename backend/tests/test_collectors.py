@@ -253,7 +253,7 @@ async def test_tiktok_maps_videos_and_filters_noise():
         "tiktok",
         "agentes de IA|CO",
         query="agentes de IA",
-        region="CO",
+        search_region="CO",
         item_regions=["MX", "CO"],
         ai_filter=True,
     )
@@ -344,4 +344,4 @@ async def test_scrapecreators_does_not_retry_paid_errors():
             await collector.collect(make_source("reddit", "OpenAI"))
 
     assert route.call_count == 1
-    assert usage.counts[(Provider.SCRAPECREATORS, "/v1/reddit/subreddit")].calls == 1
+    assert not usage.counts  # un error no gasta crédito: no cuenta como coste medido

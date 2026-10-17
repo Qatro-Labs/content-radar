@@ -84,7 +84,7 @@ async def test_seed_resolves_handles_and_is_idempotent(session):
     # La misma búsqueda en dos regiones son dos fuentes distintas.
     global_tt, mx_tt = sources[3], sources[4]
     assert (global_tt.external_id, mx_tt.external_id) == ("AI agents|global", "AI agents|MX")
-    assert mx_tt.config["region"] == "MX" and mx_tt.config["item_regions"] == ["MX", "CO"]
+    assert mx_tt.config["search_region"] == "MX" and mx_tt.config["item_regions"] == ["MX", "CO"]
     assert mx_tt.name == "TikTok · AI agents (MX)"
 
 

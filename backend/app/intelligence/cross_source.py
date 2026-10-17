@@ -7,7 +7,9 @@ infla el conteo.
 
 from collections.abc import Sequence
 
-SEARCH_PLATFORMS = {"hackernews", "tiktok"}
+from app.schemas.signal import Platform
+
+SEARCH_PLATFORMS = {Platform.HACKERNEWS, Platform.TIKTOK}
 POINTS_PER_EXTRA_SOURCE = 20
 POINTS_PER_EXTRA_PLATFORM = 15
 
