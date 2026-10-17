@@ -427,7 +427,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check`
 - **Commit:** `Add lifecycle and recommendation chips, score ring and metric bar`
 
-### Paso 7 — Cabecera, filtros y periodo
+### Paso 7 — Cabecera, filtros y periodo [HECHO]
 
 - **Archivos:** `frontend/src/components/radar/{RadarHero,RadarFilters}.vue`,
   `frontend/src/components/layout/{AppHeader,PeriodControl}.vue`
