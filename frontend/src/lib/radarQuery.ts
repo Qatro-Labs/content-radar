@@ -80,9 +80,17 @@ function uniqueOf<T extends string>(allowed: readonly T[], values: string[]): T[
   return [...new Set(valid)]
 }
 
-// Quita filtros y resaltados; la selección, el periodo y el orden se conservan.
+// Quita filtros y resaltados; la selección, el periodo y el orden se conservan. El `reset_view`
+// del agente (backend/app/agent/tools.py) quita lo mismo.
 export function resetViewPatch(): Partial<RadarQuery> {
-  return { lifecycle: [], gap: false, highlight: [], recommendation: null }
+  return {
+    lifecycle: [],
+    gap: false,
+    highlight: [],
+    recommendation: null,
+    confidence: null,
+    topic: null,
+  }
 }
 
 export function parseRadarQuery(query: LocationQuery): RadarQuery {
