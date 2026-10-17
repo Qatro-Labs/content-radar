@@ -30,6 +30,9 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
       APP_ENV: ci
+      # El CDN de WordPress.com (Import AI, Stratechery, Hipertextual) responde 403 a la huella
+      # TLS del Python que descarga uv desde los runners; con el Python del sistema responde 200.
+      UV_PYTHON_PREFERENCE: only-system
     defaults:
       run:
         working-directory: backend
@@ -45,6 +48,11 @@ jobs:
 
       - uses: actions/checkout@v4
         if: steps.guard.outputs.skip != 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
 
       - uses: astral-sh/setup-uv@v6
         if: steps.guard.outputs.skip != 'true'
