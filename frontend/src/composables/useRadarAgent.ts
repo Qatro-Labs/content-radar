@@ -26,7 +26,7 @@ import type {
 } from '@/lib/agentTypes'
 import { EXPLORE_TEXT_PARAM } from '@/lib/exploreView'
 import { parseRadarQuery, serializeRadarQuery, type RadarQuery } from '@/lib/radarQuery'
-import { RouteName } from '@/router'
+import { RouteName } from '@/router/routeNames'
 
 import { createAgentPlayback } from './agentPlayback'
 import { useAgentPresence } from './useAgentPresence'

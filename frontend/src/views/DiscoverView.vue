@@ -8,10 +8,13 @@ import RadarFootnote from '@/components/radar/RadarFootnote.vue'
 import RadarHero from '@/components/radar/RadarHero.vue'
 import RadarSidePanel from '@/components/radar/RadarSidePanel.vue'
 import RadarStates, { RadarPlaceholder } from '@/components/radar/RadarStates.vue'
+import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import { buildRadarView } from '@/lib/radarView'
 
 const { query, update } = useRadarQuery()
+// Rad repite el barrido cuando empieza a leer datos (DESIGN.md §7).
+const { sweepCount } = useRadarAgent()
 const { data, isPending, isError, refetch } = useOpportunities(() => query.value.period)
 
 const view = computed(() => buildRadarView(data.value ?? null, query.value))
@@ -60,7 +63,7 @@ function hover(id: string | null) {
         <OpportunityRadar
           :view
           :hovered-id="hovered"
-          :sweep-key="query.period"
+          :sweep-key="`${query.period}:${sweepCount}`"
           @select="select"
           @hover="hover"
         />

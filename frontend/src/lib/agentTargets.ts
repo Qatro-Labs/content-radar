@@ -1,6 +1,6 @@
 import type { RouteLocationRaw, RouteRecordNameGeneric } from 'vue-router'
 
-import { RouteName } from '@/router'
+import { RouteName } from '@/router/routeNames'
 
 import type { AgentScreen, AgentTarget, DossierSection, Navigation, RadarPatch } from './agentTypes'
 import { EXPLORE_TEXT_PARAM } from './exploreView'
@@ -145,9 +145,6 @@ export function navigationTargets(
   }
   return { before: screenEntry(nav.screen, from), after: dataStepTarget(nav.screen) }
 }
-
-// `RouteName` solo se lee dentro de las funciones: el router importa las vistas, y las vistas
-// importan este módulo (anclas de RadarHero.vue). Leerlo al cargar el módulo fallaría en ese ciclo.
 
 // Un expediente sin id no tiene ruta: se abre Explorar, que lista todos los temas.
 export function navigationRoute(nav: Navigation): RouteLocationRaw {
