@@ -18,8 +18,8 @@ Si no existe, para y di que hay que correr `/spec` primero. No improvises un pla
 
 Lee **solo** la cabecera: "Metadatos" (gate, contratos tocados, auditoría) y "Preguntas abiertas".
 
-- Gate `BLOQUEADO` o preguntas abiertas → para. Muéstralas y recomienda `/replan <ruta>`.
-  No las resuelvas tú.
+- Gate `BLOQUEADO` o preguntas abiertas → para. Muéstralas y recomienda `/spec <slug>` (modo
+  continuar). No las resuelvas tú.
 - Contrato tocado sin aviso en el canal → para y pide que se avise primero.
 - Gate `LISTO` → sigue.
 
@@ -54,7 +54,8 @@ Si el veredicto es `rework` o hay un `blocker`:
 
 - Hallazgo mecánico (tamaño, constante, comentario, query, test) → relanza `plan-implementer` con
   la lista de hallazgos y la ruta del plan.
-- Hallazgo que exige una decisión de producto o de diseño → `/replan <ruta>`.
+- Hallazgo que exige una decisión de producto o de diseño → añádelo a "Preguntas abiertas" del
+  plan, pon el gate en `BLOQUEADO` y recomienda `/spec <slug>` (modo continuar).
 
 No lo arregles tú desde esta sesión.
 
@@ -70,4 +71,5 @@ En este orden:
 Si todo pasó, pregunta si hacer push y abrir el PR. El PR resume el plan, enlaza
 `.claude/plans/<slug>.plan.md` y avisa de los contratos tocados.
 
-Si volvió `BLOQUEADO`, el plan ya tiene las preguntas anotadas: recomienda `/replan <ruta>`.
+Si volvió `BLOQUEADO`, el plan ya tiene las preguntas y el intento anotados: recomienda
+`/spec <slug>` (modo continuar).

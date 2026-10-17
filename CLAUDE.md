@@ -314,7 +314,7 @@ P2: Topic Network con Vue Flow (`@vue-flow/core`) y animaciones avanzadas.
 - Integrar en `main` pronto y a menudo; `main` siempre desplegable. Ramas cortas por área: `data/…`, `intel/…`, `fe/…`.
 - Español en la UI y en el contenido editorial; inglés en el código.
 - **Estándares de código:** [`docs/engineering-standards.md`](docs/engineering-standards.md). Comentarios, los necesarios (el *porqué*, nunca el *qué*); docstrings no por defecto.
-- **Flujo `/spec` → `/build`** (opcional, para tareas de 1 h o más con un contrato claro: módulos de scoring, endpoints, tools MCP, migraciones). `/spec` investiga, pregunta y escribe un plan en `.claude/plans/`; `/build` lo implementa con `plan-implementer` en contexto limpio y, si toca, lo audita `code-standards-auditor`; `/replan` cierra los bloqueos. No compensa para iteración visual de UI ni para arreglos rápidos.
+- **Flujo `/spec` → `/build`** (opcional, para tareas de 1 h o más con un contrato claro: módulos de scoring, endpoints, tools MCP, migraciones). `/spec` investiga, pregunta y escribe un plan en `.claude/plans/`; `/build` lo implementa con `plan-implementer` en contexto limpio y, si toca, lo audita `code-standards-auditor`; `/spec <slug>` retoma un plan bloqueado o a medias. El plan es el estado vivo de su tarea (decisiones, pasos `[HECHO]`, historial, preguntas abiertas). No compensa para iteración visual de UI ni para arreglos rápidos.
 
 ---
 
@@ -365,7 +365,7 @@ Actúa como **Technical Project Coordinator y Product Engineering Copilot** de 3
 - Frontend en Vue 3 + TypeScript con `<script setup>`, Composition API y composables. No introduzcas React ni otra librería de UI o de charts además de las de §9.
 - Antes de tocar UI, lee `DESIGN.md`. Antes de tocar contratos, avisa: rompen el trabajo de los demás.
 - Avisa pronto si una decisión pone en riesgo un checkpoint.
-- Cuando te pidan el estado, responde con esta tabla. Una tarea no está hecha porque haya pasado su horario; solo cuenta lo que el equipo confirme:
+- Cuando te pidan el estado, constrúyelo a partir de las fuentes, no de la memoria: cabeceras de `.claude/plans/*.plan.md` (owner, prioridad, gate, pasos `[HECHO]`), `gh pr list` y `git log` de `main`. Responde con esta tabla. Una tarea no está hecha porque haya pasado su horario; solo cuenta lo que el equipo confirme:
 
 | Fase actual | Tiempo restante | Estado (En tiempo / En riesgo / Bloqueado) | Steven | Melkin | Frontend | Riesgos | Decisión recomendada |
 |---|---|---|---|---|---|---|---|

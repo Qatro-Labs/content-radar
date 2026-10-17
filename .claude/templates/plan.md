@@ -86,7 +86,8 @@ Si el cambio lee o escribe la DB: qué queries, cómo se cargan las relaciones (
 
 ## Plan de implementación
 
-Pasos ordenados. Cada paso es verificable por sí solo y termina en un commit.
+Pasos ordenados. Cada paso es verificable por sí solo y termina en un commit. El implementador
+añade ` [HECHO]` al título del paso en ese mismo commit.
 
 ### Paso 1 — <qué>
 
@@ -121,7 +122,7 @@ Comandos exactos, en orden. El implementador los corre todos y pega la salida re
 
 ## Historial de intentos
 
-Lo mantiene `/replan`.
+Lo mantienen `plan-implementer` (cuando se bloquea) y `/spec` en modo continuar.
 
 | Fecha | Qué bloqueó | Qué se decidió | Commits que quedaron |
 | --- | --- | --- | --- |

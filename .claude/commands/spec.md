@@ -1,6 +1,6 @@
 ---
-description: Fase de planning. Investiga el código, te interroga hasta cerrar las decisiones y escribe un plan autocontenido para que plan-implementer lo ejecute con contexto limpio.
-argument-hint: <descripción libre | #issue>
+description: Fase de planning. Investiga el código, te interroga hasta cerrar las decisiones y escribe un plan autocontenido para que plan-implementer lo ejecute con contexto limpio. Con un plan existente, lo retoma y cierra sus bloqueos.
+argument-hint: <descripción libre | #issue | slug-o-ruta-de-un-plan>
 disable-model-invocation: true
 ---
 
@@ -20,6 +20,8 @@ negociables), §3 (ownership), §6 (contratos), §11 (convenciones), §12 (prior
 
 - `#<n>` → `gh issue view <n> --comments`. Copia sus criterios de aceptación verbatim.
 - Texto libre → genera un slug `<area>-<slug-corto>` con `area` ∈ `data | intel | fe | mcp | chore`.
+- Ruta o slug de un plan que ya existe en `.claude/plans/` → **modo continuar**: salta a la
+  sección 9.
 - Vacío → pregunta qué se va a planear y para. No inventes.
 
 ## 2. Encaje con el plan del equipo
@@ -107,3 +109,27 @@ Muestra un resumen de 5 líneas y la ruta del plan. Pregunta:
 
 Si dice que sí, sigue el flujo de `/build` con la ruta absoluta del plan. Si no, imprime
 `/build <ruta-absoluta>` para lanzarlo después.
+
+## 9. Modo continuar (plan existente)
+
+Se usa cuando `/build` volvió `BLOQUEADO`, cuando el auditor pidió `rework` por una decisión de
+producto o de diseño, o para retomar una tarea a medias. El plan es el estado vivo de la tarea:
+decisiones, pasos `[HECHO]`, historial de intentos y preguntas abiertas.
+
+1. **Lee el plan entero** y mira qué pasó de verdad, no lo que el plan dice que iba a pasar:
+   - `git log --oneline <rama-base>..<rama-de-trabajo>`: qué commits quedaron.
+   - `git status --porcelain`: trabajo sin commitear.
+   - Comprueba que cada paso marcado `[HECHO]` tiene su commit (el mensaje del paso) en la rama.
+2. **Clasifica cada pregunta abierta** antes de preguntar nada:
+   - **Hecho averiguable** → míralo en el código o en la doc oficial, resuélvelo y anota dónde.
+   - **Decisión del humano** → al interrogatorio.
+   - **Paso mal escrito** → reescríbelo y explica qué le faltaba.
+3. **Interroga solo las decisiones**, como en la sección 5. No reabras "Decisiones tomadas" ni
+   "Alternativas rechazadas" sin pedir permiso explícito.
+4. **Actualiza el plan en sitio** (mismo archivo):
+   - Decisiones nuevas numeradas desde la última, con su porqué.
+   - Pasos afectados reescritos; los `[HECHO]` se quedan como están.
+   - Entrada nueva en "Historial de intentos".
+   - "Preguntas abiertas" → `(ninguna)` y gate → `LISTO`. Si algo no se cerró, el gate se queda en
+     `BLOQUEADO` y dices qué falta: un plan medio cerrado que dice `LISTO` es peor que uno bloqueado.
+5. Resume en 5 líneas qué cambió y pregunta si relanzar `/build`.

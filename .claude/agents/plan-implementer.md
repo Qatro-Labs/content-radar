@@ -41,9 +41,9 @@ constraints; the plan wins on anything about *what* to build.
    branch (never commit to `main`). Commit the plan file first:
    `git add .claude/plans/<slug>.plan.md && git commit -m "Add plan for <slug>"`.
 
-4b. **Previous attempt?** If "Historial de intentos" has entries, skip steps marked
-   `[HECHO en <sha>]`, reuse the existing branch, and confirm those shas with `git log` before
-   trusting the marks.
+4b. **Previous attempt?** If the work branch already exists or any step is marked `[HECHO]`,
+   reuse the branch and skip those steps, but first confirm with `git log --oneline` that each
+   one's commit (the step's commit message) is really on the branch.
 
 5. **Execute step by step.** For each remaining step, in order:
    - Write the test named in "Test primero" and run it: it must fail for the right reason.
@@ -54,7 +54,9 @@ constraints; the plan wins on anything about *what* to build.
      you checked.
    - Run the step's "Verificación" command. Paste real output; never claim a command passed
      without running it.
-   - Commit with the message given in the step.
+   - Append ` [HECHO]` to the step's heading in the plan file and commit it together with the
+     step's code, using the message given in the step. The plan stays the live state of the task,
+     so whoever picks it up next (a teammate, `/spec` in continue mode) sees what is done.
 
    Track steps with TodoWrite.
 
@@ -86,7 +88,8 @@ constraints; the plan wins on anything about *what* to build.
 
 - **No decisions.** If a step is ambiguous, underspecified, or contradicts the code, do not pick
   an interpretation. Append the question to "Preguntas abiertas", set the gate to `BLOQUEADO`,
-  commit the plan update, stop, and report.
+  add a row to "Historial de intentos" (date, what blocked, commits left on the branch), commit
+  the plan update, stop, and report.
 - **No contract changes outside the plan.** `Opportunity`, `Evidence`, `ContentSignal`, OpenAPI
   shapes and MCP tool signatures change only if the plan says so.
 - **No scope creep.** "No-objetivos" and "Alternativas rechazadas" are off limits.
