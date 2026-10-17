@@ -5,6 +5,7 @@ import {
   bubbleSize,
   formatAcceleration,
   formatFit,
+  isDeclining,
   formatOutliers,
   formatScore,
   latamGapLabel,
@@ -13,9 +14,13 @@ import {
 
 describe('formatAcceleration', () => {
   it.each([
-    { name: 'growth with an up arrow and a plus sign', acceleration: 0.86, expected: '↑ +86 %' },
-    { name: 'decline with a down arrow and U+2212', acceleration: -0.3, expected: '↓ −30 %' },
-    { name: 'flat when it rounds to 0 %', acceleration: 0.004, expected: '→ 0 %' },
+    {
+      name: 'growth with an up arrow and a plus sign',
+      acceleration: 0.86,
+      expected: '↑ +86\u00a0%',
+    },
+    { name: 'decline with a down arrow and U+2212', acceleration: -0.3, expected: '↓ −30\u00a0%' },
+    { name: 'flat when it rounds to 0 %', acceleration: 0.004, expected: '→ 0\u00a0%' },
   ])('writes $name', ({ acceleration, expected }) => {
     expect(formatAcceleration(acceleration)).toBe(expected)
   })
@@ -153,5 +158,15 @@ describe('latamGapLabel', () => {
     { name: 'a missing decision', gap: null, expected: 'hueco en LATAM no disponible' },
   ])('labels $name', ({ gap, expected }) => {
     expect(latamGapLabel(gap)).toBe(expected)
+  })
+})
+
+describe('isDeclining', () => {
+  it.each([
+    { name: 'a fall shown as a negative percent', acceleration: -0.3, expected: true },
+    { name: 'a fall that rounds to 0 %', acceleration: -0.004, expected: false },
+    { name: 'growth', acceleration: 0.86, expected: false },
+  ])('is $expected for $name', ({ acceleration, expected }) => {
+    expect(isDeclining(acceleration)).toBe(expected)
   })
 })

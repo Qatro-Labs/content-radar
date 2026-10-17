@@ -1,11 +1,8 @@
 <script setup lang="ts">
+import { TEXT_ENTER_CLASS } from '@/lib/motion'
 import type { RankedOpportunity } from '@/lib/radarView'
 
 const { opportunity } = defineProps<{ opportunity: RankedOpportunity }>()
-
-// DESIGN.md §7: los textos entran con fundido y 4 px de subida al cambiar de selección.
-const TEXT_ENTER_CLASS =
-  'animate-in fade-in slide-in-from-bottom-1 duration-300 ease-out motion-reduce:animate-none'
 </script>
 
 <template>

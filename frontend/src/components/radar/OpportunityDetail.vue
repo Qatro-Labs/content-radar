@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { TEXT_ENTER_CLASS } from '@/lib/motion'
 import { computed } from 'vue'
 
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
@@ -12,6 +13,7 @@ import {
   formatOutliers,
   formatScore,
   GROWTH_LABEL,
+  isDeclining,
   latamGapLabel,
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
@@ -42,7 +44,9 @@ const tiles = computed<StatTile[]>(() => [
     value: formatAcceleration(opportunity.acceleration),
     // "↑ +100 %" no cabe en la baldosa y partiría el "%" solo en otra línea; los outliers sí
     // pueden partirse por el "·". DESIGN.md §2: la aceleración negativa va en Negativo.
-    valueClass: cn('whitespace-nowrap', { 'text-destructive': opportunity.acceleration < 0 }),
+    valueClass: cn('whitespace-nowrap', {
+      'text-destructive': isDeclining(opportunity.acceleration),
+    }),
   },
   {
     label: 'Outliers',
@@ -55,9 +59,6 @@ const tiles = computed<StatTile[]>(() => [
 // DESIGN.md §4. Los hovers de los botones no tienen token en main.css.
 const BUTTON_CLASS =
   'flex min-h-[46px] flex-[1_1_140px] items-center justify-center rounded-xl px-4 font-semibold transition-[background-color,scale] duration-150 ease-out active:scale-[0.98]'
-// DESIGN.md §7: los textos del panel entran con fundido y 4 px de subida al cambiar de selección.
-const TEXT_ENTER_CLASS =
-  'animate-in fade-in slide-in-from-bottom-1 duration-300 ease-out motion-reduce:animate-none'
 </script>
 
 <template>

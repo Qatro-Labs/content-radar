@@ -4,8 +4,14 @@ import { computed } from 'vue'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { useRadarQuery } from '@/composables/useRadarQuery'
-import { formatAcceleration, formatOutliers, formatScore, SCORE_MAX } from '@/lib/opportunityFormat'
-import { RANKING_SORTS, type RankingSort } from '@/lib/radarQuery'
+import {
+  formatAcceleration,
+  formatOutliers,
+  formatScore,
+  isDeclining,
+  SCORE_MAX,
+} from '@/lib/opportunityFormat'
+import { RANKING_SORTS, resetViewPatch, type RankingSort } from '@/lib/radarQuery'
 import type { RankedOpportunity } from '@/lib/radarView'
 
 const { rows, total, isFiltered, selectedId, hoveredId } = defineProps<{
@@ -67,7 +73,7 @@ function rowToneClass(id: string): string {
 }
 
 function resetView() {
-  update({ lifecycle: [], gap: false, highlight: [] })
+  update(resetViewPatch())
 }
 </script>
 
@@ -143,7 +149,7 @@ function resetView() {
           />
           <span
             class="font-medium whitespace-nowrap"
-            :class="{ 'text-destructive': row.acceleration < 0 }"
+            :class="{ 'text-destructive': isDeclining(row.acceleration) }"
           >
             {{ formatAcceleration(row.acceleration) }}
           </span>

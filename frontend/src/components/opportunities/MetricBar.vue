@@ -38,6 +38,8 @@ const fill = computed(() => (value === null ? 0 : value / SCORE_MAX))
         :style="{ transform: `scaleX(${fill})` }"
       />
     </span>
-    <span class="w-[72px] shrink-0 text-right text-sm font-medium">{{ display }}</span>
+    <span class="min-w-[72px] shrink-0 whitespace-nowrap text-right text-sm font-medium">{{
+      display
+    }}</span>
   </div>
 </template>

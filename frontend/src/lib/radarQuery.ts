@@ -71,6 +71,11 @@ function uniqueOf<T extends string>(allowed: readonly T[], values: string[]): T[
   return [...new Set(valid)]
 }
 
+// Quita filtros y resaltados; la selección, el periodo y el orden se conservan.
+export function resetViewPatch(): Partial<RadarQuery> {
+  return { lifecycle: [], gap: false, highlight: [] }
+}
+
 export function parseRadarQuery(query: LocationQuery): RadarQuery {
   return {
     period: oneOf(PERIODS, firstValue(query.period)) ?? DEFAULT_PERIOD,

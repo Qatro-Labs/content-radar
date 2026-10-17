@@ -16,15 +16,27 @@ const NOT_AVAILABLE = 'no disponible'
 // DESIGN.md §9: el signo menos tipográfico (U+2212), no el guion.
 const MINUS_SIGN = '−'
 
+// DESIGN.md §9: espacio antes de %, no separable para que "+100 %" no parta el "%" a otra línea.
+const PERCENT_SUFFIX = '\u00a0%'
+
+function roundedPercent(acceleration: number): number {
+  return Math.round(acceleration * PERCENT)
+}
+
 export function formatAcceleration(acceleration: number): string {
-  const percent = Math.round(acceleration * PERCENT)
-  if (percent > 0) return `↑ +${percent} %`
-  if (percent < 0) return `↓ ${MINUS_SIGN}${Math.abs(percent)} %`
-  return '→ 0 %'
+  const percent = roundedPercent(acceleration)
+  if (percent > 0) return `↑ +${percent}${PERCENT_SUFFIX}`
+  if (percent < 0) return `↓ ${MINUS_SIGN}${Math.abs(percent)}${PERCENT_SUFFIX}`
+  return `→ 0${PERCENT_SUFFIX}`
+}
+
+// Sobre la cifra que se muestra: −0,004 se lee "→ 0 %" y no debe pintarse como descenso.
+export function isDeclining(acceleration: number): boolean {
+  return roundedPercent(acceleration) < 0
 }
 
 export function formatShare(share: number): string {
-  return `${Math.round(share * PERCENT)} %`
+  return `${Math.round(share * PERCENT)}${PERCENT_SUFFIX}`
 }
 
 // DESIGN.md §9: decimales con coma ("6,1×").

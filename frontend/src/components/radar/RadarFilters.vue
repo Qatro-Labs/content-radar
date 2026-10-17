@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
-import { LIFECYCLES, type Lifecycle } from '@/lib/radarQuery'
+import { LIFECYCLES, resetViewPatch, type Lifecycle } from '@/lib/radarQuery'
 import type { RadarView } from '@/lib/radarView'
 
 const props = defineProps<{ view: RadarView }>()
@@ -36,7 +36,7 @@ function toggleStage(lifecycle: Lifecycle) {
 }
 
 function resetView() {
-  update({ lifecycle: [], gap: false, highlight: [] })
+  update(resetViewPatch())
 }
 </script>
 
