@@ -113,7 +113,9 @@ export function missingRatioLabel(evidence: Evidence): string {
 
 // DESIGN.md §4: la barra "Rendimiento frente a su canal" llega hasta 6× con marcas en 1× y 3×.
 export const PERFORMANCE_SCALE_MAX = 6
-export const PERFORMANCE_MARKS = [1, 3] as const
+// 1× es la referencia de la pieza, no un umbral: la barra la marca más suave que el 3× del outlier.
+export const PERFORMANCE_REFERENCE_MARK = 1
+export const PERFORMANCE_MARKS = [PERFORMANCE_REFERENCE_MARK, 3] as const
 
 export function performanceFraction(ratio: number): number {
   return Math.min(Math.max(ratio, 0) / PERFORMANCE_SCALE_MAX, 1)

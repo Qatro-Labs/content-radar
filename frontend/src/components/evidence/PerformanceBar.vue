@@ -5,10 +5,11 @@ import {
   formatRatio,
   missingRatioLabel,
   PERFORMANCE_MARKS,
+  PERFORMANCE_REFERENCE_MARK,
   PERFORMANCE_SCALE_MAX,
   performanceFraction,
 } from '@/lib/evidenceFormat'
-import { formatDecimal } from '@/lib/opportunityFormat'
+import { formatDecimal, PERCENT } from '@/lib/opportunityFormat'
 import type { components } from '@/types/api'
 
 const { evidence } = defineProps<{ evidence: components['schemas']['Evidence'] }>()
@@ -17,7 +18,7 @@ const ratio = computed(() => evidence.outlier_ratio ?? null)
 const isOutlier = computed(() => evidence.is_outlier === true)
 const marks = PERFORMANCE_MARKS.map((mark) => ({
   mark,
-  left: `${(mark / PERFORMANCE_SCALE_MAX) * 100}%`,
+  left: `${(mark / PERFORMANCE_SCALE_MAX) * PERCENT}%`,
 }))
 </script>
 
@@ -43,7 +44,7 @@ const marks = PERFORMANCE_MARKS.map((mark) => ({
         v-for="{ mark, left } in marks"
         :key="mark"
         class="absolute -top-1 h-3.5 w-0.5 -translate-x-1/2 rounded-full"
-        :class="mark === 1 ? 'bg-reference-mark' : 'bg-foreground'"
+        :class="mark === PERFORMANCE_REFERENCE_MARK ? 'bg-reference-mark' : 'bg-foreground'"
         :style="{ left }"
       />
     </span>
