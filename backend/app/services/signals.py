@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, cast
 
 from pydantic import HttpUrl
-from sqlalchemy import ColumnElement, CursorResult, func, or_, select
+from sqlalchemy import ColumnElement, CursorResult, Select, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -168,6 +168,31 @@ def _to_hit(item: ContentItem, source: Source, ids_by_url: dict[str, list[str]])
     )
 
 
+def _search_statement(
+    terms: list[str],
+    *,
+    platform: Platform | None,
+    segment: Segment | None,
+    since: datetime,
+    limit: int,
+) -> Select[ContentItem, Source]:
+    stmt = (
+        select(ContentItem, Source)
+        .join(Source)
+        .where(Source.active.is_(True), ContentItem.published_at >= since)
+        .where(*(_contains(t) for t in terms))
+    )
+    if platform:
+        stmt = stmt.where(ContentItem.platform == platform.value)
+    if segment:
+        stmt = stmt.where(Source.segment == segment.value)
+    return (
+        stmt.options(selectinload(ContentItem.snapshots))
+        .order_by(ContentItem.published_at.desc(), ContentItem.id.desc())
+        .limit(limit)
+    )
+
+
 async def search_signals(
     session: AsyncSession,
     *,
@@ -184,21 +209,7 @@ async def search_signals(
     terms = [t for t in query.split() if len(t) >= MIN_SEARCH_TERM_CHARS][:MAX_SEARCH_TERMS]
     if not terms:
         raise ValueError("La consulta no tiene palabras válidas")
-    stmt = (
-        select(ContentItem, Source)
-        .join(Source)
-        .where(Source.active.is_(True), ContentItem.published_at >= since)
-        .where(*(_contains(t) for t in terms))
-    )
-    if platform:
-        stmt = stmt.where(ContentItem.platform == platform.value)
-    if segment:
-        stmt = stmt.where(Source.segment == segment.value)
-    stmt = (
-        stmt.options(selectinload(ContentItem.snapshots))
-        .order_by(ContentItem.published_at.desc(), ContentItem.id.desc())
-        .limit(limit)
-    )
+    stmt = _search_statement(terms, platform=platform, segment=segment, since=since, limit=limit)
     rows = (await session.execute(stmt)).all()
     ids_by_url = await _served_ids_by_url(session)
     return [_to_hit(item, source, ids_by_url) for item, source in rows]
