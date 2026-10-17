@@ -80,6 +80,9 @@ rss:
   - { name: "Import AI", url: "https://jack-clark.net/feed/", segment: tech, language: en, region: global }
   - { name: "Ben's Bites", url: "https://www.bensbites.com/feed", segment: tech, language: en, region: global }
   - { name: "The Rundown AI", url: "https://www.therundown.ai/feed", segment: tech, language: en, region: global }
+  # Lanzamientos y conversación de desarrolladores: suman fuentes independientes tempranas (17/10).
+  - { name: "Product Hunt · AI", url: "https://www.producthunt.com/feed?category=artificial-intelligence", segment: tech, language: en, region: global }
+  - { name: "Lobsters · AI", url: "https://lobste.rs/t/ai.rss", segment: tech, language: en, region: global }
   # --- business (EN) ---
   - { name: "One Useful Thing (Ethan Mollick)", url: "https://www.oneusefulthing.org/feed", segment: business, language: en, region: global }
   - { name: "MIT Sloan Management Review", url: "https://sloanreview.mit.edu/feed/", segment: business, language: en, region: global, ai_filter: true }
