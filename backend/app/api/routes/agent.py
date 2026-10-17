@@ -138,7 +138,20 @@ def _to_sse(event: AgentEvent) -> ServerSentEvent:
     return ServerSentEvent(event=EVENT_NAMES[type(event)], data=data)
 
 
-@router.post("", response_class=EventSourceResponse)
+# El generador emite `ServerSentEvent` para poner el nombre de cada evento, y FastAPI no documenta
+# su `data`: se declara aquí para que los modelos lleguen a OpenAPI y a `frontend/src/types/api.ts`.
+EVENTS_RESPONSE = {
+    "model": AgentEvent,
+    "description": (
+        "Stream SSE. El `data` de cada evento es el modelo de su nombre: step → StepEvent, "
+        "action → ActionEvent, answer → AnswerEvent, error → ErrorEvent, done → DoneEvent."
+    ),
+}
+
+
+@router.post(
+    "", response_class=EventSourceResponse, responses={status.HTTP_200_OK: EVENTS_RESPONSE}
+)
 async def ask_agent(
     body: AgentQuestion,
     request: Request,

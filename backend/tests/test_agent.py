@@ -506,3 +506,18 @@ async def test_usage_is_recorded_when_the_client_disconnects(session, seeded):
         select(func.sum(UsageEvent.calls)).where(UsageEvent.operation == AGENT_OPERATION)
     )
     assert recorded == 1
+
+
+def test_openapi_documents_the_event_models():
+    schemas = app.openapi()["components"]["schemas"]
+
+    expected = {
+        "StepEvent",
+        "ActionEvent",
+        "RadarPatch",
+        "AnswerEvent",
+        "CitedOpportunity",
+        "ErrorEvent",
+        "DoneEvent",
+    }
+    assert expected <= set(schemas)
