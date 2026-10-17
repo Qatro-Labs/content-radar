@@ -7,6 +7,7 @@ import {
   buildExploreView,
   exploreSummary,
   parseExploreFilter,
+  parseExploreText,
   type ExploreFilter,
 } from '../exploreView'
 
@@ -227,6 +228,16 @@ describe('parseExploreFilter', () => {
     ['a repeated param', { filter: ['outliers', 'youtube'] }, 'outliers'],
   ])('reads %s', (_, query, expected) => {
     expect(parseExploreFilter(query)).toBe(expected)
+  })
+})
+
+describe('parseExploreText', () => {
+  it.each([
+    ['the text as written', { q: 'Xataka · IA ' }, 'Xataka · IA '],
+    ['no text', {}, ''],
+    ['a repeated param', { q: ['Xataka', 'HN'] }, 'Xataka'],
+  ])('reads %s', (_, query, expected) => {
+    expect(parseExploreText(query)).toBe(expected)
   })
 })
 

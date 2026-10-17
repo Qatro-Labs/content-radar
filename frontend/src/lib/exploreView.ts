@@ -12,6 +12,8 @@ type Opportunity = Schemas['Opportunity']
 export const EXPLORE_FILTERS = ['outliers', 'youtube', 'hackernews'] as const
 export type ExploreFilter = (typeof EXPLORE_FILTERS)[number]
 export const EXPLORE_FILTER_PARAM = 'filter'
+// El texto va en la URL para que la paleta ⌘K pueda abrir Explorar con una fuente ya filtrada.
+export const EXPLORE_TEXT_PARAM = 'q'
 
 // "Dónde está funcionando" muestra los cinco primeros temas y fuentes.
 const TOP_LIMIT = 5
@@ -49,11 +51,14 @@ export interface ExploreViewModel {
   topSources: SourceOutliers[]
 }
 
-export interface ExploreInput {
+export interface LoadedEvidence {
   // En el orden de la API, que es el del ranking.
   opportunities: readonly Opportunity[]
   // Solo los temas cuya evidencia ya cargó.
   evidenceById: ReadonlyMap<string, readonly Evidence[]>
+}
+
+export interface ExploreInput extends LoadedEvidence {
   filter: ExploreFilter | null
   text: string
 }
@@ -62,6 +67,12 @@ export function parseExploreFilter(query: LocationQuery): ExploreFilter | null {
   const raw = query[EXPLORE_FILTER_PARAM]
   const value = Array.isArray(raw) ? raw[0] : raw
   return EXPLORE_FILTERS.find((filter) => filter === value) ?? null
+}
+
+export function parseExploreText(query: LocationQuery): string {
+  const raw = query[EXPLORE_TEXT_PARAM]
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return value ?? ''
 }
 
 // `is_outlier` lo decide la API (≥ 3×, CLAUDE.md §7): el front no recalcula el umbral.
@@ -74,13 +85,13 @@ const FILTER_MATCHES: Record<ExploreFilter, (piece: Evidence) => boolean> = {
 // NFD separa la tilde de su letra ("á" → "a" + U+0301); quitar las marcas deja "a".
 const COMBINING_MARKS = /\p{M}/gu
 
-function foldForSearch(text: string): string {
+export function foldForSearch(text: string): string {
   return text.normalize('NFD').replace(COMBINING_MARKS, '').toLocaleLowerCase('es')
 }
 
 // La misma URL puede estar en la evidencia de dos temas: se queda con el de mejor puesto, que es
 // el primero que se recorre.
-function collectPieces({ opportunities, evidenceById }: ExploreInput): Piece[] {
+export function collectPieces({ opportunities, evidenceById }: LoadedEvidence): Piece[] {
   const byUrl = new Map<string, Piece>()
   opportunities.forEach((opportunity, index) => {
     for (const evidence of evidenceById.get(opportunity.id) ?? []) {
@@ -164,7 +175,7 @@ function filterPieces(pieces: Piece[], { filter, text }: ExploreInput): Piece[] 
 function loadedEvidenceLists({
   opportunities,
   evidenceById,
-}: ExploreInput): (readonly Evidence[])[] {
+}: LoadedEvidence): (readonly Evidence[])[] {
   return opportunities.flatMap((opportunity) => {
     const list = evidenceById.get(opportunity.id)
     return list === undefined ? [] : [list]
