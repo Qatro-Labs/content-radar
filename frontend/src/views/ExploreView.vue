@@ -11,7 +11,9 @@ import { countLabel, PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
 import {
   buildExploreView,
   EXPLORE_FILTER_PARAM,
+  EXPLORE_TEXT_PARAM,
   parseExploreFilter,
+  parseExploreText,
   type ExploreFilter,
 } from '@/lib/exploreView'
 import { formatUtcTimestamp } from '@/lib/format'
@@ -45,8 +47,17 @@ const loadedEvidence = computed(() => {
 })
 
 const filter = computed(() => parseExploreFilter(route.query))
-// El texto y la pieza elegida no van en la URL: no son un estado que se comparta.
-const text = ref('')
+// El texto va en la URL (`q`) para que la paleta ⌘K abra Explorar con una fuente ya filtrada.
+// Se escribe tal cual, sin recortar: si no, el espacio entre dos palabras se borraría al teclearlo.
+const text = computed({
+  get: () => parseExploreText(route.query),
+  set: (value: string) => {
+    void router.replace({
+      query: { ...route.query, [EXPLORE_TEXT_PARAM]: value === '' ? undefined : value },
+    })
+  },
+})
+// La pieza elegida no va en la URL: no es un estado que se comparta.
 const selectedUrl = ref<string | null>(null)
 
 const view = computed(() =>
