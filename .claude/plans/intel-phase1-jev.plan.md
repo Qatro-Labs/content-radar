@@ -284,7 +284,7 @@ class JudgeResult:
 - **Verificación:** `cd backend && uv run pytest tests/test_jev.py -q`
 - **Commit:** `Add the Jev piece battery and its decision thresholds`
 
-### Paso 3 — Adaptador del SDK
+### Paso 3 — Adaptador del SDK [HECHO]
 
 - **Archivos:** `backend/app/intelligence/jev.py`, `backend/tests/test_jev.py`.
 - **Cambio:** D5 (`TypeSafeJudge`, `build_judge`).

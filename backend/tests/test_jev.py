@@ -1,11 +1,17 @@
 """Batería de pieza de Jev y su conversión a decisiones. Sin red."""
 
+import asyncio
+import json
 from datetime import UTC, datetime
 
+import httpx2
 import pytest
-from typesafe_sdk import Choice
+from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul
 
+from app.core.config import Settings
 from app.intelligence.jev import (
+    TypeSafeJudge,
+    build_judge,
     cache_key,
     excluded_from_llm,
     piece_battery,
@@ -120,3 +126,49 @@ def test_state_trims_description_and_key_is_stable():
         piece_state(make_piece(description="x" * 1500)), "jev-1.13.0"
     )
     assert cache_key(state, "jev-1.13.0") != cache_key(state, "jev-1.14.0")
+
+
+async def test_typesafe_judge_parses_response():
+    received = {}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        received.update(json.loads(request.content))
+        return httpx2.Response(
+            200,
+            json={
+                "model": "jev-1.13.0",
+                "usage": {"input_tokens": 280, "output_tokens": 20},
+                "answers": {
+                    "relevant": {"type": "noul", "noul": 0.9},
+                    "format": {
+                        "type": "choice",
+                        "choice": "news",
+                        "confidence": 0.8,
+                        "probabilities": {"news": 0.8, "demo": 0.2},
+                    },
+                },
+            },
+        )
+
+    client = AsyncTypeSafeClient(
+        api_key="test", model="jev-1.13.0", transport=httpx2.MockTransport(handler)
+    )
+    judge = TypeSafeJudge(client, asyncio.Semaphore(1))
+    questions = {
+        "relevant": Noul(instructions="¿Trata de IA?"),
+        "format": Choice(instructions="¿Formato?", criteria={"news": None, "demo": None}),
+    }
+
+    result = await judge.judge({"title": "Lanzan un agente"}, questions)
+
+    assert received["state"] == {"title": "Lanzan un agente"}
+    assert set(received["questions"]) == {"relevant", "format"}
+    assert received["model"] == "jev-1.13.0"
+    assert result.model == "jev-1.13.0"
+    assert result.answers["relevant"]["noul"] == 0.9
+    assert result.answers["format"]["choice"] == "news"
+    assert (result.input_tokens, result.output_tokens) == (280, 20)
+
+
+def test_build_judge_without_key_is_none():
+    assert build_judge(Settings(typesafe_api_key="")) is None

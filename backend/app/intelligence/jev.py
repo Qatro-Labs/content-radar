@@ -4,18 +4,24 @@ Jev solo emite juicios atómicos; los umbrales y la decisión están aquí, en P
 El texto de la pieza va solo en `state`; nuestras instrucciones, en las preguntas (regla 6).
 """
 
+import asyncio
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 import yaml
-from typesafe_sdk import Choice, Noul, Score
+from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul, Question, Score, TypeSafeError
 
+from app.core.config import Settings
 from app.intelligence.opportunities import Piece
+
+# Excepción base del SDK: los services la capturan sin importar typesafe_sdk.
+JudgeError = TypeSafeError
 
 PIECE_BATTERY = "piece"
 PIECE_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/piece.v1.yaml"
@@ -30,6 +36,8 @@ SCORE_MIN_CONFIDENCE = 0.5
 INJECTION_EXCLUDE = 0.5
 
 REV_SUFFIX = "_rev"
+# El cookbook de TypeSafe usa 6 workers: el endpoint limita por encima de ese ritmo (docs/jev.md).
+JEV_CONCURRENCY = 6
 
 
 class QuestionType(StrEnum):
@@ -63,6 +71,44 @@ class PieceJudgment:
     business_case: bool | None
     exec_readability: int | None  # nivel 0–3; None si la confianza es baja
     latam_context: bool | None
+
+
+@dataclass(frozen=True)
+class JudgeResult:
+    model: str
+    answers: dict[str, Any]  # JSON de cada respuesta, con sus probabilidades
+    input_tokens: int | None
+    output_tokens: int | None
+
+
+class Judge(Protocol):
+    async def judge(
+        self, state: dict[str, Any], questions: Mapping[str, Question]
+    ) -> JudgeResult: ...
+
+
+class TypeSafeJudge:
+    def __init__(self, client: AsyncTypeSafeClient, semaphore: asyncio.Semaphore) -> None:
+        self._client = client
+        self._semaphore = semaphore
+
+    async def judge(self, state: dict[str, Any], questions: Mapping[str, Question]) -> JudgeResult:
+        async with self._semaphore:
+            response = await self._client.system_one(state, questions)
+        return JudgeResult(
+            model=response.model,
+            answers={k: a.model_dump(mode="json") for k, a in response.answers.items()},
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+        )
+
+
+def build_judge(settings: Settings) -> Judge | None:
+    if not settings.typesafe_api_key:
+        return None
+    # Sin `retry`: los reintentos por defecto del SDK (408, 429 y 5xx con backoff) bastan.
+    client = AsyncTypeSafeClient(api_key=settings.typesafe_api_key, model=settings.jev_model)
+    return TypeSafeJudge(client, asyncio.Semaphore(JEV_CONCURRENCY))
 
 
 def load_battery(name: str, path: Path) -> Battery:
