@@ -966,7 +966,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 
 ### Parte B — Lógica del frontend (rama `fe/radar-agent-logic`, worktree)
 
-#### Paso B.1 — Filtros `confidence` y `topic`, reset y resaltados
+#### Paso B.1 — Filtros `confidence` y `topic`, reset y resaltados [HECHO]
 
 - **Archivos:** `frontend/src/lib/radarQuery.ts`, `frontend/src/lib/radarView.ts`,
   `frontend/src/lib/__tests__/radarView.spec.ts`, `frontend/src/composables/__tests__/useRadarQuery.spec.ts` (si
@@ -985,7 +985,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd frontend && pnpm test -- radarView useRadarQuery && pnpm type-check`
 - **Commit:** `Filter the radar by confidence and topic and keep highlights lit`
 
-#### Paso B.2 — Parser SSE y cliente del agente
+#### Paso B.2 — Parser SSE y cliente del agente [HECHO]
 
 - **Archivos:** `frontend/src/lib/sse.ts`, `frontend/src/api/client.ts`, `frontend/src/api/agent.ts`,
   `frontend/src/lib/__tests__/sse.spec.ts`, `frontend/src/api/__tests__/agent.spec.ts`
@@ -1023,7 +1023,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd frontend && pnpm test -- sse agent && pnpm type-check`
 - **Commit:** `Add an SSE client for the radar agent`
 
-#### Paso B.3 — Reproducción, objetivos y petición (puros)
+#### Paso B.3 — Reproducción, objetivos y petición (puros) [HECHO]
 
 - **Archivos:** `frontend/src/lib/agentPlayer.ts`, `frontend/src/lib/agentTargets.ts`,
   `frontend/src/lib/agentRequest.ts` y sus `__tests__/*.spec.ts`
@@ -1053,7 +1053,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd frontend && pnpm test -- agentPlayer agentTargets agentRequest && pnpm type-check`
 - **Commit:** `Add pure playback, target and request logic for the radar agent`
 
-#### Paso B.4 — Presencia y estado del agente
+#### Paso B.4 — Presencia y estado del agente [HECHO]
 
 - **Archivos:** `frontend/src/composables/useAgentPresence.ts`, `frontend/src/composables/useRadarAgent.ts`
   (+ `agentPlayback.ts` si hace falta), `frontend/src/composables/__tests__/useRadarAgent.spec.ts`
@@ -1078,7 +1078,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 
 ### Parte C — Componentes (rama `fe/radar-agent-ui`, worktree)
 
-#### Paso C.1 — Barra, transcripción y cierre
+#### Paso C.1 — Barra, transcripción y cierre [HECHO]
 
 - **Archivos:** `frontend/src/components/agent/{AgentDock,AgentComposer,AgentTranscript,AgentTurn,AgentSteps,AgentEnding}.vue`
 - **Cambio:** lo de «Frontend: componentes» (sin `AgentPresence`). La marca del compositor es la provisional
@@ -1090,7 +1090,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
   en la integración.
 - **Commit:** `Add the agent dock, transcript and answer components`
 
-#### Paso C.2 — Presencia y marca de Rad (espera la elección del artboard «Rad», D14)
+#### Paso C.2 — Presencia y marca de Rad (espera la elección del artboard «Rad», D14) [HECHO]
 
 - **Archivos:** `frontend/src/components/agent/AgentPresence.vue`, `frontend/src/components/agent/RadMark.vue`
   (nuevo), `frontend/src/components/agent/AgentComposer.vue` (sustituye la marca provisional por `RadMark`)
@@ -1099,7 +1099,22 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
     lanza una pasada del haz) y `size: number`;
   - solo `transform` y `opacity`;
   - forma, colores y tiempos según el artboard elegido, que el coordinador añade a este paso antes de lanzarlo.
-- **Nota para la integración:** `useRadarAgent` ya expone `sweepCount`, que sirve como `scanKey`.
+- **Elegido por David (18/10, artboard «Rad»): marca C y presencia P1.**
+  - **`RadMark`:** cuadrado Tinta con ojo Lima.
+    - Esclerótica: `scaleY` de 0,58 en reposo a 1 trabajando.
+    - Iris: `scale` de 1 a 0,48. Pupila: opacidad de 1 a 0.
+    - Anillos r=8,6 y r=4,6, que aparecen al trabajar.
+    - Haz: una pasada por `scanKey`.
+    - Parpadeo: uno por `blinkKey`.
+    - Mirada: hasta 3,2 unidades del viewBox hacia `lookAt`.
+    - Props: `state: RadMarkState { working, scanKey, blinkKey, lookAt }` y `size`.
+  - **`AgentPresence`:** P1, el punto Lima del artboard E, con el rótulo del paso sin prefijo de nombre.
+  - **`AgentDock` y `AgentComposer`:** ganan la prop `mark: RadMarkState`.
+- **Nota para la integración:** `mark` se calcula en `App.vue`:
+  - `working`: `status !== 'idle'`;
+  - `scanKey`: nº de pasos de datos del último turno;
+  - `blinkKey`: nº de turnos `done`;
+  - `lookAt`: la posición de la presencia si es visible, o `null`.
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check`. Manual en la integración.
 - **Commit:** `Add the agent presence layer`
 
