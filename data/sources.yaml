@@ -146,3 +146,14 @@ reddit:
   - { subreddit: "LocalLLaMA", segment: tech, language: en, region: global }
   - { subreddit: "AI_Agents", segment: tech, language: en, region: global }
   # Probado y descartado el 17/10: r/Entrepreneur (1 pieza de IA en la semana por crédito).
+
+instagram:
+  # Últimos reels de cada perfil (como un canal de YouTube): el outlier se mide contra la mediana
+  # del mismo perfil. Verificados el 17/10 con el endpoint de reels: publican cada semana y traen
+  # views. ai_filter: true en los que no son solo de IA.
+  - { handle: "evolving.ai", segment: tech, language: en, region: global }
+  - { handle: "therundownai", segment: tech, language: en, region: global }
+  - { handle: "platzi", segment: latam_es, language: es, region: latam, ai_filter: true }
+  # Probados y descartados el 17/10: @andresbilbao (reels de negocio: ninguno pasa el filtro de IA),
+  # @crece30x (casi todo carruseles y colaboraciones),
+  # @futurepedia.io (sin reels en la última semana), @mreflow (sin reels).
