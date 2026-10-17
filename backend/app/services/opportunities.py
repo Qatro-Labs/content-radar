@@ -12,10 +12,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
 from app.intelligence.clustering import cluster, is_broad, representative
 from app.intelligence.embeddings import embed, embedding_text
-from app.intelligence.jev import PieceJudgment, keep_about_ai
+from app.intelligence.jev import Judge, PieceJudgment, keep_about_ai
 from app.intelligence.opportunities import Piece, TopicResult, build_opportunities
 from app.models import ContentItem, MetricSnapshot, OpportunityRecord, PipelineRun, Source
 from app.schemas.opportunity import (
@@ -29,6 +30,7 @@ from app.schemas.opportunity import (
     TopicEvidence,
 )
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
+from app.services.replicas import ReplicaStats, detect_replicas
 
 ANALYZE_JOB = "analyze"
 LOOKBACK = timedelta(days=14)
@@ -98,6 +100,7 @@ def _to_piece(
         source_kind=SourceKind(source.kind),
         snapshots=snapshots,
         region=source.region,
+        target_url=item.target_url,
     )
 
 
@@ -123,6 +126,7 @@ class ComputedOpportunities:
     analyzed: int  # piezas que entran al clustering
     off_topic_removed: int  # piezas que Jev dice con seguridad que no tratan de IA
     results: list[TopicResult]
+    replicas: ReplicaStats
 
 
 async def compute_opportunities(
@@ -131,18 +135,24 @@ async def compute_opportunities(
     *,
     pieces: list[Piece] | None = None,
     judgments: Mapping[int, PieceJudgment] | None = None,
+    judge: Judge | None,
+    meter: UsageMeter,
 ) -> ComputedOpportunities:
-    """No escribe nada."""
+    """Solo escribe la caché de pares de Jev (`jev_judgments`)."""
     if pieces is None:
         pieces = await load_pieces(session, as_of)
     loaded = pieces
     pieces = keep_about_ai(loaded, judgments or {})
     removed = len(loaded) - len(pieces)
     if not pieces:
-        return ComputedOpportunities(0, removed, [])
+        return ComputedOpportunities(0, removed, [], ReplicaStats(0, 0, 0, 0, 0, 0, 0))
     vectors = embed([embedding_text(p.title, p.description) for p in pieces])
     clusters = cluster(vectors)
     reps = [representative(vectors, c) for c in clusters]
+    # Entre clustering y scores: los pares se buscan dentro de cada tema (CLAUDE.md §7).
+    stories, replica_stats = await detect_replicas(
+        session, pieces, clusters, vectors, judge=judge, meter=meter
+    )
     results = build_opportunities(
         pieces,
         clusters,
@@ -153,8 +163,9 @@ async def compute_opportunities(
         # La referencia de outliers es cómo rinde la cuenta, no cómo rinde en IA (CLAUDE.md §7):
         # también cuentan las piezas que Jev quita por fuera de tema.
         reference=loaded,
+        stories=stories,
     )
-    return ComputedOpportunities(len(pieces), removed, results)
+    return ComputedOpportunities(len(pieces), removed, results, replica_stats)
 
 
 async def save_opportunities(session: AsyncSession, run_id: int, results: list[TopicResult]):

@@ -3,9 +3,11 @@
     uv run python -m app.jobs.analyze
 
 clasificar cada pieza con Jev (cacheado) → quitar lo que no trata de IA → embed → cluster →
-scores deterministas → audience fit con el LLM (cacheado) → persistir.
-Sin TYPESAFE_API_KEY, o si Jev falla, las piezas quedan sin clasificar y el job sigue. Sin
-LLM_API_KEY, o si el LLM falla en un tema, su audience fit queda en null (CLAUDE.md §2, regla 3).
+republicaciones con Jev (cacheado) → scores deterministas → audience fit con el LLM (cacheado) →
+persistir.
+Sin TYPESAFE_API_KEY, o si Jev falla, las piezas quedan sin clasificar, los pares los decide la
+regla de respaldo y el job sigue. Sin LLM_API_KEY, o si el LLM falla en un tema, su audience fit
+queda en null (CLAUDE.md §2, regla 3).
 """
 
 import asyncio
@@ -38,6 +40,7 @@ from app.services.opportunities import (
     load_pieces,
     save_opportunities,
 )
+from app.services.replicas import ReplicaStats
 
 log = structlog.get_logger()
 
@@ -56,12 +59,15 @@ class _Evaluated:
 async def _evaluate(session: AsyncSession, run_id: int, as_of: datetime) -> _Evaluated:
     settings = get_settings()
     loaded = await load_pieces(session, as_of)
-    meter = UsageMeter()
-    jev = await classify_pieces(session, loaded, judge=build_judge(settings), meter=meter)
-    await record_meter(session, meter, pipeline_run_id=run_id)
+    # Un solo cliente y un solo contador de Jev para las baterías de pieza y de par.
+    judge, meter = build_judge(settings), UsageMeter()
+    jev = await classify_pieces(session, loaded, judge=judge, meter=meter)
     answers = await load_judgments(session, loaded)
     judgments = {item_id: to_piece_judgment(item_id, a) for item_id, a in answers.items()}
-    computed = await compute_opportunities(session, as_of, pieces=loaded, judgments=judgments)
+    computed = await compute_opportunities(
+        session, as_of, pieces=loaded, judgments=judgments, judge=judge, meter=meter
+    )
+    await record_meter(session, meter, pipeline_run_id=run_id)
     llm_meter = UsageMeter()
     results, fit, explain = await _fit_and_explain(
         session, computed.results, answers=answers, settings=settings, meter=llm_meter
@@ -98,6 +104,7 @@ def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
         "lifecycle": dict(Counter(r.opportunity.lifecycle.value for r in e.results)),
         "recommendation": dict(Counter(r.opportunity.recommendation.value for r in e.results)),
         "jev": asdict(e.jev),
+        "replicas": asdict(e.computed.replicas),
         "llm": asdict(e.fit),
         "explain": asdict(e.explain),
     }
@@ -122,6 +129,7 @@ def _print_summary(run_id: int, stats: dict[str, Any], evaluated: _Evaluated) ->
     print(f"  jev: {jev.classified} clasificadas · {jev.cached} de caché · {jev.failed} fallidas")
     if jev.skipped_reason:
         print(f"  jev omitido: {jev.skipped_reason}")
+    _print_replicas(evaluated.computed.replicas)
     print(
         f"  llm: {fit.evaluated} evaluados · {fit.cached} de caché · {fit.failed} fallidos · "
         f"{fit.without_evidence} sin piezas seguras"
@@ -140,6 +148,16 @@ def _print_summary(run_id: int, stats: dict[str, Any], evaluated: _Evaluated) ->
             f"{o.source_count} fuentes  fit {o.audience_fit_score}  {o.recommendation.value:13} "
             f"{o.topic[:60]}"
         )
+
+
+def _print_replicas(r: ReplicaStats) -> None:
+    print(
+        f"  republicaciones: {r.replicas} piezas ({r.unverified} sin verificar) · pares: "
+        f"{r.candidates} candidatos · {r.judged} jev · {r.cached} de caché · {r.failed} fallidos · "
+        f"{r.over_budget} fuera de presupuesto"
+    )
+    if r.skipped_reason:
+        print(f"  pares omitidos: {r.skipped_reason}")
 
 
 async def main() -> int:

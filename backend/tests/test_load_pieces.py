@@ -66,3 +66,18 @@ async def test_load_pieces_ignores_pieces_first_observed_after_as_of(session):
     await session.commit()
 
     assert await load_pieces(session, AS_OF) == []
+
+
+async def test_load_pieces_carries_target_url(session):
+    src = Source(
+        platform="hackernews", kind="query", external_id="llm", name="HN · LLM", segment="tech"
+    )
+    linked = item(src, 1, published_at=AS_OF - timedelta(hours=5), last_observed_at=AS_OF)
+    linked.target_url = "https://arstechnica.com/ai/nota"
+    text_only = item(src, 2, published_at=AS_OF - timedelta(hours=4), last_observed_at=AS_OF)
+    session.add_all([src, linked, text_only])
+    await session.commit()
+
+    pieces = await load_pieces(session, AS_OF)
+
+    assert [p.target_url for p in pieces] == ["https://arstechnica.com/ai/nota", None]

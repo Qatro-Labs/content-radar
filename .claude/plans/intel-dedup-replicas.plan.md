@@ -731,7 +731,7 @@ comandos de backend se corren desde `backend/`.
 - **Verificación:** `TEST_DATABASE_URL=postgresql+asyncpg://radar:radar@localhost:5433/radar_test_dedup uv run pytest tests/test_replicas_service.py -q && uv run pyright app/services/replicas.py`
 - **Commit:** `Detect replicated stories with cached Jev pair judgments`
 
-### Paso 6 — Cableado en `compute_opportunities` y `analyze`
+### Paso 6 — Cableado en `compute_opportunities` y `analyze` [HECHO]
 
 - **Archivos:** `backend/app/services/opportunities.py`, `backend/app/jobs/analyze.py`,
   `backend/tests/test_load_pieces.py`
