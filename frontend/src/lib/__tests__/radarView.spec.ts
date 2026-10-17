@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import fixture from '@fixtures/opportunities.json'
 import type { components } from '@/types/api'
 
-import type { RadarQuery } from '../radarQuery'
+import { resetViewPatch, type RadarQuery } from '../radarQuery'
 import {
   buildRadarView,
   counterPatch,
@@ -117,6 +117,29 @@ describe('buildRadarView', () => {
     expect(view.dimmedIds).toEqual(new Set(['opp_002', 'opp_003']))
   })
 
+  it('keeps only the topics with the chosen confidence', () => {
+    const view = buildRadarView(list, query({ confidence: 'high' }))
+
+    expect(ids(view.visible)).toEqual(['opp_001', 'opp_003'])
+    expect(view.isFiltered).toBe(true)
+    expect(radarHeadline(view, query({ confidence: 'high' }))).toBe('2 de 5 temas')
+  })
+
+  it('keeps the topics whose name contains the topic filter, ignoring case', () => {
+    const view = buildRadarView(list, query({ topic: 'AGENTES' }))
+
+    expect(ids(view.visible)).toEqual(['opp_001'])
+    expect(view.isFiltered).toBe(true)
+  })
+
+  it('never dims a highlighted topic, even when the filters leave it out', () => {
+    // D6: opp_001 acelera y el filtro es «Emergentes»; opp_002 emerge pero no está resaltado.
+    const view = buildRadarView(list, query({ lifecycle: ['emerging'], highlight: ['opp_001'] }))
+
+    expect(view.dimmedIds.has('opp_001')).toBe(false)
+    expect(view.dimmedIds).toEqual(new Set(['opp_002', 'opp_003', 'opp_004']))
+  })
+
   it('dims what is not highlighted when there is a highlight', () => {
     const view = buildRadarView(
       list,
@@ -202,6 +225,11 @@ describe('counter filters', () => {
       active: null,
     },
     { case: 'a stage no counter has', filter: { lifecycle: ['peaking'] }, active: null },
+    {
+      case: 'a stage and a confidence',
+      filter: { lifecycle: ['accelerating'], confidence: 'high' },
+      active: null,
+    },
   ] satisfies { case: string; filter: Partial<RadarQuery>; active: string | null }[])(
     'active counter with $case',
     ({ filter, active }) => {
@@ -217,21 +245,31 @@ describe('counter filters', () => {
       gap: false,
       highlight: [],
       recommendation: 'publish_now',
+      confidence: null,
+      topic: null,
     })
     expect(counterPatch('accelerating', current)).toEqual({
       lifecycle: ['accelerating'],
       gap: false,
       highlight: [],
       recommendation: null,
+      confidence: null,
+      topic: null,
     })
   })
 
   it('resets the view when the active counter is pressed again', () => {
-    expect(counterPatch('emerging', query({ lifecycle: ['emerging'] }))).toEqual({
+    expect(counterPatch('emerging', query({ lifecycle: ['emerging'] }))).toEqual(resetViewPatch())
+  })
+
+  it('clears every filter and highlight on reset, keeping selection, period and sort', () => {
+    expect(resetViewPatch()).toEqual({
       lifecycle: [],
       gap: false,
       highlight: [],
       recommendation: null,
+      confidence: null,
+      topic: null,
     })
   })
 })
@@ -359,6 +397,11 @@ describe('radar texts', () => {
       case: 'stages and LATAM gap',
       filter: { lifecycle: ['peaking', 'saturated'], gap: true },
       text: 'Filtro: etapa en pico o saturado · con hueco en LATAM. El resto queda atenuado en el radar.',
+    },
+    {
+      case: 'confidence and topic',
+      filter: { confidence: 'high', topic: 'agentes' },
+      text: 'Filtro: confianza alta · tema «agentes». El resto queda atenuado en el radar.',
     },
   ] satisfies { case: string; filter: Partial<RadarQuery>; text: string }[])(
     'describes the filter: $case',

@@ -3,7 +3,7 @@ import type { components } from '@/types/api'
 import { countLabel } from './evidenceFormat'
 import { formatUtcTimestamp } from './format'
 import { LIFECYCLE_STYLE } from './lifecycle'
-import { RECOMMENDATION_LABEL } from './opportunityFormat'
+import { CONFIDENCE_LABEL, RECOMMENDATION_LABEL } from './opportunityFormat'
 import {
   resetViewPatch,
   type Lifecycle,
@@ -69,7 +69,19 @@ function rankInApiOrder(list: OpportunityList | null): RankedOpportunity[] {
 }
 
 function hasFilters(query: RadarQuery): boolean {
-  return query.lifecycle.length > 0 || query.gap || query.recommendation !== null
+  return (
+    query.lifecycle.length > 0 ||
+    query.gap ||
+    query.recommendation !== null ||
+    query.confidence !== null ||
+    query.topic !== null
+  )
+}
+
+// Igual que `_matches` de backend/app/services/opportunities.py: el tema, por subcadena sin
+// distinguir mayúsculas.
+function topicMatches(opportunity: Opportunity, topic: string | null): boolean {
+  return topic === null || opportunity.topic.toLowerCase().includes(topic.toLowerCase())
 }
 
 function matchesFilters(opportunity: Opportunity, query: RadarQuery): boolean {
@@ -78,7 +90,14 @@ function matchesFilters(opportunity: Opportunity, query: RadarQuery): boolean {
   const gapMatches = !query.gap || opportunity.latam_gap === true
   const recommendationMatches =
     query.recommendation === null || opportunity.recommendation === query.recommendation
-  return stageMatches && gapMatches && recommendationMatches
+  const confidenceMatches = query.confidence === null || opportunity.confidence === query.confidence
+  return (
+    stageMatches &&
+    gapMatches &&
+    recommendationMatches &&
+    confidenceMatches &&
+    topicMatches(opportunity, query.topic)
+  )
 }
 
 // Sin encaje no hay posición en X: dibujarla en 0 se leería "encaje 0".
@@ -86,17 +105,19 @@ export function hasAudienceFit(opportunity: RankedOpportunity): opportunity is P
   return opportunity.audience_fit_score != null
 }
 
+// D6 del plan fe-radar-agent: con resaltados se ilumina lo resaltado aunque un filtro lo deje
+// fuera (el agente resalta lo que va a explicar); sin resaltados, lo que entra en el filtro. La
+// selección nunca se atenúa.
 function collectDimmedIds(
   plotted: PlottedOpportunity[],
   visible: RankedOpportunity[],
   { highlight, selectedId }: { highlight: string[]; selectedId: string | undefined },
 ): Set<string> {
   const visibleIds = new Set(visible.map((opportunity) => opportunity.id))
-  const isInFocus = (id: string) =>
-    visibleIds.has(id) && (highlight.length === 0 || highlight.includes(id))
+  const isLit = (id: string) => (highlight.length > 0 ? highlight.includes(id) : visibleIds.has(id))
   const dimmed = plotted
     .map((opportunity) => opportunity.id)
-    .filter((id) => id !== selectedId && !isInFocus(id))
+    .filter((id) => id !== selectedId && !isLit(id))
   return new Set(dimmed)
 }
 
@@ -131,9 +152,9 @@ function sameStages(a: Lifecycle[], b: Lifecycle[]): boolean {
 }
 
 // D2: un contador está pulsado solo si los filtros son exactamente los suyos; si el agente o la
-// URL ponen otra combinación (varias etapas, `gap`), no hay ninguno pulsado.
-function findActiveCounter(query: RadarQuery): CounterFilter | null {
-  if (query.gap) return null
+// URL ponen otra combinación (varias etapas, `gap`, confianza o tema), no hay ninguno pulsado.
+export function activeCounterOf(query: RadarQuery): CounterFilter | null {
+  if (query.gap || query.confidence !== null || query.topic !== null) return null
   const isActive = (counter: CounterFilter) => {
     const { lifecycle, recommendation } = COUNTER_FILTER[counter]
     return query.recommendation === recommendation && sameStages(query.lifecycle, lifecycle)
@@ -144,7 +165,7 @@ function findActiveCounter(query: RadarQuery): CounterFilter | null {
 // D2: selección única. Pulsar un contador sustituye cualquier otro filtro; pulsar el activo lo
 // quita.
 export function counterPatch(counter: CounterFilter, query: RadarQuery): Partial<RadarQuery> {
-  if (findActiveCounter(query) === counter) return resetViewPatch()
+  if (activeCounterOf(query) === counter) return resetViewPatch()
   return { ...resetViewPatch(), ...COUNTER_FILTER[counter] }
 }
 
@@ -181,7 +202,7 @@ export function buildRadarView(list: OpportunityList | null, query: RadarQuery):
     }),
     selected,
     counts: countAll(ranked),
-    activeCounter: findActiveCounter(query),
+    activeCounter: activeCounterOf(query),
     weekPicks: pickWeek(ranked),
     outlierPieces: sumOutliers(ranked),
   }
@@ -212,6 +233,8 @@ function describeFilters(query: RadarQuery): string {
     parts.push(`para ${RECOMMENDATION_LABEL[query.recommendation].toLowerCase()}`)
   }
   if (query.gap) parts.push('con hueco en LATAM')
+  if (query.confidence) parts.push(`confianza ${CONFIDENCE_LABEL[query.confidence]}`)
+  if (query.topic) parts.push(`tema «${query.topic}»`)
   return parts.join(FILTER_SEPARATOR)
 }
 
