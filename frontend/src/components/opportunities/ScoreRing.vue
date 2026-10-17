@@ -8,10 +8,9 @@ import { formatScore, SCORE_MAX } from '@/lib/opportunityFormat'
 // fe-dashboard-v2).
 const DEFAULT_RING_SIZE_PX = 112
 
-const { score, size = DEFAULT_RING_SIZE_PX } = defineProps<{
+const { score, sizePx = DEFAULT_RING_SIZE_PX } = defineProps<{
   score: number | null
-  // Diámetro en px.
-  size?: number
+  sizePx?: number
 }>()
 
 // DESIGN.md §4 y §7: trazo de 9 px; la cifra cuenta en 450 ms con la curva ease-out de la UI
@@ -19,8 +18,8 @@ const { score, size = DEFAULT_RING_SIZE_PX } = defineProps<{
 const STROKE_WIDTH = 9
 const COUNT_DURATION_MS = 450
 
-const center = computed(() => size / 2)
-const radius = computed(() => (size - STROKE_WIDTH) / 2)
+const center = computed(() => sizePx / 2)
+const radius = computed(() => (sizePx - STROKE_WIDTH) / 2)
 const circumference = computed(() => 2 * Math.PI * radius.value)
 
 const reducedMotion = usePreferredReducedMotion()
@@ -44,11 +43,11 @@ const accessibleLabel = computed(() =>
 <template>
   <div
     class="relative shrink-0"
-    :style="{ width: `${size}px`, height: `${size}px` }"
+    :style="{ width: `${sizePx}px`, height: `${sizePx}px` }"
     role="img"
     :aria-label="accessibleLabel"
   >
-    <svg :viewBox="`0 0 ${size} ${size}`" class="block size-full" aria-hidden="true">
+    <svg :viewBox="`0 0 ${sizePx} ${sizePx}`" class="block size-full" aria-hidden="true">
       <circle
         :cx="center"
         :cy="center"

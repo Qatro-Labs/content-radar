@@ -79,7 +79,7 @@ const BUTTON_CLASS =
     </div>
 
     <div class="flex items-center gap-[18px]">
-      <ScoreRing :score="opportunity.opportunity_score ?? null" :size="PREVIEW_RING_SIZE_PX" />
+      <ScoreRing :score="opportunity.opportunity_score ?? null" :size-px="PREVIEW_RING_SIZE_PX" />
       <div class="flex min-w-0 flex-col items-start gap-2">
         <span class="text-sm text-muted-foreground">
           Oportunidad · puesto {{ opportunity.rank }} de {{ total }}
