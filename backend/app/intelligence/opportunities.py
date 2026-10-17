@@ -86,6 +86,7 @@ class Piece:
     source_kind: SourceKind
     snapshots: list[tuple[datetime, Metrics]] = field(default_factory=list)
     region: str | None = None  # de la fuente; decide si cuenta para el LATAM Gap
+    target_url: str | None = None  # enlace externo de HN y Reddit: delata republicaciones
 
 
 @dataclass

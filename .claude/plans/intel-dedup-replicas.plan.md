@@ -596,7 +596,7 @@ comandos de backend se corren desde `backend/`.
   evidencia de `opp_003` (comprobado), pero se confirma aquí y no en el paso 7.
 - **Commit:** `Add replica fields to the Evidence contract and fixture`
 
-### Paso 2 — Lógica pura de republicaciones
+### Paso 2 — Lógica pura de republicaciones [HECHO]
 
 - **Archivos:** `backend/app/intelligence/replicas.py` (nuevo), `backend/tests/test_replicas.py`
   (nuevo)
