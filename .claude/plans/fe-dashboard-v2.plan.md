@@ -390,7 +390,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 
 ### Parte 2 — Expediente (`fe/dashboard-v2-dossier`)
 
-#### Paso 2.1 — View-model puro del expediente
+#### Paso 2.1 — View-model puro del expediente [HECHO]
 
 - **Archivos:** `src/lib/dossierView.ts`, `src/lib/__tests__/dossierView.spec.ts`
 - **Cambio:**
@@ -419,7 +419,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm test -- dossierView`
 - **Commit:** `Add dossier view model`
 
-#### Paso 2.2 — Cabecera y «Cómo se compone»
+#### Paso 2.2 — Cabecera y «Cómo se compone» [HECHO]
 
 - **Archivos:** `src/components/dossier/DossierHeader.vue`, `src/components/dossier/ScoreComposition.vue`,
   `src/views/DossierView.vue`
@@ -441,7 +441,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Add dossier header and score composition`
 
-#### Paso 2.3 — Evolución
+#### Paso 2.3 — Evolución [HECHO]
 
 - **Archivos:** `src/components/dossier/DossierEvolution.vue`
 - **Cambio:** tarjeta «Evolución»: a la izquierda, badge de `GROWTH_LABEL` y las dos baldosas de `splitTimeline`
@@ -457,7 +457,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Add dossier evolution windows`
 
-#### Paso 2.4 — Por qué importa y criterios con citas
+#### Paso 2.4 — Por qué importa y criterios con citas [HECHO]
 
 - **Archivos:** `src/components/dossier/WhyItMattersSection.vue`, `src/components/dossier/FitCriterion.vue`
 - **Cambio:** `why_it_matters` completo (Geist 18px/1.55, ancho ≤ 720px). Columna izquierda: «Encaje con 30X»,
@@ -471,7 +471,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Add why-it-matters section with cited fit criteria`
 
-#### Paso 2.5 — Evidencia
+#### Paso 2.5 — Evidencia [HECHO]
 
 - **Archivos:** `src/components/dossier/EvidenceSection.vue`, `src/components/dossier/EvidenceRow.vue`,
   `src/components/dossier/AudienceMixBar.vue`, `src/views/DossierView.vue`
@@ -492,7 +492,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Add dossier evidence list with audience mix`
 
-#### Paso 2.6 — Siguiente paso, qué no sabemos y nota al pie
+#### Paso 2.6 — Siguiente paso, qué no sabemos y nota al pie [HECHO]
 
 - **Archivos:** `src/components/dossier/NextStep.vue`, `src/views/DossierView.vue`
 - **Cambio:** tarjeta de dos columnas: izquierda `RecommendationChip` + «El brief parte de esta evidencia y de los
