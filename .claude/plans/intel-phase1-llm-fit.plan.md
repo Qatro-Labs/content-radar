@@ -90,7 +90,7 @@ El plan no traía pasos: `plan-implementer` los deriva de D1–D12, sin decision
 ### Paso 1 — Precio de entrada y salida del LLM (D8) [HECHO]
 ### Paso 2 — Juicios de Jev por pieza y filtro `about_ai` (D4, D5) [HECHO]
 ### Paso 3 — Del nivel de cada criterio a los scores (D6) [HECHO]
-### Paso 4 — Evaluador con el SDK de Anthropic y prompt v1 (D1, D2, D3, D10)
+### Paso 4 — Evaluador con el SDK de Anthropic y prompt v1 (D1, D2, D3, D10) [HECHO]
 ### Paso 5 — Caché `llm_evaluations` y servicio de evaluación (D7, D9, D11)
 ### Paso 6 — Integración en `analyze` y textos que dejan de ser ciertos
 ### Paso 7 — Verificación real contra la DB local (D12)
