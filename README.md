@@ -56,6 +56,21 @@ uv run alembic revision --autogenerate -m "descripcion"
 uv run alembic upgrade head
 ```
 
+## Frontend: puesta en marcha
+
+```bash
+cd frontend
+pnpm install
+pnpm dev                 # http://localhost:5173 · proxy de /api a http://localhost:8000
+```
+
+- Si la API corre en otro puerto: `API_DEV_TARGET=http://localhost:8001 pnpm dev`.
+- Tipos de la API (nunca a mano): con la API levantada, `pnpm gen:api` regenera `src/types/api.ts`.
+  Sin API, desde un JSON: `OPENAPI_URL=ruta/openapi.json pnpm gen:api`.
+- Antes de un PR: `pnpm lint && pnpm type-check && pnpm test && pnpm build`.
+- Producción: `VITE_API_BASE_URL` con la URL pública de la API (ver `frontend/.env.example`).
+- pnpm no instala versiones publicadas hace menos de 7 días (`frontend/pnpm-workspace.yaml`).
+
 ## Recolección periódica
 
 Cada ejecución de `collect` es un snapshot de métricas; el historial de velocidad depende de que corra cada 2 h.
@@ -81,7 +96,7 @@ backend/app/
   mcp/           servidor MCP
   api/routes/    FastAPI (delgado)
   jobs/          pipelines ejecutables por cron
-frontend/        Vue 3 + Vite (pendiente)
+frontend/        Vue 3 + Vite: Radar, Explorar y Crear (vistas en construcción)
 data/            fixtures, evaluaciones y perfiles de audiencia
 docs/            brief de producto y documentación de la entrega
 ```

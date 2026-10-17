@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Solo tema claro (DESIGN.md §10). Sin esta línea, Tailwind v4 activa `dark:` con el modo
+   oscuro del sistema y los componentes de shadcn-vue se oscurecerían a medias. */
+@custom-variant dark (&:is(.dark *));
+
+/* Valores de DESIGN.md §11. En shadcn, `--accent` es el hover de menús; el acento de marca es `--signal`. */
+:root {
+  --background: #f2f3f5;
+  --foreground: #121418;
+  --card: #ffffff;
+  --card-foreground: #121418;
+  --popover: #ffffff;
+  --popover-foreground: #121418;
+  --primary: #121418;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f3f5;
+  --secondary-foreground: #121418;
+  --muted: #f6f7f8;
+  --muted-foreground: #626873;
+  --accent: #f2f3f5;
+  --accent-foreground: #121418;
+  --destructive: #b0262c;
+  --border: #e6e8eb;
+  --input: #e6e8eb;
+  --ring: #121418;
+  --radius: 0.75rem;
+
+  --signal: #c6f432;
+  --signal-foreground: #121418;
+  --signal-wash: rgb(198 244 50 / 0.16);
+  --ink-soft: #3d434c;
+  --track: #eceef1;
+  --sunken: #f6f7f8;
+  --plot: #f7f8f9;
+  --notice: #fff4e5;
+  --notice-foreground: #8a4b00;
+
+  --lc-emerging: #3d7bff;
+  --lc-emerging-bg: #e8f0ff;
+  --lc-emerging-fg: #1d4fc4;
+  --lc-accelerating: #b5e61d;
+  --lc-accelerating-stroke: #6e8f00;
+  --lc-accelerating-bg: #eef9cc;
+  --lc-accelerating-fg: #3c5a00;
+  --lc-peaking: #ff9a3c;
+  --lc-peaking-stroke: #e07a14;
+  --lc-peaking-bg: #fff0e0;
+  --lc-peaking-fg: #9a4a00;
+  --lc-saturated: #f0565c;
+  --lc-saturated-bg: #fde8e9;
+  --lc-saturated-fg: #b0262c;
+  --lc-unknown: #8a919c;
+  --lc-unknown-bg: #f0f1f3;
+  --lc-unknown-fg: #50565f;
+}
+
+/* Van aquí y no en `:root` + `@theme inline` (como sugiere DESIGN.md §11) porque comparten nombre
+   con su utilidad: así no quedan definidas como `var()` de sí mismas. */
+@theme {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --shadow-float: 0 14px 32px -10px rgb(18 20 24 / 0.22), 0 2px 6px rgb(18 20 24 / 0.06);
+}
+
+@theme inline {
+  --font-sans: 'Geist Variable', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Geist Variable', sans-serif;
+  /* Los componentes de shadcn-vue usan `font-heading` en sus títulos: van en display. */
+  --font-heading: var(--font-display);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
+  --color-signal-wash: var(--signal-wash);
+  --color-ink-soft: var(--ink-soft);
+  --color-track: var(--track);
+  --color-sunken: var(--sunken);
+  --color-plot: var(--plot);
+  --color-notice: var(--notice);
+  --color-notice-foreground: var(--notice-foreground);
+  --radius-card: 1.25rem;
+  --radius-tile: 0.875rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}

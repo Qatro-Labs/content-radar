@@ -1,0 +1,67 @@
+import type { LocationQuery, LocationQueryValue } from 'vue-router'
+
+// Replican los enums del contrato `Opportunity` (CLAUDE.md §6). Hacen falta en tiempo de
+// ejecución para validar la URL; cuando el contrato llegue a main (PR #7), se comprueban con
+// `satisfies` contra src/types/api.ts para que el compilador avise si divergen.
+export const PERIODS = ['24h', '7d', '30d'] as const
+export const LIFECYCLES = ['emerging', 'accelerating', 'peaking', 'saturated', 'unknown'] as const
+export const CONFIDENCES = ['low', 'medium', 'high'] as const
+
+export type Period = (typeof PERIODS)[number]
+export type Lifecycle = (typeof LIFECYCLES)[number]
+export type Confidence = (typeof CONFIDENCES)[number]
+
+export const DEFAULT_PERIOD: Period = '7d'
+const LIST_SEPARATOR = ','
+
+// La URL es la única fuente de verdad del estado del Radar: los filtros, el usuario y el
+// agente de la app lo cambian igual, y cualquier estado se puede compartir y repetir.
+export interface RadarQuery {
+  period: Period
+  lifecycle: Lifecycle | null
+  confidence: Confidence | null
+  topic: string | null
+  selected: string | null
+  highlight: string[]
+}
+
+export const RADAR_QUERY_KEYS = [
+  'period',
+  'lifecycle',
+  'confidence',
+  'topic',
+  'selected',
+  'highlight',
+] as const satisfies readonly (keyof RadarQuery)[]
+
+function firstValue(value: LocationQueryValue | LocationQueryValue[] | undefined): string | null {
+  const first = Array.isArray(value) ? value[0] : value
+  return first || null
+}
+
+function oneOf<T extends string>(allowed: readonly T[], value: string | null): T | null {
+  return allowed.find((option) => option === value) ?? null
+}
+
+export function parseRadarQuery(query: LocationQuery): RadarQuery {
+  const highlight = firstValue(query.highlight)
+  return {
+    period: oneOf(PERIODS, firstValue(query.period)) ?? DEFAULT_PERIOD,
+    lifecycle: oneOf(LIFECYCLES, firstValue(query.lifecycle)),
+    confidence: oneOf(CONFIDENCES, firstValue(query.confidence)),
+    topic: firstValue(query.topic),
+    selected: firstValue(query.selected),
+    highlight: highlight ? highlight.split(LIST_SEPARATOR).filter(Boolean) : [],
+  }
+}
+
+export function serializeRadarQuery(state: RadarQuery): Record<string, string> {
+  const params: Record<string, string> = {}
+  if (state.period !== DEFAULT_PERIOD) params.period = state.period
+  if (state.lifecycle) params.lifecycle = state.lifecycle
+  if (state.confidence) params.confidence = state.confidence
+  if (state.topic) params.topic = state.topic
+  if (state.selected) params.selected = state.selected
+  if (state.highlight.length > 0) params.highlight = state.highlight.join(LIST_SEPARATOR)
+  return params
+}
