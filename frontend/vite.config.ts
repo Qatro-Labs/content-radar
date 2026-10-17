@@ -32,6 +32,9 @@ export default defineConfig({
     },
   },
   build: {
+    // ECharts con solo scatter, effectScatter, bar y grid (lib/echarts.ts) ya pesa ~590 kB:
+    // es el suelo, no un chunk que haya que partir más.
+    chunkSizeWarningLimit: 650,
     rollupOptions: {
       output: {
         manualChunks: (id) => (ECHARTS_MODULE.test(id) ? ECHARTS_CHUNK : null),

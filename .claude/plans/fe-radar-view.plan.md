@@ -541,7 +541,7 @@ visual del contexto verificado.
     - con `?lifecycle=peaking,saturated`, la burbuja que latía se atenúa en su sitio (~320 ms), sin desaparecer.
 - **Commit:** `Sync the bubble entry with the sweep and fade dimmed bubbles in place`
 
-### Paso 13 — Correcciones de la auditoría (D14)
+### Paso 13 — Correcciones de la auditoría (D14) [HECHO]
 
 - **Archivos:**
   - `frontend/src/assets/main.css` y `DESIGN.md` §11;
@@ -565,7 +565,8 @@ visual del contexto verificado.
      `OpportunityRadar` y `RadarStates`.
   6. `DataStatus`: `motion-reduce:animate-none` en el `animate-pulse`.
   7. `vite.config.ts`: `build.rollupOptions.output.manualChunks` separa `echarts`/`vue-echarts` en su propio chunk,
-     para que no salga el aviso de 711 kB.
+     para que no salga el aviso de 711 kB. El chunk de ECharts sigue en ~590 kB (es el suelo con el registro mínimo):
+     `chunkSizeWarningLimit: 650` con un comentario (decisión del coordinador).
 - **Test primero:**
   - `radarView.spec.ts`: actualiza las dos expectativas de la frase ("Hay 5 temas analizados esta semana." y la del
     singular).

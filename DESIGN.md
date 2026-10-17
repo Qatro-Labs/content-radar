@@ -131,7 +131,7 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   negrita. Columnas: Puesto · Tema · Etapa · Aceleración · Outliers · Fuentes · Oportunidad (barra + cifra) · Acción.
 - **Carga:** skeletons con la forma exacta del contenido (#ECEEF1 → #F2F3F5, 1.6s). Nada de spinners circulares.
 - **Vacío:** si hay menos oportunidades que las esperadas, se muestran las que hay y una frase que explica por qué
-  ("Hay 7 temas con datos suficientes esta semana"). Nunca se rellena.
+  ("Hay 7 temas analizados esta semana"). Nunca se rellena.
 - **Error:** inline, en la tarjeta afectada, con qué falló y qué sigue funcionando.
 - **Foco:** anillo de 2px en Tinta con 2px de separación, siempre visible al navegar con teclado.
 
