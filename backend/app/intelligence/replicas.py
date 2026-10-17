@@ -239,10 +239,16 @@ def replica_notes(replicas: int, *, unverified: bool) -> list[str]:
     if replicas == 0:
         return []
     if replicas == 1:
-        count = "1 pieza es una republicación de la misma nota"
+        text = (
+            "1 pieza es una republicación de la misma nota: no cuenta como fuente independiente "
+            "ni para la saturación."
+        )
     else:
-        count = f"{replicas} piezas son republicaciones de la misma nota"
-    notes = [f"{count}: no cuentan como fuentes independientes ni para la saturación."]
+        text = (
+            f"{replicas} piezas son republicaciones de la misma nota: no cuentan como fuentes "
+            "independientes ni para la saturación."
+        )
+    notes = [text]
     if unverified:
         notes.append(REPLICAS_UNVERIFIED_NOTE)
     return notes

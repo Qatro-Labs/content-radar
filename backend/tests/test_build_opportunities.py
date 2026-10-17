@@ -372,6 +372,16 @@ def test_replica_on_another_platform_adds_no_platform():
     assert o.description.endswith("de 2 fuentes independientes (hackernews, rss).")
 
 
+def test_copy_on_another_platform_keeps_the_single_platform_note():
+    hn = [piece(i, hours_ago=5 + i * 6) for i in range(5)]
+    # La única pieza de YouTube republica la HN 0: el tema sigue en una sola plataforma.
+    video = piece(20, hours_ago=1, platform=Platform.YOUTUBE, source="Canal")
+    pieces = [*hn, video]
+    stories = group_stories(pieces, [ReplicaEdge(0, 20, ReplicaBasis.JEV)])
+    o = build_with(pieces, stories).opportunity
+    assert "Solo aparece en una plataforma (hackernews)." in o.limitations
+
+
 def test_replicas_do_not_raise_saturation():
     plain = [piece(i, hours_ago=5 + i * 6, platform=Platform.RSS, source=f"A{i}") for i in range(6)]
     copied = [

@@ -193,7 +193,6 @@ def _why_it_matters(topic: _ActiveTopic, source_count: int, outlier_count: int) 
 @dataclass
 class _TopicFacts:
     outlets: set[str]  # solo de las piezas originales
-    platforms: set[Platform]
     original_platforms: set[Platform]
     ratios: list[float | None]
     outlier_count: int
@@ -215,7 +214,6 @@ def _topic_facts(
     replica_ids = frozenset(p.item_id for p in group) & stories.replica_ids
     return _TopicFacts(
         outlets={outlet_key(p.platform.value, p.source_name) for p in originals},
-        platforms={p.platform for p in group},
         original_platforms={p.platform for p in originals},
         ratios=ratios,
         outlier_count=sum(r >= out.OUTLIER_RATIO for r in flagged),
@@ -233,7 +231,7 @@ def _originals(group: Sequence[Piece], stories: StoryAssignment) -> list[Piece]:
 def _limitations(
     growth: GrowthStatus, facts: _TopicFacts, *, since: datetime, broad: bool
 ) -> list[str]:
-    platforms, ratios = facts.platforms, facts.ratios
+    platforms, ratios = facts.original_platforms, facts.ratios
     notes = [
         f"El monitoreo comenzó el {since:%d/%m}: los periodos anteriores no son históricos.",
         LLM_PENDING_NOTE,
