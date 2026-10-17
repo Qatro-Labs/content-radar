@@ -50,13 +50,13 @@ MAX_PAIR_JUDGMENTS_PER_RUN = 250
 
 @dataclass
 class ReplicaStats:
-    candidates: int
-    judged: int  # llamadas nuevas con respuesta
-    cached: int
-    failed: int  # JudgeError
-    over_budget: int
-    replicas: int  # piezas marcadas como republicación
-    unverified: int
+    candidates: int = 0
+    judged: int = 0  # llamadas nuevas con respuesta
+    cached: int = 0
+    failed: int = 0  # JudgeError
+    over_budget: int = 0
+    replicas: int = 0  # piezas marcadas como republicación
+    unverified: int = 0
     skipped_reason: str | None = None
 
 
@@ -150,10 +150,10 @@ def _decide_pairs(
 
 async def detect_replicas(
     session: AsyncSession,
+    *,
     pieces: Sequence[Piece],
     clusters: Sequence[Sequence[int]],
     vectors: np.ndarray,
-    *,
     judge: Judge | None,
     meter: UsageMeter,
 ) -> tuple[StoryAssignment, ReplicaStats]:
@@ -171,13 +171,14 @@ async def detect_replicas(
 
     decisions = _decide_pairs(candidates, keys, judged.answers)
     stories = group_stories(pieces, edges + decisions.edges, independent=decisions.independent)
-    stats = _stats(keys, cached, judged, stories)
+    stats = _stats(keys, cached=cached, judged=judged, stories=stories)
     stats.skipped_reason = SKIPPED_WITHOUT_KEY if judge is None else None
     return stories, stats
 
 
 def _stats(
     keys: Sequence[str],
+    *,
     cached: dict[str, dict[str, Any]],
     judged: _Judged,
     stories: StoryAssignment,

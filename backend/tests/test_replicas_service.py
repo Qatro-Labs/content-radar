@@ -54,7 +54,12 @@ def two_pieces(similarity: float, *, offset: int = 0):
 async def detect(session, similarity: float, judge, meter=None):
     pieces, vectors = two_pieces(similarity)
     return await detect_replicas(
-        session, pieces, [[0, 1]], vectors, judge=judge, meter=meter or UsageMeter()
+        session,
+        pieces=pieces,
+        clusters=[[0, 1]],
+        vectors=vectors,
+        judge=judge,
+        meter=meter or UsageMeter(),
     )
 
 
@@ -126,7 +131,12 @@ async def test_jev_independent_pair_breaks_rule_chain(session):
     vectors = np.array([[math.cos(k * theta), math.sin(k * theta)] for k in range(3)])
     judge = SelectivePairJudge(independent=("Nota 1", "Nota 3"))
     stories, stats = await detect_replicas(
-        session, pieces, [[0, 1, 2]], vectors, judge=judge, meter=UsageMeter()
+        session,
+        pieces=pieces,
+        clusters=[[0, 1, 2]],
+        vectors=vectors,
+        judge=judge,
+        meter=UsageMeter(),
     )
     assert (stats.candidates, stats.judged, stats.failed) == (3, 1, 2)
     assert stories.representative_of == {}
@@ -145,9 +155,9 @@ async def test_budget_caps_new_calls(session, monkeypatch):
     judge = FakePairJudge()
     stories, stats = await detect_replicas(
         session,
-        [*low, *high],
-        [[0, 1], [2, 3]],
-        np.vstack([low_vectors, high_vectors]),
+        pieces=[*low, *high],
+        clusters=[[0, 1], [2, 3]],
+        vectors=np.vstack([low_vectors, high_vectors]),
         judge=judge,
         meter=UsageMeter(),
     )
@@ -176,9 +186,9 @@ async def test_no_candidates_makes_no_queries_or_calls():
     judge = FakePairJudge()
     stories, stats = await detect_replicas(
         NoSession(),  # type: ignore[arg-type]  # falla si se toca la DB
-        [a, b],
-        [[0, 1]],
-        np.array([[1.0, 0.0], [1.0, 0.0]]),
+        pieces=[a, b],
+        clusters=[[0, 1]],
+        vectors=np.array([[1.0, 0.0], [1.0, 0.0]]),
         judge=judge,
         meter=UsageMeter(),
     )

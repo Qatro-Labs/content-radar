@@ -147,12 +147,12 @@ async def compute_opportunities(
     pieces = keep_about_ai(loaded, judgments or {})
     removed = len(loaded) - len(pieces)
     if not pieces:
-        return ComputedOpportunities(0, removed, [], ReplicaStats(0, 0, 0, 0, 0, 0, 0))
+        return ComputedOpportunities(0, removed, [], ReplicaStats())
     vectors = embed([embedding_text(p.title, p.description) for p in pieces])
     clusters = cluster(vectors)
     # Entre clustering y scores: los pares se buscan dentro de cada tema (CLAUDE.md §7).
     stories, replica_stats = await detect_replicas(
-        session, pieces, clusters, vectors, judge=judge, meter=meter
+        session, pieces=pieces, clusters=clusters, vectors=vectors, judge=judge, meter=meter
     )
     results = _scored_topics(pieces, vectors, clusters, loaded=loaded, stories=stories, as_of=as_of)
     return ComputedOpportunities(len(pieces), removed, results, replica_stats)
