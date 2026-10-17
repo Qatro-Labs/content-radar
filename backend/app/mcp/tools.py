@@ -4,15 +4,20 @@ Los docstrings de los métodos son la descripción que lee el asistente. Toda sa
 saneado del agente (regla 6): el texto de las piezas y temas viene de Internet o del LLM.
 """
 
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Annotated
 
 from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import BaseModel, Field
 
 from app.agent.sanitize import clean_tree
+from app.schemas.cost import CostPeriod, OperatingCost
 from app.schemas.mcp import (
+    AudienceFitComparison,
     EvidenceLink,
+    FitComparisonItem,
     OpportunityAnalysis,
+    SignalSearch,
     TrendingOpportunities,
     TrendingOpportunity,
 )
@@ -22,7 +27,8 @@ from app.schemas.opportunity import (
     Evidence,
     Lifecycle,
 )
-from app.services import opportunities
+from app.schemas.signal import Platform, Segment
+from app.services import costs, opportunities, signals
 from app.services.opportunities import MONITORING_STARTED_AT, SERVED_PERIOD, ServedOpportunity
 
 if TYPE_CHECKING:
@@ -33,6 +39,13 @@ MAX_TRENDING = 10
 MAX_TOPIC_FILTER_CHARS = 60
 EVIDENCE_PER_OPPORTUNITY = 3
 MAX_ANALYZED_EVIDENCE = 15
+MAX_QUERY_CHARS = 80
+DEFAULT_SEARCH_DAYS = 14
+MAX_SEARCH_DAYS = 30
+DEFAULT_SEARCH_RESULTS = 10
+MAX_SEARCH_RESULTS = 20
+MIN_COMPARED = 2
+MAX_COMPARED = 5
 
 COVERAGE_NOTE = (
     "Ranking sobre las fuentes que monitoreamos (YouTube, Hacker News, medios y RSS). "
@@ -43,6 +56,7 @@ UNKNOWN_OPPORTUNITY = (
     "No existe la oportunidad {ids} en la ejecución servida. "
     "Usa get_trending_opportunities para ver los ids válidos."
 )
+EMPTY_QUERY = "La búsqueda necesita al menos una palabra de 2 caracteres o más."
 
 OpportunityId = Annotated[
     str,
@@ -144,3 +158,86 @@ class RadarTools:
                 timeline=served.timeline,
             )
         )
+
+    async def search_content_signals(
+        self,
+        query: Annotated[
+            str,
+            Field(
+                min_length=signals.MIN_SEARCH_TERM_CHARS,
+                max_length=MAX_QUERY_CHARS,
+                description="Palabras que deben aparecer todas (p. ej. 'agentes ventas')",
+            ),
+        ],
+        platform: Annotated[
+            Platform | None, Field(description="Solo piezas de esta plataforma")
+        ] = None,
+        segment: Annotated[
+            Segment | None,
+            Field(description="Solo fuentes de este segmento (latam_es = fuentes en español)"),
+        ] = None,
+        days: Annotated[
+            int, Field(ge=1, le=MAX_SEARCH_DAYS, description="Publicadas en los últimos N días")
+        ] = DEFAULT_SEARCH_DAYS,
+        limit: Annotated[
+            int, Field(ge=1, le=MAX_SEARCH_RESULTS, description="Cuántas piezas devolver")
+        ] = DEFAULT_SEARCH_RESULTS,
+    ) -> SignalSearch:
+        """Busca piezas públicas ya recolectadas en las fuentes que monitoreamos (no busca en la
+        web ni en LinkedIn). Todas las palabras deben aparecer en el título o la descripción, sin
+        distinguir mayúsculas; prueba también la palabra en inglés y en español. Devuelve las más
+        recientes primero, con URL, fuente, fechas, métricas públicas del último snapshot (null =
+        no disponible) y los ids de las oportunidades del ranking que contienen cada pieza."""
+        since = datetime.now(UTC) - timedelta(days=days)
+        async with self._deps.session_factory() as session:
+            try:
+                hits = await signals.search_signals(
+                    session,
+                    query=query,
+                    platform=platform,
+                    segment=segment,
+                    since=since,
+                    limit=limit,
+                )
+            except ValueError as e:
+                raise ToolError(EMPTY_QUERY) from e
+        return _sanitized(SignalSearch(query=query, days=days, items=hits, coverage=COVERAGE_NOTE))
+
+    async def compare_audience_fit(
+        self,
+        opportunity_ids: Annotated[
+            list[OpportunityId],
+            Field(
+                min_length=MIN_COMPARED,
+                max_length=MAX_COMPARED,
+                description="Ids de las oportunidades a comparar, en el orden en que se quieren",
+            ),
+        ],
+    ) -> AudienceFitComparison:
+        """Compara el encaje con la audiencia de 30X de 2 a 5 oportunidades: score 0–100 y los 6
+        criterios de la rúbrica (nivel 0–5, justificación y URLs), mezcla de audiencias, LATAM
+        Gap, recomendación y confianza. Un score null significa sin evaluar. Es una evaluación
+        editorial asistida por IA, no una medición."""
+        # Un id repetido se compara una vez, en su primera posición.
+        served = await self._served(list(dict.fromkeys(opportunity_ids)))
+        return _sanitized(
+            AudienceFitComparison(
+                items=[
+                    FitComparisonItem.model_validate(s.opportunity, from_attributes=True)
+                    for s in served
+                ]
+            )
+        )
+
+    async def get_operating_cost(
+        self,
+        period: Annotated[
+            CostPeriod, Field(description="Ventana del coste medido: 7d o 30d")
+        ] = CostPeriod.WEEK,
+    ) -> OperatingCost:
+        """Coste medido de operar el radar (APIs de datos, Jev y LLM) en los últimos 7 o 30 días,
+        por proveedor, y la proyección mensual por perfil de despliegue. La proyección es una
+        estimación: preséntala siempre separada del coste medido."""
+        async with self._deps.session_factory() as session:
+            cost = await costs.operating_cost(session, period, now=datetime.now(UTC))
+        return _sanitized(cost)

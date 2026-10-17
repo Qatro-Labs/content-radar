@@ -97,7 +97,14 @@ def transport_security(public_url: str) -> TransportSecuritySettings:
 def build_mcp_server(deps: McpDeps) -> MCPServer:
     server = MCPServer(SERVER_NAME, instructions=INSTRUCTIONS, log_level=SDK_LOG_LEVEL)
     tools = RadarTools(deps)
-    for tool in (tools.get_trending_opportunities, tools.analyze_opportunity):
+    read_only = (
+        tools.get_trending_opportunities,
+        tools.analyze_opportunity,
+        tools.search_content_signals,
+        tools.compare_audience_fit,
+        tools.get_operating_cost,
+    )
+    for tool in read_only:
         server.add_tool(tool, annotations=READ_ONLY)
     return server
 

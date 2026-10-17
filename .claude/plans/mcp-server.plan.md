@@ -622,7 +622,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest tests/test_mcp.py -q`
 - **Commit:** `Add MCP server with trending and opportunity analysis tools`
 
-### Paso 6 — Búsqueda, comparación de encaje y coste (D8, D13)
+### Paso 6 — Búsqueda, comparación de encaje y coste (D8, D13) [HECHO]
 
 - **Archivos:** `backend/app/mcp/tools.py`, `backend/tests/test_mcp.py`
 - **Cambio:** `search_content_signals` (convierte `ValueError` de `search_signals` en

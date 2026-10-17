@@ -6,6 +6,7 @@ dentro falla en el teardown (anyio cierra sus task groups en otra tarea).
 
 import asyncio
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -14,11 +15,16 @@ from mcp.types import CallToolResult, TextContent
 
 from app.agent.limits import RateLimiter
 from app.agent.sanitize import clean_tree
+from app.collectors.usage import UsageMeter
 from app.mcp.server import McpDeps, build_mcp_server, transport_security
-from app.mcp.tools import NO_DATA
+from app.mcp.tools import COVERAGE_NOTE, NO_DATA
+from app.schemas.cost import CostPeriod, Provider
+from app.services import costs
+from app.services.costs import record_meter
 from app.services.opportunities import get_served
 from tests.test_editorial_brief import FakeBriefer
 from tests.test_opportunity_routes import add_run, fixture_results
+from tests.test_search_signals import item, source
 
 LOCAL_HOSTS = ["127.0.0.1:*", "localhost:*", "[::1]:*"]
 LOCAL_ORIGINS = ["http://127.0.0.1:*", "http://localhost:*", "http://[::1]:*"]
@@ -169,3 +175,72 @@ def test_transport_security_follows_the_public_url(public_url, hosts, origins):
 def test_invalid_public_url_fails_at_startup():
     with pytest.raises(ValueError, match="MCP_PUBLIC_URL"):
         transport_security("radar.example")
+
+
+async def test_search_through_mcp_returns_urls_and_coverage(session):
+    yesterday = datetime.now(UTC) - timedelta(days=1)
+    found = item(source(), "Agentes en la empresa", published_at=yesterday)
+    session.add(found)
+    await session.commit()
+
+    async with Client(build_mcp_server(deps(session))) as c:
+        out = structured(await c.call_tool("search_content_signals", {"query": "agentes"}))
+
+    assert [h["url"] for h in out["items"]] == [found.url]
+    assert out["coverage"] == COVERAGE_NOTE
+
+
+async def test_compare_keeps_requested_order_and_null_fit(session):
+    await add_run(session, fixture_results())
+
+    async with Client(build_mcp_server(deps(session))) as c:
+        result = await c.call_tool(
+            "compare_audience_fit", {"opportunity_ids": ["opp_005", "opp_001"]}
+        )
+
+    unevaluated, evaluated = structured(result)["items"]
+    assert (unevaluated["id"], evaluated["id"]) == ("opp_005", "opp_001")
+    assert unevaluated["audience_fit_score"] is None
+    assert unevaluated["audience_fit_criteria"] is None
+    assert len(evaluated["audience_fit_criteria"]) == 6
+
+
+async def test_compare_names_unknown_ids(session):
+    await add_run(session, fixture_results())
+
+    async with Client(build_mcp_server(deps(session))) as c:
+        result = await c.call_tool(
+            "compare_audience_fit", {"opportunity_ids": ["opp_001", "opp_999"]}
+        )
+
+    assert result.is_error
+    assert "opp_999" in text_of(result)
+
+
+@pytest.mark.parametrize("count", [1, 6], ids=["one", "six"])
+async def test_compare_needs_two_to_five_ids(session, count):
+    await add_run(session, fixture_results())
+    # Todos existen: solo el límite del schema puede rechazarlos (el sexto se repetiría).
+    ids = ["opp_001", "opp_002", "opp_003", "opp_004", "opp_005", "opp_001"][:count]
+
+    async with Client(build_mcp_server(deps(session))) as c:
+        result = await c.call_tool("compare_audience_fit", {"opportunity_ids": ids})
+
+    assert result.is_error
+    assert "opportunity_ids" in text_of(result)
+
+
+async def test_operating_cost_matches_the_service(session):
+    meter = UsageMeter()
+    meter.add(Provider.LLM_TEXT, "evaluate_topic", units=600, output_units=200)
+    await record_meter(session, meter)
+
+    async with Client(build_mcp_server(deps(session))) as c:
+        out = structured(await c.call_tool("get_operating_cost", {}))
+    expected = (
+        await costs.operating_cost(session, CostPeriod.WEEK, now=datetime.now(UTC))
+    ).model_dump(mode="json")
+
+    assert out["period"] == expected["period"] == "7d"
+    assert out["measured"]["total_usd"] == expected["measured"]["total_usd"]
+    assert out["measured"]["providers"] == expected["measured"]["providers"]
