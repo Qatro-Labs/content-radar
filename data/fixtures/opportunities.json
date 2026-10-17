@@ -153,17 +153,17 @@
           "business": 0.0,
           "latam_es": 1.0
         },
-        "audience_fit_score": 70,
+        "audience_fit_score": null,
         "cross_source_score": 10,
         "saturation_score": 10,
-        "actionability_score": 50,
-        "opportunity_score": 44.0,
+        "actionability_score": null,
+        "opportunity_score": null,
         "confidence": "low",
         "source_count": 1,
         "evidence_strength": 12,
         "latam_gap": null,
         "recommendation": "wait_for_case",
-        "why_it_matters": "Puede importar a directivos, pero hoy solo hay una fuente; esperar confirmación.",
+        "why_it_matters": "Hoy solo hay una fuente; esperar confirmación. Audience fit todavía sin evaluar.",
         "limitations": [
           "Una sola fuente: no hay validación cruzada.",
           "Sin aceleración demostrada."

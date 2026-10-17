@@ -135,11 +135,11 @@ Grupos para el **LATAM Opportunity Gap**:
   "outlier_count": 3,                  // piezas del tema con outlier_ratio ≥ 3
   "top_outlier_ratio": 6.1,
   "audience_mix": {"tech": 0.7, "business": 0.2, "latam_es": 0.1},
-  "audience_fit_score": 0-100,
+  "audience_fit_score": 0-100 | null,  // LLM; null = sin evaluar
   "cross_source_score": 0-100,
   "saturation_score": 0-100,
-  "actionability_score": 0-100,
-  "opportunity_score": 0-100,
+  "actionability_score": 0-100 | null, // LLM; null = sin evaluar
+  "opportunity_score": 0-100 | null,   // null si falta audience fit
   "confidence": "low | medium | high",
   "source_count": 4,
   "evidence_strength": 0-100,          // normalizado: NO sumar views entre plataformas

@@ -95,11 +95,12 @@ class Opportunity(BaseModel):
     outlier_count: int = Field(ge=0)
     top_outlier_ratio: float | None = Field(default=None, ge=0)
     audience_mix: AudienceMix
-    audience_fit_score: Score
+    # Los calcula el LLM (rúbrica de §7). None = todavía sin evaluar; nunca un valor inventado.
+    audience_fit_score: Score | None = None
     cross_source_score: Score
     saturation_score: Score
-    actionability_score: Score
-    opportunity_score: Score
+    actionability_score: Score | None = None
+    opportunity_score: Score | None = Field(default=None, description="None sin audience fit")
     confidence: Confidence
     source_count: int = Field(ge=0, description="Fuentes independientes")
     evidence_strength: float = Field(
