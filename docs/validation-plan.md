@@ -17,12 +17,13 @@
 | Target | LATAM (España fuera). LATAM Gap = acelera en las fuentes globales y todavía es bajo en LATAM | $0 |
 | Redes sociales | YouTube (con Shorts) automático; LinkedIn, Instagram y TikTok por sensor editorial manual (CSV). Grok Bot fuera; X en el roadmap | $0 |
 | Medios LATAM | RSS → news sitemap → Firecrawl (free tier) solo como respaldo | $0 |
-| Explicación | Rasgos deterministas (gancho, formato, timing, autor, difusión) con lift y n; el LLM solo redacta | Céntimos por ejecución |
+| Clasificación y fit | Jev (TypeSafe): batería de pieza (formato, gancho, pilar…) y de tema (6 criterios del fit); Python combina con umbrales y pesos (`docs/jev.md`) | < 2 $ al mes |
+| Explicación | Lift de los rasgos de Jev + timing, autor y difusión (Python), con n; el LLM generativo solo redacta y Jev verifica cada afirmación | Céntimos por ejecución |
 | Consulta | MCP (Claude, ChatGPT o Grok, con la suscripción del usuario) sobre los mismos services que el dashboard | $0 para nosotros |
 | Validación | Backtest, estabilidad del ranking, ranking ciego de 30X, Google Trends por país | $0 |
 
 **Orden:**
-1. P0: YouTube, rutas `/opportunities`, `30x.yaml` y audience fit.
+1. P0: YouTube, rutas `/opportunities`, `30x.yaml` y audience fit con Jev.
 2. Explicación determinista y test de Poisson.
 3. Servidor MCP + brief.
 4. Backtest, estabilidad y ranking ciego.
@@ -38,7 +39,7 @@ Un data scientist de inteligencia editorial o un científico social computaciona
 - **Backtest (hindcast).** Congelar los datos en una fecha pasada (`as_of = 10/10`), dejar que el sistema prediga y comprobar con lo observado del 11 al 17/10. Medir precision@10 de los temas `emerging` y cuántos días de ventaja dan. Es la prueba central de la primera pregunta del reto.
 - **Incertidumbre con muestras pequeñas.** Pasar de 3 a 6 piezas es "+100 %" y no significa nada. Hacen falta un test de razón de tasas de Poisson, intervalos y un mínimo de piezas. Para los outliers de canales pequeños, shrinkage bayesiano empírico.
 - **Estabilidad del ranking.** Perturbar pesos y umbrales ±10–20 % y medir cuánto cambia el top 10. Si cambia casi entero, el ranking lo deciden los parámetros, no los datos.
-- **Calibrar el LLM con humanos.** Hoy el audience fit del LLM no se contrasta con ninguna referencia. Hacen falta un etiquetado humano de unos 30 temas, el acuerdo entre las personas del equipo, la correlación entre LLM y humanos y un test-retest (la misma entrada dos veces debe dar la misma nota).
+- **Validar Jev con humanos antes de confiar en él.** Se necesitan 30–50 piezas etiquetadas a mano por otra persona (`data/evaluations/jev_pieces.yaml`). Una pregunta con menos del 70 % de acuerdo no se usa en la demo (`docs/jev.md`). Para el fit de los temas: ranking ciego del equipo y correlación de Spearman frente a Jev.
 - **"Por qué funcionó" con controles.** Comparar cada outlier con piezas del mismo canal y del mismo tema, controlando la edad de la pieza. Cada hipótesis tiene que poder resultar falsa.
 - **Medir el desfase global → LATAM.** Si el LATAM Gap existe, los temas aparecen antes en las fuentes globales (sobre todo USA) que en las de LATAM. Con el backfill de 14 días se puede medir. Si no lo medimos, la tesis es solo una suposición.
 - **Ser explícitos con LinkedIn.** El ejemplo del reto dice "en LinkedIn" y ahí no podemos hacer scraping. Hay que decirlo claramente y comprobar si nuestras fuentes funcionan como proxy, contrastándolas con una muestra de LinkedIn curada a mano.
@@ -60,7 +61,7 @@ Un data scientist de inteligencia editorial o un científico social computaciona
 | Outliers robustos | Shrinkage bayesiano empírico sobre `outlier_ratio` | NumPy |
 | Calidad del clustering | Revisión manual de la pureza en una muestra; estabilidad entre seeds y umbrales con ARI | `sklearn.metrics.adjusted_rand_score`, `silhouette_score` |
 | Estabilidad del ranking | Perturbación Monte Carlo de pesos, medida con Kendall τ y RBO | `scipy.stats.kendalltau` |
-| LLM fiable | Set etiquetado por humanos, Spearman LLM vs. humanos, Krippendorff α entre humanos, test-retest y casos de prompt injection | pytest + fixtures |
+| Jev fiable | Piezas etiquetadas a mano (acuerdo ≥ 70 % por pregunta), preguntas `_rev` contra el sesgo hacia la primera opción, Spearman frente al ranking humano, pregunta `injection` | `typesafe-sdk`, pytest + respx |
 | LATAM Gap | Desfase entre la primera aparición en fuentes globales y de LATAM por tema; correlación cruzada de los conteos diarios | Polars |
 | Demanda externa | Google Trends US frente a países LATAM; pageviews en/es antes y después de la detección | Google Trends RSS, Wikipedia REST API (`httpx`) |
 
@@ -207,24 +208,27 @@ LinkedIn, Instagram y TikTok no sirven para *detectar* tendencias tempranas: las
 
 ## 8. Explicación a coste casi nulo
 
-**El 80 % del valor es determinista y cuesta $0** (`intelligence/explain.py`, función pura con tests). Es un análisis contrastivo dentro de cada tema: outliers frente al resto.
+**El cálculo es determinista** (`intelligence/explain.py`, función pura con tests). Es un análisis contrastivo dentro de cada tema: outliers frente al resto. Los rasgos de cada pieza los clasifica Jev en la batería de pieza (`docs/jev.md`); el resto sale de los datos.
 
-| Dimensión | Cálculo sin LLM | Dato |
+| Dimensión | Cómo se obtiene | Dato |
 |---|---|---|
-| Gancho | Rasgos del título: pregunta, número, "cómo…", modelo o marca, primera persona, longitud, tono | `title` |
-| Formato | Short (< 60 s) frente a vídeo largo; vídeo, artículo o post; etiqueta manual | `duration_seconds`, `format`, CSV |
+| Gancho | Jev `hook` / `hook_rev` (pregunta, dato o cifra, contraintuitivo, historia, cómo hacer, noticia, lista); si no coinciden, "incierto" | `title`, `description` |
+| Formato | Jev `format` / `format_rev` + Short (< 60 s) frente a vídeo largo + etiqueta manual | `duration_seconds`, `format`, CSV |
 | Timing | Horas desde la primera aparición del tema; día y hora | `published_at` |
 | Autor | `outlier_ratio` (ya normalizado por canal) | snapshots |
 | Difusión | Capas y orden de aparición (global → LATAM) | `segment`, `published_at` |
 
-Para cada rasgo, el **lift** (% entre los outliers frente a % en el resto) **con n**. Por ejemplo: "4 de 5 outliers usan un número en el título, frente a 3 de 20". Son hipótesis, no causalidad. `limitations` sale de las banderas de datos (`growth_status`, n, una sola fuente, sin snapshots, muestra curada).
+Para cada rasgo, el **lift** (% entre los outliers frente a % en el resto) **con n**. Un lift ≥ 2 en al menos 2 outliers es un "patrón observado"; si no, "anecdótico". Lo incierto no cuenta. Por ejemplo: "3 de 4 outliers usan un gancho de dato o cifra, frente a 3 de 10". Son hipótesis, no causalidad. `limitations` sale de las banderas de datos (`growth_status`, n, una sola fuente, sin snapshots, muestra curada).
 
-**El LLM solo redacta:**
-- Una llamada por oportunidad (top ~15), solo dentro de `analyze`.
-- Audience fit y `why_it_matters` van en la misma llamada.
-- Salida en Pydantic, con la tabla de rasgos como dato delimitado y caché por hash de las entradas.
+**El audience fit no lo calcula un LLM:** son 6 preguntas `score` de Jev en la batería de tema, combinadas en Python con pesos en código (CLAUDE.md §7).
+
+**El LLM generativo solo redacta** (SDK oficial del proveedor, sin LiteLLM):
+- Una llamada por oportunidad (top ~15), solo dentro de `analyze`, para `why_it_matters` y `limitations`.
+- Recibe como datos la tabla de lift y los juicios de Jev, delimitados.
+- Devuelve afirmaciones con el id de su evidencia. Jev verifica cada una y lo no respaldado se elimina (batería 4 de `docs/jev.md`).
+- Salida en Pydantic y caché por hash de las entradas.
 - Nunca por petición, y sin texto completo, transcripciones ni análisis de vídeo.
-- Unos 50k tokens por ejecución; el coste se calcula con el `LLM_MODEL` configurado.
+- Cada llamada registra su consumo en `usage_events` (CLAUDE.md §4).
 
 **La explicación profunda bajo demanda** la redacta el asistente del usuario vía MCP (§9).
 
@@ -281,15 +285,18 @@ reciba qué publicar, por qué y con qué evidencia, sobre un análisis que poda
 que no es ruido, a coste casi nulo. Deadline: dom 18/10, 11:15 COL.
 
 1. Explicación determinista (intelligence/explain.py, función pura con tests): para cada
-   tema, compara outliers con el resto por gancho (rasgos del título), formato (duración,
-   tipo, etiqueta manual), timing (horas desde la primera aparición del tema), autor
-   (outlier_ratio) y difusión (capas y orden global → LATAM). Devuelve el lift con n. Genera
-   `limitations` a partir de las banderas de datos. Sin LLM.
+   tema, compara outliers con el resto por gancho y formato (juicios de Jev de la batería
+   de pieza, sin contar los inciertos), timing (horas desde la primera aparición del
+   tema), autor (outlier_ratio) y difusión (capas y orden global → LATAM). Devuelve el
+   lift con n ("patrón observado" si lift ≥ 2 en ≥ 2 outliers). Genera `limitations` a
+   partir de las banderas de datos.
 
-2. Redacción con LLM: una llamada por oportunidad (top ~15) dentro de `analyze`, que
-   devuelva audience fit (rúbrica 6×0–5) y why_it_matters, en Pydantic, con la tabla de
-   rasgos como dato delimitado y caché por hash de las entradas. Nunca por petición.
-   Estima el coste por ejecución con el LLM_MODEL configurado.
+2. Jev y redacción (docs/jev.md): audience fit y accionabilidad con la batería de tema,
+   combinados en Python. El LLM generativo (SDK oficial, sin LiteLLM) solo redacta
+   why_it_matters en una llamada por oportunidad (top ~15) dentro de `analyze`, con la
+   tabla de lift como dato delimitado, afirmaciones con el id de su evidencia que Jev
+   verifica, y caché por hash. Nunca por petición. Todo registra consumo en
+   usage_events.
 
 3. Rigor: test de Poisson para la aceleración con mínimo de piezas (se refleja en
    lifecycle_reason y growth_status) y tope de piezas por outlet en el clustering. No
