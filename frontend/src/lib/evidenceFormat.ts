@@ -17,6 +17,7 @@ export const PLATFORM_LABEL: Record<Platform, string> = {
   linkedin: 'LinkedIn',
   instagram: 'Instagram',
   tiktok: 'TikTok',
+  reddit: 'Reddit',
 }
 
 // Tope de piezas por tema de GET /opportunities/{id}/evidence: con 25, puede haber más que no se
