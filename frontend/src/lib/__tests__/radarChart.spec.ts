@@ -170,6 +170,14 @@ describe('buildRadarOption', () => {
     )
   })
 
+  it('fades a bubble in place when it gets dimmed', () => {
+    // ECharts 6.1 no anima la opacidad con `animationDurationUpdate`: sin la transición universal,
+    // la burbuja salta a 0,16 en lugar de fundirse (G3, D14).
+    const option = buildRadarOption(input())
+
+    expect(seriesOfType(option, 'scatter')?.universalTransition).toBe(true)
+  })
+
   it('drops the ring series and every animation with reduced motion', () => {
     const option = buildRadarOption(input({ reducedMotion: true }))
 

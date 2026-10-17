@@ -218,6 +218,9 @@ function bubbleSeries(bubbles: Bubble[], input: RadarChartInput): ScatterSeriesO
     clip: false,
     // El hover agranda la burbuja desde `shownBubbleSize`, igual desde el radar que desde el ranking.
     emphasis: { scale: false },
+    // ECharts 6.1 no anima la opacidad con `animationDurationUpdate`: sin esto, la burbuja que se
+    // atenúa salta a 0,16 en lugar de fundirse en su sitio (D14).
+    universalTransition: true,
     // Entre dos etiquetas que chocan, ECharts deja la de la burbuja más grande (su prioridad es el
     // área), que es la de más evidencia. Solo compara etiquetas entre sí, no con burbujas.
     labelLayout: { hideOverlap: true },
