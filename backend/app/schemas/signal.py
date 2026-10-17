@@ -94,3 +94,23 @@ class SourceStatus(BaseModel):
     active: bool
     items: int
     last_observed_at: datetime | None
+
+
+class SignalHit(BaseModel):
+    """Una pieza recolectada que coincide con una búsqueda. Sin descripción ni autor (regla 1)."""
+
+    url: HttpUrl
+    title: str
+    source: str = Field(description="Nombre de la fuente monitoreada (canal, medio o búsqueda)")
+    platform: Platform
+    segment: Segment
+    region: str | None = Field(description="Región de la fuente; null = sin región asignada")
+    language: str | None = Field(description="ISO 639-1; null = la fuente no lo indica")
+    published_at: AwareDatetime
+    observed_at: AwareDatetime = Field(
+        description="Último snapshot de métricas o, sin snapshots, última vez que se vio la pieza"
+    )
+    metrics: Metrics = Field(description="Del último snapshot; null = no disponible, nunca 0")
+    opportunity_ids: list[str] = Field(
+        description="Oportunidades del ranking servido cuya evidencia incluye esta pieza"
+    )

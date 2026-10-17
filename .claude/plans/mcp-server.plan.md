@@ -538,7 +538,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest tests/test_opportunity_routes.py -q`
 - **Commit:** `Add a single-query read of the served run with evidence`
 
-### Paso 3 — Servicio de búsqueda de señales (D8)
+### Paso 3 — Servicio de búsqueda de señales (D8) [HECHO]
 
 - **Archivos:** `backend/app/schemas/signal.py`, `backend/app/services/signals.py`,
   `backend/tests/test_search_signals.py` (nuevo)
