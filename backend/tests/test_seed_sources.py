@@ -32,6 +32,7 @@ SEED = SeedFile.model_validate(
             },
         ],
         "reddit": [{"subreddit": "OpenAI", "segment": "tech"}],
+        "instagram": [{"handle": "@platzi", "segment": "latam_es", "ai_filter": True}],
     }
 )
 
@@ -68,6 +69,7 @@ async def test_seed_resolves_handles_and_is_idempotent(session):
     sources = (await session.scalars(select(Source).order_by(Source.platform, Source.id))).all()
     assert [s.platform for s in sources] == [
         "hackernews",
+        "instagram",
         "reddit",
         "rss",
         "tiktok",
@@ -75,14 +77,18 @@ async def test_seed_resolves_handles_and_is_idempotent(session):
         "youtube",
     ]
 
-    yt_src = sources[5]
+    yt_src = sources[6]
     assert yt_src.external_id == "UCy5znSnfMsDwaLlROnZ7Qbg"
     assert yt_src.segment == "latam_es"
     assert yt_src.config["uploads_playlist_id"] == "UUy5znSnfMsDwaLlROnZ7Qbg"
-    assert sources[2].config == {"ai_filter": True}
-    assert sources[1].external_id == "OpenAI" and sources[1].name == "r/OpenAI"
+    assert sources[3].config == {"ai_filter": True}
+    assert sources[2].external_id == "OpenAI" and sources[2].name == "r/OpenAI"
+    # El handle se guarda sin @, que es como lo pide la API.
+    ig = sources[1]
+    assert (ig.external_id, ig.name) == ("platzi", "Instagram · @platzi")
+    assert ig.url == "https://www.instagram.com/platzi/"
     # La misma búsqueda en dos regiones son dos fuentes distintas.
-    global_tt, mx_tt = sources[3], sources[4]
+    global_tt, mx_tt = sources[4], sources[5]
     assert (global_tt.external_id, mx_tt.external_id) == ("AI agents|global", "AI agents|MX")
     assert mx_tt.config["search_region"] == "MX" and mx_tt.config["item_regions"] == ["MX", "CO"]
     assert mx_tt.name == "TikTok · AI agents (MX)"

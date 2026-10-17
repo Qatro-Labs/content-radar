@@ -12,7 +12,7 @@
 **Pregunta que el prototipo debe responder:**
 > "¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?"
 
-El reto pone como ejemplo "en LinkedIn". TikTok y Reddit entran vía ScrapeCreators (§2, regla 2; §5). LinkedIn, Instagram y X **no entran en el MVP**: sin login no se puede buscar su contenido, y lo que se obtiene por Google llega poco y tarde para detectar tendencias (decidido el 17/10). Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS), y el pitch lo explica de frente (`docs/brief.md` §2).
+El reto pone como ejemplo "en LinkedIn". TikTok y Reddit entran vía ScrapeCreators (§2, regla 2; §5), e Instagram por perfiles concretos, como los canales de YouTube. LinkedIn y X **no entran en el MVP**: sin login no se puede buscar su contenido, y lo que se obtiene por Google llega poco y tarde para detectar tendencias (decidido el 17/10). Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS), y el pitch lo explica de frente (`docs/brief.md` §2).
 
 **Propuesta de valor:** 30X Signal convierte señales públicas de Internet en oportunidades editoriales **verificables y accionables**, accesibles desde un dashboard visual (Vue) o desde asistentes de IA (Claude, ChatGPT, Grok) vía **MCP**.
 
@@ -36,7 +36,7 @@ Las tres preguntas del reto y cómo las respondemos:
 ## 2. Reglas no negociables
 
 1. **Solo contenido público. Nada de datos personales.** Guardamos metadatos, enlaces y métricas públicas, no copias completas ni datos de usuarios.
-2. **Redes sociales solo con contenido público y sin login propio.** Nada detrás de un login nuestro ni de cuentas falsas. Desde el 17/10 (los organizadores del reto se mostraron flexibles), TikTok y Reddit entran vía **ScrapeCreators**, un proveedor de datos públicos (§5); el pitch dice de dónde vienen esos datos. Instagram, LinkedIn y X siguen fuera hasta que el equipo decida lo contrario: su búsqueda depende de lo que indexa Google (poco y tarde), y el radar necesita datos a tiempo.
+2. **Redes sociales solo con contenido público y sin login propio.** Nada detrás de un login nuestro ni de cuentas falsas. Desde el 17/10 (los organizadores del reto se mostraron flexibles), TikTok, Reddit e Instagram (solo perfiles concretos, sin búsqueda) entran vía **ScrapeCreators**, un proveedor de datos públicos (§5); el pitch dice de dónde vienen esos datos. LinkedIn y X siguen fuera hasta que el equipo decida lo contrario: su búsqueda depende de lo que indexa Google (poco y tarde), y el radar necesita datos a tiempo.
 3. **Nunca inventar datos.** No mostrar métricas, crecimiento o conclusiones no observadas como hechos. Si hay 7 oportunidades reales, se muestran 7, no 10. Un dato ausente se muestra como "no disponible", nunca como 0.
 4. **El LLM evalúa y explica, no calcula.** Los scores se calculan en Python, de forma determinista y reproducible. El LLM emite niveles de rúbrica justificados y redacta; Jev emite juicios atómicos tipados sobre cada pieza (sí/no, opción). Python combina ambos con pesos en código (§7).
 5. **Distinguir siempre el tipo de evidencia:** `observed` (≥2 mediciones) · `estimated` (1 medición vs. referencia) · `preliminary` (aparece, sin aceleración demostrada).
@@ -69,7 +69,7 @@ Responsable: · Estado: · Completado: · Pendiente: · Bloqueos: · Disponible 
 **Modular monolith.** Una sola capa de servicios de dominio que consumen la API REST y el servidor MCP. El frontend **no** calcula tendencias y el MCP **no** recalcula ni hace scraping: los dos leen oportunidades ya procesadas.
 
 ```
-Collectors (YouTube, HN, RSS, TikTok, Reddit, Brave)
+Collectors (YouTube, HN, RSS, TikTok, Reddit, Instagram, Brave)
         │  normalize + dedupe + snapshots
         ▼
 PostgreSQL + pgvector  ◄──  Intelligence (embeddings → clustering → scores → LLM insights)
@@ -108,8 +108,8 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 | RSS / medios tech y LATAM | `feedparser` + `httpx` | Artículos y lanzamientos | P0 |
 | Brave Search | API oficial (5 $/1.000 consultas, 5 $ de crédito gratis al mes). Sus términos solo permiten guardar resultados de forma **transitoria**: se persisten agregados, no resultados | Descubrimiento web (nunca LinkedIn) | P1 |
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
-| TikTok · Reddit | **ScrapeCreators** (pago por crédito: 1 crédito por fuente y ejecución, ~1,9 $/1.000; el cron solo lo consulta dos veces al día). TikTok: búsqueda por palabra clave de la semana, por región. Reddit: top de la semana por subreddit | Vídeos cortos (views, likes, comentarios, shares) y conversación (score, comentarios) | P1 (17/10) |
-| LinkedIn · Instagram · X | **Fuera del MVP.** ScrapeCreators los cubre, pero su búsqueda depende de lo que indexa Google (incompleta y con poco de lo reciente). Roadmap: vías oficiales (API de portabilidad DMA, Business Discovery API de Instagram, API de X) | — | Roadmap |
+| TikTok · Reddit · Instagram | **ScrapeCreators** (pago por crédito: 1 crédito por fuente y ejecución, ~1,9 $/1.000; el cron solo lo consulta dos veces al día). TikTok: búsqueda por palabra clave de la semana, por región. Reddit: top de la semana por subreddit. Instagram: últimos reels de perfiles elegidos a mano (no descubre temas, sirve para outliers) | Vídeos cortos (views, likes, comentarios, shares) y conversación (score, comentarios) | P1 (17/10) |
+| LinkedIn · X | **Fuera del MVP.** ScrapeCreators los cubre, pero su búsqueda depende de lo que indexa Google (incompleta y con poco de lo reciente). Roadmap: vías oficiales (API de portabilidad DMA, API de X) | — | Roadmap |
 
 **Límites de cada fuente y vías oficiales para el roadmap:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
 
@@ -205,6 +205,7 @@ GET  /health
   - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
   - TikTok: `views / días desde la publicación` vs. la mediana de los vídeos de la misma búsqueda.
   - Reddit: score vs. la mediana de los posts del mismo subreddit.
+  - Instagram: `views / días desde la publicación` vs. la mediana de los reels del mismo perfil (sin colaboraciones de otras cuentas).
   - HN: puntos vs. el **p90** de las stories de la misma búsqueda y el mismo periodo. HN tiene cola larga: con la mediana (~4 puntos) un 22 % de las stories salía como outlier; con el p90, un 3–6 %.
   - `≥ 3×` = outlier, `≥ 2×` = destacado. Con una sola observación es `estimated`.
   - Los outliers alimentan el "por qué funcionó": se comparan con las piezas normales **del mismo tema** (análisis contrastivo, ver "Por qué funcionó" más abajo) en lugar de describir una pieza aislada.

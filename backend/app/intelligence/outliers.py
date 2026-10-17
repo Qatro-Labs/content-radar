@@ -2,6 +2,7 @@
 
 - YouTube: views/día desde la publicación vs. los vídeos del mismo canal.
 - TikTok: views/día vs. los vídeos de la misma búsqueda. Reddit: score vs. el mismo subreddit.
+- Instagram: views/día vs. los reels del mismo perfil.
 - HN: puntos vs. el p90 de las stories de la misma búsqueda y el mismo periodo. Con la mediana
   (~4 puntos) un 22 % de las stories salía como outlier; con el p90, un 3–6 %.
 """
@@ -23,6 +24,7 @@ HN_REFERENCE_QUANTILE = 0.9  # HN tiene cola larga: la mediana no separa nada
 MIN_REFERENCE_AGE = {
     Platform.YOUTUBE: timedelta(days=2),
     Platform.TIKTOK: timedelta(days=2),
+    Platform.INSTAGRAM: timedelta(days=2),
     Platform.HACKERNEWS: timedelta(hours=6),
     Platform.REDDIT: timedelta(hours=6),
 }
