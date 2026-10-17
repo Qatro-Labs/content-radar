@@ -90,6 +90,12 @@ class Evidence(BaseModel):
     )
 
 
+class TopicEvidence(Evidence):
+    """Elemento de GET /evidence: la evidencia de todas las oportunidades servidas."""
+
+    opportunity_id: str = Field(description="Oportunidad a la que pertenece la pieza")
+
+
 class ScoreComponentName(StrEnum):
     MOMENTUM = "momentum"
     AUDIENCE_FIT = "audience_fit"
