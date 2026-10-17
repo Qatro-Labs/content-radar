@@ -1,0 +1,366 @@
+# Algoritmo de priorización
+
+> Cómo `analyze` convierte piezas en oportunidades ordenadas: qué se mide, con qué umbrales y en qué
+> orden. Describe el código de `main` a 18/10/2026; cada constante lleva su `ruta:línea`. Si el
+> código y [`CLAUDE.md`](../CLAUDE.md) §7 no coinciden, aquí manda el código y la diferencia se
+> anota al final. La arquitectura está en [`architecture.md`](architecture.md) y la batería de Jev,
+> en [`jev.md`](jev.md).
+
+## Principios
+
+- **Velocidad, no popularidad.** Ningún total de views, likes o puntos entra en un score. Solo
+  tasas, percentiles entre temas y ratios dentro de cada fuente.
+- **Python calcula y el LLM evalúa.** Los scores son deterministas: la misma entrada con el mismo
+  `as_of` da el mismo resultado. El LLM solo pone niveles 0–5 de una rúbrica (CLAUDE.md §2, regla 4).
+- **Lo ausente es `null`, nunca 0.** Sin audience fit no hay Opportunity Score; sin referencia no
+  hay outlier ratio.
+
+## Recorrido
+
+```
+piezas de 14 días → filtro de Jev → embeddings → clusters → temas activos
+  → velocidad y aceleración · outliers · saturación · fuentes independientes
+  → etapa · growth_status · confianza · momentum · audience mix · LATAM gap
+  → audience fit (LLM) → Opportunity Score → recomendación → orden
+```
+
+## 1. Corpus
+
+| Qué | Valor | Dónde |
+|---|---|---|
+| Ventana de piezas | Publicadas en los últimos 14 días hasta `as_of`, de fuentes activas | `backend/app/services/opportunities.py:33` |
+| Inicio del monitoreo (texto de las limitaciones) | 16/10/2026 | `backend/app/services/opportunities.py:35` |
+| Periodo servido | Solo `7d` (ventanas de 3 + 3 días) | `backend/app/services/opportunities.py:37` |
+
+Antes de llegar aquí, las fuentes con `ai_filter: true` ya descartaron en el colector las piezas sin
+términos de IA (`backend/app/collectors/text.py:25`).
+
+## 2. Filtro de Jev
+
+Cada pieza pasa por la batería `piece.v3` (`backend/app/intelligence/jev.py:27`). Python convierte
+las probabilidades en decisiones:
+
+| Tipo | Regla | Dónde |
+|---|---|---|
+| `noul` (sí/no) | ≥ 0,7 es sí; ≤ 0,3 es no; en medio, incierto | `backend/app/intelligence/jev.py:32`, `:33` |
+| `choice` (formato, gancho) | Probabilidad máxima ≥ 0,6 **y** la misma respuesta con las opciones en orden inverso (`_rev`); si no, incierto | `backend/app/intelligence/jev.py:31`, `:171` |
+| Inyección | Probabilidad > 0,5, o sin respuesta: la pieza no entra en el contexto del LLM (sí cuenta en los scores) | `backend/app/intelligence/jev.py:35`, `:197` |
+
+**Qué sale del corpus:** solo las piezas en las que Jev dice con seguridad "no" a `about_ai` **y** a
+`ai_in_title`. Lo incierto o sin clasificar se queda, para no perder temas por un fallo de Jev
+(`backend/app/intelligence/jev.py:205`).
+
+**Qué recibe el LLM como pista:** los conteos de `business_use`, `business_case`, `dev_audience`,
+`tech_jargon`, `latam_context` y `launch` del tema ("8 de 20 piezas clasificadas…, 3 inciertas") y
+los formatos (`backend/app/editorial/audience.py:37`). El `state` de Jev nunca lleva el segmento ni la
+región de la fuente (`backend/app/intelligence/jev.py:133`).
+
+## 3. Temas
+
+| Qué | Valor | Dónde |
+|---|---|---|
+| Modelo de embeddings | `paraphrase-multilingual-MiniLM-L12-v2`, título + 300 caracteres de descripción | `backend/app/intelligence/embeddings.py:8`, `:9` |
+| Clustering | Aglomerativo, coseno, *average linkage*, umbral de distancia 0,5 | `backend/app/intelligence/clustering.py:8` |
+| Tamaño mínimo de un tema | 5 piezas | `backend/app/intelligence/clustering.py:9` |
+| Tema amplio | > 25 piezas y similitud media < 0,6: se parte una vez con umbral 0,4. Si no salen subtemas de ≥ 5, se conserva con la limitación "Tema amplio" | `backend/app/intelligence/clustering.py:12`–`14` |
+| Tema activo | ≥ 3 piezas en las dos últimas ventanas (6 días); si no, se descarta | `backend/app/intelligence/opportunities.py:62` |
+| Id estable | `opp_<id de la pieza más antigua del cluster>` | `backend/app/intelligence/opportunities.py:210` |
+
+`item_count` es el tamaño del cluster entero (14 días). Solo velocidad, aceleración, saturación y el
+timeline usan las ventanas de 3 días.
+
+## 4. Velocidad y aceleración
+
+Ventanas móviles de 72 h desde `as_of`: la actual es `(as_of − 3 d, as_of]` y la anterior, los 3 días
+previos (`backend/app/intelligence/velocity.py:12`).
+
+```
+velocity     = piezas_actual / 3                                  (piezas/día)
+esperado     = piezas_anterior × (corpus_actual / corpus_anterior)
+acceleration = (piezas_actual − esperado) / max(esperado, 1)
+```
+
+- Se calcula sobre conteos de piezas por `published_at`, sin snapshots
+  (`backend/app/intelligence/velocity.py:49`–`52`).
+- **Ajuste por volumen:** la ventana anterior se escala con el volumen del corpus completo en cada
+  ventana. Los feeds RSS solo guardan sus últimas N piezas y los días recientes tienen más volumen en
+  todas partes; sin el ajuste, casi todo parecería acelerar. Si el corpus anterior está vacío, la
+  escala es 1.
+- El suelo `max(esperado, 1)` es de una pieza, no de una pieza al día.
+- `velocity` no se pondera por fuentes independientes: es el conteo bruto entre 3.
+
+**Velocidad de una pieza** (para la evidencia): `Δmétrica / Δhoras` entre su primer y su último
+snapshot con valor; `null` con menos de dos (`backend/app/intelligence/velocity.py:61`). Métrica:
+views en YouTube, TikTok e Instagram; puntos en HN y Reddit; RSS no tiene
+(`backend/app/intelligence/opportunities.py:53`).
+
+## 5. Outliers
+
+`outlier_ratio = rendimiento de la pieza / cuantil de su referencia`
+(`backend/app/intelligence/outliers.py:39`).
+
+| Qué | Valor | Dónde |
+|---|---|---|
+| Rendimiento | Views por día de vida (mínimo 1 día) en YouTube, TikTok e Instagram; puntos brutos en HN y Reddit | `backend/app/intelligence/outliers.py:33`, `backend/app/intelligence/opportunities.py:61` |
+| Referencia | Las **otras** piezas de la misma fuente (`source_id`: un canal, un feed, una búsqueda de HN) que están en el corpus analizado | `backend/app/intelligence/opportunities.py:124` |
+| Cuantil | Mediana; **p90 en HN** (con la mediana, ~4 puntos, un 22 % salía outlier; con el p90, un 3–6 %) | `backend/app/intelligence/outliers.py:20`, `:21`, `backend/app/intelligence/opportunities.py:141` |
+| Tamaño mínimo de la referencia | 5 piezas; con menos, ratio `null` | `backend/app/intelligence/outliers.py:19` |
+| Edad mínima para entrar en la referencia | 2 días en YouTube, TikTok e Instagram; 6 h en HN y Reddit. Lo recién publicado sí se puntúa, pero no hunde la referencia | `backend/app/intelligence/outliers.py:24` |
+| Referencia 0 | Ratio `null` | `backend/app/intelligence/outliers.py:46` |
+| Outlier | ratio ≥ 3 | `backend/app/intelligence/outliers.py:17` |
+
+`outlier_count` cuenta las piezas del tema con ratio ≥ 3 y `top_outlier_ratio` es el máximo, `null`
+si ninguna tiene ratio (`backend/app/intelligence/opportunities.py:307`). La evidencia guarda hasta 25
+piezas, outliers primero y después las más recientes (`backend/app/intelligence/opportunities.py:64`,
+`:425`).
+
+> **Pendiente:** el PR #48 (`intel/outlier-reference-all-pieces`) cambia la referencia para que use
+> todas las piezas cargadas de la fuente, también las que quita el filtro de Jev. Hoy la referencia
+> sale del corpus ya filtrado, así que una fuente con muchas piezas fuera de tema puede quedarse sin
+> las 5 de referencia.
+
+## 6. Saturación
+
+```
+saturation_score = percentil (0–100) de las piezas del tema en las dos ventanas (6 días)
+                   frente a los demás temas activos
+```
+
+Es la proporción de temas activos con menos piezas que este; con un solo tema, 50
+(`backend/app/intelligence/cross_source.py:33`, `backend/app/intelligence/opportunities.py:457`). Es
+relativa a la muestra: "en las fuentes que monitoreamos". Un 75 significa que el tema tiene más
+volumen que el 75 % de los demás, no un volumen absoluto.
+
+## 7. Fuentes independientes
+
+- **Clave de independencia:** HN y TikTok, que se leen por búsqueda, cuentan cada uno como un solo
+  medio; el resto cuenta por fuente (canal, feed, subreddit, perfil)
+  (`backend/app/intelligence/cross_source.py:12`, `:17`).
+- `source_count` = número de medios distintos en el tema.
+- `cross_source_score = min(100, 20 × (medios − 1) + 15 × (plataformas − 1))`; 0 con un solo medio
+  (`backend/app/intelligence/cross_source.py:13`, `:14`, `:23`).
+- `evidence_strength = min(100, 4 × piezas) × (0,5 + 0,5 × min(1, medios / 3))`
+  (`backend/app/intelligence/ranking.py:36`, `:37`, `:50`). No suma métricas entre plataformas.
+
+No se detectan todavía las notas de prensa replicadas: dos medios que publican la misma nota cuentan
+como dos fuentes.
+
+## 8. Etapa (`lifecycle`)
+
+Primera regla que se cumple, en este orden (`backend/app/intelligence/lifecycle.py:29`). El texto de
+la regla queda en `lifecycle_reason`.
+
+| # | Etapa | Regla | Constantes |
+|---|---|---|---|
+| 1 | `unknown` (datos insuficientes) | < 5 piezas **o** < 2 fuentes independientes | `lifecycle.py:7`, `:25` |
+| 2 | `saturated` | saturación ≥ 75 y aceleración < 0 | `lifecycle.py:8` |
+| 3 | `peaking` | saturación ≥ 60 y \|aceleración\| < 0,2 | `lifecycle.py:9`, `:10` |
+| 4 | `accelerating` | aceleración ≥ 0,5 y ≥ 3 fuentes independientes | `lifecycle.py:11`, `:12` |
+| 5 | `emerging` | aceleración > 0, ≤ 3 fuentes independientes y saturación < 40 | `lifecycle.py:13`, `:14` |
+| 6 | `unknown` ("en descenso") | aceleración < 0 sin cumplir las anteriores | `lifecycle.py:67` |
+| 7 | `unknown` | Ninguna regla se cumple | `lifecycle.py:74` |
+
+Las rutas son relativas a `backend/app/intelligence/`. Como un tema tiene al menos 5 piezas, en la
+práctica la regla 1 salta por tener una sola fuente.
+
+**`growth_status`** depende de los datos, no de la etapa (`backend/app/intelligence/ranking.py:115`):
+`preliminary` con datos insuficientes; `estimated` si la ventana anterior está vacía; `observed` si
+la ventana anterior también tiene piezas.
+
+## 9. Confianza
+
+`backend/app/intelligence/ranking.py:126`:
+
+| Confianza | Regla |
+|---|---|
+| `low` | `preliminary` o < 2 fuentes independientes |
+| `high` | `observed`, ≥ 3 fuentes y ≥ 10 piezas |
+| `medium` | El resto |
+
+La confianza se muestra aparte del score: un tema puede puntuar alto con evidencia débil.
+
+## 10. Momentum
+
+`backend/app/intelligence/ranking.py:40`:
+
+```
+aceleración_norm = 50 + 50 × clamp(aceleración, −1, 1)
+outliers_norm    = min(100, 25 × outlier_count)
+momentum_score   = 0,4 × percentil_velocidad + 0,4 × aceleración_norm + 0,2 × outliers_norm
+```
+
+| Constante | Valor | Dónde |
+|---|---|---|
+| `W_VELOCITY` | 0,4 | `backend/app/intelligence/ranking.py:19` |
+| `W_ACCELERATION` | 0,4 | `backend/app/intelligence/ranking.py:20` |
+| `W_OUTLIERS` | 0,2 | `backend/app/intelligence/ranking.py:21` |
+| `ACCELERATION_CAP` | 1,0 (+100 % o más = máximo) | `backend/app/intelligence/ranking.py:22` |
+| `POINTS_PER_OUTLIER` | 25 (4 outliers = 100) | `backend/app/intelligence/ranking.py:23` |
+
+`percentil_velocidad` es el percentil de las piezas de la ventana actual del tema frente a los demás
+temas activos, con la misma función que la saturación (`backend/app/intelligence/opportunities.py:458`).
+
+## 11. Para quién importa: audience mix y LATAM gap
+
+**`audience_mix`** = proporción del peso de las piezas por segmento de su fuente (`tech`, `business`,
+`latam_es`; suma 1) (`backend/app/intelligence/audience_mix.py:20`). El peso de cada pieza es su
+outlier ratio acotado entre 0,5 y 3,0, o 1,0 si no tiene ratio
+(`backend/app/intelligence/opportunities.py:63`, `:239`). `latam_es` mezcla España y Latinoamérica:
+la UI lo rotula "en español".
+
+**`latam_gap`** usa otra proporción: el peso de las piezas cuya fuente tiene `region`
+latinoamericana (`latam`, `mx`, `co`, `ar`… 21 códigos). **España no cuenta**
+(`backend/app/intelligence/audience_mix.py:14`, `:37`).
+
+| `latam_gap` | Regla | Dónde |
+|---|---|---|
+| `false` (ya cubierto en la región) | Proporción LATAM ≥ 0,30 | `backend/app/intelligence/audience_mix.py:10` |
+| `true` (oportunidad) | `business` ≥ 0,15 **y** proporción LATAM < 0,10 | `backend/app/intelligence/audience_mix.py:8`, `:9` |
+| `null` | El resto: no hay señal suficiente para decidir | `backend/app/intelligence/audience_mix.py:48` |
+
+## 12. Audience fit (LLM)
+
+El LLM recibe, por tema, hasta 10 piezas seguras (sin las marcadas por inyección), con la
+descripción cortada a 500 caracteres, el audience mix y las pistas de Jev
+(`backend/app/editorial/audience.py:32`, `:33`, `:138`). El system prompt lleva la rúbrica
+(`backend/app/editorial/prompts/audience_fit_rubric.v1.yaml`) y el perfil
+[`data/audiences/30x.yaml`](../data/audiences/30x.yaml). Prompt `evaluate_topic.v2`
+(`backend/app/editorial/audience.py:27`).
+
+Para cada criterio devuelve primero la justificación y las URLs que cita, y después un nivel entero
+de 0 a 5 (`backend/app/editorial/audience.py:47`). Los seis criterios
+(`backend/app/schemas/opportunity.py:128`):
+
+| Criterio | Pregunta |
+|---|---|
+| `business_impact` | Impacto en decisiones empresariales |
+| `org_application` | Aplicación real en organizaciones |
+| `exec_readability` | Comprensible para directivos no técnicos |
+| `latam_relevance` | Relevancia LATAM |
+| `pillar_fit` | Encaje con los pilares de 30X |
+| `actionable_content` | Convertible en contenido accionable |
+
+Python combina los niveles (`backend/app/intelligence/audience_fit.py:40`):
+
+```
+audience_fit_score  = media ponderada de los 6 niveles / 5 × 100
+actionability_score = nivel de actionable_content / 5 × 100
+```
+
+- **Pesos:** iguales (1,0 cada criterio) hasta que una validación con temas etiquetados justifique
+  otros (`backend/app/intelligence/audience_fit.py:19`).
+- **Citas:** se quitan las URLs que el LLM no recibió, y se anota cuántas
+  (`backend/app/intelligence/audience_fit.py:55`).
+- **Bandas** para el texto: bajo < 40 ≤ medio < 60 ≤ alto
+  (`backend/app/editorial/explanation.py:34`, `:35`).
+- Si el LLM falla o la respuesta no llega entera (`stop_reason` distinto de `end_turn`), el fit queda
+  en `null` con una limitación (`backend/app/editorial/evaluator.py:21`, `:67`).
+
+## 13. Opportunity Score
+
+`backend/app/intelligence/ranking.py:57`:
+
+```
+opportunity_score = 0,30 × momentum
+                  + 0,25 × audience_fit
+                  + 0,20 × cross_source
+                  + 0,15 × (100 − saturación)
+                  + 0,10 × actionability
+                  − penalizaciones
+acotado a [0, 100]
+```
+
+| Constante | Valor | Dónde |
+|---|---|---|
+| `W_MOMENTUM` | 0,30 | `backend/app/intelligence/ranking.py:26` |
+| `W_FIT` | 0,25 | `backend/app/intelligence/ranking.py:27` |
+| `W_CROSS` | 0,20 | `backend/app/intelligence/ranking.py:28` |
+| `W_FRESHNESS` | 0,15 | `backend/app/intelligence/ranking.py:29` |
+| `W_ACTION` | 0,10 | `backend/app/intelligence/ranking.py:30` |
+| Penalización `single_source` | −10 si < 2 fuentes independientes | `backend/app/intelligence/ranking.py:31` |
+| Penalización `small_sample` | −10 si < 8 piezas | `backend/app/intelligence/ranking.py:32`, `:33` |
+
+Sin audience fit o sin actionability, el score es `null`: no se rellena con un supuesto
+(`backend/app/intelligence/ranking.py:68`). El desglose (componentes, pesos y penalizaciones) va en
+`score_breakdown`, para que la UI y el MCP lo expliquen.
+
+## 14. Recomendación
+
+Primera regla que se cumple (`backend/app/intelligence/ranking.py:162`); el texto va en
+`recommendation_reason`:
+
+| # | Recomendación | Regla |
+|---|---|---|
+| 1 | `discard` | Etapa `saturated` |
+| 2 | `wait_for_case` | Datos insuficientes |
+| 3 | `wait_for_case` | Confianza `low` |
+| 4 | `wait_for_case` | `org_application` ≤ 1: ninguna pieza muestra una organización real (`backend/app/intelligence/ranking.py:135`) |
+| 5 | `find_angle` | Etapa `peaking` |
+| 6 | `find_angle` | Etapa `unknown` con datos (ninguna regla de etapa se cumple, o en descenso) |
+| 7 | `find_angle` | `latam_gap = false`: ya hay cobertura en fuentes latinoamericanas |
+| 8 | `find_angle` | Sin audience fit |
+| 9 | `publish_now` | Llega aquí (`emerging` o `accelerating`) con audience fit ≥ 60 (`backend/app/intelligence/ranking.py:35`) |
+| 10 | `find_angle` | Audience fit < 60 |
+
+Un fit bajo no descarta: da `find_angle` y la UI muestra la banda.
+
+## 15. Orden del ranking
+
+`backend/app/intelligence/opportunities.py:484`, aplicado en `analyze` después del audience fit
+(`backend/app/jobs/analyze.py:71`). De mayor a menor:
+
+1. Temas con Opportunity Score antes que los que no lo tienen.
+2. Dentro de cada grupo, los que no son `discard` antes que los `discard`.
+3. `opportunity_score`.
+4. `momentum_score`, y después `acceleration`, para desempatar.
+
+El orden queda guardado en la ejecución (`rank`) y la API y el MCP lo sirven tal cual.
+
+## Limitaciones
+
+Lo que estos números **no** dicen (CLAUDE.md §2, regla 3; [`brief.md`](brief.md) §7):
+
+- **No miden la audiencia real.** El audience fit es una evaluación editorial asistida por IA contra
+  el perfil de 30X, no un dato de comportamiento. Los pesos iguales de los criterios no están
+  validados.
+- **Todo es relativo a la muestra.** Saturación, percentil de velocidad y LATAM gap comparan con las
+  fuentes que monitoreamos (las de `data/sources.yaml`), no con Internet ni con el mercado
+  LATAM. Un tema saturado aquí puede no estarlo fuera, y al revés.
+- **Poco historial.** El monitoreo con snapshots empezó el 16–17/10. La aceleración compara dos
+  ventanas de 3 días, lo que casi siempre es parte del backfill, no historial observado en vivo. La
+  velocidad de una pieza necesita dos snapshots, y muchas solo tienen unas horas de historial.
+- **No es causalidad.** Un outlier dice que una pieza rindió más que su referencia, no por qué. El
+  "por qué funcionó" (lift de rasgos entre outliers y el resto) no está implementado.
+- **Las métricas son las de la fuente.** RSS no tiene métricas, así que no da outliers; HN y Reddit
+  se comparan en puntos brutos, sin ajustar por edad.
+- **Las fuentes independientes pueden estar infladas** por notas de prensa replicadas, que todavía
+  no se detectan.
+- **Los clusters cambian entre ejecuciones.** Una oportunidad puede cambiar de id, partirse o
+  desaparecer en la siguiente ejecución. Por eso la demo se fija con `DEMO_RUN_ID`.
+- **Jev se equivoca.** De las 36 piezas que el filtro de fuera de tema quitó en la validación con
+  200 piezas, 9 eran buenas, según evaluadores LLM a ciegas, no humanos (`data/evaluations/jev_piece_v3_eval.md`).
+- **Las métricas de TikTok e Instagram** solo se vuelven a medir si la pieza vuelve a salir en la
+  búsqueda o entre los últimos reels del perfil ([`sources.md`](sources.md)).
+
+## Diferencias con CLAUDE.md
+
+El código de `main` difiere de lo que describe CLAUDE.md en estos puntos. Este documento sigue al
+código; CLAUDE.md no se ha tocado.
+
+| # | Tema | CLAUDE.md dice | El código hace |
+|---|---|---|---|
+| 1 | Velocidad del tema (§7) | Piezas nuevas por día "ponderadas por fuentes independientes" | Conteo bruto entre 3 días, sin ponderar (`backend/app/intelligence/velocity.py:54`) |
+| 2 | Referencia de YouTube (§7) | Mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`) | Mediana de las otras piezas del mismo canal que están en el corpus de 14 días, ya filtrado por Jev, con ≥ 2 días de edad y un mínimo de 5 (`backend/app/intelligence/opportunities.py:124`). El PR #48 lo cambiaría en parte |
+| 3 | "Destacado" ≥ 2× (§7) | Banda de piezas destacadas | `NOTABLE_RATIO = 2.0` existe pero no se usa en ningún sitio (`backend/app/intelligence/outliers.py:18`) |
+| 4 | Ubicación de los módulos (§7, §10) | `intelligence/momentum.py`, `saturation.py`, `relevance.py` | Momentum, score y recomendación en `ranking.py`; saturación y fuentes independientes en `cross_source.py`; audience fit en `audience_fit.py`. No hay `momentum.py`, `saturation.py` ni `relevance.py` |
+| 5 | Saturación (§7) | Volumen de contenido similar en la ventana reciente | Percentil del volumen del tema frente a los demás temas activos (`backend/app/intelligence/cross_source.py:33`). Los umbrales de etapa (75, 60, 40) se aplican a ese percentil |
+| 6 | Notas replicadas (§7) | Regla provisional de similitud coseno ≥ umbral y fuente distinta; después, la batería de pares de Jev | No implementado: ni la regla ni la batería. Cada medio cuenta como fuente independiente |
+| 7 | Penalizaciones (§7) | Datos pobres, fuentes duplicadas, muestra pequeña | Solo `single_source` (−10) y `small_sample` (−10) (`backend/app/intelligence/ranking.py:31`, `:32`) |
+| 8 | Etapa (§7) | Cinco reglas | Añade un `unknown` "en descenso" con aceleración < 0 (`backend/app/intelligence/lifecycle.py:67`). Con clusters de ≥ 5 piezas, "menos de 5 piezas" no llega a darse |
+| 9 | Audience mix (§7) | Ponderado por el engagement normalizado | Ponderado por el outlier ratio acotado a [0,5, 3,0], 1,0 sin ratio (`backend/app/intelligence/opportunities.py:239`) |
+| 10 | LATAM gap ([`brief.md`](brief.md) §7) | Se sostiene "cuando ambos grupos de fuentes tienen cobertura suficiente" | No comprueba la cobertura del grupo A (global); solo la proporción LATAM y la de negocio (`backend/app/intelligence/audience_mix.py:48`) |
+| 11 | Verificación de afirmaciones (§7) | Jev verifica cada afirmación del LLM; se publica con `confidence` ≥ 0,8 | No hay batería de verificación. Python exige que cada afirmación cite una pieza enviada y que sus cifras estén en los datos (`backend/app/intelligence/explanation.py:52`) |
+| 12 | "Por qué funcionó" (§7) | Lift de gancho y formato entre outliers y el resto del tema | No implementado. Jev ya clasifica gancho y formato, pero solo llegan al LLM como conteos |
+| 13 | Pistas de Jev (§7) | Incluye "pilar de 30X" | La batería `piece.v3` no tiene pregunta de pilar (pendiente en [`jev.md`](jev.md)) |
+| 14 | Fuentes (§2 regla 2, §5) | LinkedIn, Instagram y TikTok fuera del MVP; Brave en P1 | TikTok, Reddit e Instagram entran por ScrapeCreators desde el 17/10 ([`sources.md`](sources.md)). Brave no tiene colector |
+| 15 | MCP (§6) | Herramientas de solo lectura | `generate_editorial_brief` escribe en la caché de briefs y en `usage_events` (`backend/app/mcp/server.py:39`) |

@@ -4,6 +4,8 @@ Radar de inteligencia editorial para 30X: detecta qué temas de IA están aceler
 
 - **Por qué y para quién:** [docs/brief.md](docs/brief.md)
 - **Plan, reglas y contratos:** [CLAUDE.md](CLAUDE.md)
+- **Arquitectura y coste de operación medido:** [docs/architecture.md](docs/architecture.md) · [docs/costs.md](docs/costs.md)
+- **Algoritmo de priorización:** [docs/scoring.md](docs/scoring.md)
 
 ## Cómo trabajamos
 
