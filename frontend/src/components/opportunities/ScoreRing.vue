@@ -10,7 +10,7 @@ const DEFAULT_RING_SIZE_PX = 112
 
 const { score, size = DEFAULT_RING_SIZE_PX } = defineProps<{
   score: number | null
-  // Diámetro en px: fija el `viewBox`, el radio y el tamaño.
+  // Diámetro en px.
   size?: number
 }>()
 
