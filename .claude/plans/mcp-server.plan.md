@@ -577,7 +577,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest tests/test_editorial_brief.py -q`
 - **Commit:** `Record brief LLM usage in the editorial service`
 
-### Paso 5 — Servidor MCP con listado y análisis (D1, D4, D5, D11, D12, D13)
+### Paso 5 — Servidor MCP con listado y análisis (D1, D4, D5, D11, D12, D13) [HECHO]
 
 - **Archivos:** `backend/app/schemas/mcp.py` (nuevo), `backend/app/mcp/server.py` (nuevo),
   `backend/app/mcp/tools.py` (nuevo), `backend/tests/test_mcp.py` (nuevo)

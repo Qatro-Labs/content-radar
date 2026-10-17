@@ -33,6 +33,8 @@ ANALYZE_JOB = "analyze"
 LOOKBACK = timedelta(days=14)
 # Día en que empezó el monitoreo con snapshots (CLAUDE.md §9): lo anterior es backfill.
 MONITORING_STARTED_AT = datetime(2026, 10, 16, tzinfo=UTC)
+# Lo que cubren las ventanas de 3 + 3 días de `analyze`: es el único periodo que se calcula.
+SERVED_PERIOD = Period.D7
 
 
 def _metrics(snapshot) -> Metrics:
@@ -215,7 +217,7 @@ async def list_opportunities(
         items=[
             o for o in items if _matches(o, lifecycle=lifecycle, confidence=confidence, topic=topic)
         ],
-        period=Period.D7,  # ventanas de 3 + 3 días
+        period=SERVED_PERIOD,
         generated_at=run.finished_at,
         monitoring_started_at=MONITORING_STARTED_AT,
     )
