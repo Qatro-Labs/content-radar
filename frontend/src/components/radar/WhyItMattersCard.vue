@@ -1,8 +1,33 @@
 <script setup lang="ts">
+import { useResizeObserver } from '@vueuse/core'
+import { ref, useTemplateRef, watch } from 'vue'
+
 import { TEXT_ENTER_CLASS } from '@/lib/motion'
 import type { RankedOpportunity } from '@/lib/radarView'
 
 const { opportunity } = defineProps<{ opportunity: RankedOpportunity }>()
+
+const WHY_TEXT_ID = 'why-it-matters-text'
+
+// El texto del LLM ocupa 500–900 caracteres: la tarjeta muestra 3 líneas (más o menos la primera
+// frase) y el resto se abre aquí. Se corta con CSS y no por frases: "EE. UU." parte un texto real.
+const whyText = useTemplateRef('whyText')
+const expanded = ref(false)
+const clamped = ref(false)
+
+useResizeObserver(whyText, () => {
+  const el = whyText.value
+  // Abierto, el texto ya no desborda: se conserva la medida para poder volver a cerrarlo.
+  if (!el || expanded.value) return
+  clamped.value = el.scrollHeight > el.clientHeight
+})
+
+watch(
+  () => opportunity.id,
+  () => {
+    expanded.value = false
+  },
+)
 </script>
 
 <template>
@@ -12,13 +37,27 @@ const { opportunity } = defineProps<{ opportunity: RankedOpportunity }>()
   >
     <h2 class="font-display text-xl font-semibold tracking-[-0.02em]">Por qué importa</h2>
 
-    <p
-      :key="opportunity.id"
-      class="max-w-[720px] text-lg leading-[1.55] text-ink-read"
-      :class="TEXT_ENTER_CLASS"
-    >
-      {{ opportunity.why_it_matters }}
-    </p>
+    <div class="flex flex-col items-start gap-1">
+      <p
+        :id="WHY_TEXT_ID"
+        ref="whyText"
+        :key="opportunity.id"
+        class="max-w-[720px] text-lg leading-[1.55] text-ink-read"
+        :class="[TEXT_ENTER_CLASS, { 'line-clamp-3': !expanded }]"
+      >
+        {{ opportunity.why_it_matters }}
+      </p>
+      <button
+        v-if="clamped"
+        type="button"
+        :aria-expanded="expanded"
+        :aria-controls="WHY_TEXT_ID"
+        class="min-h-11 text-[15px] font-semibold text-foreground underline decoration-[1.5px] underline-offset-4 hover:text-ink-soft"
+        @click="expanded = !expanded"
+      >
+        {{ expanded ? 'Ver menos' : 'Leer completo' }}
+      </button>
+    </div>
 
     <div
       data-agent="limit"
