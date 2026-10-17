@@ -330,7 +330,7 @@ Solo lecturas a través de `app.services.opportunities` (sin queries nuevas) y u
 - **Verificación:** `cd backend && uv run pytest tests/test_agent.py -q`
 - **Commit:** `Add the radar agent contract and in-memory rate limits`
 
-### Paso 2 — Tools
+### Paso 2 — Tools [HECHO]
 
 - **Archivos:** `backend/app/agent/tools.py`, `backend/app/agent/labels.py`, `backend/tests/test_agent.py`
 - **Cambio:** tabla de tools: `TOOL_SCHEMAS` (JSON Schema de cada tool para el SDK), `execute_tool(name,

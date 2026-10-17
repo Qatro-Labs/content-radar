@@ -5,7 +5,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from app.agent.limits import LimitResult, RateLimiter
-from app.schemas.agent import ActionEvent, RadarPatch
+from app.agent.tools import Seen, execute_tool
+from app.schemas.agent import ActionEvent, RadarPatch, StepKind
+from tests.test_opportunity_routes import add_run, fixture_results
 
 T0 = datetime(2026, 10, 17, 12, tzinfo=UTC)
 
@@ -49,3 +51,52 @@ def test_action_patch_keeps_explicit_nulls():
 
     assert dumped["patch"] == {"selected": None, "gap": False}
     assert "lifecycle" not in dumped["patch"]
+
+
+@pytest.fixture
+async def seeded(session):
+    await add_run(session, fixture_results())
+
+
+async def test_list_tool_filters_and_records_seen_ids(session, seeded):
+    seen = Seen()
+
+    outcome = await execute_tool("list_opportunities", {"lifecycle": ["emerging"]}, session, seen)
+
+    assert outcome.kind is StepKind.DATA
+    assert not outcome.is_error
+    assert outcome.content.startswith("<datos>")
+    assert '"opp_002"' in outcome.content
+    assert '"opp_001"' not in outcome.content
+    assert set(seen.opportunities) == {"opp_002"}
+
+
+async def test_view_tool_rejects_unknown_id(session, seeded):
+    outcome = await execute_tool("select_opportunity", {"id": "opp_nope"}, session, Seen())
+
+    assert outcome.kind is StepKind.VIEW
+    assert outcome.is_error
+    assert outcome.patch is None
+
+
+async def test_set_filters_label_and_patch(session, seeded):
+    outcome = await execute_tool("set_filters", {"gap": True}, session, Seen())
+
+    assert outcome.label == "Pulsando «Hueco en LATAM»"
+    assert outcome.patch is not None
+    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {"gap": True}
+
+
+async def test_reset_view_patch(session, seeded):
+    outcome = await execute_tool("reset_view", {}, session, Seen())
+
+    assert outcome.patch is not None
+    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {
+        "lifecycle": [],
+        "confidence": None,
+        "topic": None,
+        "gap": False,
+        "sort": "opportunity",
+        "selected": None,
+        "highlight": [],
+    }
