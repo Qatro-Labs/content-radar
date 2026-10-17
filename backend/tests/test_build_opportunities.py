@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from app.intelligence.opportunities import Piece, build_opportunities, outlier_ratios
-from app.schemas.opportunity import Collection, Lifecycle
+from app.schemas.opportunity import Collection, Confidence, GrowthStatus, Lifecycle
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
 AS_OF = datetime(2026, 10, 17, 12, tzinfo=UTC)
@@ -138,3 +138,50 @@ def test_manual_source_is_marked_manual_in_evidence():
     by_url = {str(e.url): e.collection for e in r.evidence}
     assert by_url.pop("https://example.com/9") is Collection.MANUAL
     assert set(by_url.values()) == {Collection.AUTOMATIC}
+
+
+def build_one(pieces):
+    [r] = build_opportunities(
+        pieces,
+        [list(range(len(pieces)))],
+        [0],
+        as_of=AS_OF,
+        monitoring_started_at=STARTED,
+        id_prefix="opp_t",
+    )
+    return r
+
+
+def test_zero_snapshots():
+    pieces = [
+        replace(piece(i, hours_ago=5 + i * 10), metrics=Metrics(), snapshots=[]) for i in range(6)
+    ]
+    r = build_one(pieces)
+    assert all(e.velocity is None for e in r.evidence)
+    assert all(e.outlier_ratio is None and e.is_outlier is None for e in r.evidence)
+    assert r.opportunity.outlier_count == 0
+    assert r.opportunity.top_outlier_ratio is None
+
+
+def test_single_source():
+    o = build_one([piece(i, hours_ago=5 + i * 10) for i in range(6)]).opportunity
+    assert o.lifecycle is Lifecycle.UNKNOWN
+    assert o.confidence is Confidence.LOW
+    assert any("una plataforma" in note for note in o.limitations)
+
+
+def test_empty_previous_window():
+    hn = [piece(i, hours_ago=5 + i * 10) for i in range(3)]
+    rss = [
+        piece(10 + i, hours_ago=3 + i, platform=Platform.RSS, source=f"Medio {i}") for i in range(3)
+    ]
+    o = build_one(hn + rss).opportunity
+    assert o.growth_status is GrowthStatus.ESTIMATED
+
+
+def test_missing_metric():
+    pieces = [piece(i, hours_ago=10) for i in range(6)]
+    pieces.append(replace(piece(9, hours_ago=10), metrics=Metrics(points=None)))
+    ratios = {str(e.url): e.outlier_ratio for e in build_one(pieces).evidence}
+    assert ratios.pop("https://example.com/9") is None
+    assert None not in ratios.values()

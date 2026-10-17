@@ -400,7 +400,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_load_pieces.py -q`
 - **Commit:** `Respect as_of when loading pieces and snapshots`
 
-### Paso 7 — Casos límite del motor
+### Paso 7 — Casos límite del motor [HECHO]
 
 - **Archivos:** `backend/tests/test_build_opportunities.py`.
 - **Cambio:** solo tests (arreglar el código si alguno falla por un bug real y decirlo en el commit).
