@@ -29,9 +29,9 @@ Antes de tocar UI, lee `DESIGN.md`.
      compartir y repetir. El frontend no llama al LLM ni al MCP: consume el stream de eventos del
      backend. Componentes y movimiento en `DESIGN.md` §4 y §7.
 2. **Explore (Evidencia):** dos estados, los dos con contenido propio.
-   - **Sin tema (`/explore`): «Lo que está funcionando».** Todas las piezas de todos los temas: rendimiento frente a
-     su canal por fecha (dispersión, escala log), tabla de piezas con outliers primero y panel lateral («Dónde está
-     funcionando» o el detalle de la pieza, con enlace a su tema). Necesita un endpoint de piezas de todos los temas;
+   - **Sin tema (`/explore`): «Lo que está funcionando».** Todas las piezas de todos los temas: tabla ordenada por
+     rendimiento frente a su canal (outliers primero; sin gráfico de dispersión, descartado el 17/10) y panel lateral
+     («Dónde está funcionando» o el detalle de la pieza, con enlace a su tema). Necesita un endpoint de piezas de todos los temas;
      mientras no exista, se monta con `/evidence` de cada oportunidad.
    - **Con tema (`/explore/:id`): el expediente** (artboard I). "Cómo se compone" (`score_breakdown`) · timeline de
      la ventana actual frente a la anterior con su confianza · "Por qué importa" completo · criterios de encaje con

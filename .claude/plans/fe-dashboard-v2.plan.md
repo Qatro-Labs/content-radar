@@ -377,7 +377,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm test -- evidenceFormat && pnpm type-check && pnpm lint`
 - **Commit:** `Add shared evidence formatting and performance bar`
 
-#### Paso 0.4 — Docs de las decisiones
+#### Paso 0.4 — Docs de las decisiones [HECHO]
 
 - **Archivos:** `DESIGN.md`, `.claude/rules/frontend.md`
 - **Cambio:** `DESIGN.md` §4 (contador-filtro: totales fijos y selección única, D2; tokens de ventana, D12) · §5
