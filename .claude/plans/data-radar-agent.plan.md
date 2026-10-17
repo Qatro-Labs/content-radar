@@ -484,7 +484,7 @@ Solo lecturas a través de `app.services.opportunities` (sin queries nuevas) y u
 - **Verificación:** `cd backend && uv run pytest tests/test_agent.py -q`
 - **Commit:** `Harden the radar agent against prompt injection and abuse`
 
-### Paso 5 — Prueba real (manual)
+### Paso 5 — Prueba real (manual) [HECHO]
 
 - **Archivos:** ninguno nuevo.
 - **Cambio:** `backend/.env` ya tiene `LLM_API_KEY` y `LLM_MODEL=claude-haiku-5-5`. La DB local solo
@@ -503,7 +503,7 @@ Solo lecturas a través de `app.services.opportunities` (sin queries nuevas) y u
   texto fijo de `decline` o sin el enlace.
 - **Commit:** `Tune the radar agent prompt against real data` (solo si cambió el prompt)
 
-### Paso 6 — Documentación
+### Paso 6 — Documentación [HECHO]
 
 - **Archivos:** `CLAUDE.md`, `README.md`
 - **Cambio:**
