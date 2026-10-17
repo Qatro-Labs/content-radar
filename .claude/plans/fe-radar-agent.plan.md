@@ -839,7 +839,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 
 ### Fase 0 (coordinador, rama `fe/radar-agent` desde `main`)
 
-#### Paso 0.1 — Contrato del agente
+#### Paso 0.1 — Contrato del agente [HECHO]
 
 - **Archivos:** `backend/app/schemas/agent.py`, `backend/tests/test_agent_contract.py`
 - **Cambio:** lo de «Backend (contrato, fase 0)».
@@ -856,7 +856,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
   pyright app/schemas/agent.py && uv run ruff check . && uv run ruff format --check .`
 - **Commit:** `Extend the radar agent contract for conversation and navigation`
 
-#### Paso 0.2 — Regenerar los tipos del frontend
+#### Paso 0.2 — Regenerar los tipos del frontend [HECHO]
 
 - **Archivos:** `frontend/src/types/api.ts`
 - **Cambio:**
@@ -872,7 +872,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd frontend && pnpm type-check`
 - **Commit:** `Regenerate API types for the agent contract`
 
-#### Paso 0.3 — Tipos y tiempos compartidos del agente en el front
+#### Paso 0.3 — Tipos y tiempos compartidos del agente en el front [HECHO]
 
 - **Archivos:** `frontend/src/lib/agentTypes.ts`, `frontend/src/lib/agentMotion.ts`
 - **Cambio:** lo de «Frontend: tipos y tiempos compartidos».
