@@ -17,9 +17,10 @@ Antes de tocar UI, lee `DESIGN.md`.
    - X = audience fit · Y = momentum · tamaño = evidence strength (normalizado) · color = lifecycle.
    - Cuadrante superior derecho = prioridad. Filtros: periodo y los contadores-filtro de la cabecera (Publicar ya ·
      Acelerando · Emergentes · Sin etapa), todos en la URL. El ranking lleva mini barras de 6 días (`/timeline`).
-   - En el ranking, cada fila muestra la etapa (badge con `lifecycle_reason` en el tooltip), la
-     aceleración (↑ +80 %) y el nº de outliers. Ordenar por aceleración, no por volumen. Si una
-     métrica falta, la UI lo dice; no la rellena.
+   - Ranking (D6, 17/10): Puesto · Tema · Etapa (badge con `lifecycle_reason` en el tooltip) · 6 días ·
+     Aceleración (↑ +80 %, con Observado · Estimado · Preliminar) · Oportunidad. Se ordena por oportunidad;
+     el orden por aceleración se pide por URL (`sort=acceleration`, lo usa el agente) y no tiene botón. Si
+     una métrica falta, la UI lo dice; no la rellena.
    - Avisar de forma visible desde cuándo se monitorea (primer snapshot: 17/10 ~02:50 UTC) para que
      nadie lea los periodos largos como historial medido.
    - **Agente del Radar** (artboard E, aprobado el 17/10): una barra de pregunta fija abajo. El agente
