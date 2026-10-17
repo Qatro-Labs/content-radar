@@ -25,6 +25,7 @@ from sqlalchemy import select, text
 from app.collectors.base import SignalCollector
 from app.collectors.hackernews import HackerNewsCollector
 from app.collectors.rss import RSSCollector
+from app.collectors.scrapecreators import RedditCollector, ScrapeCreatorsClient, TikTokCollector
 from app.collectors.usage import UsageMeter
 from app.collectors.youtube import YouTubeClient, YouTubeCollector
 from app.core.config import get_settings
@@ -46,9 +47,15 @@ def build_collectors(http: httpx.AsyncClient, usage: UsageMeter) -> dict[str, Si
         Platform.HACKERNEWS.value: HackerNewsCollector(http, usage),
         Platform.RSS.value: RSSCollector(http, usage),
     }
-    api_key = get_settings().youtube_api_key
-    if api_key:
-        collectors[Platform.YOUTUBE.value] = YouTubeCollector(YouTubeClient(api_key, http, usage))
+    settings = get_settings()
+    if settings.youtube_api_key:
+        collectors[Platform.YOUTUBE.value] = YouTubeCollector(
+            YouTubeClient(settings.youtube_api_key, http, usage)
+        )
+    if settings.scrapecreators_api_key:
+        scrapecreators = ScrapeCreatorsClient(settings.scrapecreators_api_key, http, usage)
+        collectors[Platform.TIKTOK.value] = TikTokCollector(scrapecreators)
+        collectors[Platform.REDDIT.value] = RedditCollector(scrapecreators)
     return collectors
 
 

@@ -554,13 +554,21 @@ export interface components {
      * Platform
      * @enum {string}
      */
-    Platform: 'youtube' | 'hackernews' | 'rss' | 'brave' | 'linkedin' | 'instagram' | 'tiktok'
+    Platform:
+      'youtube' | 'hackernews' | 'rss' | 'brave' | 'linkedin' | 'instagram' | 'tiktok' | 'reddit'
     /**
      * Provider
      * @description APIs externas con consumo medido. Cada valor es una clave de `variable` en pricing.yaml.
      * @enum {string}
      */
-    Provider: 'youtube' | 'hackernews' | 'rss' | 'brave_search' | 'typesafe_jev' | 'llm_text'
+    Provider:
+      | 'youtube'
+      | 'hackernews'
+      | 'rss'
+      | 'brave_search'
+      | 'scrapecreators'
+      | 'typesafe_jev'
+      | 'llm_text'
     /** ProviderCost */
     ProviderCost: {
       provider: components['schemas']['Provider']

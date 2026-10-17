@@ -76,6 +76,25 @@ def test_youtube_reference_needs_two_days():
     assert set(outlier_ratios(videos, AS_OF).values()) == {None}  # referencia de 4 < 5
 
 
+def test_tiktok_ratio_uses_views_per_day_against_same_search():
+    def video(i, days_ago, views):
+        p = piece(i, hours_ago=24 * days_ago, platform=Platform.TIKTOK, source="TikTok · AI")
+        return replace(p, metrics=Metrics(views=views))
+
+    reference = [video(i, 4, 4000) for i in range(5)]  # 1.000 views/día cada uno
+    hit = video(99, 2, 12000)  # 6.000 views/día
+    assert outlier_ratios([*reference, hit], AS_OF)[99] == 6.0
+
+
+def test_reddit_ratio_uses_score_against_same_subreddit():
+    def post(i, score):
+        p = piece(i, hours_ago=24, platform=Platform.REDDIT, source="r/OpenAI")
+        return replace(p, metrics=Metrics(points=score))
+
+    reference = [post(i, 100) for i in range(5)]
+    assert outlier_ratios([*reference, post(99, 400)], AS_OF)[99] == 4.0  # mediana 100
+
+
 def test_rss_has_no_metrics_and_no_ratio():
     rss = piece(1, hours_ago=5, platform=Platform.RSS, source="Medio")
     assert outlier_ratios([rss], AS_OF) == {1: None}

@@ -15,6 +15,7 @@ class Provider(StrEnum):
     HACKERNEWS = "hackernews"
     RSS = "rss"
     BRAVE_SEARCH = "brave_search"
+    SCRAPECREATORS = "scrapecreators"
     TYPESAFE_JEV = "typesafe_jev"
     LLM_TEXT = "llm_text"
 

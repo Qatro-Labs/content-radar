@@ -161,9 +161,11 @@ def test_spanish_coverage_does_not_close_the_latam_gap():
 # --- cross source / saturation ---
 
 
-def test_hn_queries_count_as_one_outlet():
+def test_search_queries_count_as_one_outlet():
     assert outlet_key("hackernews", "HN · LLM") == outlet_key("hackernews", "HN · OpenAI")
+    assert outlet_key("tiktok", "TikTok · AI agents") == outlet_key("tiktok", "TikTok · agentes")
     assert outlet_key("rss", "A") != outlet_key("rss", "B")
+    assert outlet_key("reddit", "r/OpenAI") != outlet_key("reddit", "r/ClaudeAI")
 
 
 def test_cross_source_score():

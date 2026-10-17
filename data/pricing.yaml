@@ -24,6 +24,12 @@ variable:
     price_per_unit: 0.005 # 5 $ por 1.000 consultas
     free_credit_monthly: 5.00 # ≈ 1.000 consultas al mes
     source: https://brave.com/search/api/
+  scrapecreators:
+    # TikTok y Reddit. 1 crédito por llamada; paquete Freelance: 47 $ por 25.000 créditos, sin
+    # caducidad (100 gratis al registrarse).
+    unit: requests
+    price_per_unit: 0.00188
+    source: https://scrapecreators.com
   typesafe_jev:
     unit: input_tokens
     price_per_unit: 0.000000042 # 0,042 $ por millón de tokens de entrada; la salida es gratis

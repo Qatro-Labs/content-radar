@@ -12,7 +12,8 @@
 | Hacker News | Algolia HN Search API | Metadatos, puntos, comentarios y snapshots | 0 $ | Comunidad técnica: no representa a la audiencia de negocio |
 | RSS | `feedparser` + `httpx` | Título, enlace, fecha y descripción del feed | 0 $ | Sin métricas de engagement |
 | Brave Search | API oficial (cabecera `X-Subscription-Token`) | Solo agregados: sus resultados son transitorios | 5 $ por 1.000 consultas, con 5 $ de crédito gratis al mes (≈ 1.000 consultas) | Solo descubrimiento web, nunca LinkedIn |
-| LinkedIn · Instagram · TikTok | **Fuera del MVP** (decidido el 17/10). Roadmap: vías oficiales (abajo) | Nada | — | Sin login ni scraping no hay acceso; la curación manual se descartó |
+| TikTok · Reddit | **ScrapeCreators** (desde el 17/10; los organizadores fueron flexibles con la regla 2): `/v1/tiktok/search/keyword` y `/v1/reddit/subreddit` | Metadatos, enlace y métricas públicas; nunca el autor de Reddit | 1 crédito por llamada; 47 $ por 25.000 créditos (~1,9 $/1.000), 100 gratis | TikTok: solo la semana en curso y hasta 30 vídeos por búsqueda. Reddit: top de la semana. Re-medir una pieza depende de que vuelva a salir en la búsqueda |
+| LinkedIn · Instagram · X | **Fuera del MVP.** Roadmap: vías oficiales (abajo) | Nada | — | ScrapeCreators los cubre, pero su búsqueda depende de lo que indexa Google |
 
 ## Brave: uso transitorio
 
