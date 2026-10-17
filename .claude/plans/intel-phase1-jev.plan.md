@@ -297,7 +297,7 @@ class JudgeResult:
 - **Verificación:** `cd backend && uv run pytest tests/test_jev.py -q`
 - **Commit:** `Wrap the TypeSafe SDK behind a Judge protocol`
 
-### Paso 4 — Tabla `jev_judgments` (la migración revisa `5c0a7e3d91b2`)
+### Paso 4 — Tabla `jev_judgments` (la migración revisa `5c0a7e3d91b2`) [HECHO]
 
 - **Archivos:** `backend/app/models/jev.py`, `backend/app/models/__init__.py`,
   `backend/alembic/versions/<nuevo>_jev_judgments.py`.
