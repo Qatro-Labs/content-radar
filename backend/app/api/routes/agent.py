@@ -1,12 +1,12 @@
 import asyncio
 import hashlib
-import logging
 from collections.abc import AsyncIterable, AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager
 from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +29,7 @@ from app.schemas.agent import (
 from app.services.costs import record_meter
 
 router = APIRouter(prefix="/agent", tags=["agent"])
-logger = logging.getLogger(__name__)
+log = structlog.get_logger()
 
 SessionFactory = Callable[[], AbstractAsyncContextManager[AsyncSession]]
 NOT_CONFIGURED = "El asistente no está configurado."
@@ -183,9 +183,9 @@ async def ask_agent(
     finally:
         await _record_usage_despite_cancel(meter, session_factory)
         # Nunca el texto de la pregunta ni la IP (D15).
-        logger.info(
-            "agent question chars=%d steps=%d ip_hash=%s",
-            len(body.question),
-            steps,
-            _ip_hash(client_ip(request)),
+        log.info(
+            "agent_question",
+            chars=len(body.question),
+            steps=steps,
+            ip_hash=_ip_hash(client_ip(request)),
         )

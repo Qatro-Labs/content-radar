@@ -12,6 +12,7 @@ from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from starlette.types import ASGIApp
+from structlog.testing import capture_logs
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.agent import runner
@@ -306,6 +307,20 @@ async def test_route_streams_events(seeded, overrides):
     body = response.text
     positions = [body.index(f"event: {name}") for name in ("step", "answer", "done")]
     assert positions == sorted(positions)
+
+
+async def test_route_logs_the_question_without_its_text(seeded, overrides):
+    model = ScriptedModel([turn(("list_opportunities", {})), final(cited=["opp_001"])])
+    overrides[get_agent_model] = lambda: model
+
+    with capture_logs() as logs:
+        await ask("¿Qué tema de agentes acelera?")
+
+    [entry] = [e for e in logs if e["event"] == "agent_question"]
+    assert entry["chars"] == len("¿Qué tema de agentes acelera?")
+    assert entry["steps"] == 1
+    assert len(entry["ip_hash"]) == 12
+    assert "agentes" not in str(entry)
 
 
 async def test_route_rejects_long_question(overrides):
