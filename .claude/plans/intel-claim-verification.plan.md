@@ -783,7 +783,7 @@ Se informa también por posición (1, 2, 3) y la variante sin `measured_facts`.
      Si se adopta, lleva también el cambio del default, con «Enable claim verification by default»
      como segunda línea del mensaje.
 
-### Paso 6 — Documentación
+### Paso 6 — Documentación [HECHO]
 
 - **Archivos:** `docs/jev.md`, `.env.example`, `CLAUDE.md`
 - **Cambio:**
@@ -862,6 +862,7 @@ Supabase. La comprobación de punta a punta con datos reales la hace Melkin al l
 
 | Fecha | Qué bloqueó | Qué se decidió | Commits que quedaron |
 | --- | --- | --- | --- |
+| 2026-10-18 | Paso 5: el permiso de la sesión denegó la lectura de Supabase (`sample`), y el encargo prohibía llamar a Jev. Sin muestra no hay etiquetado ni `run` ni `score` | Pasos 0–4 y 6 hechos sobre `main` @ `026e504`. El script `eval_claim_verification.py` queda commiteado y probado con `sample` contra la DB local (ejecución 28: 40 reales de 14 temas + 10 sintéticas; esa muestra no se commitea porque no es la ejecución servida). `jev_verify_claims` sigue en `False`, y la documentación lo dice. **Pendiente para Melkin:** (1) `sample` contra Supabase en solo lectura; (2) etiquetar las 40 reales a ciegas y commitear con «Add the labelled claim sample for the Jev verification eval»; (3) `run --variant facts` y `run --variant evidence_only` con `claim.v1.yaml`; (4) `score`, `jev_claim_v1_eval.md` y la decisión de D10. Desvíos menores: test DB `radar_test_claims` (no `radar_test_verify`); `battery_cache_key` ya existía (dedup, D5); `claim_cache_key(state)` añadido en `services/verification.py` para que el service de explicación lea el veredicto por clave; `test_build_claim_verifier` usa `Settings(...)` con los dos campos explícitos y sin `_env_file`, como el resto de tests (pyright rechaza `_env_file`) | `939183c` plan · `339ee65` paso 1 · `cfcd62d` paso 2 · `050d71a` paso 3 · `a90617b` paso 4 · `e41ab15` script del paso 5 · paso 6 |
 
 ## Preguntas abiertas
 

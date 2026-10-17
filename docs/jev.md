@@ -121,18 +121,63 @@ filas van a `jev_judgments` con `battery = "pair"` y `content_item_id` nulo: la 
 
 ### 3. Verificación: después del LLM
 
-El LLM devuelve `why_it_matters` y los briefs como una lista de afirmaciones, cada una con el id de
-la evidencia que la respalda. Por cada afirmación:
+**Estado: implementada y apagada por defecto (`JEV_VERIFY_CLAIMS=false`) hasta validarla.** Mientras
+esté apagada, `why_it_matters` solo pasa las comprobaciones de Python y no se puede decir que Jev
+lo verifica. La validación con afirmaciones reales está pendiente (ver más abajo).
 
-1. Python comprueba que la evidencia citada pertenece al tema.
-2. Jev responde un `choice` contra el texto de esa evidencia: `supports` · `contradicts` ·
-   `says_nothing` (cookbook *citation check*).
-3. Se publica solo si es `supports` con `confidence` ≥ 0,8. Un `supports` por debajo de 0,8, un
-   `says_nothing` o un `contradicts` no se publican y quedan registrados.
+El LLM devuelve `why_it_matters` como una lista de afirmaciones, cada una con las URLs de la
+evidencia que la respalda. En `analyze`, por cada afirmación:
 
-**Limitación:** la evidencia es solo título y descripción. El LLM tiene que ceñirse a lo que dicen;
-si no, casi todo saldrá `says_nothing`. Si no sobrevive ninguna afirmación, la UI dice "sin
-afirmaciones verificables" en vez de mostrar un texto vacío.
+1. Python comprueba que cita una pieza que el LLM recibió y que no trae cifras que no estén en los
+   datos ni en la evidencia (`intelligence/explanation.py`, `python_checked`).
+2. Jev responde la batería `claim.v1`
+   (`backend/app/editorial/prompts/jev/claim.v1.yaml`) en una llamada: un `choice` `support`
+   (`supports` · `contradicts` · `says_nothing`, patrón *citation check* del cookbook) y su
+   `support_rev`, con las opciones en orden inverso para detectar el sesgo hacia la primera.
+3. Se publica solo si `support` es `supports` con `confidence` ≥ 0,8 y `support_rev` también dice
+   `supports` (`claim_supported`, en `intelligence/jev.py`).
+
+**Qué va en el `state`:** la afirmación, los datos medidos que recibió el LLM (`measured_facts`,
+las mismas frases de `opportunity_facts`) y las piezas citadas que el LLM recibió, solo con fuente,
+título y descripción. Sin URL, plataforma, segmento ni región, y sin las justificaciones del fit.
+Los datos medidos entran porque las afirmaciones reales mezclan lo que dicen las piezas con lo que
+calculó Python («saturado», «4 piezas frente a 12», «conviene descartar»). Contra las piezas solas,
+Jev, que lee de forma literal, dejaría sin respaldo la frase de qué conviene hacer. Las
+justificaciones del fit no entran: son texto del LLM, y verificar al LLM con su propio texto sería
+circular.
+
+**Notas en `limitations`** (sin cambio de contrato; la UI las muestra en «Qué no sabemos»):
+
+- «Jev no encontró respaldo en la evidencia citada para N afirmaciones del LLM: no se publican.»
+  Las afirmaciones rechazadas se quitan del texto.
+- Si Jev rechaza todas, el tema conserva la plantilla de datos medidos con la nota de «ninguna
+  afirmación superó la comprobación de evidencia», como cuando falla Python.
+- Un tema se verifica entero o no se verifica. Si falta el juicio de alguna de sus afirmaciones
+  (no hay `TYPESAFE_API_KEY` y no estaba en caché, Jev falló o se agotó el presupuesto), se publican
+  las que pasaron Python con la nota «"Por qué importa" no está verificado por Jev».
+
+**Caché y presupuesto:** `jev_judgments` con `battery = "claim"` y `content_item_id` nulo. La clave
+es el hash del `state`, la batería, su versión y el modelo, así que una segunda ejecución con las
+mismas explicaciones no llama a Jev. Como mucho 200 llamadas nuevas por ejecución
+(`MAX_CLAIM_VERIFICATIONS_PER_RUN`), repartidas en el orden del ranking, para gastar primero en lo
+que se ve arriba del Radar. Cada llamada real cuenta en `usage_events` como `claim_battery`.
+
+**Validación (pendiente):** `data/evaluations/eval_claim_verification.py` prepara una muestra de 40
+afirmaciones reales de la ejecución servida y 10 negativas sintéticas (cita cambiada y hecho
+insertado), etiquetadas antes de ver a Jev. El criterio de adopción está fijado de antemano:
+conserva ≥ 70 % de las respaldadas, filtra ≥ 60 % de las negativas y ≥ 80 % de los temas conservan
+alguna afirmación. Los resultados irán a `data/evaluations/jev_claim_v1_eval.md`. Solo si se cumple
+el criterio, `JEV_VERIFY_CLAIMS` pasa a `true`.
+
+**Limitaciones:**
+
+- La evidencia es solo título y descripción. El LLM tiene que ceñirse a lo que dicen; si no, casi
+  todo saldrá `says_nothing`.
+- Una ausencia («ninguna pieza muestra…») se comprueba solo contra las piezas citadas, no contra
+  todas las del tema.
+- **Pendiente:** los briefs (`POST /editorial/brief`, `generate_editorial_brief`) no se verifican.
+  Se generan dentro del request, y verificar ahí añadiría la latencia de Jev y una ruta de fallo
+  nueva en el MCP. Además, el brief no tiene la forma «afirmación + URLs».
 
 ## Del juicio a la decisión (en Python)
 
