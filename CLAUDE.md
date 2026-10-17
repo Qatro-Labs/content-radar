@@ -12,7 +12,7 @@
 **Pregunta que el prototipo debe responder:**
 > "¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?"
 
-El reto pone como ejemplo "en LinkedIn". LinkedIn, Instagram y TikTok no tienen acceso sin login, así que entran por curación manual (§2, regla 2), y el pitch lo explica de frente (`docs/brief.md` §2).
+El reto pone como ejemplo "en LinkedIn". LinkedIn, Instagram y TikTok no tienen acceso sin login, así que entran por curación manual o por APIs oficiales con consentimiento del dueño (§2, regla 2; §5), y el pitch lo explica de frente (`docs/brief.md` §2).
 
 **Propuesta de valor:** 30X Signal convierte señales públicas de Internet en oportunidades editoriales **verificables y accionables**, accesibles desde un dashboard visual (Vue) o desde asistentes de IA (Claude, ChatGPT, Grok) vía **MCP**.
 
@@ -199,7 +199,7 @@ GET  /health
   - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
   - HN: puntos vs. la mediana de las stories de la misma búsqueda y el mismo periodo.
   - `≥ 3×` = outlier, `≥ 2×` = destacado. Con una sola observación es `estimated`.
-  - Los outliers alimentan el "por qué funcionó": el LLM compara outliers con las piezas normales **del mismo tema** (análisis contrastivo) en lugar de describir una pieza aislada.
+  - Los outliers alimentan el "por qué funcionó": se comparan con las piezas normales **del mismo tema** (análisis contrastivo, ver "Por qué funcionó" más abajo) en lugar de describir una pieza aislada.
 - **Etapa de la tendencia (`lifecycle`, determinista, en `intelligence/lifecycle.py`).** Primera regla que se cumple, con umbrales ajustables:
   | Etapa | Regla inicial |
   |---|---|
