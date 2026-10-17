@@ -10,8 +10,16 @@ from typing import TYPE_CHECKING, Annotated
 from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import BaseModel, Field
 
+from app.agent.limits import LimitResult
 from app.agent.sanitize import clean_tree
 from app.schemas.cost import CostPeriod, OperatingCost
+from app.schemas.editorial import (
+    BriefFormat,
+    BriefGoal,
+    BriefPlatform,
+    BriefRequest,
+    EditorialBrief,
+)
 from app.schemas.mcp import (
     AudienceFitComparison,
     EvidenceLink,
@@ -28,7 +36,7 @@ from app.schemas.opportunity import (
     Lifecycle,
 )
 from app.schemas.signal import Platform, Segment
-from app.services import costs, opportunities, signals
+from app.services import costs, editorial, opportunities, signals
 from app.services.opportunities import MONITORING_STARTED_AT, SERVED_PERIOD, ServedOpportunity
 
 if TYPE_CHECKING:
@@ -57,6 +65,13 @@ UNKNOWN_OPPORTUNITY = (
     "Usa get_trending_opportunities para ver los ids válidos."
 )
 EMPTY_QUERY = "La búsqueda necesita al menos una palabra de 2 caracteres o más."
+# El límite de briefs es uno para todos los clientes MCP (ver `production_deps`).
+MCP_CLIENT_KEY = "mcp"
+MCP_BRIEF_BUSY = "Se están generando otros briefs. Prueba en unos segundos."
+MCP_BRIEF_LIMITS = {
+    LimitResult.IP: "Se alcanzó el límite de briefs por hora desde el MCP. Prueba más tarde.",
+    LimitResult.GLOBAL: "Se alcanzó el límite de briefs de hoy desde el MCP. Prueba mañana.",
+}
 
 OpportunityId = Annotated[
     str,
@@ -241,3 +256,40 @@ class RadarTools:
         async with self._deps.session_factory() as session:
             cost = await costs.operating_cost(session, period, now=datetime.now(UTC))
         return _sanitized(cost)
+
+    async def generate_editorial_brief(
+        self,
+        opportunity_id: OpportunityId,
+        platform: Annotated[BriefPlatform, Field(description="Dónde publicará 30X la pieza")],
+        goal: Annotated[BriefGoal, Field(description="Qué busca la pieza")],
+        format: Annotated[BriefFormat, Field(description="Formato de la pieza")],
+    ) -> EditorialBrief:
+        """Genera (o devuelve cacheado) un brief editorial de 30X para una oportunidad: ángulo,
+        gancho, estructura, puntos clave con sus URLs de evidencia y por qué encaja. Solo usa
+        piezas comprobadas y respeta la recomendación de la oportunidad. Llama a un LLM, así que
+        tiene un límite por hora y por día. Puede fallar si el brief no supera la comprobación de
+        evidencia: no lo reintentes en bucle."""
+        request = BriefRequest(
+            opportunity_id=opportunity_id, platform=platform, goal=goal, format=format
+        )
+        slots = self._deps.brief_slots
+        if slots.locked():
+            raise ToolError(MCP_BRIEF_BUSY)
+        async with slots:
+            now = datetime.now(UTC)
+            # Cuenta también un acierto de caché, como en la ruta: el cupo no depende de la caché.
+            limit = self._deps.brief_limiter.check(MCP_CLIENT_KEY, now)
+            if limit is not LimitResult.OK:
+                raise ToolError(MCP_BRIEF_LIMITS[limit])
+            brief = await self._metered_brief(request, now)
+        return _sanitized(brief)
+
+    async def _metered_brief(self, request: BriefRequest, now: datetime) -> EditorialBrief:
+        async with self._deps.session_factory() as session:
+            try:
+                return await editorial.generate_metered_brief(
+                    session, request, briefer=self._deps.briefer, now=now
+                )
+            except editorial.BriefError as e:
+                # Sus mensajes ya se pueden mostrar: nunca llevan texto de la evidencia.
+                raise ToolError(str(e)) from e

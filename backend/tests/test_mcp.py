@@ -5,6 +5,7 @@ dentro falla en el teardown (anyio cierra sus task groups en otra tarea).
 """
 
 import asyncio
+import dataclasses
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -12,17 +13,19 @@ from typing import Any
 import pytest
 from mcp import Client
 from mcp.types import CallToolResult, TextContent
+from sqlalchemy import select
 
-from app.agent.limits import RateLimiter
+from app.agent.limits import LimitResult, RateLimiter
 from app.agent.sanitize import clean_tree
 from app.collectors.usage import UsageMeter
 from app.mcp.server import McpDeps, build_mcp_server, transport_security
-from app.mcp.tools import COVERAGE_NOTE, NO_DATA
+from app.mcp.tools import COVERAGE_NOTE, MCP_BRIEF_LIMITS, NO_DATA
+from app.models import UsageEvent
 from app.schemas.cost import CostPeriod, Provider
 from app.services import costs
 from app.services.costs import record_meter
 from app.services.opportunities import get_served
-from tests.test_editorial_brief import FakeBriefer
+from tests.test_editorial_brief import FakeBriefer, seed
 from tests.test_opportunity_routes import add_run, fixture_results
 from tests.test_search_signals import item, source
 
@@ -244,3 +247,86 @@ async def test_operating_cost_matches_the_service(session):
     assert out["period"] == expected["period"] == "7d"
     assert out["measured"]["total_usd"] == expected["measured"]["total_usd"]
     assert out["measured"]["providers"] == expected["measured"]["providers"]
+
+
+def brief_args(opportunity_id: str) -> dict[str, str]:
+    return {
+        "opportunity_id": opportunity_id,
+        "platform": "linkedin",
+        "goal": "educate",
+        "format": "carousel",
+    }
+
+
+async def usage_events(session) -> list[UsageEvent]:
+    return list((await session.scalars(select(UsageEvent))).all())
+
+
+async def test_lists_the_six_tools_with_descriptions_and_hints(session):
+    async with Client(build_mcp_server(deps(session))) as c:
+        tools = (await c.list_tools()).tools
+
+    assert {t.name for t in tools} == {
+        "get_trending_opportunities",
+        "analyze_opportunity",
+        "search_content_signals",
+        "compare_audience_fit",
+        "get_operating_cost",
+        "generate_editorial_brief",
+    }
+    assert all(t.description and t.output_schema for t in tools)
+    read_only = {t.name: bool(t.annotations and t.annotations.read_only_hint) for t in tools}
+    assert [name for name, hint in read_only.items() if not hint] == ["generate_editorial_brief"]
+
+
+async def test_brief_through_mcp_matches_the_service_and_records_usage(session):
+    opportunity_id = await seed(session)
+    served = await get_served(session, opportunity_id)
+    assert served is not None
+
+    async with Client(build_mcp_server(deps(session))) as c:
+        out = structured(await c.call_tool("generate_editorial_brief", brief_args(opportunity_id)))
+
+    assert out["opportunity_id"] == opportunity_id
+    evidence_urls = {str(e.url) for e in served.evidence}
+    cited = {url for point in out["key_points"] for url in point["evidence_urls"]}
+    assert cited and cited <= evidence_urls
+    assert len(await usage_events(session)) == 1
+
+
+async def test_rejected_brief_is_an_error_and_its_usage_is_recorded(session):
+    opportunity_id = await seed(session)
+    server = build_mcp_server(deps(session, briefer=FakeBriefer(angle="El 70 % ya delega.")))
+
+    async with Client(server) as c:
+        result = await c.call_tool("generate_editorial_brief", brief_args(opportunity_id))
+
+    assert result.is_error
+    assert len(await usage_events(session)) == 1
+
+
+async def test_brief_without_llm_is_an_error(session):
+    opportunity_id = await seed(session)
+    server = build_mcp_server(dataclasses.replace(deps(session), briefer=None))
+
+    async with Client(server) as c:
+        result = await c.call_tool("generate_editorial_brief", brief_args(opportunity_id))
+
+    assert result.is_error
+    assert "falta configurar el LLM" in text_of(result)
+
+
+async def test_brief_limit_is_an_error_without_calling_the_llm(session):
+    opportunity_id = await seed(session)
+    briefer = FakeBriefer()
+    limiter = RateLimiter(per_ip_per_hour=1, global_per_day=100)
+    server = build_mcp_server(deps(session, briefer=briefer, limiter=limiter))
+
+    async with Client(server) as c:
+        first = await c.call_tool("generate_editorial_brief", brief_args(opportunity_id))
+        second = await c.call_tool("generate_editorial_brief", brief_args(opportunity_id))
+
+    assert not first.is_error, text_of(first)
+    assert second.is_error
+    assert MCP_BRIEF_LIMITS[LimitResult.IP] in text_of(second)
+    assert briefer.calls == 1

@@ -37,6 +37,11 @@ MCP_BRIEFS_PER_DAY = 100
 MAX_CONCURRENT_MCP_BRIEFS = 2
 
 READ_ONLY = ToolAnnotations(read_only_hint=True, open_world_hint=False)
+# Escribe en la caché y en el registro de consumo y llama a un LLM externo; repetido, devuelve
+# el brief cacheado.
+BRIEF = ToolAnnotations(
+    read_only_hint=False, destructive_hint=False, idempotent_hint=True, open_world_hint=True
+)
 
 INSTRUCTIONS = """\
 30X Signal es el radar editorial de 30X sobre temas de inteligencia artificial para ejecutivos y \
@@ -106,6 +111,7 @@ def build_mcp_server(deps: McpDeps) -> MCPServer:
     )
     for tool in read_only:
         server.add_tool(tool, annotations=READ_ONLY)
+    server.add_tool(tools.generate_editorial_brief, annotations=BRIEF)
     return server
 
 

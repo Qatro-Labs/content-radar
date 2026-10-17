@@ -642,7 +642,7 @@ abiertas", gate `BLOQUEADO`, y parar.
 - **Verificación:** `cd backend && uv run pytest tests/test_mcp.py -q`
 - **Commit:** `Add signal search, audience fit comparison and cost MCP tools`
 
-### Paso 7 — Brief por MCP con límites (D9, D10, D11)
+### Paso 7 — Brief por MCP con límites (D9, D10, D11) [HECHO]
 
 - **Archivos:** `backend/app/mcp/tools.py` (o `backend/app/mcp/briefs.py`, ver "Tamaño"),
   `backend/app/mcp/server.py`, `backend/tests/test_mcp.py`
