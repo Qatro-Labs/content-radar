@@ -49,11 +49,6 @@ export function formatDecimal(value: number): string {
   return oneDecimal.format(value)
 }
 
-export function formatOutliers(count: number, topRatio: number | null | undefined): string {
-  if (count === 0 || topRatio == null) return String(count)
-  return `${count} · máx. ${formatDecimal(topRatio)}×`
-}
-
 export function formatScore(score: number | null | undefined): string {
   if (score == null) return NOT_AVAILABLE
   return String(Math.round(score))
