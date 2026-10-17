@@ -11,8 +11,12 @@ Antes de tocar UI, lee `DESIGN.md`.
 ## Tres vistas
 
 1. **Discover (Radar):** gráfico de burbujas de ECharts como protagonista y ranking sincronizado.
+   - **Arranca sin tema seleccionado** (D2, 17/10). El panel lateral muestra «Esta semana» (los temas de «Publicar
+     ya»); al elegir una burbuja o una fila pasa a la vista previa del tema, y "Ver expediente" abre
+     `/explore/:id`. Ninguna vista pide «elige algo».
    - X = audience fit · Y = momentum · tamaño = evidence strength (normalizado) · color = lifecycle.
-   - Cuadrante superior derecho = prioridad. Filtros: periodo, lifecycle, confianza, tema, segmento.
+   - Cuadrante superior derecho = prioridad. Filtros: periodo y los contadores-filtro de la cabecera (Publicar ya ·
+     Acelerando · Emergentes · Sin etapa), todos en la URL. El ranking lleva mini barras de 6 días (`/timeline`).
    - En el ranking, cada fila muestra la etapa (badge con `lifecycle_reason` en el tooltip), la
      aceleración (↑ +80 %) y el nº de outliers. Ordenar por aceleración, no por volumen. Si una
      métrica falta, la UI lo dice; no la rellena.
@@ -24,11 +28,16 @@ Antes de tocar UI, lee `DESIGN.md`.
      estado de la URL (`useRadarQuery`), igual que los controles, así que una vista del agente se puede
      compartir y repetir. El frontend no llama al LLM ni al MCP: consume el stream de eventos del
      backend. Componentes y movimiento en `DESIGN.md` §4 y §7.
-2. **Explore (Evidencia):** timeline de velocidad del tema (barras por día, ventana actual vs.
-   anterior) con su confianza · **barra apilada de `audience_mix`** (para quién importa) · Evidence
-   Explorer por plataforma (enlaces originales, fechas, métricas, velocidad y **badge de outlier
-   `6.1×`**; outliers primero) · AI Insights (por qué funciona, patrones, **qué no podemos saber**,
-   encaje con 30X).
+2. **Explore (Evidencia):** dos estados, los dos con contenido propio.
+   - **Sin tema (`/explore`): «Lo que está funcionando».** Todas las piezas de todos los temas: rendimiento frente a
+     su canal por fecha (dispersión, escala log), tabla de piezas con outliers primero y panel lateral («Dónde está
+     funcionando» o el detalle de la pieza, con enlace a su tema). Necesita un endpoint de piezas de todos los temas;
+     mientras no exista, se monta con `/evidence` de cada oportunidad.
+   - **Con tema (`/explore/:id`): el expediente** (artboard I). "Cómo se compone" (`score_breakdown`) · timeline de
+     la ventana actual frente a la anterior con su confianza · "Por qué importa" completo · criterios de encaje con
+     citas que resaltan su evidencia · **barra apilada de `audience_mix`** · evidencia por plataforma (enlaces
+     originales, fechas, métricas, velocidad y **badge de outlier `6.1×`** con la barra 1×/3×; outliers primero) ·
+     **qué no podemos saber** · "Generar brief".
 3. **Create (Content Studio, P1):** oportunidad + plataforma + objetivo + formato → brief (ángulo,
    gancho, estructura, evidencias, por qué encaja). Se puede copiar. No es un editor.
 
