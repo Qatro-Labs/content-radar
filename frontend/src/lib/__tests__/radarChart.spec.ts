@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest'
 import fixture from '@fixtures/opportunities.json'
 import type { components } from '@/types/api'
 
-import type { LifecyclePalette } from '../lifecycle'
 import {
   buildRadarOption,
   sweepDelaySeconds,
   type RadarChartInput,
   type RadarChartOption,
+  type RadarPalette,
 } from '../radarChart'
 import { buildRadarView } from '../radarView'
 
@@ -28,13 +28,18 @@ const { plotted } = buildRadarView(list, {
   sort: 'opportunity',
 })
 
-// Paleta fija con los colores de DESIGN.md §2; en la app se lee de las variables --lc-*.
-const PALETTE: LifecyclePalette = {
-  emerging: { fill: '#3d7bff', stroke: '#3d7bff' },
-  accelerating: { fill: '#b5e61d', stroke: '#6e8f00' },
-  peaking: { fill: '#ff9a3c', stroke: '#e07a14' },
-  saturated: { fill: '#f0565c', stroke: '#f0565c' },
-  unknown: { fill: '#8a919c', stroke: '#8a919c' },
+// Paleta fija con los colores de DESIGN.md §2; en la app se lee de las variables de main.css.
+const PALETTE: RadarPalette = {
+  stages: {
+    emerging: { fill: '#3d7bff', stroke: '#3d7bff' },
+    accelerating: { fill: '#b5e61d', stroke: '#6e8f00' },
+    peaking: { fill: '#ff9a3c', stroke: '#e07a14' },
+    saturated: { fill: '#f0565c', stroke: '#f0565c' },
+    unknown: { fill: '#8a919c', stroke: '#8a919c' },
+  },
+  surface: '#ffffff',
+  ink: '#121418',
+  muted: '#626873',
 }
 
 function input(patch: Partial<RadarChartInput> = {}): RadarChartInput {
@@ -118,11 +123,17 @@ describe('buildRadarOption', () => {
     expect(seriesOfType(option, 'effectScatter')?.data).toEqual([
       expect.objectContaining({
         name: 'opp_001',
-        rippleEffect: expect.objectContaining({ period: 2.0, color: '#6e8f00' }),
+        rippleEffect: expect.objectContaining({
+          period: 2.0,
+          color: PALETTE.stages.accelerating.stroke,
+        }),
       }),
       expect.objectContaining({
         name: 'opp_003',
-        rippleEffect: expect.objectContaining({ period: 3.6, color: '#e07a14' }),
+        rippleEffect: expect.objectContaining({
+          period: 3.6,
+          color: PALETTE.stages.peaking.stroke,
+        }),
       }),
     ])
   })
@@ -179,8 +190,8 @@ describe('buildRadarOption', () => {
       expect.objectContaining({
         name: 'opp_002',
         itemStyle: expect.objectContaining({
-          color: '#ffffff',
-          borderColor: '#8a919c',
+          color: PALETTE.surface,
+          borderColor: PALETTE.stages.unknown.stroke,
           borderType: 'dashed',
         }),
       }),

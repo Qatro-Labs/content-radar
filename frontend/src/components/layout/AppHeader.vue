@@ -45,7 +45,7 @@ const views = [
       <PeriodControl v-if="route.name === RouteName.Discover" />
       <span
         v-if="USING_FIXTURES"
-        class="rounded-full bg-[#fff0dc] px-3 py-1.5 text-[13px] font-medium text-notice-foreground"
+        class="rounded-full bg-sample px-3 py-1.5 text-[13px] font-medium text-notice-foreground"
       >
         Datos de ejemplo
       </span>

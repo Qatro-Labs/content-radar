@@ -47,8 +47,6 @@ const COLUMNS = [
 
 // DESIGN.md §6: por debajo de 1000 px la tabla hace scroll dentro de su tarjeta. Las columnas en
 // px del artboard E suman unos 1300 px; estos mínimos suman 1000 con los huecos y el padding.
-// Etiqueta (#4A505A), Línea de tabla (#EEF0F2) y el hover del secundario (#E8EAED) no tienen
-// token en main.css (DESIGN.md §2 y §4).
 const ROW_GRID_CLASS =
   'grid grid-cols-[56px_minmax(152px,2.4fr)_minmax(120px,1fr)_minmax(92px,0.8fr)_minmax(112px,1fr)_minmax(60px,0.5fr)_minmax(140px,1.3fr)_minmax(124px,1fr)] items-center gap-x-4 px-4'
 
@@ -91,7 +89,7 @@ function resetView() {
           :key="sort"
           type="button"
           :aria-pressed="query.sort === sort"
-          class="min-h-9 rounded-[9px] px-3.5 text-sm font-medium text-[#4a505a] transition-colors duration-150 ease-out aria-pressed:bg-card aria-pressed:font-semibold aria-pressed:text-foreground"
+          class="min-h-9 rounded-[9px] px-3.5 text-sm font-medium text-label transition-colors duration-150 ease-out aria-pressed:bg-card aria-pressed:font-semibold aria-pressed:text-foreground"
           @click="update({ sort })"
         >
           {{ SORT_LABEL[sort] }}
@@ -103,7 +101,7 @@ function resetView() {
       <p class="text-[15px] text-ink-soft">Ningún tema cumple estos filtros.</p>
       <button
         type="button"
-        class="min-h-11 rounded-xl bg-secondary px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-[#e8eaed] active:scale-[0.98]"
+        class="min-h-11 rounded-xl bg-secondary px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
         @click="resetView"
       >
         Restablecer vista
@@ -120,7 +118,7 @@ function resetView() {
           :key="row.id"
           type="button"
           :aria-pressed="row.id === selectedId"
-          class="min-h-14 w-full border-t border-[#eef0f2] text-left text-[15px] transition-colors duration-150 ease-out"
+          class="min-h-14 w-full border-t border-table-line text-left text-[15px] transition-colors duration-150 ease-out"
           :class="[ROW_GRID_CLASS, ROW_ENTER_CLASS, rowToneClass(row.id)]"
           :style="{ animationDelay: staggerDelay(index) }"
           @click="emit('select', row.id)"

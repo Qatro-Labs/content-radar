@@ -36,6 +36,17 @@
   --plot: #f7f8f9;
   --notice: #fff4e5;
   --notice-foreground: #8a4b00;
+  --label: #4a505a;
+  --data-line: #e2e5e9;
+  --table-line: #eef0f2;
+  --sample: #fff0dc;
+  --secondary-hover: #e8eaed;
+  --primary-hover: #2a2e35;
+  --ink-read: #22262c;
+  --neutral-action: #f0f1f3;
+  --negative-bg: #fde8e9;
+  --audience-business: #8a919c;
+  --saturation: #ff9a3c;
 
   --lc-emerging: #3d7bff;
   --lc-emerging-bg: #e8f0ff;
@@ -102,6 +113,17 @@
   --color-plot: var(--plot);
   --color-notice: var(--notice);
   --color-notice-foreground: var(--notice-foreground);
+  --color-label: var(--label);
+  --color-data-line: var(--data-line);
+  --color-table-line: var(--table-line);
+  --color-sample: var(--sample);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-primary-hover: var(--primary-hover);
+  --color-ink-read: var(--ink-read);
+  --color-neutral-action: var(--neutral-action);
+  --color-negative-bg: var(--negative-bg);
+  --color-audience-business: var(--audience-business);
+  --color-saturation: var(--saturation);
   --radius-card: 1.25rem;
   --radius-tile: 0.875rem;
 }

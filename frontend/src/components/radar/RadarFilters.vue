@@ -85,7 +85,7 @@ function resetView() {
         <span class="text-[13px] text-muted-foreground">Filtros activos</span>
         <button
           type="button"
-          class="min-h-11 rounded-lg bg-card px-4 text-sm font-semibold transition duration-150 ease-out hover:bg-[#e8eaed] active:scale-[0.98]"
+          class="min-h-11 rounded-lg bg-card px-4 text-sm font-semibold transition duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
           @click="resetView"
         >
           Restablecer vista

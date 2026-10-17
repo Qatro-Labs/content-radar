@@ -32,9 +32,8 @@ const SKELETON_ROWS = 5
 const SKELETON_COUNTERS = 3
 const SKELETON_TILES = 3
 const SKELETON_BARS = 3
-// Hover del botón secundario (#E8EAED, DESIGN.md §4): no tiene token en main.css.
 const RETRY_BUTTON =
-  'min-h-11 rounded-xl px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-[#e8eaed] active:scale-[0.98]'
+  'min-h-11 rounded-xl px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]'
 // Sobre el fondo del gráfico el secundario va en blanco, como "Restablecer vista" sobre el
 // lienzo (DESIGN.md §4): el gris de siempre casi no se distingue de ese fondo.
 const RETRY_ON_PLOT = 'bg-card'

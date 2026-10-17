@@ -32,8 +32,7 @@ const placement = computed(() => {
   >
     <LifecycleChip :lifecycle="opportunity.lifecycle" size="sm" class="self-start" />
     <span class="text-[15px] leading-tight font-semibold">{{ opportunity.topic }}</span>
-    <!-- Etiqueta (#4A505A, DESIGN.md §2) no tiene token en main.css. -->
-    <span class="text-[13px] text-[#4a505a]">
+    <span class="text-[13px] text-label">
       Oportunidad {{ formatScore(opportunity.opportunity_score) }} ·
       {{ formatAcceleration(opportunity.acceleration) }}
     </span>

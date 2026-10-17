@@ -56,7 +56,7 @@ const tiles = computed<StatTile[]>(() => [
   { label: 'Fuentes', value: String(opportunity.source_count), valueClass: '' },
 ])
 
-// DESIGN.md §4. Los hovers de los botones no tienen token en main.css.
+// DESIGN.md §4.
 const BUTTON_CLASS =
   'flex min-h-[46px] flex-[1_1_140px] items-center justify-center rounded-xl px-4 font-semibold transition-[background-color,scale] duration-150 ease-out active:scale-[0.98]'
 </script>
@@ -124,14 +124,14 @@ const BUTTON_CLASS =
     <div class="mt-auto flex flex-wrap gap-2">
       <RouterLink
         :to="{ name: RouteName.Explore, params: { id: opportunity.id } }"
-        class="bg-secondary text-secondary-foreground hover:bg-[#e8eaed]"
+        class="bg-secondary text-secondary-foreground hover:bg-secondary-hover"
         :class="BUTTON_CLASS"
       >
         Ver evidencia
       </RouterLink>
       <RouterLink
         :to="{ name: RouteName.Create, query: { opportunity: opportunity.id } }"
-        class="bg-primary text-primary-foreground hover:bg-[#2a2e35]"
+        class="bg-primary text-primary-foreground hover:bg-primary-hover"
         :class="BUTTON_CLASS"
       >
         Generar brief
