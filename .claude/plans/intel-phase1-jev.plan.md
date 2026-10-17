@@ -323,7 +323,7 @@ class JudgeResult:
 - **Verificación:** `cd backend && uv run pytest tests/test_classification.py -q`
 - **Commit:** `Classify pieces with Jev and cache judgments in Postgres`
 
-### Paso 6 — Integración en `analyze`
+### Paso 6 — Integración en `analyze` [HECHO]
 
 - **Archivos:** `backend/app/jobs/analyze.py` (y `services/opportunities.py` solo si hace falta
   para no cargar las piezas dos veces; mantener compatible la firma existente).

@@ -2,20 +2,32 @@
 
     uv run python -m app.jobs.analyze
 
-embed → cluster → scores deterministas → persistir. Sin LLM por ahora: los campos del LLM
-quedan en null (CLAUDE.md §2, regla 3).
+clasificar cada pieza con Jev (cacheado) → embed → cluster → scores deterministas → persistir.
+Sin LLM por ahora: los campos del LLM quedan en null (CLAUDE.md §2, regla 3). Sin
+TYPESAFE_API_KEY, o si Jev falla, las piezas quedan sin clasificar y el job sigue.
 """
 
 import asyncio
 import sys
+from dataclasses import asdict
 from datetime import UTC, datetime
 
 import structlog
 from sqlalchemy import text
 
+from app.collectors.usage import UsageMeter
+from app.core.config import get_settings
 from app.db.session import SessionLocal, engine
+from app.intelligence.jev import build_judge
 from app.models import PipelineRun
-from app.services.opportunities import ANALYZE_JOB, compute_opportunities, save_opportunities
+from app.services.classification import classify_pieces
+from app.services.costs import record_meter
+from app.services.opportunities import (
+    ANALYZE_JOB,
+    compute_opportunities,
+    load_pieces,
+    save_opportunities,
+)
 
 log = structlog.get_logger()
 
@@ -36,7 +48,13 @@ async def main() -> int:
 
             try:
                 as_of = datetime.now(UTC)
-                pieces, results = await compute_opportunities(session, run_row.id, as_of)
+                loaded = await load_pieces(session, as_of)
+                meter = UsageMeter()
+                jev = await classify_pieces(session, loaded, build_judge(get_settings()), meter)
+                await record_meter(session, meter, pipeline_run_id=run_row.id)
+                pieces, results = await compute_opportunities(
+                    session, run_row.id, as_of, pieces=loaded
+                )
                 await save_opportunities(session, run_row.id, results)
                 lifecycles: dict[str, int] = {}
                 for r in results:
@@ -48,6 +66,7 @@ async def main() -> int:
                     "pieces": pieces,
                     "opportunities": len(results),
                     "lifecycle": lifecycles,
+                    "jev": asdict(jev),
                 }
             except Exception as e:
                 await session.rollback()
@@ -61,6 +80,9 @@ async def main() -> int:
 
     log.info("analyze_done", run=run_row.id, stats=run_row.stats)
     print(f"✓ run #{run_row.id}: {pieces} piezas · {len(results)} oportunidades · {lifecycles}")
+    print(f"  jev: {jev.classified} clasificadas · {jev.cached} de caché · {jev.failed} fallidas")
+    if jev.skipped_reason:
+        print(f"  jev omitido: {jev.skipped_reason}")
     for r in results[:10]:
         o = r.opportunity
         print(

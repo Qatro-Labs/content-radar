@@ -73,10 +73,14 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
 
 
 async def compute_opportunities(
-    session: AsyncSession, run_id: int, as_of: datetime
+    session: AsyncSession, run_id: int, as_of: datetime, pieces: list[Piece] | None = None
 ) -> tuple[int, list[TopicResult]]:
-    """Devuelve (piezas analizadas, oportunidades). No escribe nada."""
-    pieces = await load_pieces(session, as_of)
+    """Devuelve (piezas analizadas, oportunidades). No escribe nada.
+
+    Si el job ya cargó las piezas, las pasa en `pieces` para no leerlas dos veces.
+    """
+    if pieces is None:
+        pieces = await load_pieces(session, as_of)
     if not pieces:
         return 0, []
     vectors = embed([embedding_text(p.title, p.description) for p in pieces])
