@@ -121,25 +121,26 @@ def _old_enough_for_reference(p: Piece, as_of: datetime) -> bool:
     return as_of - p.published_at >= out.MIN_REFERENCE_AGE.get(p.platform, timedelta(0))
 
 
-def outlier_ratios(pieces: Sequence[Piece], as_of: datetime) -> dict[int, float | None]:
-    """Ratio de cada pieza frente a las otras de su fuente (canal o query) con edad suficiente:
-    mediana, o p90 en HN.
+def outlier_ratios(
+    pieces: Sequence[Piece], as_of: datetime, *, reference: Sequence[Piece] | None = None
+) -> dict[int, float | None]:
+    """Ratio de cada pieza de `pieces` frente a las otras de su fuente (canal o query) en
+    `reference` (por defecto, `pieces`) con edad suficiente: mediana, o p90 en HN.
     """
-    perf = {p.item_id: _performance(p) for p in pieces}
     by_source: dict[int, list[tuple[int, float]]] = defaultdict(list)
-    for p in pieces:
-        value = perf[p.item_id]
+    for p in pieces if reference is None else reference:
+        value = _performance(p)
         if value is not None and _old_enough_for_reference(p, as_of):
             by_source[p.source_id].append((p.item_id, value))
     ratios: dict[int, float | None] = {}
     for p in pieces:
-        value = perf[p.item_id]
+        value = _performance(p)
         if value is None:
             ratios[p.item_id] = None
             continue
-        reference = [v for item_id, v in by_source[p.source_id] if item_id != p.item_id]
+        others = [v for item_id, v in by_source[p.source_id] if item_id != p.item_id]
         quantile = out.HN_REFERENCE_QUANTILE if p.platform is Platform.HACKERNEWS else out.MEDIAN
-        ratios[p.item_id] = out.outlier_ratio(value, reference, quantile)
+        ratios[p.item_id] = out.outlier_ratio(value, others, quantile)
     return ratios
 
 
@@ -446,8 +447,9 @@ def build_opportunities(
     as_of: datetime,
     monitoring_started_at: datetime,
     broad: Sequence[bool] | None = None,
+    reference: Sequence[Piece] | None = None,
 ) -> list[TopicResult]:
-    ratios = outlier_ratios(pieces, as_of)
+    ratios = outlier_ratios(pieces, as_of, reference=reference)
     broad_flags = broad if broad is not None else [False] * len(clusters)
     topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of)
     if not topics:

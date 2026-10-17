@@ -134,9 +134,9 @@ async def compute_opportunities(
     """No escribe nada."""
     if pieces is None:
         pieces = await load_pieces(session, as_of)
-    loaded = len(pieces)
-    pieces = keep_about_ai(pieces, judgments or {})
-    removed = loaded - len(pieces)
+    loaded = pieces
+    pieces = keep_about_ai(loaded, judgments or {})
+    removed = len(loaded) - len(pieces)
     if not pieces:
         return ComputedOpportunities(0, removed, [])
     vectors = embed([embedding_text(p.title, p.description) for p in pieces])
@@ -149,6 +149,9 @@ async def compute_opportunities(
         as_of=as_of,
         monitoring_started_at=MONITORING_STARTED_AT,
         broad=[is_broad(vectors, c) for c in clusters],
+        # La referencia de outliers es cómo rinde la cuenta, no cómo rinde en IA (CLAUDE.md §7):
+        # en cuentas amplias Jev quita la mitad de las piezas y no se llegaba a MIN_REFERENCE.
+        reference=loaded,
     )
     return ComputedOpportunities(len(pieces), removed, results)
 
