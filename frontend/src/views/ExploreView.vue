@@ -2,12 +2,12 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { useOpportunities, useOpportunitiesEvidence } from '@/api/opportunities'
+import { useAllEvidence, useOpportunities } from '@/api/opportunities'
 import ExploreHeader from '@/components/explore/ExploreHeader.vue'
 import ExploreSidePanel from '@/components/explore/ExploreSidePanel.vue'
 import ExploreSkeleton from '@/components/explore/ExploreSkeleton.vue'
 import PiecesTable from '@/components/explore/PiecesTable.vue'
-import { countLabel, PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
+import { PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
 import {
   buildExploreView,
   EXPLORE_FILTER_PARAM,
@@ -18,33 +18,20 @@ import {
 } from '@/lib/exploreView'
 import { formatUtcTimestamp } from '@/lib/format'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
-import type { components } from '@/types/api'
-
-type Evidence = components['schemas']['Evidence']
 
 const route = useRoute()
 const router = useRouter()
 
 const { data: list, isPending, isError, refetch } = useOpportunities(DEFAULT_PERIOD)
 const opportunities = computed(() => list.value?.items ?? [])
-// No hay endpoint de todas las piezas: una petición a /evidence por tema (D5 del plan
-// fe-dashboard-v2).
-const { evidenceById, refetchFailed } = useOpportunitiesEvidence(() =>
-  opportunities.value.map((opportunity) => opportunity.id),
-)
-
-const evidenceStates = computed(() => [...evidenceById.value.values()])
-const isEvidencePending = computed(() => evidenceStates.value.some((state) => state.isPending))
-const failedTopicCount = computed(
-  () => evidenceStates.value.filter((state) => state.isError && state.data === undefined).length,
-)
-const loadedEvidence = computed(() => {
-  const loaded = new Map<string, Evidence[]>()
-  for (const [id, state] of evidenceById.value) {
-    if (state.data !== undefined) loaded.set(id, state.data)
-  }
-  return loaded
-})
+const {
+  data: evidence,
+  isPending: isEvidencePending,
+  isError: isEvidenceQueryError,
+  refetch: refetchEvidence,
+} = useAllEvidence()
+// Si falla una recarga en segundo plano, las piezas que ya llegaron se siguen mostrando.
+const isEvidenceError = computed(() => isEvidenceQueryError.value && evidence.value === undefined)
 
 const filter = computed(() => parseExploreFilter(route.query))
 // El texto va en la URL (`q`) para que la paleta ⌘K abra Explorar con una fuente ya filtrada.
@@ -63,36 +50,32 @@ const selectedUrl = ref<string | null>(null)
 const view = computed(() =>
   buildExploreView({
     opportunities: opportunities.value,
-    evidenceById: loadedEvidence.value,
+    evidence: evidence.value ?? [],
     filter: filter.value,
     text: text.value,
   }),
 )
 
-// Mientras llegan las peticiones de cada tema, la tabla se reordenaría con cada una: se espera a
-// que terminen todas.
 const isLoading = computed(() => isPending.value || isEvidencePending.value)
 
-const failedMessage = computed(
-  () => `No se pudo cargar la evidencia de ${countLabel(failedTopicCount.value, 'tema', 'temas')}.`,
-)
-
-// Sin piezas cargadas no se monta la cabecera: "0 piezas de los 0 temas" se leería como un
-// resultado real (CLAUDE.md §2.3).
+// Sin piezas no se monta la cabecera: "0 piezas de los 0 temas" se leería como un resultado real
+// (CLAUDE.md §2.3).
 const message = computed<string | null>(() => {
   if (isError.value) return 'No se pudieron cargar las oportunidades.'
   if (list.value === null) return 'Todavía no hay análisis: el job analyze no ha corrido.'
   if (opportunities.value.length === 0) {
     return 'El último análisis no encontró temas con datos suficientes.'
   }
-  if (view.value.loadedTopicCount === 0) return failedMessage.value
+  if (isEvidenceError.value) return 'No se pudo cargar la evidencia.'
+  if (view.value.topicsWithPiecesCount === 0)
+    return 'El último análisis no trae piezas de evidencia.'
   return null
 })
-const canRetry = computed(() => isError.value || failedTopicCount.value > 0)
+const canRetry = computed(() => isError.value || isEvidenceError.value)
 
 function retry() {
   if (isError.value) void refetch()
-  else refetchFailed()
+  if (isEvidenceError.value) void refetchEvidence()
 }
 
 // `replace` y no `push`, como en el Radar: cambiar un filtro no llena el historial.
@@ -135,15 +118,6 @@ const RETRY_BUTTON =
 
     <div class="flex flex-wrap items-start gap-4">
       <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-4">
-        <!-- DESIGN.md §4: el error va en línea y el resto de los temas se sigue mostrando. -->
-        <div
-          v-if="failedTopicCount > 0"
-          class="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-card bg-card px-6 py-4"
-        >
-          <p role="alert" class="text-[15px] text-ink-soft">{{ failedMessage }}</p>
-          <button type="button" :class="RETRY_BUTTON" @click="refetchFailed">Reintentar</button>
-        </div>
-
         <PiecesTable
           v-model:text="text"
           :rows="view.visible"
