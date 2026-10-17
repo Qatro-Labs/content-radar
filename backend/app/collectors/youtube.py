@@ -14,13 +14,18 @@ import httpx
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.collectors.text import clean_html, is_ai_related
+from app.collectors.usage import UsageMeter
 from app.models import Source
+from app.schemas.cost import Provider
 from app.schemas.signal import ContentFormat, ContentSignal, Metrics, Platform
 
 API_BASE = "https://www.googleapis.com/youtube/v3"
 SHORT_MAX_SECONDS = 180  # los Shorts pueden durar hasta 3 min
 MAX_UPLOAD_PAGES = 4  # 200 vídeos por canal como máximo en un backfill
 FILTER_DESCRIPTION_CHARS = 200
+# Unidades de cuota por llamada, según la tabla oficial (cuenta también si la llamada falla):
+# https://developers.google.com/youtube/v3/determine_quota_cost
+QUOTA_COST = {"channels": 1, "playlistItems": 1, "videos": 1, "search": 100}
 
 
 class YouTubeError(Exception):
@@ -39,11 +44,12 @@ class Channel:
 
 
 class YouTubeClient:
-    def __init__(self, api_key: str, client: httpx.AsyncClient):
+    def __init__(self, api_key: str, client: httpx.AsyncClient, usage: UsageMeter | None = None):
         if not api_key:
             raise YouTubeError("YOUTUBE_API_KEY no está configurada")
         self._key = api_key
         self._http = client
+        self.usage = usage or UsageMeter()
 
     @retry(
         retry=retry_if_exception_type(httpx.TransportError),
@@ -53,6 +59,7 @@ class YouTubeClient:
     )
     async def _get(self, resource: str, **params: str) -> dict:
         r = await self._http.get(f"{API_BASE}/{resource}", params={**params, "key": self._key})
+        self.usage.add(Provider.YOUTUBE, f"{resource}.list", QUOTA_COST[resource])
         if r.status_code != 200:
             # El mensaje de la API explica el motivo (cuota, key inválida…); nunca incluye la key.
             reason = r.json().get("error", {}).get("message", r.text[:200])

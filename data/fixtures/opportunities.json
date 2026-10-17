@@ -19,16 +19,98 @@
           "business": 0.4,
           "latam_es": 0.05
         },
-        "audience_fit_score": 82,
+        "audience_fit_score": 83.3,
+        "audience_fit_criteria": [
+          {
+            "criterion": "business_impact",
+            "justification": "[MOCK] Nivel 5 en impacto en decisiones empresariales, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/1"
+            ],
+            "level": 5
+          },
+          {
+            "criterion": "org_application",
+            "justification": "[MOCK] Nivel 4 en aplicación real en organizaciones, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/2"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "exec_readability",
+            "justification": "[MOCK] Nivel 4 en comprensible para directivos no técnicos, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/3"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "latam_relevance",
+            "justification": "[MOCK] Nivel 4 en relevancia LATAM, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/1"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "pillar_fit",
+            "justification": "[MOCK] Nivel 4 en encaje con pilares 30X, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/2"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "actionable_content",
+            "justification": "[MOCK] Nivel 4 en convertible en contenido accionable, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/3"
+            ],
+            "level": 4
+          }
+        ],
         "cross_source_score": 70,
         "saturation_score": 45,
-        "actionability_score": 78,
-        "opportunity_score": 74.2,
+        "actionability_score": 80,
+        "opportunity_score": 74.7,
+        "score_breakdown": {
+          "components": [
+            {
+              "name": "momentum",
+              "value": 78.8,
+              "weight": 0.3
+            },
+            {
+              "name": "audience_fit",
+              "value": 83.3,
+              "weight": 0.25
+            },
+            {
+              "name": "cross_source",
+              "value": 70,
+              "weight": 0.2
+            },
+            {
+              "name": "freshness",
+              "value": 55,
+              "weight": 0.15
+            },
+            {
+              "name": "actionability",
+              "value": 80,
+              "weight": 0.1
+            }
+          ],
+          "penalties": [],
+          "total": 74.7
+        },
         "confidence": "high",
         "source_count": 5,
         "evidence_strength": 74,
         "latam_gap": true,
         "recommendation": "publish_now",
+        "recommendation_reason": "Publicar: tema en crecimiento con encaje alto con la audiencia de 30X (≥ 60).",
         "why_it_matters": "Crece en fuentes técnicas y de negocio a la vez, pero casi no hay cobertura en español: hueco para explicarlo a directivos de LATAM.",
         "limitations": [
           "El monitoreo empezó el 16/10: la tendencia cubre pocos días.",
@@ -53,16 +135,98 @@
           "business": 0.15,
           "latam_es": 0.0
         },
-        "audience_fit_score": 58,
+        "audience_fit_score": 56.7,
+        "audience_fit_criteria": [
+          {
+            "criterion": "business_impact",
+            "justification": "[MOCK] Nivel 3 en impacto en decisiones empresariales, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/4"
+            ],
+            "level": 3
+          },
+          {
+            "criterion": "org_application",
+            "justification": "[MOCK] Nivel 3 en aplicación real en organizaciones, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/5"
+            ],
+            "level": 3
+          },
+          {
+            "criterion": "exec_readability",
+            "justification": "[MOCK] Nivel 3 en comprensible para directivos no técnicos, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/4"
+            ],
+            "level": 3
+          },
+          {
+            "criterion": "latam_relevance",
+            "justification": "[MOCK] Nivel 2 en relevancia LATAM, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/5"
+            ],
+            "level": 2
+          },
+          {
+            "criterion": "pillar_fit",
+            "justification": "[MOCK] Nivel 3 en encaje con pilares 30X, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/4"
+            ],
+            "level": 3
+          },
+          {
+            "criterion": "actionable_content",
+            "justification": "[MOCK] Nivel 3 en convertible en contenido accionable, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/5"
+            ],
+            "level": 3
+          }
+        ],
         "cross_source_score": 35,
         "saturation_score": 25,
-        "actionability_score": 55,
-        "opportunity_score": 57.5,
+        "actionability_score": 60,
+        "opportunity_score": 57.7,
+        "score_breakdown": {
+          "components": [
+            {
+              "name": "momentum",
+              "value": 64.1,
+              "weight": 0.3
+            },
+            {
+              "name": "audience_fit",
+              "value": 56.7,
+              "weight": 0.25
+            },
+            {
+              "name": "cross_source",
+              "value": 35,
+              "weight": 0.2
+            },
+            {
+              "name": "freshness",
+              "value": 75,
+              "weight": 0.15
+            },
+            {
+              "name": "actionability",
+              "value": 60,
+              "weight": 0.1
+            }
+          ],
+          "penalties": [],
+          "total": 57.7
+        },
         "confidence": "medium",
         "source_count": 2,
         "evidence_strength": 38,
         "latam_gap": null,
         "recommendation": "find_angle",
+        "recommendation_reason": "Buscar ángulo: tema en crecimiento, pero el encaje con la audiencia de 30X es menor de 60.",
         "why_it_matters": "Conversación casi solo técnica: todavía no llegó a ejecutivos. El ángulo es privacidad y coste para negocio.",
         "limitations": [
           "Solo una medición por pieza: el crecimiento es estimado.",
@@ -87,16 +251,98 @@
           "business": 0.25,
           "latam_es": 0.45
         },
-        "audience_fit_score": 75,
+        "audience_fit_score": 76.7,
+        "audience_fit_criteria": [
+          {
+            "criterion": "business_impact",
+            "justification": "[MOCK] Nivel 4 en impacto en decisiones empresariales, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/6"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "org_application",
+            "justification": "[MOCK] Nivel 4 en aplicación real en organizaciones, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/7"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "exec_readability",
+            "justification": "[MOCK] Nivel 4 en comprensible para directivos no técnicos, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/6"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "latam_relevance",
+            "justification": "[MOCK] Nivel 3 en relevancia LATAM, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/7"
+            ],
+            "level": 3
+          },
+          {
+            "criterion": "pillar_fit",
+            "justification": "[MOCK] Nivel 4 en encaje con pilares 30X, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/6"
+            ],
+            "level": 4
+          },
+          {
+            "criterion": "actionable_content",
+            "justification": "[MOCK] Nivel 4 en convertible en contenido accionable, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/7"
+            ],
+            "level": 4
+          }
+        ],
         "cross_source_score": 80,
         "saturation_score": 65,
-        "actionability_score": 70,
-        "opportunity_score": 64.6,
+        "actionability_score": 80,
+        "opportunity_score": 66.1,
+        "score_breakdown": {
+          "components": [
+            {
+              "name": "momentum",
+              "value": 58.8,
+              "weight": 0.3
+            },
+            {
+              "name": "audience_fit",
+              "value": 76.7,
+              "weight": 0.25
+            },
+            {
+              "name": "cross_source",
+              "value": 80,
+              "weight": 0.2
+            },
+            {
+              "name": "freshness",
+              "value": 35,
+              "weight": 0.15
+            },
+            {
+              "name": "actionability",
+              "value": 80,
+              "weight": 0.1
+            }
+          ],
+          "penalties": [],
+          "total": 66.1
+        },
         "confidence": "high",
         "source_count": 6,
         "evidence_strength": 81,
         "latam_gap": false,
         "recommendation": "find_angle",
+        "recommendation_reason": "Buscar ángulo: el tema está en su pico y hace falta un enfoque propio.",
         "why_it_matters": "Tema maduro y ya cubierto en la región; solo vale la pena con un caso concreto o un ángulo de métricas.",
         "limitations": [
           "La saturación se mide solo dentro de las fuentes monitoreadas."
@@ -121,15 +367,97 @@
           "latam_es": 0.35
         },
         "audience_fit_score": 40,
+        "audience_fit_criteria": [
+          {
+            "criterion": "business_impact",
+            "justification": "[MOCK] Nivel 2 en impacto en decisiones empresariales, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/8"
+            ],
+            "level": 2
+          },
+          {
+            "criterion": "org_application",
+            "justification": "[MOCK] Nivel 2 en aplicación real en organizaciones, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/8"
+            ],
+            "level": 2
+          },
+          {
+            "criterion": "exec_readability",
+            "justification": "[MOCK] Nivel 2 en comprensible para directivos no técnicos, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/8"
+            ],
+            "level": 2
+          },
+          {
+            "criterion": "latam_relevance",
+            "justification": "[MOCK] Nivel 2 en relevancia LATAM, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/8"
+            ],
+            "level": 2
+          },
+          {
+            "criterion": "pillar_fit",
+            "justification": "[MOCK] Nivel 2 en encaje con pilares 30X, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/8"
+            ],
+            "level": 2
+          },
+          {
+            "criterion": "actionable_content",
+            "justification": "[MOCK] Nivel 2 en convertible en contenido accionable, según la evidencia citada.",
+            "evidence_urls": [
+              "https://example.com/mock/8"
+            ],
+            "level": 2
+          }
+        ],
         "cross_source_score": 85,
         "saturation_score": 82,
-        "actionability_score": 45,
-        "opportunity_score": 48.3,
+        "actionability_score": 40,
+        "opportunity_score": 47.8,
+        "score_breakdown": {
+          "components": [
+            {
+              "name": "momentum",
+              "value": 47.0,
+              "weight": 0.3
+            },
+            {
+              "name": "audience_fit",
+              "value": 40,
+              "weight": 0.25
+            },
+            {
+              "name": "cross_source",
+              "value": 85,
+              "weight": 0.2
+            },
+            {
+              "name": "freshness",
+              "value": 18,
+              "weight": 0.15
+            },
+            {
+              "name": "actionability",
+              "value": 40,
+              "weight": 0.1
+            }
+          ],
+          "penalties": [],
+          "total": 47.8
+        },
         "confidence": "medium",
         "source_count": 7,
         "evidence_strength": 66,
         "latam_gap": false,
         "recommendation": "discard",
+        "recommendation_reason": "Tema saturado: mucho contenido similar y en descenso en las fuentes monitoreadas.",
         "why_it_matters": "Mucho contenido similar y en descenso; poco encaje con los pilares de 30X.",
         "limitations": [
           "No medimos rendimiento en Instagram ni TikTok, donde este tema es más visual."
@@ -154,15 +482,18 @@
           "latam_es": 1.0
         },
         "audience_fit_score": null,
+        "audience_fit_criteria": null,
         "cross_source_score": 10,
         "saturation_score": 10,
         "actionability_score": null,
         "opportunity_score": null,
+        "score_breakdown": null,
         "confidence": "low",
         "source_count": 1,
         "evidence_strength": 12,
         "latam_gap": null,
         "recommendation": "wait_for_case",
+        "recommendation_reason": "Esperar: no hay datos suficientes para afirmar una tendencia.",
         "why_it_matters": "Hoy solo hay una fuente; esperar confirmación. Audience fit todavía sin evaluar.",
         "limitations": [
           "Una sola fuente: no hay validación cruzada.",
@@ -196,7 +527,8 @@
           "unit": "views/h"
         },
         "outlier_ratio": 6.1,
-        "is_outlier": true
+        "is_outlier": true,
+        "collection": "automatic"
       },
       {
         "url": "https://example.com/mock/2",
@@ -216,7 +548,8 @@
           "unit": "points/h"
         },
         "outlier_ratio": 3.4,
-        "is_outlier": true
+        "is_outlier": true,
+        "collection": "automatic"
       },
       {
         "url": "https://example.com/mock/3",
@@ -230,7 +563,8 @@
         "metrics": {},
         "velocity": null,
         "outlier_ratio": null,
-        "is_outlier": null
+        "is_outlier": null,
+        "collection": "automatic"
       }
     ],
     "opp_002": [
@@ -249,7 +583,8 @@
         },
         "velocity": null,
         "outlier_ratio": 2.2,
-        "is_outlier": false
+        "is_outlier": false,
+        "collection": "automatic"
       },
       {
         "url": "https://example.com/mock/5",
@@ -267,7 +602,8 @@
         },
         "velocity": null,
         "outlier_ratio": null,
-        "is_outlier": null
+        "is_outlier": null,
+        "collection": "automatic"
       }
     ],
     "opp_003": [
@@ -290,7 +626,8 @@
           "unit": "views/h"
         },
         "outlier_ratio": 1.8,
-        "is_outlier": false
+        "is_outlier": false,
+        "collection": "automatic"
       },
       {
         "url": "https://example.com/mock/7",
@@ -304,7 +641,8 @@
         "metrics": {},
         "velocity": null,
         "outlier_ratio": null,
-        "is_outlier": null
+        "is_outlier": null,
+        "collection": "automatic"
       }
     ],
     "opp_004": [
@@ -327,7 +665,8 @@
           "unit": "views/h"
         },
         "outlier_ratio": 0.6,
-        "is_outlier": false
+        "is_outlier": false,
+        "collection": "automatic"
       }
     ],
     "opp_005": [
@@ -343,7 +682,8 @@
         "metrics": {},
         "velocity": null,
         "outlier_ratio": null,
-        "is_outlier": null
+        "is_outlier": null,
+        "collection": "automatic"
       }
     ]
   },

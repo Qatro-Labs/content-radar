@@ -1,0 +1,76 @@
+# Recalcula las oportunidades contra la DB compartida (Supabase) después de cada recolección,
+# para que la API sirva siempre las piezas y snapshots recién guardados.
+#
+# Secrets del repo (Settings → Secrets and variables → Actions), además de DATABASE_URL:
+#   TYPESAFE_API_KEY  Jev: clasificación de piezas y filtro de fuera de tema
+#   LLM_API_KEY       evaluación de audience fit de cada tema
+# Sin alguno de los tres no se ejecuta: una ejecución sin Jev o sin LLM pasaría a ser la última
+# correcta y la API serviría oportunidades sin filtro ni score (CLAUDE.md §2, regla 3).
+name: analyze
+
+on:
+  workflow_run:
+    workflows: [collect]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: analyze
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      # Debe coincidir con el modelo con precio de data/pricing.yaml; si no, el coste queda en null.
+      LLM_MODEL: claude-haiku-5-5
+      APP_ENV: ci
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Skip if a secret is missing
+        id: guard
+        working-directory: .
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$TYPESAFE_API_KEY" ] || [ -z "$LLM_API_KEY" ]; then
+            echo "Falta DATABASE_URL, TYPESAFE_API_KEY o LLM_API_KEY; se omite."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.skip != 'true'
+
+      # torch desde PyPI trae las librerías de CUDA (varios GB): la caché evita descargarlas
+      # en cada ejecución.
+      - uses: astral-sh/setup-uv@v6
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Cache the embedding model
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-paraphrase-multilingual-MiniLM-L12-v2
+
+      # Con el grupo `ml` (embeddings), sin `dev`.
+      - name: Install
+        if: steps.guard.outputs.skip != 'true'
+        run: uv sync --frozen --no-dev
+
+      - name: Migrate
+        if: steps.guard.outputs.skip != 'true'
+        run: uv run --no-sync alembic upgrade head
+
+      - name: Analyze
+        if: steps.guard.outputs.skip != 'true'
+        run: uv run --no-sync python -m app.jobs.analyze

@@ -83,8 +83,10 @@ scripts/schedule-local.sh install    # launchd en macOS, cada 2 h (status / unin
 tail -f backend/logs/collect.log
 ```
 
-- **Local (ahora):** requiere el Mac encendido y Docker levantado. Si el Mac duerme, la ejecución pendiente corre al despertar, pero ese hueco no se recupera.
-- **Compartido (cuando exista Supabase):** `.github/workflows/collect.yml` corre cada 2 h al configurar los secrets `DATABASE_URL` (session pooler, puerto 5432) y `YOUTUBE_API_KEY`. Al activarlo, desinstalar el launchd local para tener una sola base de verdad.
+- **Compartido (activo):** `.github/workflows/collect.yml` corre cada 2 h contra Supabase con los secrets `DATABASE_URL` (session pooler, puerto 5432) y `YOUTUBE_API_KEY`. Es la única recolección que alimenta la DB compartida.
+- **Local (solo desarrollo):** el launchd recolecta en el Docker de cada uno. Requiere el Mac encendido; si duerme, ese hueco no se recupera.
+
+Después de cada recolección correcta, `.github/workflows/analyze.yml` recalcula las oportunidades (Jev → embeddings → clustering → scores → audience fit con el LLM), y la API sirve la última ejecución correcta. Necesita también los secrets `TYPESAFE_API_KEY` y `LLM_API_KEY`; sin alguno de ellos no se ejecuta, para no publicar oportunidades sin filtro ni score. Las respuestas de Jev y del LLM se cachean en la DB, así que cada ejecución solo paga lo nuevo.
 
 ## Despliegue (Railway + Supabase)
 

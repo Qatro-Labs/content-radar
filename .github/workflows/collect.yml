@@ -1,7 +1,7 @@
 # Ciclo periódico del Signal Engine contra la DB compartida (Supabase).
 #
-# Se activa solo cuando existe el secret DATABASE_URL. Mientras la DB viva en el Docker local
-# de Steven, el ciclo lo hace launchd (scripts/schedule-local.sh).
+# Se activa solo cuando existe el secret DATABASE_URL. Es la única recolección activa: el launchd
+# local (scripts/schedule-local.sh) queda para desarrollo contra el Docker de cada uno.
 #
 # Secrets del repo (Settings → Secrets and variables → Actions):
 #   DATABASE_URL     postgresql+asyncpg://… del *session pooler* de Supabase (puerto 5432).
@@ -49,14 +49,20 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         if: steps.guard.outputs.skip != 'true'
 
+      # Sin grupos por defecto: `ml` (torch) solo lo usa `analyze`, y `dev` no hace falta aquí.
+      # `--no-sync` en cada paso evita que `uv run` vuelva a instalarlos.
+      - name: Install
+        if: steps.guard.outputs.skip != 'true'
+        run: uv sync --frozen --no-default-groups
+
       - name: Migrate
         if: steps.guard.outputs.skip != 'true'
-        run: uv run alembic upgrade head
+        run: uv run --no-sync alembic upgrade head
 
       - name: Seed sources
         if: steps.guard.outputs.skip != 'true'
-        run: uv run python -m app.jobs.seed_sources
+        run: uv run --no-sync python -m app.jobs.seed_sources
 
       - name: Collect
         if: steps.guard.outputs.skip != 'true'
-        run: uv run python -m app.jobs.collect --days "${{ inputs.days || '7' }}"
+        run: uv run --no-sync python -m app.jobs.collect --days "${{ inputs.days || '7' }}"

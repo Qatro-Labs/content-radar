@@ -86,6 +86,8 @@ rss:
   - { name: "Stratechery", url: "https://stratechery.com/feed/", segment: business, language: en, region: global, ai_filter: true }
   - { name: "Exponential View", url: "https://www.exponentialview.co/feed", segment: business, language: en, region: global }
   - { name: "Benedict Evans", url: "https://www.ben-evans.com/benedictevans?format=rss", segment: business, language: en, region: global, ai_filter: true }
+  - { name: "McKinsey Insights", url: "https://www.mckinsey.com/insights/rss", segment: business, language: en, region: global, ai_filter: true }
+  - { name: "Fortune", url: "https://fortune.com/feed/", segment: business, language: en, region: global, ai_filter: true }
   # --- latam_es (ES) ---
   - { name: "Xataka · Inteligencia artificial", url: "https://www.xataka.com/tag/inteligencia-artificial/rss2.xml", segment: latam_es, language: es, region: es }
   - { name: "Xataka México", url: "https://www.xataka.com.mx/feedburner.xml", segment: latam_es, language: es, region: mx, ai_filter: true }
@@ -103,3 +105,16 @@ rss:
   - { name: "La República (CO)", url: "https://www.larepublica.co/rss/", segment: latam_es, language: es, region: co, ai_filter: true }
   - { name: "Bloomberg Línea · Tecnología", url: "https://www.bloomberglinea.com/arc/outboundfeeds/rss/category/tecnologia/?outputType=xml", segment: latam_es, language: es, region: latam, ai_filter: true }
   - { name: "DPL News", url: "https://www.dplnews.com/feed/", segment: latam_es, language: es, region: latam, ai_filter: true }
+  # --- latam_es · negocio LATAM ---
+  # Verificados con feedparser el 17/10. Sin RSS usable: América Economía (522), El Economista MX
+  # por sección (403) y Forbes MX/CO (403/401). Valora Analitik y El Financiero se probaron y
+  # se descartaron: casi ninguna pieza de IA y falsos positivos del filtro.
+  - { name: "iProUP · Innovación", url: "https://www.iproup.com/rss/innovacion", segment: latam_es, language: es, region: ar, ai_filter: true }
+  - { name: "Contxto", url: "https://www.contxto.com/es/feed/", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { name: "Bloomberg Línea · Negocios", url: "https://www.bloomberglinea.com/arc/outboundfeeds/rss/category/negocios/?outputType=xml", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { name: "El Economista (MX)", url: "https://www.eleconomista.com.mx/rss/ultimas-noticias", segment: latam_es, language: es, region: mx, ai_filter: true }
+  - { name: "Expansión MX · Empresas", url: "https://expansion.mx/rss/empresas", segment: latam_es, language: es, region: mx, ai_filter: true }
+  - { name: "Portafolio · Tecnología", url: "https://www.portafolio.co/rss/tecnologia.xml", segment: latam_es, language: es, region: co, ai_filter: true }
+  - { name: "Diario Financiero (CL)", url: "https://www.df.cl/noticias/site/list/port/rss.xml", segment: latam_es, language: es, region: cl, ai_filter: true }
+  - { name: "Gestión (PE)", url: "https://gestion.pe/arc/outboundfeeds/rss/?outputType=xml", segment: latam_es, language: es, region: pe, ai_filter: true }
+  - { name: "LatamList", url: "https://latamlist.com/feed/", segment: latam_es, language: en, region: latam, ai_filter: true }

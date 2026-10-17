@@ -1,0 +1,74 @@
+# Rúbrica del audience fit (CLAUDE.md §7). El LLM evalúa cada tema completo en los 6 criterios:
+# primero la justificación, citando URLs de la evidencia, y después el nivel 0–5.
+# Cada nivel describe algo observable en la evidencia (títulos y descripciones), sin solapes entre
+# niveles vecinos: con niveles ambiguos el modelo duda y puntúa al azar entre ellos.
+# Los ids coinciden con `FitCriterion` (app/schemas/opportunity.py).
+# Ajustada el 2026-10-17 tras revisar @crece30x y @andresbilbao: 30X cuenta la IA como "qué cambia
+# para tu empresa" y la vuelve accionable con checklists, frameworks con pasos y ejemplos de
+# empresas conocidas. Cambian pillar_fit, exec_readability y actionable_content.
+# latam_relevance se redefinió el mismo día: mide si el tema le sirve a un líder de LATAM, no si
+# la evidencia ya habla de la región (eso lo mide `latam_gap`).
+version: 1
+criteria:
+  - id: business_impact
+    name: Impacto en decisiones empresariales
+    question: ¿Cambia este tema alguna decisión que tome un directivo (inversión, estrategia, contratación, compras, riesgo)?
+    levels:
+      0: No tiene relación con decisiones de empresa (curiosidad, entretenimiento, ciencia básica).
+      1: Afecta a empresas solo de forma indirecta o a muy largo plazo; ninguna pieza lo conecta con una decisión.
+      2: Las piezas mencionan efectos en empresas, pero genéricos ("cambiará los negocios") y sin decisión concreta.
+      3: Al menos una pieza conecta el tema con una decisión concreta (adoptar, comprar, regular, invertir), sin datos de impacto.
+      4: Varias piezas muestran una decisión concreta con datos de impacto (costes, ahorros, ingresos, riesgos cuantificados).
+      5: El tema obliga a decidir ahora (cambio regulatorio, de precios o competitivo con fecha) y la evidencia lo cuantifica.
+  - id: org_application
+    name: Aplicación real en organizaciones
+    question: ¿Hay organizaciones concretas que ya aplican esto?
+    levels:
+      0: No hay aplicación en organizaciones; es investigación, opinión o un producto sin usuarios.
+      1: Solo se habla de usos posibles o futuros, sin ninguna organización que lo aplique.
+      2: Solo el proveedor que lo lanza cuenta cómo se usaría; ningún cliente lo usa todavía.
+      3: Una organización concreta (que no es el proveedor) lo aplica, sin resultados medidos.
+      4: Una o más organizaciones lo aplican y dan resultados medidos.
+      5: Varias organizaciones de sectores distintos lo aplican con resultados medidos, o una de LATAM con resultados.
+  - id: exec_readability
+    name: Comprensible para directivos no técnicos
+    question: ¿Un directivo sin perfil técnico entiende de qué va el tema y por qué importa a su empresa?
+    levels:
+      0: Solo se entiende con formación técnica (código, arquitecturas, benchmarks).
+      1: La mayoría de las piezas usan jerga técnica y ninguna explica el tema en términos de negocio.
+      2: Hay jerga técnica, pero alguna pieza explica el tema en términos generales.
+      3: Se entiende en términos generales, pero ninguna pieza dice qué cambia para una empresa (clientes, ventas, costes, equipo).
+      4: Al menos una pieza explica, con vocabulario de negocio o de prensa general, qué cambia para una empresa.
+      5: Varias piezas explican sin tecnicismos qué cambia para una empresa y lo ilustran con un ejemplo de empresa o una situación de negocio concreta.
+  - id: latam_relevance
+    name: Relevancia LATAM
+    # Mide si el tema le sirve a un líder de la región, no si ya se habla de él allí: un tema que aún
+    # no llegó a LATAM es justo la oportunidad. La cobertura regional la mide Python (`latam_gap`).
+    question: ¿Le sirve este tema a un dueño o líder de empresa de Latinoamérica, aunque la evidencia todavía no hable de la región?
+    levels:
+      0: Solo afecta a un mercado concreto fuera de LATAM (una regulación, un servicio o una empresa local) y no tiene traducción a la región.
+      1: Depende de condiciones que la evidencia sitúa fuera del alcance de LATAM (producto no disponible en la región, presupuesto o infraestructura de gran corporación global).
+      2: Aplica en LATAM, pero solo a una minoría de empresas (grandes corporaciones o empresas tecnológicas).
+      3: Aplica tal cual a empresas medianas y pymes de LATAM (una práctica o herramienta de uso general, al alcance de su presupuesto). Que la evidencia no mencione la región no baja de este nivel.
+      4: Cumple el nivel 3 y la evidencia da una razón concreta por la que importa más en LATAM (idioma, coste, regulación, mercado o talento).
+      5: Cumple el nivel 4 y alguna pieza lo trata en un país o empresa de LATAM con un caso o datos.
+  - id: pillar_fit
+    name: Encaje con pilares 30X
+    question: ¿Con cuántos pilares del perfil de 30X encaja el tema y con qué claridad lo muestra la evidencia?
+    levels:
+      0: Está en la lista de "qué no encaja" del perfil.
+      1: No encaja con ningún pilar.
+      2: Toca un pilar solo de pasada; ninguna pieza trata el tema desde ese pilar y habría que forzar el ángulo.
+      3: Encaja con un pilar, pero las piezas lo tratan como noticia de tecnología, sin mencionar ventas, operación, estrategia, liderazgo o crecimiento de una empresa.
+      4: Encaja con un pilar y al menos una pieza lo trata desde ese pilar (p. ej. qué cambia para las ventas, la operación o la estrategia de una empresa).
+      5: Cumple el nivel 4 y, además, la evidencia lo conecta con un segundo pilar.
+  - id: actionable_content
+    name: Convertible en contenido accionable
+    question: ¿Se puede convertir en una pieza que diga a un líder qué hacer en su empresa (pasos, checklist, criterio de decisión)?
+    levels:
+      0: No hay nada que el líder pueda hacer con ello.
+      1: Solo da para informar ("ha pasado X"), sin acción posible.
+      2: Da para una reflexión u opinión, sin pasos concretos.
+      3: Da para una recomendación general ("revisa tu política de X") sin pasos ni criterio.
+      4: La evidencia da material para pasos, un checklist o un criterio de decisión concreto (qué revisar, qué preparar, cuándo adoptarlo).
+      5: Cumple el nivel 4 y la evidencia trae un caso de empresa o cifras para ilustrarlo.
