@@ -86,5 +86,6 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SCRAPECREATORS_API_KEY: ${{ secrets.SCRAPECREATORS_API_KEY }}
           DAYS: ${{ inputs.days || '7' }}
         run: uv run --no-sync python -m app.jobs.collect --days "$DAYS"

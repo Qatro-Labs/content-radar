@@ -22,6 +22,16 @@ SEED = SeedFile.model_validate(
                 "ai_filter": True,
             }
         ],
+        "tiktok": [
+            {"query": "AI agents", "segment": "tech"},
+            {
+                "query": "AI agents",
+                "search_region": "MX",
+                "item_regions": ["MX", "CO"],
+                "segment": "latam_es",
+            },
+        ],
+        "reddit": [{"subreddit": "OpenAI", "segment": "tech"}],
     }
 )
 
@@ -55,14 +65,27 @@ async def test_seed_resolves_handles_and_is_idempotent(session):
     assert report["youtube"] == 1
     assert report["youtube_unresolved"] == ["@noexiste"]
 
-    sources = (await session.scalars(select(Source).order_by(Source.platform))).all()
-    assert [s.platform for s in sources] == ["hackernews", "rss", "youtube"]
+    sources = (await session.scalars(select(Source).order_by(Source.platform, Source.id))).all()
+    assert [s.platform for s in sources] == [
+        "hackernews",
+        "reddit",
+        "rss",
+        "tiktok",
+        "tiktok",
+        "youtube",
+    ]
 
-    yt_src = sources[2]
+    yt_src = sources[5]
     assert yt_src.external_id == "UCy5znSnfMsDwaLlROnZ7Qbg"
     assert yt_src.segment == "latam_es"
     assert yt_src.config["uploads_playlist_id"] == "UUy5znSnfMsDwaLlROnZ7Qbg"
-    assert sources[1].config == {"ai_filter": True}
+    assert sources[2].config == {"ai_filter": True}
+    assert sources[1].external_id == "OpenAI" and sources[1].name == "r/OpenAI"
+    # La misma búsqueda en dos regiones son dos fuentes distintas.
+    global_tt, mx_tt = sources[3], sources[4]
+    assert (global_tt.external_id, mx_tt.external_id) == ("AI agents|global", "AI agents|MX")
+    assert mx_tt.config["region"] == "MX" and mx_tt.config["item_regions"] == ["MX", "CO"]
+    assert mx_tt.name == "TikTok · AI agents (MX)"
 
 
 async def test_seed_without_youtube_key_skips_channels(session):

@@ -3,7 +3,8 @@
     uv run python -m app.jobs.seed_sources            # carga todo
     uv run python -m app.jobs.seed_sources --dry-run  # solo valida el YAML
 
-Sin YOUTUBE_API_KEY se cargan HN y RSS y se omiten los canales de YouTube (aviso, no error).
+Sin YOUTUBE_API_KEY se cargan HN, RSS, TikTok y Reddit y se omiten los canales de YouTube (aviso,
+no error). TikTok y Reddit no llaman a ninguna API al darse de alta.
 """
 
 import argparse
@@ -50,10 +51,22 @@ class RSSSeed(_Common):
     url: HttpUrl
 
 
+class TikTokSeed(_Common):
+    query: str
+    search_region: str | None = None  # país de la búsqueda (ISO, p. ej. MX)
+    item_regions: list[str] = []  # solo vídeos de estos países; vacío = todos
+
+
+class RedditSeed(_Common):
+    subreddit: str
+
+
 class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
     hackernews: list[HackerNewsSeed] = []
     rss: list[RSSSeed] = []
+    tiktok: list[TikTokSeed] = []
+    reddit: list[RedditSeed] = []
 
 
 def load_seed_file(path: Path) -> SeedFile:
@@ -78,7 +91,14 @@ def _common(seed: _Common) -> dict[str, Any]:
 
 
 async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | None) -> dict:
-    report: dict[str, Any] = {"hackernews": 0, "rss": 0, "youtube": 0, "youtube_unresolved": []}
+    report: dict[str, Any] = {
+        "hackernews": 0,
+        "rss": 0,
+        "tiktok": 0,
+        "reddit": 0,
+        "youtube": 0,
+        "youtube_unresolved": [],
+    }
 
     for s in data.hackernews:
         await upsert_source(
@@ -106,7 +126,38 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
         )
         report["rss"] += 1
 
-    # HN y RSS quedan guardados aunque YouTube falle después (cuota, key inválida).
+    for s in data.tiktok:
+        await upsert_source(
+            session,
+            platform=Platform.TIKTOK.value,
+            kind=SourceKind.QUERY.value,
+            external_id=f"{s.query}|{s.search_region or 'global'}",
+            name=f"TikTok · {s.query}" + (f" ({s.search_region})" if s.search_region else ""),
+            url=f"https://www.tiktok.com/search?q={s.query.replace(' ', '+')}",
+            config={
+                "query": s.query,
+                "region": s.search_region,
+                "item_regions": s.item_regions,
+                "ai_filter": s.ai_filter,
+            },
+            **_common(s),
+        )
+        report["tiktok"] += 1
+
+    for s in data.reddit:
+        await upsert_source(
+            session,
+            platform=Platform.REDDIT.value,
+            kind=SourceKind.CHANNEL.value,
+            external_id=s.subreddit,
+            name=f"r/{s.subreddit}",
+            url=f"https://www.reddit.com/r/{s.subreddit}/",
+            config={"ai_filter": s.ai_filter},
+            **_common(s),
+        )
+        report["reddit"] += 1
+
+    # Lo anterior queda guardado aunque YouTube falle después (cuota, key inválida).
     await session.commit()
 
     if youtube is None:
@@ -141,7 +192,7 @@ async def main(path: Path, dry_run: bool) -> int:
     data = load_seed_file(path)
     print(
         f"{path.name}: {len(data.youtube)} YouTube · {len(data.hackernews)} HN · "
-        f"{len(data.rss)} RSS"
+        f"{len(data.rss)} RSS · {len(data.tiktok)} TikTok · {len(data.reddit)} Reddit"
     )
     if dry_run:
         return 0
