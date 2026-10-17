@@ -61,12 +61,12 @@ y dónde la respondemos.
 | El reto dice | Qué implica para nosotros | Dónde lo respondemos |
 |---|---|---|
 | "de forma confiable" | Cada afirmación lleva su evidencia y dice si es dato observado, estimado o preliminar | CLAUDE.md §2 (reglas 3 y 5) · §7 de este brief |
-| "sin gastar una fortuna" (hoy pagan miles de USD al año) | Solo fuentes gratuitas o con API oficial, y modelos baratos. El coste real de operar el radar se mide en cada llamada y se consulta bajo demanda (MCP o `GET /costs`) | CLAUDE.md §4 (coste de operación) · `data/pricing.yaml` · [`sources.md`](sources.md) |
+| "sin gastar una fortuna" (hoy pagan miles de USD al año) | Fuentes gratuitas o con API oficial, un proveedor de datos públicos de pago por uso (ScrapeCreators, ~1,9 $/1.000 llamadas) y modelos baratos. El coste real de operar el radar se mide en cada llamada y se consulta bajo demanda (MCP o `GET /costs`) | CLAUDE.md §4 (coste de operación) · `data/pricing.yaml` · [`sources.md`](sources.md) |
 | "temas **y formatos**" | El formato es una dimensión más: se analiza qué formato funciona y se recomienda formato por plataforma | `ContentSignal.format` · "por qué funcionó" · `recommendation` |
 | "si es una tendencia que recién empieza o una que ya todos copiaron" | Etapa del ciclo de vida y saturación, no solo volumen | `lifecycle` (`emerging` … `saturated`), `saturation_score` |
 | "por qué funcionó: gancho, formato, tema, momento, quién" | Outliers frente a su referencia y contraste con el resto del tema, presentado como hipótesis | CLAUDE.md §7 (outliers y "por qué funcionó") |
 | "ejecutivos y equipos de Latinoamérica aprendiendo IA" | Encaje con la audiencia evaluado contra el perfil de 30X | `audience_fit_score`, `audience_mix`, `latam_gap` |
-| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. Sus términos tampoco permiten usar su contenido obtenido a través de buscadores sin consentimiento del dueño. **Decidido el 17/10: LinkedIn, Instagram y TikTok no entran en el MVP**, y la curación manual se descartó. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS). Las vías oficiales (API de portabilidad DMA, exports de analítica con consentimiento, embed) quedan en el roadmap. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
+| "en redes" y el ejemplo "en LinkedIn" | **Decidido el 17/10** (los organizadores fueron flexibles con la regla 2): TikTok, Reddit e Instagram entran vía **ScrapeCreators**, un proveedor de datos públicos, sin login propio. Cada uno con su límite: TikTok, solo la semana en curso y hasta 30 vídeos por búsqueda; Reddit, el top de la semana por subreddit, sin guardar nunca el autor; Instagram, los últimos ~12 reels de perfiles elegidos a mano, así que no descubre temas (sirve para outliers). El pitch dice de dónde vienen esos datos. **LinkedIn y X no entran en el MVP:** sin login no se puede buscar su contenido, y lo que se obtiene por Google llega poco y tarde para detectar tendencias. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS). Las vías oficiales (API de portabilidad DMA, exports de analítica con consentimiento, embed, API de X; Business Discovery API para sustituir Instagram) quedan en el roadmap. El pitch lo cuenta como respuesta a la restricción, no como carencia. *Antes del pitch, comprobar en la DB qué redes tienen piezas de verdad: el 17/10 a las ~23:50 ESP había reels de Instagram, pero ninguna pieza de TikTok ni de Reddit (colector conectado, sin recolección en la DB compartida)* | CLAUDE.md §2 (regla 2) y §5 · [`sources.md`](sources.md) |
 | "la propia comunidad como sensor" | Descartado para el MVP (17/10): sin curación manual | — |
 | "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe)** para las decisiones atómicas sobre piezas: clasifica cada pieza (relevancia, formato, gancho…), detecta notas replicadas y verifica lo que escribe el LLM. Python prioriza, y el LLM evalúa cada tema y redacta | CLAUDE.md §7 · [`jev.md`](jev.md) |
 | "el mismo problema que tiene cualquier marca, medio o creador" | El perfil de audiencia es un archivo: cambiarlo adapta el radar a otra marca. En la demo basta con contarlo | `data/audiences/30x.yaml` · "varias audiencias" es P2 |
@@ -113,8 +113,8 @@ Lo que la demo tiene que demostrar:
   audiencia, no el volumen.
 - **Evidencia visible:** fuentes originales, fechas, métricas tal como las da la fuente y límites
   de interpretación.
-- **Coste bajo y medido:** fuentes abiertas y APIs oficiales, con el coste real de operación
-  documentado.
+- **Coste bajo y medido:** fuentes abiertas, APIs oficiales y un proveedor de datos públicos de
+  pago por uso, con el coste real de operación documentado.
 - **LATAM Opportunity Gap:** temas con tracción internacional y poca cobertura observada entre
   referentes empresariales en español.
 - **Inteligencia accionable:** ángulo, gancho, estructura y formato por plataforma.
@@ -142,7 +142,8 @@ siguen la estructura objetivo de CLAUDE.md §10. La prioridad es la de §12.
 | Interactive Radar | Permite explorar, filtrar, seleccionar y abrir evidencias | Propia | `frontend/`: vistas Discover y Explore | P0 |
 | Historical Tracking | Guarda observaciones y muestra la evolución cuando hay historial | Exploding Topics | `metric_snapshots` (P0) · timeline (P1) | P0 / P1 |
 | Content Recommendations | Propone tema, ángulo y formato por plataforma | SparkToro / vidIQ | `recommendation` (P0) · `editorial/briefs` y vista Create (P1) | P0 / P1 |
-| LinkedIn Sensor | Posts de LinkedIn por vías oficiales (API de portabilidad DMA, exports de analítica de 30X y Bilbao), mostrados con el embed oficial | Propia | `collectors/linkedin_dma`, `jobs/import_linkedin_export` | Roadmap (fuera del MVP, 17/10) |
+| Social Sensor | TikTok (búsqueda por palabra clave de la semana), Reddit (top de la semana por subreddit) e Instagram (reels de perfiles elegidos a mano) vía ScrapeCreators, con métricas públicas y sin autor de Reddit | Propia | `collectors/scrapecreators` | P1 (17/10) · conectado; comprobar datos antes del pitch |
+| LinkedIn Sensor | Posts de LinkedIn por vías oficiales (API de portabilidad DMA, exports de analítica de 30X y Bilbao), mostrados con el embed oficial | Propia | `collectors/linkedin_dma`, `jobs/import_linkedin_export` | Roadmap (LinkedIn y X fuera del MVP, 17/10) |
 | Claim Verification | Verifica cada afirmación del LLM contra la evidencia que cita; lo no respaldado no se publica | Cookbook de TypeSafe | Batería de verificación de Jev | P1 · tras el núcleo (CLAUDE.md §12) |
 | LATAM Opportunity Gap | Compara la atención internacional con la cobertura observada en fuentes de Latinoamérica (España aparte, como contexto) | Propia | `intelligence/audience_mix` → `latam_gap` | P1 |
 | MCP Integration | Permite consultar oportunidades, temas y evidencias desde asistentes de IA | Propia | `mcp/` | P1 |
@@ -156,7 +157,7 @@ respuestas MCP y el pitch. Concreta las reglas de CLAUDE.md §2.
 |---|---|---|
 | "Está creciendo" | Hay ≥2 observaciones comparables (`observed`) | Con la tasa y su unidad: "+80 % de piezas nuevas frente a los 3 días anteriores" |
 | Estimación o señal preliminar | Hay una sola observación, o la pieza aparece sin aceleración demostrada (`estimated`, `preliminary`) | Con la etiqueta "estimado" o "preliminar"; es una señal, no crecimiento |
-| Outlier | Existe la referencia comparable (mediana del canal o de la búsqueda) | "6,1× la mediana de su canal". Si falta la referencia: "sin línea base" |
+| Outlier | Existe la referencia comparable (mediana del canal, del perfil, del subreddit o de la búsqueda) | "6,1× la mediana de su canal". Si falta la referencia: "sin línea base" |
 | Saturación | Siempre, porque es relativa a la muestra | "en las fuentes que monitoreamos" |
 | LATAM Gap | Ambos grupos de fuentes tienen cobertura suficiente (CLAUDE.md §5) | "poca cobertura observada en fuentes latinoamericanas". Es una hipótesis sobre la muestra; España se muestra aparte |
 | Audience fit | Se aplicó la rúbrica al perfil de 30X | "evaluación editorial asistida por IA", en banda (bajo · medio · alto) con sus 6 niveles y sus justificaciones |
@@ -206,9 +207,11 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
 - Cada juicio de Jev guarda la versión del modelo y su `confidence`. Si hubo clave de Jev, se
   validó con piezas etiquetadas a mano en `data/evaluations/`.
 - El audience fit del LLM coincide, a grandes rasgos, con el ranking que el equipo revisó a mano.
-- El pitch explica por qué LinkedIn, Instagram y TikTok no entran en el MVP (sin login ni
-  scraping, por sus términos), cómo entran sus referentes (canales abiertos) y qué vías oficiales
-  quedan en el roadmap (§2).
+- El pitch dice de dónde vienen los datos de TikTok, Reddit e Instagram (ScrapeCreators, un
+  proveedor de datos públicos) y sus límites; por qué LinkedIn y X no entran en el MVP (sin login
+  no se puede buscar su contenido, y por Google llega poco y tarde); cómo entran sus referentes
+  (canales abiertos), y qué vías oficiales quedan en el roadmap (§2). Solo se nombran como fuentes
+  de la demo las redes que tengan piezas en la DB servida: se comprueba antes del pitch.
 
 **Entrega**
 - La app está desplegada y funciona desde una sesión limpia, no solo en local.
