@@ -39,6 +39,7 @@ LIMIT_MESSAGES = {
 }
 BUSY_MESSAGE = "El asistente está ocupado. Prueba en unos segundos."
 UNKNOWN_CLIENT = "unknown"
+FORWARDED_FOR = "x-forwarded-for"
 # Preguntas a la vez en todo el proceso: cada una mantiene una llamada al LLM y una sesión de DB.
 MAX_CONCURRENT_QUESTIONS = 4
 # Lo justo para distinguir clientes en los logs sin guardar su IP (D15).
@@ -72,29 +73,32 @@ def get_agent_slots() -> asyncio.Semaphore:
 
 
 def get_session_factory() -> SessionFactory:
-    # La vida de una dependencia con `yield` no cubre todo el stream: la sesión la abre el
-    # generador (plan data-radar-agent, D7).
+    # Una factoría y no una sesión: el stream abre la suya (D7) y el registro del consumo otra
+    # propia que sobrevive a la cancelación (D18); los tests la sustituyen por la DB de tests.
     return SessionLocal
 
 
-def check_agent_allowed(
-    # Sin uso aquí: obliga a FastAPI a validar el cuerpo antes, así un 422 no gasta cupo (D19).
-    body: AgentQuestion,
-    request: Request,
+def require_agent_model(
     model: Annotated[AgentModel | None, Depends(get_agent_model)],
-    limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
 ) -> AgentModel:
     if model is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, NOT_CONFIGURED)
-    result = limiter.check(_client_ip(request), datetime.now(UTC))
-    if result is not LimitResult.OK:
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LIMIT_MESSAGES[result])
     return model
 
 
-async def hold_agent_slot(
-    model: Annotated[AgentModel, Depends(check_agent_allowed)],
+def _check_limits(limiter: RateLimiter, request: Request) -> None:
+    result = limiter.check(_client_ip(request), datetime.now(UTC))
+    if result is not LimitResult.OK:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LIMIT_MESSAGES[result])
+
+
+async def admit_question(
+    # Sin uso aquí: obliga a FastAPI a validar el cuerpo antes, así un 422 no gasta cupo (D19).
+    body: AgentQuestion,
+    request: Request,
+    model: Annotated[AgentModel, Depends(require_agent_model)],
     slots: Annotated[asyncio.Semaphore, Depends(get_agent_slots)],
+    limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
 ) -> AsyncIterator[AgentModel]:
     # Una dependencia con `yield` se cierra cuando termina el stream SSE (o el cliente se va):
     # el hueco se libera siempre.
@@ -102,13 +106,21 @@ async def hold_agent_slot(
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, BUSY_MESSAGE)
     await slots.acquire()
     try:
+        # Con el hueco ya tomado: un 429 por "ocupado" no gasta cupo.
+        _check_limits(limiter, request)
         yield model
     finally:
         slots.release()
 
 
 def _client_ip(request: Request) -> str:
-    # Detrás del proxy de Railway, uvicorn ya pone aquí la IP real (--proxy-headers).
+    # El proxy de Railway añade la IP real AL FINAL de X-Forwarded-For; lo de la izquierda lo
+    # escribe el cliente. Con --forwarded-allow-ips='*', uvicorn pone en `request.client` la
+    # entrada de la izquierda, así que no sirve para limitar.
+    hops = [h.strip() for value in request.headers.getlist(FORWARDED_FOR) for h in value.split(",")]
+    hops = [h for h in hops if h]
+    if hops:
+        return hops[-1]
     return request.client.host if request.client else UNKNOWN_CLIENT
 
 
@@ -155,7 +167,7 @@ EVENTS_RESPONSE = {
 async def ask_agent(
     body: AgentQuestion,
     request: Request,
-    model: Annotated[AgentModel, Depends(hold_agent_slot)],
+    model: Annotated[AgentModel, Depends(admit_question)],
     session_factory: Annotated[SessionFactory, Depends(get_session_factory)],
 ) -> AsyncIterable[ServerSentEvent]:
     """Agente del Radar. Stream SSE: `step`, `action`, `answer`, `error` y siempre `done`."""

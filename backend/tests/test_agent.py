@@ -11,6 +11,8 @@ from anthropic.types import MessageParam, ToolUseBlock
 from fastapi import Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
+from starlette.types import ASGIApp
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.agent import runner
 from app.agent.limits import MAX_STEPS, LimitResult, RateLimiter
@@ -283,9 +285,14 @@ def overrides(session):
         app.dependency_overrides.clear()
 
 
-async def ask(question: str = "¿Qué acelera?") -> httpx.Response:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        return await client.post("/api/v1/agent", json={"question": question})
+async def ask(
+    question: str = "¿Qué acelera?",
+    headers: dict[str, str] | None = None,
+    asgi_app: ASGIApp = app,
+) -> httpx.Response:
+    transport = ASGITransport(app=asgi_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        return await client.post("/api/v1/agent", json={"question": question}, headers=headers)
 
 
 async def test_route_streams_events(seeded, overrides):
@@ -521,3 +528,32 @@ def test_openapi_documents_the_event_models():
         "DoneEvent",
     }
     assert expected <= set(schemas)
+
+
+async def test_rate_limit_uses_the_ip_added_by_the_proxy(seeded, overrides):
+    limiter = RateLimiter(per_ip_per_hour=1, global_per_day=300)
+    overrides[get_rate_limiter] = lambda: limiter
+    overrides[get_agent_model] = lambda: ScriptedModel([final(), final()])
+
+    # Como en producción: --proxy-headers --forwarded-allow-ips='*' (backend/Dockerfile).
+    behind_proxy = ProxyHeadersMiddleware(app, trusted_hosts="*")
+
+    first = await ask(headers={"X-Forwarded-For": "1.1.1.1, 9.9.9.9"}, asgi_app=behind_proxy)
+    rotated = await ask(headers={"X-Forwarded-For": "2.2.2.2, 9.9.9.9"}, asgi_app=behind_proxy)
+
+    assert first.status_code == 200
+    assert rotated.status_code == 429
+
+
+async def test_busy_does_not_use_the_ip_quota(seeded, overrides):
+    limiter = RateLimiter(per_ip_per_hour=1, global_per_day=300)
+    overrides[get_rate_limiter] = lambda: limiter
+    overrides[get_agent_model] = lambda: ScriptedModel([final()])
+    overrides[get_agent_slots] = lambda: asyncio.Semaphore(0)
+
+    busy = await ask()
+    overrides[get_agent_slots] = lambda: asyncio.Semaphore(1)
+    accepted = await ask()
+
+    assert busy.status_code == 429
+    assert accepted.status_code == 200
