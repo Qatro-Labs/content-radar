@@ -111,6 +111,21 @@ def test_score_needs_confidence():
     assert to_piece_judgment(1, {"exec_readability": score(2.6, 0.4)}).exec_readability is None
 
 
+@pytest.mark.parametrize(("level", "expected"), [(0.5, 1), (1.5, 2), (2.5, 3)])
+def test_score_rounds_half_up(level, expected):
+    answers = {"exec_readability": score(level, 0.7)}
+    assert to_piece_judgment(1, answers).exec_readability == expected
+
+
+def test_missing_answers_are_uncertain():
+    judgment = to_piece_judgment(1, {})
+    assert all(value is None for key, value in vars(judgment).items() if key != "item_id")
+
+
+def test_missing_injection_answer_excludes_piece():
+    assert excluded_from_llm({}) is True
+
+
 @pytest.mark.parametrize(
     ("p", "expected"), [(0.51, True), (0.5, False)], ids=["above_half", "at_half"]
 )

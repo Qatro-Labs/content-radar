@@ -7,6 +7,7 @@ El texto de la pieza va solo en `state`; nuestras instrucciones, en las pregunta
 import asyncio
 import hashlib
 import json
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -173,7 +174,8 @@ def _score(answers: dict[str, Any], question: str) -> int | None:
     answer = answers.get(question)
     if answer is None or answer["confidence"] < SCORE_MIN_CONFIDENCE:
         return None
-    return round(answer["score"])
+    # Medio nivel redondea hacia arriba; round() de Python redondea al par.
+    return math.floor(answer["score"] + 0.5)
 
 
 def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:
@@ -191,4 +193,8 @@ def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:
 
 
 def excluded_from_llm(answers: dict[str, Any]) -> bool:
-    return answers[INJECTION_QUESTION]["noul"] > INJECTION_EXCLUDE
+    answer = answers.get(INJECTION_QUESTION)
+    # Sin respuesta de inyección no sabemos si la pieza es segura: se excluye.
+    if answer is None:
+        return True
+    return answer["noul"] > INJECTION_EXCLUDE

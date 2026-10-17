@@ -81,8 +81,8 @@ async def test_second_run_uses_cache(session):
     pieces = await make_pieces(session)
     judge = FakeJudge()
 
-    first = await classify_pieces(session, pieces, judge, UsageMeter())
-    second = await classify_pieces(session, pieces, judge, UsageMeter())
+    first = await classify_pieces(session, pieces, judge=judge, meter=UsageMeter())
+    second = await classify_pieces(session, pieces, judge=judge, meter=UsageMeter())
 
     assert (first.classified, first.cached) == (3, 0)
     assert judge.calls == 3
@@ -91,11 +91,11 @@ async def test_second_run_uses_cache(session):
 
 async def test_changed_state_is_reclassified(session):
     pieces = await make_pieces(session)
-    await classify_pieces(session, pieces, FakeJudge(), UsageMeter())
+    await classify_pieces(session, pieces, judge=FakeJudge(), meter=UsageMeter())
     judge = FakeJudge()
 
     pieces[0] = replace(pieces[0], title="Título nuevo")
-    stats = await classify_pieces(session, pieces, judge, UsageMeter())
+    stats = await classify_pieces(session, pieces, judge=judge, meter=UsageMeter())
 
     assert judge.calls == 1
     assert (stats.classified, stats.cached) == (1, 2)
@@ -105,15 +105,15 @@ async def test_failure_in_one_piece_does_not_abort(session):
     pieces = await make_pieces(session)
     judge = FakeJudge(fail_titles=frozenset({pieces[1].title}))
 
-    stats = await classify_pieces(session, pieces, judge, UsageMeter())
+    stats = await classify_pieces(session, pieces, judge=judge, meter=UsageMeter())
 
     assert (stats.classified, stats.failed) == (2, 1)
 
 
-async def test_without_judge_nothing_is_called(session):
+async def test_without_judge_all_pieces_are_skipped(session):
     pieces = await make_pieces(session)
 
-    stats = await classify_pieces(session, pieces, None, UsageMeter())
+    stats = await classify_pieces(session, pieces, judge=None, meter=UsageMeter())
 
     assert stats.failed == len(pieces)
     assert stats.skipped_reason
@@ -124,9 +124,9 @@ async def test_usage_counted_only_for_real_calls(session):
     judge = FakeJudge(input_tokens=100)
     meter = UsageMeter()
 
-    await classify_pieces(session, pieces, judge, meter)
+    await classify_pieces(session, pieces, judge=judge, meter=meter)
     second_meter = UsageMeter()
-    await classify_pieces(session, pieces, judge, second_meter)
+    await classify_pieces(session, pieces, judge=judge, meter=second_meter)
 
     count = meter.counts[(Provider.TYPESAFE_JEV, "piece_battery")]
     assert (count.calls, count.units) == (3, 300)

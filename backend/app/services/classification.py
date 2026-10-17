@@ -65,7 +65,11 @@ async def _cached_keys(session: AsyncSession, keys: Sequence[str]) -> set[str]:
 
 
 async def _save(
-    session: AsyncSession, judged: dict[str, JudgeResult], requests: dict[str, _Request], model: str
+    session: AsyncSession,
+    judged: dict[str, JudgeResult],
+    *,
+    requests: dict[str, _Request],
+    model: str,
 ) -> None:
     if not judged:
         return
@@ -101,7 +105,7 @@ def _requests_by_key(pieces: Sequence[Piece], model: str) -> tuple[list[str], di
 
 
 async def classify_pieces(
-    session: AsyncSession, pieces: Sequence[Piece], judge: Judge | None, meter: UsageMeter
+    session: AsyncSession, pieces: Sequence[Piece], *, judge: Judge | None, meter: UsageMeter
 ) -> ClassificationStats:
     if judge is None:
         return ClassificationStats(
@@ -114,7 +118,7 @@ async def classify_pieces(
     results = await asyncio.gather(*(_judge_one(judge, requests[key]) for key in missing))
     judged = {key: r for key, r in zip(missing, results, strict=True) if r is not None}
 
-    await _save(session, judged, requests, model)
+    await _save(session, judged, requests=requests, model=model)
     for result in judged.values():
         meter.add(Provider.TYPESAFE_JEV, PIECE_BATTERY_OPERATION, units=result.input_tokens or 0)
     await session.commit()

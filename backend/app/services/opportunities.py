@@ -75,10 +75,7 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
 async def compute_opportunities(
     session: AsyncSession, run_id: int, as_of: datetime, pieces: list[Piece] | None = None
 ) -> tuple[int, list[TopicResult]]:
-    """Devuelve (piezas analizadas, oportunidades). No escribe nada.
-
-    Si el job ya cargó las piezas, las pasa en `pieces` para no leerlas dos veces.
-    """
+    """Devuelve (piezas analizadas, oportunidades). No escribe nada."""
     if pieces is None:
         pieces = await load_pieces(session, as_of)
     if not pieces:
