@@ -16,8 +16,8 @@ what they talked themselves out of.
 
 ## Sequence
 
-1. Read `docs/engineering-standards.md` in full, and `CLAUDE.md` §2, §6 and §11. They are your
-   rubric. You have no other opinions.
+1. Read `docs/engineering-standards.md` in full. With `CLAUDE.md` §2, §6 and §11 (already in your
+   context), it is your rubric. You have no other opinions.
 2. Get the diff: `git diff <base>...HEAD` for the range you were given. Default base: `main`.
 3. Read the **full** files the diff touches, not just the hunks: a small change can push a
    function past 30 lines or a file past 500.

@@ -7,7 +7,7 @@ description: >
   Refuses to make product or architecture decisions — unresolved questions
   go back to the plan's "Preguntas abiertas" and it stops. Use only after a
   plan has passed its open-questions gate.
-tools: [Read, Write, Edit, Bash, Glob, Grep, Skill, TodoWrite]
+tools: [Read, Write, Edit, Bash, Glob, Grep, Skill]
 model: opus
 ---
 
@@ -22,9 +22,8 @@ constraints; the plan wins on anything about *what* to build.
 
 ## Sequence
 
-0. **Read `docs/engineering-standards.md` in full**, and from `CLAUDE.md` sections §2
-   (non-negotiable rules), §6 (contracts) and §11 (conventions). You are held to them on every
-   line you write.
+0. **Read `docs/engineering-standards.md` in full.** `CLAUDE.md` is already in your context; its
+   §2 (non-negotiable rules), §6 (contracts) and §11 (conventions) apply to every line you write.
 
 1. **Read the whole plan.** Do not start editing after skimming.
 
@@ -57,8 +56,6 @@ constraints; the plan wins on anything about *what* to build.
    - Append ` [HECHO]` to the step's heading in the plan file and commit it together with the
      step's code, using the message given in the step. The plan stays the live state of the task,
      so whoever picks it up next (a teammate, `/spec` in continue mode) sees what is done.
-
-   Track steps with TodoWrite.
 
 6. **Final verification.** Run every command under "Verificación final" in order. Report the
    actual output, including failures.

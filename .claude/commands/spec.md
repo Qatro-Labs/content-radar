@@ -107,8 +107,8 @@ Muestra un resumen de 5 líneas y la ruta del plan. Pregunta:
 
 > ¿Lanzo la implementación con `plan-implementer` (contexto limpio) ahora?
 
-Si dice que sí, sigue el flujo de `/build` con la ruta absoluta del plan. Si no, imprime
-`/build <ruta-absoluta>` para lanzarlo después.
+Si dice que sí, lee `.claude/commands/build.md` y sigue sus pasos desde el 2 con la ruta
+absoluta del plan. Si no, imprime `/build <ruta-absoluta>` para lanzarlo después.
 
 ## 9. Modo continuar (plan existente)
 
@@ -132,4 +132,5 @@ decisiones, pasos `[HECHO]`, historial de intentos y preguntas abiertas.
    - Entrada nueva en "Historial de intentos".
    - "Preguntas abiertas" → `(ninguna)` y gate → `LISTO`. Si algo no se cerró, el gate se queda en
      `BLOQUEADO` y dices qué falta: un plan medio cerrado que dice `LISTO` es peor que uno bloqueado.
-5. Resume en 5 líneas qué cambió y pregunta si relanzar `/build`.
+5. Resume en 5 líneas qué cambió y pregunta si relanzar la implementación. Si dice que sí, lee
+   `.claude/commands/build.md` y sigue sus pasos desde el 2.
