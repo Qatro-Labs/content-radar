@@ -114,7 +114,7 @@ backend/app/
   mcp/           servidor MCP
   api/routes/    FastAPI (delgado)
   jobs/          pipelines ejecutables por cron
-frontend/        Vue 3 + Vite: Radar, Explorar y Crear (vistas en construcción)
+frontend/        Vue 3 + Vite: Radar; Explorar y Crear, en construcción
 data/            fixtures, evaluaciones y perfiles de audiencia
 docs/            brief de producto y documentación de la entrega
 ```
