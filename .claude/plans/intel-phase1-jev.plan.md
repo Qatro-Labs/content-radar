@@ -264,7 +264,7 @@ class JudgeResult:
   **nunca** la clave.
 - **Commit:** `Add typesafe-sdk 0.7.4 and Jev settings`
 
-### Paso 2 — Batería y decisiones
+### Paso 2 — Batería y decisiones [HECHO]
 
 - **Archivos:** `backend/app/editorial/prompts/jev/piece.v1.yaml`, `backend/app/intelligence/jev.py`,
   `backend/tests/test_jev.py`.

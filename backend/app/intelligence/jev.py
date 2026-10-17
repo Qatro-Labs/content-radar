@@ -1,0 +1,147 @@
+"""Jev (TypeSafe): batería de pieza y conversión de sus respuestas en decisiones (CLAUDE.md §7).
+
+Jev solo emite juicios atómicos; los umbrales y la decisión están aquí, en Python (regla 4).
+El texto de la pieza va solo en `state`; nuestras instrucciones, en las preguntas (regla 6).
+"""
+
+import hashlib
+import json
+from dataclasses import dataclass
+from enum import StrEnum
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+
+import yaml
+from typesafe_sdk import Choice, Noul, Score
+
+from app.intelligence.opportunities import Piece
+
+PIECE_BATTERY = "piece"
+PIECE_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/piece.v1.yaml"
+MAX_DESCRIPTION_CHARS = 1000
+
+# Umbrales de docs/jev.md, "Del juicio a la decisión". Iniciales: se ajustan con la validación.
+CHOICE_MIN_PROB = 0.6
+NOUL_YES = 0.7
+NOUL_NO = 0.3
+SCORE_MIN_CONFIDENCE = 0.5
+# Más bajo que NOUL_YES a propósito: ante la duda, la pieza no entra en el contexto del LLM.
+INJECTION_EXCLUDE = 0.5
+
+REV_SUFFIX = "_rev"
+
+
+class QuestionType(StrEnum):
+    NOUL = "noul"
+    CHOICE = "choice"
+    SCORE = "score"
+
+
+QUESTION_CLASSES: dict[QuestionType, type[Noul | Choice | Score]] = {
+    QuestionType.NOUL: Noul,
+    QuestionType.CHOICE: Choice,
+    QuestionType.SCORE: Score,
+}
+
+
+@dataclass(frozen=True)
+class Battery:
+    name: str
+    version: int
+    questions: dict[str, Noul | Choice | Score]
+
+
+@dataclass(frozen=True)
+class PieceJudgment:
+    item_id: int
+    relevant: bool | None
+    injection: bool | None
+    format: str | None  # None si es incierto o no coincide con format_rev
+    hook: str | None  # igual con hook_rev
+    announcement: bool | None
+    business_case: bool | None
+    exec_readability: int | None  # nivel 0–3; None si la confianza es baja
+    latam_context: bool | None
+
+
+def load_battery(name: str, path: Path) -> Battery:
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    questions: dict[str, Noul | Choice | Score] = {}
+    for entry in raw["questions"]:
+        fields = {k: entry[k] for k in ("instructions", "criteria") if k in entry}
+        questions[entry["id"]] = QUESTION_CLASSES[QuestionType(entry["type"])](**fields)
+    return Battery(name=name, version=raw["version"], questions=questions)
+
+
+@lru_cache
+def piece_battery() -> Battery:
+    return load_battery(PIECE_BATTERY, PIECE_BATTERY_FILE)
+
+
+def piece_state(piece: Piece) -> dict[str, Any]:
+    description = piece.description[:MAX_DESCRIPTION_CHARS] if piece.description else None
+    return {
+        "title": piece.title,
+        "description": description,
+        "channel": piece.source_name,
+        "platform": piece.platform.value,
+        "language": piece.language,
+    }
+
+
+def cache_key(state: dict[str, Any], model: str) -> str:
+    battery = piece_battery()
+    payload = {
+        "state": state,
+        "battery": battery.name,
+        "battery_version": battery.version,
+        "model": model,
+    }
+    canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _noul(answers: dict[str, Any], question: str) -> bool | None:
+    answer = answers.get(question)
+    if answer is None:
+        return None
+    if answer["noul"] >= NOUL_YES:
+        return True
+    if answer["noul"] <= NOUL_NO:
+        return False
+    return None
+
+
+def _choice(answers: dict[str, Any], question: str) -> str | None:
+    answer, reverse = answers.get(question), answers.get(question + REV_SUFFIX)
+    if answer is None or reverse is None:
+        return None
+    if max(answer["probabilities"].values()) < CHOICE_MIN_PROB:
+        return None
+    return answer["choice"] if answer["choice"] == reverse["choice"] else None
+
+
+def _score(answers: dict[str, Any], question: str) -> int | None:
+    answer = answers.get(question)
+    if answer is None or answer["confidence"] < SCORE_MIN_CONFIDENCE:
+        return None
+    return round(answer["score"])
+
+
+def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:
+    return PieceJudgment(
+        item_id=item_id,
+        relevant=_noul(answers, "relevant"),
+        injection=_noul(answers, "injection"),
+        format=_choice(answers, "format"),
+        hook=_choice(answers, "hook"),
+        announcement=_noul(answers, "announcement"),
+        business_case=_noul(answers, "business_case"),
+        exec_readability=_score(answers, "exec_readability"),
+        latam_context=_noul(answers, "latam_context"),
+    )
+
+
+def excluded_from_llm(answers: dict[str, Any]) -> bool:
+    return answers["injection"]["noul"] > INJECTION_EXCLUDE
