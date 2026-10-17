@@ -37,10 +37,14 @@ def answer(label: str, confidence: float = 0.9) -> dict[str, Any]:
 class FakeClaimJudge:
     def __init__(self, *, rejected: frozenset[str] = frozenset({REJECTED}), fail: str = ""):
         self.rejected, self.fail = rejected, fail
-        self.calls = 0
+        self.states: list[dict[str, Any]] = []
+
+    @property
+    def calls(self) -> int:
+        return len(self.states)
 
     async def judge(self, state: dict[str, Any], questions: Mapping[str, Any]) -> JudgeResult:
-        self.calls += 1
+        self.states.append(state)
         if state["claim"] == self.fail:
             raise JudgeError("rate limited")
         label = "says_nothing" if state["claim"] in self.rejected else "supports"

@@ -679,7 +679,7 @@ Se informa también por posición (1, 2, 3) y la variante sin `measured_facts`.
 - **Verificación:** `cd backend && TEST_DATABASE_URL=postgresql+asyncpg://radar:radar@localhost:5433/radar_test_verify uv run pytest tests/test_verification.py -q`
 - **Commit:** `Verify explanation claims with Jev, cached and bounded per run`
 
-### Paso 4 — Cablear en `explain_topics` y en `analyze`
+### Paso 4 — Cablear en `explain_topics` y en `analyze` [HECHO]
 
 - **Archivos:** `backend/app/services/explanation.py`, `backend/app/jobs/analyze.py`,
   `backend/tests/test_explanation.py`

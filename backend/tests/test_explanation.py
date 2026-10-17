@@ -1,6 +1,6 @@
 """«Por qué importa»: comprobaciones en Python, prompt y servicio con caché (contra radar_test)."""
 
-from collections.abc import Set
+from collections.abc import Sequence, Set
 from dataclasses import replace
 
 from sqlalchemy import func, select
@@ -33,7 +33,9 @@ from app.intelligence.explanation import (
 from app.models import LlmEvaluation
 from app.services.audience_fit import evaluate_topics
 from app.services.explanation import explain_topics
+from app.services.verification import ClaimVerifier
 from tests.test_audience_fit_service import FakeEvaluator, two_topics
+from tests.test_verification import FakeClaimJudge
 
 URL = "https://example.com/0"
 WHY = "Las empresas empiezan a usar agentes de IA en operaciones."
@@ -190,19 +192,20 @@ async def test_external_text_goes_escaped_in_the_user_message_only(session):
 
 
 class FakeExplainer:
-    def __init__(self, *, fail: bool = False) -> None:
+    def __init__(self, *, fail: bool = False, texts: Sequence[str] = (WHY,), extra_url: str = ""):
         self.calls = 0
         self.fail = fail
+        self.texts, self.extra_url = texts, extra_url
 
     async def explain(self, explain: ExplainInput) -> ExplanationResult:
         self.calls += 1
         if self.fail:
             raise EvaluationError("stop_reason=max_tokens")
-        url = explain.pieces[0].url
+        urls = [explain.pieces[0].url] + ([self.extra_url] if self.extra_url else [])
         return ExplanationResult(
             model="claude-haiku-5-5",
             output=OpportunityExplanation(
-                claims=[Claim(text=WHY, evidence_urls=[url])],
+                claims=[Claim(text=t, evidence_urls=urls) for t in self.texts],
                 limitations=[],
             ),
             input_tokens=900,
@@ -251,3 +254,73 @@ async def test_failed_explanation_keeps_the_template_with_a_note_and_is_not_cach
     assert all(EXPLANATION_FAILED_NOTE in r.opportunity.limitations for r in out)
     assert out[0].opportunity.why_it_matters == fitted[0].opportunity.why_it_matters
     assert await session.scalar(select(func.count()).select_from(LlmEvaluation)) == before
+
+
+# --- servicio con verificación de Jev -----------------------------------------------------
+
+
+async def explain_verified(session, verifier, explainer=None):
+    fitted, answers = await fitted_topics(session)
+    return await explain_topics(
+        session,
+        fitted,
+        answers=answers,
+        explainer=explainer or FakeExplainer(texts=(WHY, OTHER)),
+        meter=UsageMeter(),
+        verifier=verifier,
+    )
+
+
+async def test_verified_explanation_publishes_only_supported_claims(session):
+    judge = FakeClaimJudge(rejected=frozenset({OTHER}))
+
+    out, stats = await explain_verified(session, ClaimVerifier(judge=judge))
+
+    assert all(r.opportunity.why_it_matters == WHY for r in out)
+    assert all(
+        "Jev no encontró respaldo en la evidencia citada para 1 afirmación del LLM: no se publica."
+        in r.opportunity.limitations
+        for r in out
+    )
+    assert not any(UNVERIFIED_NOTE in r.opportunity.limitations for r in out)
+    assert stats.verification is not None and stats.verification.rejected == 2
+
+
+async def test_with_verification_on_and_no_key_topics_are_marked_unverified(session):
+    out, stats = await explain_verified(session, ClaimVerifier(judge=None))
+
+    assert all(r.opportunity.why_it_matters == f"{WHY} {OTHER}" for r in out)
+    assert all(UNVERIFIED_NOTE in r.opportunity.limitations for r in out)
+    assert stats.verification is not None and stats.verification.unverified_topics == 2
+
+
+async def test_without_verifier_nothing_changes(session):
+    fitted, answers = await fitted_topics(session)
+
+    out, stats = await explain_topics(
+        session, fitted, answers=answers, explainer=FakeExplainer(), meter=UsageMeter()
+    )
+
+    assert not any(UNVERIFIED_NOTE in r.opportunity.limitations for r in out)
+    assert stats.verification is None
+
+
+async def test_claim_state_carries_only_the_sent_citations(session):
+    judge = FakeClaimJudge()
+
+    await explain_verified(
+        session, ClaimVerifier(judge=judge), FakeExplainer(extra_url="https://otro.example/x")
+    )
+
+    assert judge.calls == 2
+    assert all(len(s["evidence"]) == 1 for s in judge.states)
+
+
+async def test_topic_without_python_valid_claims_sends_nothing_to_jev(session):
+    judge = FakeClaimJudge()
+    invented = FakeExplainer(texts=("Crece un 300 % este mes.",))
+
+    out, _ = await explain_verified(session, ClaimVerifier(judge=judge), invented)
+
+    assert judge.calls == 0
+    assert all(r.opportunity.limitations[-1:] == [NO_VALID_CLAIM_NOTE] for r in out)
