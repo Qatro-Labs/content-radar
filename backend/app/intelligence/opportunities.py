@@ -11,11 +11,15 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import TypedDict
 
-from pydantic import HttpUrl
-
 from app.intelligence import outliers as out
 from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
+from app.intelligence.evidence import (
+    PERFORMANCE_METRIC,
+    ranked_pieces,
+    timeline,
+    topic_evidence,
+)
 from app.intelligence.lifecycle import Stage, classify
 from app.intelligence.ranking import (
     confidence,
@@ -29,47 +33,30 @@ from app.intelligence.replicas import (
     NO_REPLICAS,
     StoryAssignment,
     replica_notes,
-    replica_outlets,
 )
 from app.intelligence.velocity import (
-    WINDOW,
     TopicVelocity,
     WindowCounts,
-    piece_rate,
     topic_velocity,
     window_counts,
 )
 from app.schemas.opportunity import (
     AudienceMix,
-    Collection,
     Confidence,
     Evidence,
     GrowthStatus,
     Lifecycle,
     Opportunity,
     OpportunityTimeline,
-    Rate,
     Recommendation,
     ScoreBreakdown,
-    TimelinePoint,
-    TimelineWindow,
 )
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
-# Métrica que mide el rendimiento de cada plataforma. RSS no expone métricas. El score de Reddit
-# se guarda en `points`, como el de HN.
-PERFORMANCE_METRIC = {
-    Platform.YOUTUBE: "views",
-    Platform.TIKTOK: "views",
-    Platform.INSTAGRAM: "views",
-    Platform.HACKERNEWS: "points",
-    Platform.REDDIT: "points",
-}
 # Plataformas cuyas views se acumulan con los días: su rendimiento se ajusta por edad.
 CUMULATIVE_VIEWS = {Platform.YOUTUBE, Platform.TIKTOK, Platform.INSTAGRAM}
 MIN_RECENT_ITEMS = 3  # piezas en las dos últimas ventanas para considerar el tema activo
 MIX_WEIGHT_MIN, MIX_WEIGHT_MAX = 0.5, 3.0
-MAX_EVIDENCE = 25
 LLM_PENDING_NOTE = "Audience fit y análisis editorial pendientes (sin LLM todavía)."
 BROAD_TOPIC_NOTE = (
     "Tema amplio: las piezas comparten poco más que el término de búsqueda; tómalo como "
@@ -156,51 +143,6 @@ def outlier_ratios(
         others = [v for item_id, v in by_source[p.source_id] if item_id != p.item_id]
         ratios[p.item_id] = out.outlier_ratio(value, others, out.reference_quantile(p.platform))
     return ratios
-
-
-def _rate(p: Piece) -> Rate | None:
-    metric = PERFORMANCE_METRIC.get(p.platform)
-    if metric is None:
-        return None
-    value = piece_rate([(t, getattr(m, metric)) for t, m in p.snapshots])
-    return None if value is None else Rate(value=value, unit=f"{metric}/h")
-
-
-def _collection(kind: SourceKind) -> Collection:
-    return Collection.MANUAL if kind is SourceKind.MANUAL else Collection.AUTOMATIC
-
-
-def _evidence(
-    p: Piece, ratio: float | None, *, replica_of: str | None, replica_count: int
-) -> Evidence:
-    return Evidence(
-        url=p.url,  # type: ignore[arg-type]
-        source=p.source_name,
-        platform=p.platform,
-        segment=p.segment,
-        title=p.title,
-        published_at=p.published_at,
-        observed_at=p.observed_at,
-        language=p.language,
-        metrics=p.metrics,
-        velocity=_rate(p),
-        outlier_ratio=ratio,
-        is_outlier=out.is_outlier(ratio),
-        collection=_collection(p.source_kind),
-        replica_of=HttpUrl(replica_of) if replica_of else None,
-        replica_count=replica_count,
-    )
-
-
-def _timeline(oid: str, published: Sequence[datetime], as_of: datetime) -> OpportunityTimeline:
-    days = int(WINDOW / timedelta(days=1))
-    points = []
-    for k in range(2 * days - 1, -1, -1):
-        end = as_of - timedelta(days=k)
-        count = sum(1 for t in published if end - timedelta(days=1) < t <= end)
-        window = TimelineWindow.CURRENT if k < days else TimelineWindow.PREVIOUS
-        points.append(TimelinePoint(date=end.date(), count=count, window=window))
-    return OpportunityTimeline(opportunity_id=oid, window_days=days, points=points)
 
 
 def _stable_id(group: Sequence[Piece]) -> str:
@@ -448,42 +390,6 @@ def _opportunity(
     return opportunity, scores.stage
 
 
-def _ranked(
-    group: Sequence[Piece], ratios: Sequence[float | None], replica_ids: frozenset[int]
-) -> list[tuple[Piece, float | None]]:
-    # Originales antes que republicaciones: con el corte de MAX_EVIDENCE, cada `replica_of`
-    # apunta a una pieza guardada, y el LLM no gasta contexto en copias. Dentro de cada grupo,
-    # outliers primero y después lo más reciente; `item_id` desempata para que el orden (y lo
-    # que se envía al LLM) no cambie entre ejecuciones.
-    return sorted(
-        zip(group, ratios, strict=True),
-        key=lambda pair: (
-            pair[0].item_id in replica_ids,
-            pair[1] is None,
-            -(pair[1] or 0),
-            -pair[0].published_at.timestamp(),
-            pair[0].item_id,
-        ),
-    )
-
-
-def _topic_evidence(
-    ranked: Sequence[tuple[Piece, float | None]],
-    group: Sequence[Piece],
-    stories: StoryAssignment,
-) -> list[Evidence]:
-    by_id = {p.item_id: p for p in group}
-    # Sobre el tema completo, no sobre la evidencia recortada a MAX_EVIDENCE.
-    outlets = replica_outlets(group, stories)
-    evidence = []
-    for p, ratio in ranked[:MAX_EVIDENCE]:
-        rep_id = stories.representative_of.get(p.item_id)
-        replica_of = by_id[rep_id].url if rep_id is not None else None
-        count = outlets.get(p.item_id, 0)
-        evidence.append(_evidence(p, ratio, replica_of=replica_of, replica_count=count))
-    return evidence
-
-
 def _topic_result(
     topic: _ActiveTopic,
     ratios: Mapping[int, float | None],
@@ -504,11 +410,11 @@ def _topic_result(
         as_of=as_of,
         monitoring_started_at=monitoring_started_at,
     )
-    ranked = _ranked(topic.group, group_ratios, facts.replica_ids)
-    evidence = _topic_evidence(ranked, topic.group, stories)
-    timeline = _timeline(opportunity.id, [p.published_at for p in topic.group], as_of)
+    ranked = ranked_pieces(topic.group, group_ratios, facts.replica_ids)
+    evidence = topic_evidence(ranked, topic.group, stories)
+    points = timeline(opportunity.id, [p.published_at for p in topic.group], as_of)
     pieces = [p for p, _ in ranked]
-    return TopicResult(opportunity, evidence, timeline, stage, pieces, facts.replica_ids)
+    return TopicResult(opportunity, evidence, points, stage, pieces, facts.replica_ids)
 
 
 def _story_saturation(
@@ -519,6 +425,15 @@ def _story_saturation(
         window_counts([p.published_at for p in _originals(t.group, stories)], as_of) for t in topics
     ]
     return saturation_scores([c.current + c.previous for c in counts])
+
+
+def _across_topics(
+    topics: Sequence[_ActiveTopic], stories: StoryAssignment, as_of: datetime
+) -> list[tuple[float, float]]:
+    # Saturación y percentil de velocidad se normalizan entre temas: necesitan todos los activos.
+    saturation = _story_saturation(topics, stories, as_of)
+    velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
+    return list(zip(saturation, velocity_pct, strict=True))
 
 
 def build_opportunities(
@@ -532,17 +447,10 @@ def build_opportunities(
     reference: Sequence[Piece] | None = None,
     stories: StoryAssignment | None = None,
 ) -> list[TopicResult]:
-    ratios = outlier_ratios(pieces, as_of, reference=reference)
     stories = stories if stories is not None else NO_REPLICAS
     broad_flags = broad if broad is not None else [False] * len(clusters)
     topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of)
-    if not topics:
-        return []
-
-    # Saturación y velocidad se normalizan entre temas: necesitan todos los temas activos.
-    saturation = _story_saturation(topics, stories, as_of)
-    velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
-
+    ratios = outlier_ratios(pieces, as_of, reference=reference)
     results = [
         _topic_result(
             topic,
@@ -553,7 +461,9 @@ def build_opportunities(
             as_of=as_of,
             monitoring_started_at=monitoring_started_at,
         )
-        for topic, sat, vel_pct in zip(topics, saturation, velocity_pct, strict=True)
+        for topic, (sat, vel_pct) in zip(
+            topics, _across_topics(topics, stories, as_of), strict=True
+        )
     ]
     return rank(results)
 
