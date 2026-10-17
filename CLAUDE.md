@@ -77,9 +77,15 @@ Domain services (Python)
 `collect → normalize & dedupe → save snapshots → embed → cluster → score → editorial insights → persist opportunities`.
 Lock para que nunca corran dos ejecuciones del mismo pipeline a la vez.
 
+**Comandos** (desde `backend/`; la puesta en marcha completa está en `README.md`):
+
 ```bash
-uv run python -m app.jobs.collect
-uv run python -m app.jobs.analyze
+uv run pytest                                  # tests (DB aparte: radar_test)
+uv run ruff check . && uv run ruff format .    # lint y formato
+uv run pyright <archivos>                      # tipos
+uv run python -m app.jobs.collect              # recolecta y guarda un snapshot (--days N)
+uv run python -m app.jobs.analyze              # pendiente: embeddings → clustering → scores
+uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 ```
 
 ---
@@ -99,11 +105,7 @@ uv run python -m app.jobs.analyze
 - **Automáticos:** YouTube, HN, RSS, Brave.
 - **Editoriales:** el equipo o la comunidad de 30X pegan enlaces y los etiquetan. Es el enfoque de "comunidad como sensor" que propone el brief.
 
-Patrón común:
-```python
-class SignalCollector(Protocol):
-    async def collect(self) -> list[ContentSignal]: ...
-```
+Todos los conectores implementan el protocolo `SignalCollector` (`backend/app/collectors/base.py`) y no escriben en la DB: la persistencia la hace `services.signals.store_signals`.
 Cada `source` lleva un **`segment`** (`tech` | `business` | `latam_es`), además de `language` y `region`. Se asigna a mano al dar de alta la fuente o el canal; es lo que permite responder "para quién importa".
 
 **Backfill:** al dar de alta una fuente, traer también las piezas de los últimos 14 días (HN y YouTube lo permiten por fecha). La velocidad **del tema** se calcula con `published_at` y no necesita snapshots, así que sí habrá tendencia de varios días el domingo. La velocidad **de una pieza** sí necesita snapshots.
@@ -209,7 +211,7 @@ GET  /health
   ```
   La **confianza** se muestra aparte del score. Una oportunidad puede ser alta con evidencia débil.
 - **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita.
-- **LLM:** vía el **SDK oficial del proveedor**, con un modelo económico y salidas estructuradas. Sin LiteLLM: un modelo y cuatro funciones no justifican la capa, y LiteLLM 1.82.7 y 1.82.8 fueron versiones maliciosas en PyPI (marzo de 2026). Proveedor y modelo: pendiente (Melkin). Funciones concretas (`classify_topic`, `evaluate_audience_fit`, `explain_opportunity`, `recommend_content_angles`). **Sin agentes autónomos.** Resultados cacheados en Postgres.
+- **LLM:** vía el **SDK oficial del proveedor**, con salidas estructuradas (Pydantic). Sin capa multi-proveedor: un modelo y cuatro funciones no la justifican. El modelo se elige con `LLM_MODEL`. Proveedor y modelo: pendiente (Melkin). Funciones concretas (`classify_topic`, `evaluate_audience_fit`, `explain_opportunity`, `recommend_content_angles`). **Sin agentes autónomos.** Resultados cacheados en Postgres.
 - **Perfil editorial de 30X:** en `data/audiences/30x.yaml` (audiencia, pilares, tono, formatos, qué no encaja). Se define en la Fase 2 a partir de los Instagram de 30X y Andrés Bilbao.
 
 ---
@@ -237,46 +239,11 @@ GET  /health
 ## 9. Frontend
 
 ### Stack base (P0)
-> Decisión del 17/10 (frontend lead): **Vue en lugar de React**, por facilidad de uso. Sustituye a la versión anterior de esta sección.
-
 **Vue 3 + TypeScript + Vite** (SPA con `<script setup>` y Composition API; sin Nuxt: no hace falta SSR y el backend ya es FastAPI) · Tailwind CSS v4 (`@tailwindcss/vite`) · **shadcn-vue** (sobre Reka UI) · `@lucide/vue` · **Apache ECharts + `vue-echarts`** · TanStack Vue Query (`@tanstack/vue-query`) · Vue Router · Pinia (P1, solo si el estado en la URL no alcanza).
 El frontend habla **solo con la API REST**, nunca con el MCP. Cliente tipado con `openapi-typescript` + `openapi-fetch`, envuelto en composables de TanStack Vue Query en `src/api/`. Los filtros del Radar se guardan en la URL (query params de Vue Router) para poder compartir enlaces y repetir la demo.
 
-### Tres vistas
-1. **Discover (Radar):** gráfico de burbujas de ECharts como protagonista y ranking sincronizado.
-   - X = audience fit · Y = momentum · tamaño = evidence strength (normalizado) · color = lifecycle.
-   - Cuadrante superior derecho = prioridad. Filtros: periodo, lifecycle, confianza, tema, segmento.
-   - En el ranking, cada fila muestra la etapa (badge con `lifecycle_reason` en el tooltip), la aceleración (↑ +80 %) y el nº de outliers. Ordenar por aceleración, no por volumen. Si una métrica falta, la UI lo dice; no la rellena.
-   - Avisar de forma visible que "el monitoreo comenzó el 16/10" para que nadie lea los periodos largos como históricos.
-2. **Explore (Evidencia):** timeline de velocidad del tema (barras por día, ventana actual vs. anterior) con su confianza · **barra apilada de `audience_mix`** (para quién importa) · Evidence Explorer por plataforma (enlaces originales, fechas, métricas, velocidad y **badge de outlier `6.1×`**; outliers primero) · AI Insights (por qué funciona, patrones, **qué no podemos saber**, encaje con 30X).
-3. **Create (Content Studio, P1):** oportunidad + plataforma + objetivo + formato → brief (ángulo, gancho, estructura, evidencias, por qué encaja). Se puede copiar. No es un editor.
-
-P2: Topic Network con Vue Flow (`@vue-flow/core`) y animaciones avanzadas.
-
-### Dirección visual
-"Intelligence platform", no un admin dashboard. Tono tecnológico, editorial y minimalista: fondo oscuro, superficies neutras, acentos de color solo para estados (lifecycle o confianza). Los gráficos son el centro de la interfaz. Jerarquía: **score → evolución → explicación → acción**. Microinteracciones suaves al seleccionar y filtrar. Ningún gráfico decorativo.
-
-**Regla de efectos:** como mucho un efecto llamativo por vista (por ejemplo, un fondo sutil en el Radar o number tickers en los scores). El Radar y la evidencia son el producto; los efectos de Inspira UI o Vue Bits no pueden tapar los datos ni bajar el rendimiento.
-
-### Recursos de diseño (de nuestra lista de referencias)
-
-| Uso | Recurso | Cómo lo usamos |
-|---|---|---|
-| Componentes base | [shadcn-vue](https://www.shadcn-vue.com) | Sistema de componentes principal (se instalan con el CLI de shadcn-vue, el código queda en el repo) |
-| Tema / tokens | [tweakcn](https://tweakcn.com/) | Generar las variables CSS del tema oscuro (las mismas que usa shadcn-vue) |
-| Ecosistema shadcn | [21st.dev](https://21st.dev), [shadcndesign.com](https://www.shadcndesign.com/) | **Son de React: solo referencia visual** de bloques (sidebars, paneles, tablas); se reimplementan con shadcn-vue. Mapa de LATAM (P2): con ECharts |
-| Componentes animados | [Inspira UI](https://inspira-ui.com) (port Vue de Aceternity y Magic UI), [Vue Bits](https://vue-bits.dev) (port de React Bits) | Pocos y con intención (ver regla de efectos). Copiar el componente al repo, no instalar librerías enteras |
-| Animación | `<Transition>` / `<TransitionGroup>` de Vue; Motion para Vue (`motion-v`) si no alcanza | Transiciones de panel, selección y entrada de listas |
-| Gráficos | ECharts con `vue-echarts` (decidido) | No cambiar de librería de charts durante la hackathon |
-| Inspiración UI | [Refero Styles](https://styles.refero.design), [Mobbin](https://mobbin.com), [Godly](https://godly.website), [minimal.gallery](https://minimal.gallery), [60fps.design](https://60fps.design), [beautifului.dev](https://www.beautifului.dev), [component.gallery](https://component.gallery), [navbar.gallery](https://www.navbar.gallery), [cta.gallery](https://www.cta.gallery) | Buscar referencias de dashboards de analítica o inteligencia y de paneles laterales de detalle |
-| Principios | [Vercel Design Engineering](https://vercel.com/design/engineer) | Checklist de calidad de interacción |
-| Assets | [3dicons.co](https://3dicons.co), [backgrounds.supply](https://www.backgrounds.supply) | Solo para landing o hero si sobra tiempo (P2) |
-
-### Diseñar con agentes (Claude Code)
-- Crear un **`DESIGN.md`** en la raíz (formato DESIGN.md de Google Stitch, con paleta, tipografía, espaciado, radios, estados y tono). Referencias: [designmd.supply](https://www.designmd.supply/) y [typeui.sh](https://www.typeui.sh/). Todo agente que toque UI debe leerlo primero.
-- Skills útiles: `frontend-design`, [taste-skill](https://www.tasteskill.dev/) e [impeccable](https://impeccable.style/) (para evitar diseño genérico), y [emilkowalski/skills](https://github.com/emilkowalski/skills) (`/apple-design`, `/animation-performance`) para el pulido final.
-- Si alguien tiene acceso, el **MCP de Mobbin** sirve para comparar pantallas con referencias reales.
-- Antes de instalar una skill o un MCP de terceros, revisar su contenido.
+### Vistas y dirección visual
+Tres vistas: **Discover** (Radar de burbujas + ranking), **Explore** (evidencia, timeline, `audience_mix`, insights) y **Create** (Content Studio, P1). El detalle de las vistas, la dirección visual y las librerías de UI están en `.claude/rules/frontend.md`, que Claude carga al tocar `frontend/`. Referencias de inspiración para el equipo: `docs/design-resources.md`.
 
 ---
 
@@ -285,6 +252,8 @@ P2: Topic Network con Vue Flow (`@vue-flow/core`) y animaciones avanzadas.
 ```
 .
 ├── CLAUDE.md · DESIGN.md · README.md · docker-compose.yml · .env.example
+├── .claude/{commands,agents,templates,plans}   # flujo /spec → /build (§11)
+├── .claude/rules/frontend.md                   # se carga solo al tocar frontend/
 ├── backend/
 │   ├── app/
 │   │   ├── api/routes/          # FastAPI, delgado: solo llama a services
@@ -300,7 +269,7 @@ P2: Topic Network con Vue Flow (`@vue-flow/core`) y animaciones avanzadas.
 │   └── src/{components/{ui,radar,opportunities,evidence,editorial},views,composables,lib,api,types,router}
 │       # components/ui = shadcn-vue · api = cliente openapi-fetch + composables de TanStack Vue Query · types/api.ts generado desde OpenAPI
 ├── data/{fixtures,evaluations,audiences}
-└── docs/{architecture,scoring,sources,mcp}.md
+└── docs/{engineering-standards,architecture,scoring,sources,mcp}.md
 ```
 
 ---
@@ -312,7 +281,10 @@ P2: Topic Network con Vue Flow (`@vue-flow/core`) y animaciones avanzadas.
 - Las funciones de scoring (velocidad, outliers, lifecycle, audience mix, ranking) son puras, con umbrales como constantes con nombre, y tienen tests en pytest con casos límite (0 snapshots, una sola fuente, ventana anterior vacía). Los conectores se testean con `respx`, no contra la red.
 - Prompts versionados en archivos. Salidas del LLM validadas con Pydantic. El contenido externo va delimitado en el prompt.
 - Integrar en `main` pronto y a menudo; `main` siempre desplegable. Ramas cortas por área: `data/…`, `intel/…`, `fe/…`.
+- Cualquiera del equipo puede mergear a `main` (mismo poder de decisión), con los tests en verde. Los cambios de contrato se avisan en el canal antes de mergear. Claude nunca mergea: abre el PR y la persona decide.
 - Español en la UI y en el contenido editorial; inglés en el código.
+- **Estándares de código:** [`docs/engineering-standards.md`](docs/engineering-standards.md). Comentarios, los necesarios (el *porqué*, nunca el *qué*); docstrings no por defecto.
+- **Flujo `/spec` → `/build`** (opcional, para tareas de 1 h o más con un contrato claro: módulos de scoring, endpoints, tools MCP, migraciones). `/spec` investiga, pregunta y escribe un plan en `.claude/plans/`; `/build` lo implementa con `plan-implementer` en contexto limpio y, si toca, lo audita `code-standards-auditor`; `/spec <slug>` retoma un plan bloqueado o a medias. El plan es el estado vivo de su tarea (decisiones, pasos `[HECHO]`, historial, preguntas abiertas). No compensa para iteración visual de UI ni para arreglos rápidos.
 
 ---
 
@@ -360,10 +332,10 @@ Actúa como **Technical Project Coordinator y Product Engineering Copilot** de 3
 - Respeta el ownership de §3 al sugerir tareas o resolver dependencias.
 - Prefiere soluciones simples y librerías maduras. Evita la sobreingeniería y las herramientas de la lista de "fuera de la hackathon".
 - **Nunca** generes ni muestres datos ficticios como resultados reales. Los mocks viven solo en `data/fixtures/` y se marcan como tales.
-- Frontend en Vue 3 + TypeScript con `<script setup>`, Composition API y composables. No introduzcas React ni otra librería de UI o de charts además de las de §9.
+- Frontend en Vue 3 + TypeScript con `<script setup>`, Composition API y composables, solo con las librerías de UI y de charts de §9.
 - Antes de tocar UI, lee `DESIGN.md`. Antes de tocar contratos, avisa: rompen el trabajo de los demás.
 - Avisa pronto si una decisión pone en riesgo un checkpoint.
-- Cuando te pidan el estado, responde con esta tabla. Una tarea no está hecha porque haya pasado su horario; solo cuenta lo que el equipo confirme:
+- Cuando te pidan el estado, constrúyelo a partir de las fuentes, no de la memoria: cabeceras de `.claude/plans/*.plan.md` (owner, prioridad, gate, pasos `[HECHO]`), `gh pr list` y `git log` de `main`. Responde con esta tabla. Una tarea no está hecha porque haya pasado su horario; solo cuenta lo que el equipo confirme:
 
 | Fase actual | Tiempo restante | Estado (En tiempo / En riesgo / Bloqueado) | Steven | Melkin | Frontend | Riesgos | Decisión recomendada |
 |---|---|---|---|---|---|---|---|
