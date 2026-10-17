@@ -416,7 +416,11 @@ def _score_fields(
 
 def _description(group: Sequence[Piece], facts: _TopicFacts) -> str:
     platforms = ", ".join(sorted(p.value for p in facts.platforms))
-    replicas = f" ({facts.replica_count} republicaciones)" if facts.replica_count else ""
+    replicas = ""
+    if facts.replica_count == 1:
+        replicas = " (1 republicación)"
+    elif facts.replica_count > 1:
+        replicas = f" ({facts.replica_count} republicaciones)"
     return (
         f"Tema agrupado automáticamente: {len(group)} piezas{replicas} de "
         f"{len(facts.outlets)} fuentes independientes ({platforms})."

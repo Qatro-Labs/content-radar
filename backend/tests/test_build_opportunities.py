@@ -450,8 +450,10 @@ def test_replica_limitations():
     assert REPLICAS_UNVERIFIED_NOTE not in notes
 
     by_rule = group_stories(pieces, [ReplicaEdge(10, 11, ReplicaBasis.SIMILARITY)])
-    notes = build_with(pieces, by_rule).opportunity.limitations
+    o = build_with(pieces, by_rule).opportunity
+    notes = o.limitations
     assert any(n.startswith("1 pieza es una republicación") for n in notes)
+    assert "6 piezas (1 republicación) de 3 fuentes independientes" in o.description
     assert REPLICAS_UNVERIFIED_NOTE in notes
 
 
