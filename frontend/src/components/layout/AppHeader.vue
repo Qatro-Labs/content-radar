@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChartLine, PenLine, Radar } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 
 import { USING_FIXTURES } from '@/api/opportunities'
@@ -11,9 +12,14 @@ const route = useRoute()
 
 // Una vista de la nav puede abarcar varias rutas: Explorar incluye el expediente de cada tema.
 const views = [
-  { name: RouteName.Discover, label: 'Radar', routes: [RouteName.Discover] },
-  { name: RouteName.Explore, label: 'Explorar', routes: [RouteName.Explore, RouteName.Dossier] },
-  { name: RouteName.Create, label: 'Crear', routes: [RouteName.Create] },
+  { name: RouteName.Discover, label: 'Radar', icon: Radar, routes: [RouteName.Discover] },
+  {
+    name: RouteName.Explore,
+    label: 'Explorar',
+    icon: ChartLine,
+    routes: [RouteName.Explore, RouteName.Dossier],
+  },
+  { name: RouteName.Create, label: 'Crear', icon: PenLine, routes: [RouteName.Create] },
 ] as const
 
 function isCurrent(routes: readonly string[]): boolean {
@@ -32,14 +38,15 @@ function isCurrent(routes: readonly string[]): boolean {
         30X Signal
       </RouterLink>
 
-      <nav aria-label="Vistas" class="flex items-center gap-1">
+      <nav aria-label="Vistas" class="flex flex-wrap items-center gap-1">
         <RouterLink
           v-for="view in views"
           :key="view.name"
           :to="{ name: view.name }"
           :aria-current="isCurrent(view.routes) ? 'page' : undefined"
-          class="flex h-11 items-center rounded-[10px] px-4 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
+          class="flex h-11 items-center gap-2 rounded-[10px] px-3.5 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
         >
+          <component :is="view.icon" class="size-4 shrink-0" :stroke-width="2" aria-hidden="true" />
           {{ view.label }}
         </RouterLink>
       </nav>
