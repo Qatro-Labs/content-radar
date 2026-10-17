@@ -133,4 +133,5 @@ Cifras de Supabase del 17/10, ~18:15 UTC.
 | `analyze` (Jev → embeddings → clustering → scores → audience fit con el LLM) después de cada recolección | ✅ |
 | API en Railway: `/opportunities` (+ detalle, evidencia, timeline), `/sources/status`, `/costs` | ✅ |
 | Coste medido de Jev y del LLM en `usage_events` (`GET /costs`) | ✅ |
+| Agente del Radar: `POST /api/v1/agent` (SSE con pasos, acciones de vista y respuesta con citas validadas; ámbito cerrado, límites de pasos, tiempo, frecuencia y concurrencia). Probado en local contra Supabase; falta la barra en el frontend | ✅ backend |
 | LinkedIn, Instagram y TikTok | Fuera del MVP (decidido el 17/10; `CLAUDE.md` §5) |

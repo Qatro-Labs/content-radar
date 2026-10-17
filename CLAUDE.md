@@ -182,6 +182,7 @@ GET  /costs                      ?period=7d|30d  (coste medido + proyección men
 GET  /topics · GET /signals · GET /sources/status
 POST /editorial/brief            {opportunity_id, platform, goal, format}
 POST /editorial/feedback
+POST /agent                      {question} → SSE (step · action · answer · error · done; agente del Radar)
 GET  /health
 ```
 
@@ -242,7 +243,7 @@ GET  /health
   | `find_angle` | cualquier otro caso (también mientras no haya audience fit) |
   Decidido el 17/10: un fit bajo **no** descarta (con fit < 40 se descartaban 22 de 37 temas, también los de más momentum); da `find_angle` y la UI muestra la banda de fit.
 - **"Por qué funcionó" (por pieza):** gancho · tema · formato · estructura · propuesta de valor · credibilidad · timing · autor · rendimiento relativo → hipótesis redactada por el LLM con su limitación explícita. Jev clasifica el gancho y el formato de cada pieza, y Python calcula el *lift* de cada rasgo entre los outliers y el resto del tema (lift ≥ 2 en ≥ 2 outliers = "patrón observado"; si no, "anecdótico"). El LLM redacta la hipótesis a partir de esa tabla. Con pocos outliers por tema casi todo saldrá "anecdótico", y se dice así.
-- **Los embeddings agrupan, Jev clasifica cada pieza, Python calcula, el LLM evalúa cada tema y redacta, y Jev verifica lo que escribe el LLM.** Cada modelo usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Resultados cacheados en Postgres.
+- **Los embeddings agrupan, Jev clasifica cada pieza, Python calcula, el LLM evalúa cada tema y redacta, y Jev verifica lo que escribe el LLM.** Cada modelo usa su SDK oficial; sin capa multi-proveedor. **Sin agentes autónomos.** Excepción: el agente del Radar (`POST /agent`) lo arranca el usuario, solo lee la ejecución servida, sus acciones solo cambian la vista (máx. 8 pasos) y sus citas se validan en Python contra lo que devolvieron sus tools; no pasa por Jev. Ámbito cerrado con `decline`, entradas y salidas saneadas, datos externos delimitados, canario y límites de tiempo, pasos y concurrencia. Resultados cacheados en Postgres.
 - **Jev (TypeSafe; lo sugiere el reto): decisiones atómicas sobre piezas.** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel) con probabilidades y, en `choice` y `score`, `confidence`. Las preguntas de una llamada corren en paralelo y el `state` se paga una vez, así que cada entidad se evalúa en **una llamada con todas sus preguntas** (una *batería*):
   - **Pieza** (`piece.v2.yaml`, una condición por pregunta): trata de IA, formato, gancho, lanzamiento e inyección de instrucciones, más pistas para el LLM (uso en organizaciones, público desarrollador, caso real, jerga técnica, contexto LATAM sin España, pilar de 30X). Formato y gancho van repetidos con las opciones en orden inverso para detectar el sesgo hacia la primera opción.
   - **Par:** ¿es la misma nota replicada? → fuentes independientes y saturación.
