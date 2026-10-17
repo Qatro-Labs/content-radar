@@ -47,6 +47,9 @@
   --negative-bg: #fde8e9;
   --audience-business: #8a919c;
   --saturation: #ff9a3c;
+  --window-previous: #c9ced6; /* Ventana anterior del timeline y de las mini barras */
+  --window-empty: #d5d9df; /* Periodo sin piezas: trazo mínimo, nunca una barra vacía */
+  --reference-mark: #8a919c; /* Marca 1× y barra de rendimiento que no es outlier */
 
   --lc-emerging: #3d7bff;
   --lc-emerging-bg: #e8f0ff;
@@ -124,6 +127,9 @@
   --color-negative-bg: var(--negative-bg);
   --color-audience-business: var(--audience-business);
   --color-saturation: var(--saturation);
+  --color-window-previous: var(--window-previous);
+  --color-window-empty: var(--window-empty);
+  --color-reference-mark: var(--reference-mark);
   --radius-card: 1.25rem;
   --radius-tile: 0.875rem;
 }

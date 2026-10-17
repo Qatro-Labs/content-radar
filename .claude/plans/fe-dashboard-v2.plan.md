@@ -345,7 +345,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm test -- opportunities && pnpm type-check`
 - **Commit:** `Add opportunity detail, evidence and timeline queries`
 
-#### Paso 0.3 — Formato de evidencia, barra de rendimiento y tokens
+#### Paso 0.3 — Formato de evidencia, barra de rendimiento y tokens [HECHO]
 
 - **Archivos:** `src/lib/format.ts`, `src/lib/evidenceFormat.ts` (nuevo), `src/lib/__tests__/evidenceFormat.spec.ts`
   (nuevo), `src/components/evidence/PerformanceBar.vue` (nuevo), `src/assets/main.css`
@@ -361,11 +361,12 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
     `PERFORMANCE_SCALE_MAX = 6` · `PERFORMANCE_MARKS = [1, 3]` · `HIGHLIGHT_RATIO_MIN = 2` (comentario: CLAUDE.md §7) ·
     `PERFORMANCE_LEGEND` y `VELOCITY_NOTE` (textos de D10) · `shortSourceName(source)` (D11).
   - `PerformanceBar.vue` (props `{ evidence: Evidence }`): con ratio, pista de 6 px (radio completo) con marcas en
-    1× (`--lc-unknown`) y 3× (Tinta), relleno con `scaleX(fraction)` y `transform-origin: left` (Tinta si
-    `is_outlier`, `--lc-unknown` si no) y badge «5,1×» (Lima señal + Tinta si outlier; `bg-neutral-action` si no);
+    1× (`bg-reference-mark`) y 3× (Tinta), relleno con `scaleX(fraction)` y `transform-origin: left` (Tinta si
+    `is_outlier`, `bg-reference-mark` si no) y badge «5,1×» (Lima señal + Tinta si outlier; `bg-neutral-action` si no);
     `aria-label` «5,1 veces su referencia». Sin ratio, solo el texto de `missingRatioLabel` en Apagado 13px. El título
     («Rendimiento frente a su canal») lo pone quien lo usa.
-  - `main.css`: `--window-previous: #C9CED6`, `--window-empty: #D5D9DF` y sus `--color-*` en `@theme inline`.
+  - `main.css`: `--window-previous: #C9CED6`, `--window-empty: #D5D9DF`, `--reference-mark: #8A919C` y sus
+    `--color-*` en `@theme inline` (clases `bg-window-previous`, `bg-window-empty`, `bg-reference-mark`).
 - **Test primero:** `evidenceFormat.spec.ts`: `formatCount(1363)` → «1.363»; `formatMetrics` con todo nulo → `null`
   y con vistas + me gusta → «213.269 vistas · 4.367 me gusta»; `formatVelocity({value: 0, unit: 'points/h'})` →
   «0 puntos/h» y `{value: 1363.4, unit: 'views/h'}` → «1.363 vistas/h»; `formatRatio(26.9)` → «26,9×»;
