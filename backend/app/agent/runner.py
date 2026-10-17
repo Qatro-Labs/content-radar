@@ -18,6 +18,7 @@ from app.agent.sanitize import (
     UNKNOWNS_MAX,
     clean_output,
     leaks_canary,
+    strip_invisible,
     wrap_question,
 )
 from app.agent.tools import (
@@ -98,11 +99,14 @@ def declined_answer(reason: DeclineReason) -> AnswerEvent:
 
 
 def validated_answer(raw: FinalAnswerInput, seen: Seen) -> AnswerEvent:
-    if leaks_canary(raw.text, *raw.unknowns):
-        return declined_answer(DeclineReason.UNSAFE)
-    cited_ids = dict.fromkeys(i for i in raw.cited_ids if i in seen.opportunities)
     text = clean_output(raw.text, seen.evidence_urls, ANSWER_MAX_CHARS)
     unknowns = [clean_output(u, seen.evidence_urls, UNKNOWN_MAX_CHARS) for u in raw.unknowns]
+    # Sobre lo limpio, porque limpiar puede volver a juntar un canario partido con una etiqueta o
+    # un enlace vacíos; y sobre el original sin invisibles, por si el corte lo deja fuera.
+    raw_visible = [strip_invisible(t) for t in (raw.text, *raw.unknowns)]
+    if leaks_canary(text, *unknowns, *raw_visible):
+        return declined_answer(DeclineReason.UNSAFE)
+    cited_ids = dict.fromkeys(i for i in raw.cited_ids if i in seen.opportunities)
     unknowns = [u for u in unknowns if u][:UNKNOWNS_MAX] or [DEFAULT_UNKNOWN]
     return AnswerEvent(
         text=text, cited=[seen.opportunities[i] for i in cited_ids], unknowns=unknowns

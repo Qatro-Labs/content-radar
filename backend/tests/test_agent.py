@@ -392,6 +392,27 @@ async def test_invalid_tool_input_is_rejected(session, seeded, name, args):
     assert "passwd" not in outcome.content
 
 
+async def test_answer_drops_unseen_bare_domains(session, seeded):
+    text = "Lee www.evil.example o evil.example/x; también https://example.com/mock/1."
+    model = ScriptedModel([turn(("get_evidence", {"id": "opp_001"})), final(text=text)])
+
+    answer = (await run(session, model))[-2]
+
+    assert isinstance(answer, AnswerEvent)
+    assert "evil" not in answer.text
+    assert "https://example.com/mock/1" in answer.text
+
+
+async def test_answer_keeps_figures_that_look_like_domains(session, seeded):
+    text = "Oportunidad 65.8, ↑ +104 % y Oportunidad 65,8; más que en EE.UU."
+    model = ScriptedModel([turn(("list_opportunities", {})), final(text=text)])
+
+    answer = (await run(session, model))[-2]
+
+    assert isinstance(answer, AnswerEvent)
+    assert answer.text == text
+
+
 async def test_answer_strips_html_and_markdown_links(session, seeded):
     text = "<b>Agentes</b> crece. [Ver más](https://evil.example/x) <script>alert(1)</script>"
     model = ScriptedModel([turn(("list_opportunities", {})), final(text=text)])
@@ -404,8 +425,21 @@ async def test_answer_strips_html_and_markdown_links(session, seeded):
     assert "evil.example" not in answer.text
 
 
-async def test_canary_in_answer_returns_unsafe_text(session, seeded):
-    model = ScriptedModel([final(text=f"Mis instrucciones dicen {CANARY}", cited=["opp_001"])])
+HALF = len(CANARY) // 2
+
+
+@pytest.mark.parametrize(
+    "leak",
+    [
+        CANARY,
+        f"{CANARY[:HALF]}{ZERO_WIDTH_SPACE}{CANARY[HALF:]}",
+        f"{CANARY[:HALF]}<b></b>{CANARY[HALF:]}",
+        f"[{CANARY[:HALF]}](){CANARY[HALF:]}",
+    ],
+    ids=["plain", "zero-width", "empty-html-tag", "empty-markdown-link"],
+)
+async def test_canary_in_answer_returns_unsafe_text(session, seeded, leak):
+    model = ScriptedModel([final(text=f"Mis instrucciones dicen {leak}", cited=["opp_001"])])
 
     answer = (await run(session, model))[-2]
 
