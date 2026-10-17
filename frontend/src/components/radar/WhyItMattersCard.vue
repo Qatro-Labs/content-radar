@@ -12,10 +12,9 @@ const { opportunity } = defineProps<{ opportunity: RankedOpportunity }>()
   >
     <h2 class="font-display text-xl font-semibold tracking-[-0.02em]">Por qué importa</h2>
 
-    <!-- Tinta de lectura (DESIGN.md §2) no tiene token en main.css. -->
     <p
       :key="opportunity.id"
-      class="max-w-[720px] text-lg leading-[1.55] text-[#22262c]"
+      class="max-w-[720px] text-lg leading-[1.55] text-ink-read"
       :class="TEXT_ENTER_CLASS"
     >
       {{ opportunity.why_it_matters }}

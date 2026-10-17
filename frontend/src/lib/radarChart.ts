@@ -2,7 +2,7 @@ import type { EffectScatterSeriesOption, ScatterSeriesOption } from 'echarts/cha
 import type { GridComponentOption } from 'echarts/components'
 import type { ComposeOption } from 'echarts/core'
 
-import { LIFECYCLE_STYLE, type LifecyclePalette } from './lifecycle'
+import { LIFECYCLE_STYLE, resolveLifecyclePalette, type LifecyclePalette } from './lifecycle'
 import { bubbleSize, pulsePeriodSeconds, SCORE_MAX } from './opportunityFormat'
 import type { PlottedOpportunity, RankedOpportunity } from './radarView'
 
@@ -10,12 +10,21 @@ export type RadarChartOption = ComposeOption<
   ScatterSeriesOption | EffectScatterSeriesOption | GridComponentOption
 >
 
+// Superficie, Tinta y Apagado (DESIGN.md §2): borde y relleno hueco de las burbujas, etiqueta en
+// hover y etiqueta en reposo.
+export interface RadarPalette {
+  stages: LifecyclePalette
+  surface: string
+  ink: string
+  muted: string
+}
+
 export interface RadarChartInput {
   plotted: PlottedOpportunity[]
   dimmedIds: Set<string>
   selectedId: string | null
   hoveredId: string | null
-  palette: LifecyclePalette
+  palette: RadarPalette
   reducedMotion: boolean
   showLabels: boolean
   // `true` mientras el haz barre: sin anillos ni etiquetas (D13).
@@ -34,7 +43,9 @@ export interface PlotPoint {
 
 // El área del radar es 16:9 (DESIGN.md §6); el ángulo con el que el haz detecta cada burbuja
 // usa esa proporción.
-export const RADAR_ASPECT: PlotSize = { width: 16, height: 9 }
+const RADAR_ASPECT: PlotSize = { width: 16, height: 9 }
+// La misma proporción como `aspect-ratio` de CSS: el área del radar y su skeleton.
+export const PLOT_ASPECT = `${RADAR_ASPECT.width} / ${RADAR_ASPECT.height}`
 
 // DESIGN.md §7: el haz pivota en la esquina "Prioridad" de 170° a 290°, en 1,8 s tras 0,2 s.
 // RadarSweep.vue anima con estos mismos valores para que cada burbuja aparezca cuando el haz pasa.
@@ -56,11 +67,7 @@ const UPDATE_DURATION_MS = 320
 // D9 del plan fe-radar-view: un anillo que crece hasta 2,4 veces la burbuja.
 const PULSE_RIPPLE = { brushType: 'stroke', scale: 2.4, number: 1 } as const
 
-// ECharts pinta en canvas y no lee `var(--…)`: blanco, Tinta y Apagado de DESIGN.md §2.
-const WHITE = '#ffffff'
 const TRANSPARENT = 'transparent'
-const INK = '#121418'
-const MUTED = '#626873'
 // Borde blanco de 2 px (DESIGN.md §8); "Sin etapa", hueca con trazo discontinuo (artboard E).
 const BUBBLE_BORDER_PX = 2
 const HOLLOW_BORDER_PX = 1.5
@@ -74,6 +81,18 @@ const LABEL_FLIP_FIT_MIN = 76
 
 const BUBBLE_SERIES_ID = 'bubbles'
 const RING_SERIES_ID = 'rings'
+
+// ECharts pinta en canvas y no lee `var(--…)`: los colores se resuelven una vez desde main.css,
+// la única fuente de colores (DESIGN.md §11).
+export function resolveRadarPalette(style: CSSStyleDeclaration): RadarPalette {
+  const read = (name: string) => style.getPropertyValue(name).trim()
+  return {
+    stages: resolveLifecyclePalette(style),
+    surface: read('--card'),
+    ink: read('--foreground'),
+    muted: read('--muted-foreground'),
+  }
+}
 
 export function sweepDelaySeconds(fit: number, momentum: number): number {
   const leftward = (SCORE_MAX - fit) * RADAR_ASPECT.width
@@ -135,19 +154,24 @@ function plotValue(opportunity: PlottedOpportunity): [number, number] {
   return [opportunity.audience_fit_score, opportunity.momentum_score]
 }
 
-function bubbleItemStyle({ opportunity, dimmed }: Bubble, palette: LifecyclePalette) {
-  const colors = palette[opportunity.lifecycle]
+function bubbleItemStyle({ opportunity, dimmed }: Bubble, palette: RadarPalette) {
+  const colors = palette.stages[opportunity.lifecycle]
   const opacity = dimmed ? DIMMED_OPACITY : 1
   if (LIFECYCLE_STYLE[opportunity.lifecycle].dashed) {
     return {
-      color: WHITE,
+      color: palette.surface,
       borderColor: colors.stroke,
       borderWidth: HOLLOW_BORDER_PX,
       borderType: 'dashed' as const,
       opacity,
     }
   }
-  return { color: colors.fill, borderColor: WHITE, borderWidth: BUBBLE_BORDER_PX, opacity }
+  return {
+    color: colors.fill,
+    borderColor: palette.surface,
+    borderWidth: BUBBLE_BORDER_PX,
+    opacity,
+  }
 }
 
 // La seleccionada no lleva etiqueta: su tema ya está en la tarjeta flotante (artboard E).
@@ -170,7 +194,7 @@ function bubbleLabel(bubble: Bubble, input: RadarChartInput) {
     ellipsis: '…',
     fontSize: LABEL.fontSize,
     fontWeight: hovered ? 600 : 500,
-    color: hovered ? INK : MUTED,
+    color: hovered ? input.palette.ink : input.palette.muted,
   }
 }
 
@@ -196,6 +220,9 @@ function bubbleSeries(bubbles: Bubble[], input: RadarChartInput): ScatterSeriesO
     clip: false,
     // El hover agranda la burbuja desde `shownBubbleSize`, igual desde el radar que desde el ranking.
     emphasis: { scale: false },
+    // ECharts 6.1 no anima la opacidad con `animationDurationUpdate`: sin esto, la burbuja que se
+    // atenúa salta a 0,16 en lugar de fundirse en su sitio (D14).
+    universalTransition: true,
     // Entre dos etiquetas que chocan, ECharts deja la de la burbuja más grande (su prioridad es el
     // área), que es la de más evidencia. Solo compara etiquetas entre sí, no con burbujas.
     labelLayout: { hideOverlap: true },
@@ -221,7 +248,10 @@ function ringSeries(rings: Ring[], input: RadarChartInput): EffectScatterSeriesO
       value: plotValue(opportunity),
       symbolSize: shownBubbleSize(opportunity, input),
       itemStyle: { color: TRANSPARENT },
-      rippleEffect: { period: periodSeconds, color: input.palette[opportunity.lifecycle].stroke },
+      rippleEffect: {
+        period: periodSeconds,
+        color: input.palette.stages[opportunity.lifecycle].stroke,
+      },
     })),
   }
 }

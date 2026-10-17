@@ -18,13 +18,13 @@ interface SegmentStyle {
 }
 
 // La lima sobre blanco no tiene contraste (DESIGN.md §2): en la leyenda la marca un filo de tinta.
-const LIME_SWATCH_EDGE_CLASS = 'shadow-[inset_0_0_0_1px_rgb(18_20_24/0.15)]'
+const LIME_SWATCH_EDGE_CLASS = 'inset-ring inset-ring-foreground/15'
 
 // DESIGN.md §2 "Audiencia" y §9: `latam_es` mezcla España y Latinoamérica, así que se rotula
-// "En español". El gris de Negocio no tiene token en main.css.
+// "En español".
 const SEGMENTS: readonly SegmentStyle[] = [
   { segment: 'tech', label: 'Tech', colorClass: 'bg-foreground' },
-  { segment: 'business', label: 'Negocio', colorClass: 'bg-[#8a919c]' },
+  { segment: 'business', label: 'Negocio', colorClass: 'bg-audience-business' },
   {
     segment: 'latam_es',
     label: 'En español',
@@ -72,7 +72,7 @@ const reading = computed(() => audienceReading(opportunity))
         <span class="font-display text-[28px] leading-[1.1] font-semibold tracking-[-0.02em]">
           {{ formatShare(segment.share) }}
         </span>
-        <span class="flex items-center gap-1.5 text-sm text-[#4a505a]">
+        <span class="flex items-center gap-1.5 text-sm text-label">
           <span
             class="size-[9px] shrink-0 rounded-[3px]"
             :class="[segment.colorClass, segment.swatchEdgeClass]"

@@ -6,6 +6,10 @@ import { defineConfig } from 'vitest/config'
 
 const API_DEV_TARGET = process.env.API_DEV_TARGET ?? 'http://localhost:8000'
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url))
+// ECharts, con zrender (su motor de dibujo, que entra con él), pesa más que el resto de la app
+// junta: en su propio chunk, un cambio en la app no invalida su caché.
+const ECHARTS_MODULE = /node_modules\/(echarts|vue-echarts)\//
+const ECHARTS_CHUNK = 'echarts'
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
@@ -25,6 +29,13 @@ export default defineConfig({
     proxy: {
       '/api': API_DEV_TARGET,
       '/health': API_DEV_TARGET,
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => (ECHARTS_MODULE.test(id) ? ECHARTS_CHUNK : null),
+      },
     },
   },
   test: {

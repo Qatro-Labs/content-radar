@@ -4,8 +4,7 @@ import type { ECElementEvent } from 'echarts/core'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import { VChart } from '@/lib/echarts'
-import { resolveLifecyclePalette } from '@/lib/lifecycle'
-import { buildRadarOption, RADAR_ASPECT, SWEEP } from '@/lib/radarChart'
+import { buildRadarOption, PLOT_ASPECT, resolveRadarPalette, SWEEP } from '@/lib/radarChart'
 import type { RadarView } from '@/lib/radarView'
 
 import RadarSelectionLayer from './RadarSelectionLayer.vue'
@@ -25,10 +24,8 @@ const emit = defineEmits<{
 
 // DESIGN.md §6: en un área estrecha las etiquetas se pisan y queda la tarjeta flotante.
 const LABELS_MIN_WIDTH_PX = 640
-// Línea de dato (#E2E5E9, DESIGN.md §2): no tiene token en main.css.
-const DATA_LINE = 'absolute bg-[#e2e5e9]'
+const DATA_LINE = 'absolute bg-data-line'
 const QUADRANT_NOTE = 'absolute z-[1] text-[13px] text-muted-foreground'
-const PLOT_ASPECT = `${RADAR_ASPECT.width} / ${RADAR_ASPECT.height}`
 // Capas del área: nombres de cuadrante y mira (z-1) quedan bajo las burbujas; anillos, ping y
 // tarjeta flotante (z-3 y z-4, RadarSelectionLayer) van encima.
 const CHART_LAYER = 'relative z-[2]'
@@ -44,8 +41,8 @@ const isMeasured = computed(() => width.value > 0)
 const showLabels = computed(() => width.value >= LABELS_MIN_WIDTH_PX)
 const motionPreference = usePreferredReducedMotion()
 const reducedMotion = computed(() => motionPreference.value === 'reduce')
-// Los colores de etapa viven en main.css (DESIGN.md §11) y el canvas no lee `var()`: se leen una vez.
-const palette = resolveLifecyclePalette(getComputedStyle(document.documentElement))
+// Los colores viven en main.css (DESIGN.md §11) y el canvas no lee `var()`: se leen una vez.
+const palette = resolveRadarPalette(getComputedStyle(document.documentElement))
 
 const hovered = computed(
   () => view.plotted.find((opportunity) => opportunity.id === hoveredId) ?? null,

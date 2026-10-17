@@ -1,18 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import fixture from '@fixtures/opportunities.json'
+import { SCORE_MAX } from '@/lib/opportunityFormat'
+import { CONFIDENCES, LIFECYCLES } from '@/lib/radarQuery'
 
 import type { Schemas } from '../client'
 
+// Solo los tests necesitan estos dos enums en tiempo de ejecución; los demás vienen de radarQuery.
 // `satisfies` hace que el type-check avise si un valor deja de existir en el contrato
 // (src/types/api.ts); el test avisa si el fixture usa uno que no está en la lista.
-const LIFECYCLES = [
-  'emerging',
-  'accelerating',
-  'peaking',
-  'saturated',
-  'unknown',
-] as const satisfies readonly Schemas['Lifecycle'][]
 const RECOMMENDATIONS = [
   'publish_now',
   'find_angle',
@@ -24,7 +20,6 @@ const GROWTH_STATUSES = [
   'estimated',
   'preliminary',
 ] as const satisfies readonly Schemas['GrowthStatus'][]
-const CONFIDENCES = ['low', 'medium', 'high'] as const satisfies readonly Schemas['Confidence'][]
 
 const SCORE_KEYS = [
   'momentum_score',
@@ -35,7 +30,6 @@ const SCORE_KEYS = [
   'opportunity_score',
 ] as const satisfies readonly (keyof Schemas['Opportunity'])[]
 const SCORE_MIN = 0
-const SCORE_MAX = 100
 
 const items = fixture.opportunities.items
 

@@ -54,7 +54,8 @@ function spotOf(opportunity: RankedOpportunity | null): Spot | null {
 }
 
 // El radar se remonta con cada barrido (al cargar y al cambiar de periodo). La primera selección
-// espera a que el haz detecte su burbuja (DESIGN.md §7); las siguientes responden al instante.
+// espera a que el haz detecte su burbuja (DESIGN.md §7): la mira, las lecturas, el anillo y la
+// tarjeta. Las siguientes responden al instante.
 const isFirstSelection = ref(true)
 watch(
   () => selected?.id,
@@ -62,6 +63,7 @@ watch(
     if (previousId) isFirstSelection.value = false
   },
 )
+const entryClass = computed(() => ({ 'radar-entry': isFirstSelection.value }))
 
 function ringBox({ point, diameter }: Spot) {
   return { width: `${diameter}px`, height: `${diameter}px`, transform: translateTo(point) }
@@ -74,18 +76,20 @@ const layout = computed(() => {
   const delayMs = isFirstSelection.value
     ? detectionDelayMs(spot.opportunity) + AFTER_DETECTION_MS
     : 0
+  const entry = { animationDelay: `${delayMs}ms` }
   return {
     spot,
     delayMs,
-    horizontal: { transform: `translateY(${y}px) scaleX(${x / size.width})` },
+    horizontal: { ...entry, transform: `translateY(${y}px) scaleX(${x / size.width})` },
     vertical: {
+      ...entry,
       transform: `${translateTo(spot.point)} scaleY(${(size.height - y) / size.height})`,
     },
-    momentumReading: { transform: `translateY(calc(${y}px - 50%))` },
-    fitReading: { transform: `translateX(calc(${x}px - 50%))` },
-    ring: { ...ringBox(spot), animationDelay: `${delayMs}ms` },
+    momentumReading: { ...entry, transform: `translateY(calc(${y}px - 50%))` },
+    fitReading: { ...entry, transform: `translateX(calc(${x}px - 50%))` },
+    ring: { ...entry, ...ringBox(spot) },
     // La tarjeta se coloca sola (RadarFloatingCard); aquí solo espera al haz.
-    card: { animationDelay: `${delayMs}ms` },
+    card: entry,
     pingColor: `var(${LIFECYCLE_STYLE[spot.opportunity.lifecycle].cssVar.stroke})`,
   }
 })
@@ -99,27 +103,27 @@ const hoverSpot = computed(() => (hovered?.id === selected?.id ? null : spotOf(h
     <template v-if="layout">
       <span
         class="absolute top-0 left-0 z-[1] h-px w-full origin-left bg-foreground/28"
-        :class="SLIDE"
+        :class="[SLIDE, entryClass]"
         :style="layout.horizontal"
       />
       <span
         class="absolute top-0 left-0 z-[1] h-full w-px origin-top bg-foreground/28"
-        :class="SLIDE"
+        :class="[SLIDE, entryClass]"
         :style="layout.vertical"
       />
       <span
-        :class="[READING, SLIDE, 'top-0 right-[calc(100%+4px)]']"
+        :class="[READING, SLIDE, entryClass, 'top-0 right-[calc(100%+4px)]']"
         :style="layout.momentumReading"
       >
         {{ formatScore(layout.spot.opportunity.momentum_score) }}
       </span>
-      <span :class="[READING, SLIDE, 'top-[calc(100%+5px)] left-0']" :style="layout.fitReading">
+      <span
+        :class="[READING, SLIDE, entryClass, 'top-[calc(100%+5px)] left-0']"
+        :style="layout.fitReading"
+      >
         {{ formatScore(layout.spot.opportunity.audience_fit_score) }}
       </span>
-      <span
-        :class="[RING, SLIDE, 'ring-foreground', { 'radar-entry': isFirstSelection }]"
-        :style="layout.ring"
-      />
+      <span :class="[RING, SLIDE, entryClass, 'ring-foreground']" :style="layout.ring" />
       <div
         :key="layout.spot.opportunity.id"
         class="absolute top-0 left-0 z-[3]"
@@ -141,7 +145,7 @@ const hoverSpot = computed(() => (hovered?.id === selected?.id ? null : spotOf(h
         :opportunity="layout.spot.opportunity"
         :point="layout.spot.point"
         class="absolute top-0 left-0 z-[4]"
-        :class="[SLIDE, { 'radar-entry': isFirstSelection }]"
+        :class="[SLIDE, entryClass]"
         :style="layout.card"
       />
     </template>

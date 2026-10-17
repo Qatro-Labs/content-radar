@@ -136,11 +136,11 @@ describe('radar texts', () => {
     const single = { ...list, items: list.items.slice(0, 1) }
 
     expect(headline(query(), single)).toBe('1 oportunidad esta semana')
-    expect(subline(query(), single)).toBe('Hay 1 tema con datos suficientes esta semana.')
+    expect(subline(query(), single)).toBe('Hay 1 tema analizado esta semana.')
   })
 
-  it('says how many topics have enough data when there are fewer than ten', () => {
-    expect(subline(query())).toBe('Hay 5 temas con datos suficientes esta semana.')
+  it('says how many topics were analyzed when there are fewer than ten', () => {
+    expect(subline(query())).toBe('Hay 5 temas analizados esta semana.')
   })
 
   it('describes the radar when there are at least ten topics', () => {

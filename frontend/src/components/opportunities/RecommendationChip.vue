@@ -10,13 +10,13 @@ const { recommendation, size = 'md' } = defineProps<{
   size?: ChipSize
 }>()
 
-// DESIGN.md §2 y §4. El neutro de acción y el fondo negativo no tienen token en main.css.
-const NEUTRAL_ACTION_CLASS = 'bg-[#f0f1f3] text-[#22262c]'
+// DESIGN.md §2 y §4.
+const NEUTRAL_ACTION_CLASS = 'bg-neutral-action text-ink-read'
 const TONE_CLASS: Record<Recommendation, string> = {
   publish_now: 'bg-signal text-signal-foreground',
   find_angle: NEUTRAL_ACTION_CLASS,
   wait_for_case: NEUTRAL_ACTION_CLASS,
-  discard: 'bg-[#fde8e9] text-destructive',
+  discard: 'bg-negative-bg text-destructive',
 }
 
 // `md` para el panel de detalle; `sm` para el ranking.

@@ -113,6 +113,8 @@ interface Noun {
 
 const OPPORTUNITY_NOUN: Noun = { one: 'oportunidad', many: 'oportunidades' }
 const TOPIC_NOUN: Noun = { one: 'tema', many: 'temas' }
+// No "con datos suficientes": la cuenta incluye temas preliminares (D14 del plan fe-radar-view).
+const ANALYZED_TOPIC_NOUN: Noun = { one: 'tema analizado', many: 'temas analizados' }
 const STAGE_SEPARATOR = ' o '
 const FILTER_SEPARATOR = ' · '
 
@@ -141,7 +143,7 @@ export function radarHeadline(view: RadarView, query: RadarQuery): string {
 export function radarSubline(view: RadarView, query: RadarQuery): string {
   if (hasFilters(query)) return `Filtro: ${describeFilters(query)}.`
   if (view.total < EXPECTED_OPPORTUNITIES) {
-    return `Hay ${formatCount(view.total, TOPIC_NOUN)} con datos suficientes esta semana.`
+    return `Hay ${formatCount(view.total, ANALYZED_TOPIC_NOUN)} esta semana.`
   }
   return 'Los temas de IA que más rápido crecen, ordenados por su encaje con líderes y equipos de LATAM.'
 }
