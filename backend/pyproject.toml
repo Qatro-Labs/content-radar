@@ -15,6 +15,7 @@ dependencies = [
     "tenacity>=9.0",
     "feedparser>=6.0",
     "structlog>=24.4",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -24,6 +25,7 @@ dev = [
     "respx>=0.21",
     "ruff>=0.8",
     "pyright>=1.1.390",
+    "types-pyyaml>=6.0.12.20260906",
 ]
 
 [tool.pytest.ini_options]
@@ -36,6 +38,10 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.ruff.lint.per-file-ignores]
+# Migraciones autogeneradas por Alembic.
+"alembic/versions/*" = ["E501"]
 
 [tool.ruff.lint.isort]
 # La carpeta local alembic/ no es el paquete alembic.

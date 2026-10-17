@@ -1,0 +1,105 @@
+# Fuentes iniciales del Signal Engine (CLAUDE.md §5).
+# Carga: cd backend && uv run python -m app.jobs.seed_sources
+#
+# segment = para quién importa:
+#   tech      → comunidad técnica / IA internacional (grupo A del LATAM Gap)
+#   business  → negocio y management en inglés
+#   latam_es  → contenido en español, LATAM y España (grupo B del LATAM Gap)
+# region: ISO 3166 en minúsculas, o "latam" / "global".
+# ai_filter: true → la fuente no es solo de IA; el collector descarta piezas sin términos de IA.
+#
+# Feeds RSS verificados con feedparser el 2026-10-16. Handles de YouTube verificados que
+# existen; el loader los convierte a channel ID con la API oficial (requiere YOUTUBE_API_KEY).
+
+youtube:
+  # --- tech (EN) ---
+  - { handle: "@TwoMinutePapers", segment: tech, language: en, region: global }
+  - { handle: "@AndrejKarpathy", segment: tech, language: en, region: global }
+  - { handle: "@aiexplained-official", segment: tech, language: en, region: global }
+  - { handle: "@matthew_berman", segment: tech, language: en, region: global }
+  - { handle: "@mreflow", segment: tech, language: en, region: global }
+  - { handle: "@YannicKilcher", segment: tech, language: en, region: global }
+  - { handle: "@DwarkeshPatel", segment: tech, language: en, region: global }
+  - { handle: "@anthropic-ai", segment: tech, language: en, region: global }
+  - { handle: "@OpenAI", segment: tech, language: en, region: global }
+  - { handle: "@GoogleDeepMind", segment: tech, language: en, region: global }
+  - { handle: "@Fireship", segment: tech, language: en, region: global }
+  - { handle: "@AIDailyBrief", segment: tech, language: en, region: global }
+  - { handle: "@aiDotEngineer", segment: tech, language: en, region: global }
+  - { handle: "@WesRoth", segment: tech, language: en, region: global }
+  - { handle: "@lexfridman", segment: tech, language: en, region: global }
+  # --- business (EN) ---
+  - { handle: "@NateBJones", segment: business, language: en, region: global }
+  - { handle: "@ycombinator", segment: business, language: en, region: global }
+  - { handle: "@a16z", segment: business, language: en, region: global }
+  - { handle: "@LennysPodcast", segment: business, language: en, region: global }
+  - { handle: "@harvardbusinessreview", segment: business, language: en, region: global, ai_filter: true }
+  - { handle: "@McKinsey", segment: business, language: en, region: global, ai_filter: true }
+  - { handle: "@TheDiaryOfACEO", segment: business, language: en, region: global, ai_filter: true }
+  - { handle: "@StanfordGSB", segment: business, language: en, region: global, ai_filter: true }
+  - { handle: "@MyFirstMillionPod", segment: business, language: en, region: global, ai_filter: true }
+  - { handle: "@allin", segment: business, language: en, region: global, ai_filter: true }
+  # --- latam_es (ES) ---
+  - { handle: "@DotCSV", segment: latam_es, language: es, region: es }
+  - { handle: "@XavierMitjana", segment: latam_es, language: es, region: es }
+  - { handle: "@midudev", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { handle: "@platzi", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { handle: "@EDteam", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { handle: "@NateGentile7", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { handle: "@carlosazaustre", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { handle: "@BettaTech", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { handle: "@EmprendeAprendiendo", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { handle: "@mouredev", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { handle: "@FaztTech", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { handle: "@CodigoFacilito", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { handle: "@hdeleonnet", segment: latam_es, language: es, region: mx, ai_filter: true }
+  # TODO: 30X y Andrés Bilbao, si tienen canal público (confirmar handle exacto antes de añadir).
+
+hackernews:
+  # Algolia HN Search; query = texto de búsqueda. Señal temprana del grupo A.
+  - { query: "AI agents", segment: tech }
+  - { query: "LLM", segment: tech }
+  - { query: "Claude", segment: tech }
+  - { query: "OpenAI", segment: tech }
+  - { query: "Model Context Protocol", segment: tech }
+  - { query: "generative AI enterprise", segment: business }
+  - { query: "AI adoption", segment: business }
+
+rss:
+  # --- tech (EN) ---
+  - { name: "MIT Technology Review · AI", url: "https://www.technologyreview.com/topic/artificial-intelligence/feed", segment: tech, language: en, region: global }
+  - { name: "TechCrunch · AI", url: "https://techcrunch.com/category/artificial-intelligence/feed/", segment: tech, language: en, region: global }
+  - { name: "The Verge · AI", url: "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", segment: tech, language: en, region: global }
+  - { name: "Ars Technica · AI", url: "https://arstechnica.com/ai/feed/", segment: tech, language: en, region: global }
+  - { name: "WIRED · AI", url: "https://www.wired.com/feed/tag/ai/latest/rss", segment: tech, language: en, region: global }
+  - { name: "OpenAI News", url: "https://openai.com/news/rss.xml", segment: tech, language: en, region: global }
+  - { name: "Google AI Blog", url: "https://blog.google/technology/ai/rss/", segment: tech, language: en, region: global }
+  - { name: "Hugging Face Blog", url: "https://huggingface.co/blog/feed.xml", segment: tech, language: en, region: global }
+  - { name: "Simon Willison", url: "https://simonwillison.net/atom/everything/", segment: tech, language: en, region: global, ai_filter: true }
+  - { name: "Latent Space", url: "https://www.latent.space/feed", segment: tech, language: en, region: global }
+  - { name: "Import AI", url: "https://jack-clark.net/feed/", segment: tech, language: en, region: global }
+  - { name: "Ben's Bites", url: "https://www.bensbites.com/feed", segment: tech, language: en, region: global }
+  - { name: "The Rundown AI", url: "https://www.therundown.ai/feed", segment: tech, language: en, region: global }
+  # --- business (EN) ---
+  - { name: "One Useful Thing (Ethan Mollick)", url: "https://www.oneusefulthing.org/feed", segment: business, language: en, region: global }
+  - { name: "MIT Sloan Management Review", url: "https://sloanreview.mit.edu/feed/", segment: business, language: en, region: global, ai_filter: true }
+  - { name: "Stratechery", url: "https://stratechery.com/feed/", segment: business, language: en, region: global, ai_filter: true }
+  - { name: "Exponential View", url: "https://www.exponentialview.co/feed", segment: business, language: en, region: global }
+  - { name: "Benedict Evans", url: "https://www.ben-evans.com/benedictevans?format=rss", segment: business, language: en, region: global, ai_filter: true }
+  # --- latam_es (ES) ---
+  - { name: "Xataka · Inteligencia artificial", url: "https://www.xataka.com/tag/inteligencia-artificial/rss2.xml", segment: latam_es, language: es, region: es }
+  - { name: "Xataka México", url: "https://www.xataka.com.mx/feedburner.xml", segment: latam_es, language: es, region: mx, ai_filter: true }
+  - { name: "Genbeta", url: "https://www.genbeta.com/feedburner.xml", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { name: "Hipertextual", url: "https://hipertextual.com/feed", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { name: "MIT Technology Review en español", url: "https://www.technologyreview.es/feed", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { name: "WIRED en Español", url: "https://es.wired.com/feed/rss", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { name: "El País · Tecnología", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/tecnologia/portada", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { name: "Expansión (ES) · Tecnología", url: "https://www.expansion.com/rss/tecnologia.xml", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { name: "Expansión MX · Tecnología", url: "https://expansion.mx/rss/tecnologia", segment: latam_es, language: es, region: mx, ai_filter: true }
+  - { name: "Infobae · Tecno", url: "https://www.infobae.com/arc/outboundfeeds/rss/category/tecno/", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { name: "La Nación · Tecnología", url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/tecnologia/?outputType=xml", segment: latam_es, language: es, region: ar, ai_filter: true }
+  - { name: "Clarín · Tecnología", url: "https://www.clarin.com/rss/tecnologia/", segment: latam_es, language: es, region: ar, ai_filter: true }
+  - { name: "El Tiempo · Tecnósfera", url: "https://www.eltiempo.com/rss/tecnosfera.xml", segment: latam_es, language: es, region: co, ai_filter: true }
+  - { name: "La República (CO)", url: "https://www.larepublica.co/rss/", segment: latam_es, language: es, region: co, ai_filter: true }
+  - { name: "Bloomberg Línea · Tecnología", url: "https://www.bloomberglinea.com/arc/outboundfeeds/rss/category/tecnologia/?outputType=xml", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { name: "DPL News", url: "https://www.dplnews.com/feed/", segment: latam_es, language: es, region: latam, ai_filter: true }

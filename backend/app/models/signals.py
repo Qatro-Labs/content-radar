@@ -39,6 +39,8 @@ class Source(TimestampMixin, Base):
     language: Mapped[str | None] = mapped_column(String(8))
     region: Mapped[str | None] = mapped_column(String(32))
     active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    # Opciones del collector: handle, uploads_playlist_id, ai_filter…
+    config: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}")
 
     items: Mapped[list["ContentItem"]] = relationship(back_populates="source")
 
