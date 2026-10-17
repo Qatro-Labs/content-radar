@@ -1,0 +1,49 @@
+relevant       etiquetadas 40 · Jev seguro en 24 (60%) · acuerdo 0.83 · errores {'etiqueta=False jev=True': 2, 'etiqueta=True jev=False': 2}
+{
+ "about_ai": {
+  "labeled": 39,
+  "jev_certain": 37,
+  "coverage": 0.95,
+  "agreement_when_certain": 0.95,
+  "errors": {
+   "etiqueta=True jev=False": 2
+  }
+ },
+ "business_use": {
+  "labeled": 40,
+  "jev_certain": 25,
+  "coverage": 0.62,
+  "agreement_when_certain": 0.88,
+  "errors": {
+   "etiqueta=False jev=True": 3
+  }
+ },
+ "latam_context": {
+  "labeled": 40,
+  "jev_certain": 38,
+  "coverage": 0.95,
+  "agreement_when_certain": 0.97,
+  "errors": {
+   "etiqueta=False jev=True": 1
+  }
+ },
+ "business_case": {
+  "labeled": 40,
+  "jev_certain": 35,
+  "coverage": 0.88,
+  "agreement_when_certain": 0.97,
+  "errors": {
+   "etiqueta=False jev=True": 1
+  }
+ },
+ "relevant": {
+  "labeled": 40,
+  "jev_certain": 24,
+  "coverage": 0.6,
+  "agreement_when_certain": 0.83,
+  "errors": {
+   "etiqueta=False jev=True": 2,
+   "etiqueta=True jev=False": 2
+  }
+ }
+}
