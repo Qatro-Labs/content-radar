@@ -603,7 +603,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 
 ### Parte 3 — Explorar sin tema (`fe/dashboard-v2-explore`)
 
-#### Paso 3.1 — View-model puro de Explorar
+#### Paso 3.1 — View-model puro de Explorar [HECHO]
 
 - **Archivos:** `src/lib/exploreView.ts`, `src/lib/__tests__/exploreView.spec.ts`
 - **Cambio:** `ExploreFilter = 'outliers' | 'youtube' | 'hackernews'` y `parseExploreFilter(query)` (param
@@ -625,7 +625,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm test -- exploreView`
 - **Commit:** `Add explore view model`
 
-#### Paso 3.2 — Vista, cabecera y tabla de piezas
+#### Paso 3.2 — Vista, cabecera y tabla de piezas [HECHO]
 
 - **Archivos:** `src/views/ExploreView.vue`, `src/components/explore/ExploreHeader.vue`,
   `src/components/explore/PiecesTable.vue`, `src/components/explore/PieceRow.vue`
@@ -648,7 +648,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 - **Verificación:** `cd frontend && pnpm type-check && pnpm lint`
 - **Commit:** `Add explore pieces table with counter filters`
 
-#### Paso 3.3 — Panel «Dónde está funcionando» y detalle de la pieza
+#### Paso 3.3 — Panel «Dónde está funcionando» y detalle de la pieza [HECHO]
 
 - **Archivos:** `src/components/explore/ExploreSidePanel.vue`, `src/components/explore/WhereItWorks.vue`,
   `src/components/explore/PieceDetail.vue`, `src/views/ExploreView.vue`
