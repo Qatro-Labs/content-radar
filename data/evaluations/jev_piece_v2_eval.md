@@ -28,15 +28,18 @@ Datos completos en `jev_piece_v2_llm_results.json`; etiquetas en `jev_piece_v2_l
 
 ## Lo que hay que saber
 
-- **El filtro `about_ai` pierde alguna pieza buena.** La 1119 (La República, Colombia: «La IA se
-  compra. La gerencia para usarla, no») y la 872 (HN: «Run AI-generated logic safely inside your
-  app») tienen `about_ai` en 0,11 y 0,07: Jev está seguro y se equivoca, así que salen del análisis.
-  Endurecer el umbral no lo arregla (con < 0,05 la 872 seguiría fuera y se dejaría de filtrar casi
-  todo el ruido). Hoy el filtro quita 225 de 1.550 piezas juzgadas (umbral 0,3).
+- **El filtro `about_ai` pierde alguna pieza buena.** La pieza 4293 de la DB (La República,
+  Colombia: «La IA se compra. La gerencia para usarla, no») y la 628 (HN: «Show HN: Run AI-generated
+  logic safely inside your app») tienen `about_ai` en 0,27 y 0,22: Jev está seguro y se equivoca, así
+  que salen del análisis. Hoy el filtro quita 225 de 1.550 piezas juzgadas (umbral 0,3).
+  *Corrección del 17/10:* una versión anterior de este documento daba 0,11 y 0,07 y concluía que
+  endurecer el umbral no lo arreglaba. Esos valores eran de las piezas 1119 y 872 de la DB, que son
+  otras: la columna `id` de la hoja es un número de fila, no el id de la DB (las piezas se cruzan por
+  URL). La medida con más piezas y la batería que lo corrige están en `jev_piece_v3_eval.md`.
 - **`business_use` y `relevant` son las preguntas más inciertas** (Jev no se decide en ~4 de cada 10
   piezas). Como solo son pistas para el LLM y lo incierto se le pasa como tal, no cambian scores por
   sí solas.
-- **`latam_context`:** el único desacuerdo es la misma pieza 1119, que dice "el país" sin nombrar
+- **`latam_context`:** el único desacuerdo es la misma pieza 4293, que dice "el país" sin nombrar
   Colombia. El evaluador fue estricto (la regla pide una mención explícita) y Jev no.
 
 ## Cómo repetirlo
@@ -50,3 +53,8 @@ PYTHONPATH=. uv run python ../data/evaluations/score_jev.py --sheet <hoja_humana
 
 Solo lee la DB de `DATABASE_URL` (no llama a Jev). Las piezas se buscan por URL y los juicios con la
 misma clave de caché que usa `analyze`.
+
+*Desde la v3:* `score_jev.py` lee los juicios con la clave de la batería actual, así que puntúa la v3
+(y no devuelve nada hasta que `analyze` reclasifique). Los números exactos de la v2 salen de las
+respuestas guardadas: `eval_jev_battery.py score --answers jev_piece_v2_stored_answers.json`
+(ver `jev_piece_v3_eval.md`).

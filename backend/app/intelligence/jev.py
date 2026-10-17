@@ -24,7 +24,7 @@ from app.intelligence.opportunities import Piece
 JudgeError = TypeSafeError
 
 PIECE_BATTERY = "piece"
-PIECE_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/piece.v2.yaml"
+PIECE_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/piece.v3.yaml"
 MAX_DESCRIPTION_CHARS = 1000
 
 # Umbrales de docs/jev.md, "Del juicio a la decisión". Iniciales: se ajustan con la validación.
@@ -63,7 +63,9 @@ class Battery:
 @dataclass(frozen=True)
 class PieceJudgment:
     item_id: int
-    about_ai: bool | None  # filtro de ruido
+    # Filtro de ruido: sale solo lo que Jev dice con seguridad que no es IA en las dos preguntas.
+    about_ai: bool | None
+    ai_in_title: bool | None
     injection: bool | None
     format: str | None  # None si es incierto o no coincide con format_rev
     hook: str | None  # igual con hook_rev
@@ -179,6 +181,7 @@ def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:
     return PieceJudgment(
         item_id=item_id,
         about_ai=_noul(answers, "about_ai"),
+        ai_in_title=_noul(answers, "ai_in_title"),
         injection=_noul(answers, INJECTION_QUESTION),
         format=_choice(answers, "format"),
         hook=_choice(answers, "hook"),
@@ -201,6 +204,13 @@ def excluded_from_llm(answers: dict[str, Any]) -> bool:
 
 def keep_about_ai(pieces: Sequence[Piece], judgments: Mapping[int, PieceJudgment]) -> list[Piece]:
     # Solo sale lo que Jev dice con seguridad que no trata de IA: incierto o sin clasificar se
-    # queda, para no perder temas por un fallo de Jev.
-    off_topic = {item_id for item_id, j in judgments.items() if j.about_ai is False}
+    # queda, para no perder temas por un fallo de Jev. `about_ai` solo quitaba piezas buenas con la
+    # IA en el título y una descripción sobre otra cosa (Jev lee el conjunto de forma literal); con
+    # el título como segunda condición, las piezas buenas quitadas bajan de 24 a 9 en 200
+    # etiquetadas (data/evaluations/jev_piece_v3_eval.md).
+    off_topic = {
+        item_id
+        for item_id, j in judgments.items()
+        if j.about_ai is False and j.ai_in_title is False
+    }
     return [p for p in pieces if p.item_id not in off_topic]
