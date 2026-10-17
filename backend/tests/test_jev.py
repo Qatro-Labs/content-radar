@@ -54,16 +54,6 @@ def choice(label: str, prob: float) -> dict:
     }
 
 
-def score(value: float, conf: float) -> dict:
-    return {
-        "type": "score",
-        "score": value,
-        "confidence": conf,
-        "legend": {},
-        "probabilities": {},
-    }
-
-
 def labels(question) -> list[str]:
     assert isinstance(question, Choice)
     return list(question.criteria)
@@ -73,15 +63,17 @@ def test_battery_loads_all_questions():
     battery = piece_battery()
 
     assert list(battery.questions) == [
-        "relevant",
+        "about_ai",
+        "business_use",
+        "dev_audience",
         "injection",
         "format",
         "format_rev",
         "hook",
         "hook_rev",
-        "announcement",
+        "launch",
         "business_case",
-        "exec_readability",
+        "tech_jargon",
         "latam_context",
     ]
     q = battery.questions
@@ -93,7 +85,7 @@ def test_battery_loads_all_questions():
     ("p", "expected"), [(0.71, True), (0.29, False), (0.5, None)], ids=["yes", "no", "uncertain"]
 )
 def test_noul_thresholds(p, expected):
-    assert to_piece_judgment(1, {"relevant": noul(p)}).relevant is expected
+    assert to_piece_judgment(1, {"about_ai": noul(p)}).about_ai is expected
 
 
 def test_choice_needs_agreement_with_rev():
@@ -104,17 +96,6 @@ def test_choice_needs_agreement_with_rev():
     assert to_piece_judgment(1, agree).format == "use_case"
     assert to_piece_judgment(1, disagree).format is None
     assert to_piece_judgment(1, weak).format is None
-
-
-def test_score_needs_confidence():
-    assert to_piece_judgment(1, {"exec_readability": score(2.6, 0.7)}).exec_readability == 3
-    assert to_piece_judgment(1, {"exec_readability": score(2.6, 0.4)}).exec_readability is None
-
-
-@pytest.mark.parametrize(("level", "expected"), [(0.5, 1), (1.5, 2), (2.5, 3)])
-def test_score_rounds_half_up(level, expected):
-    answers = {"exec_readability": score(level, 0.7)}
-    assert to_piece_judgment(1, answers).exec_readability == expected
 
 
 def test_missing_answers_are_uncertain():
@@ -141,6 +122,15 @@ def test_state_trims_description_and_key_is_stable():
         piece_state(make_piece(description="x" * 1500)), "jev-1.13.0"
     )
     assert cache_key(state, "jev-1.13.0") != cache_key(state, "jev-1.14.0")
+
+
+@pytest.mark.parametrize("description", [None, ""], ids=["none", "empty"])
+def test_state_omits_missing_description(description):
+    assert "description" not in piece_state(make_piece(description=description))
+
+
+def test_state_never_carries_source_segment_or_region():
+    assert {"segment", "region"}.isdisjoint(piece_state(make_piece(description="x")))
 
 
 async def test_typesafe_judge_parses_response():

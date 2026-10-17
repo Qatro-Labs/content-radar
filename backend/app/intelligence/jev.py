@@ -7,7 +7,6 @@ El texto de la pieza va solo en `state`; nuestras instrucciones, en las pregunta
 import asyncio
 import hashlib
 import json
-import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -25,14 +24,13 @@ from app.intelligence.opportunities import Piece
 JudgeError = TypeSafeError
 
 PIECE_BATTERY = "piece"
-PIECE_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/piece.v1.yaml"
+PIECE_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/piece.v2.yaml"
 MAX_DESCRIPTION_CHARS = 1000
 
 # Umbrales de docs/jev.md, "Del juicio a la decisión". Iniciales: se ajustan con la validación.
 CHOICE_MIN_PROB = 0.6
 NOUL_YES = 0.7
 NOUL_NO = 0.3
-SCORE_MIN_CONFIDENCE = 0.5
 # Más bajo que NOUL_YES a propósito: ante la duda, la pieza no entra en el contexto del LLM.
 INJECTION_EXCLUDE = 0.5
 
@@ -65,13 +63,16 @@ class Battery:
 @dataclass(frozen=True)
 class PieceJudgment:
     item_id: int
-    relevant: bool | None
+    about_ai: bool | None  # filtro de ruido
     injection: bool | None
     format: str | None  # None si es incierto o no coincide con format_rev
     hook: str | None  # igual con hook_rev
-    announcement: bool | None
+    launch: bool | None
+    # Pistas para el LLM, que decide el audience fit (CLAUDE.md §7).
+    business_use: bool | None
+    dev_audience: bool | None
     business_case: bool | None
-    exec_readability: int | None  # nivel 0–3; None si la confianza es baja
+    tech_jargon: bool | None
     latam_context: bool | None
 
 
@@ -128,14 +129,18 @@ def piece_battery() -> Battery:
 
 
 def piece_state(piece: Piece) -> dict[str, Any]:
-    description = piece.description[:MAX_DESCRIPTION_CHARS] if piece.description else None
-    return {
+    state: dict[str, Any] = {
         "title": piece.title,
-        "description": description,
         "channel": piece.source_name,
         "platform": piece.platform.value,
         "language": piece.language,
     }
+    # Sin descripción se omite la clave en vez de mandar `null`: en las preguntas de la v2 no cambia
+    # nada medible y evita que Jev lea el `null` como dato. Segmento y región de la fuente no entran
+    # nunca: con ellos en el state, Jev contestaba a partir de la fuente y no del contenido.
+    if piece.description:
+        state["description"] = piece.description[:MAX_DESCRIPTION_CHARS]
+    return state
 
 
 def cache_key(state: dict[str, Any], model: str) -> str:
@@ -170,24 +175,18 @@ def _choice(answers: dict[str, Any], question: str) -> str | None:
     return answer["choice"] if answer["choice"] == reverse["choice"] else None
 
 
-def _score(answers: dict[str, Any], question: str) -> int | None:
-    answer = answers.get(question)
-    if answer is None or answer["confidence"] < SCORE_MIN_CONFIDENCE:
-        return None
-    # Medio nivel redondea hacia arriba; round() de Python redondea al par.
-    return math.floor(answer["score"] + 0.5)
-
-
 def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:
     return PieceJudgment(
         item_id=item_id,
-        relevant=_noul(answers, "relevant"),
+        about_ai=_noul(answers, "about_ai"),
         injection=_noul(answers, INJECTION_QUESTION),
         format=_choice(answers, "format"),
         hook=_choice(answers, "hook"),
-        announcement=_noul(answers, "announcement"),
+        launch=_noul(answers, "launch"),
+        business_use=_noul(answers, "business_use"),
+        dev_audience=_noul(answers, "dev_audience"),
         business_case=_noul(answers, "business_case"),
-        exec_readability=_score(answers, "exec_readability"),
+        tech_jargon=_noul(answers, "tech_jargon"),
         latam_context=_noul(answers, "latam_context"),
     )
 
