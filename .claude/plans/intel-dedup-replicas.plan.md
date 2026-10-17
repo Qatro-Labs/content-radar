@@ -705,7 +705,7 @@ comandos de backend se corren desde `backend/`.
 - **Verificación:** `uv run pytest tests/test_build_opportunities.py tests/test_audience_fit.py -q && uv run pyright app/intelligence/opportunities.py app/intelligence/audience_fit.py`
 - **Commit:** `Count independent sources and saturation by story, not by copy`
 
-### Paso 5 — Servicio de detección con caché y presupuesto
+### Paso 5 — Servicio de detección con caché y presupuesto [HECHO]
 
 - **Archivos:** `backend/app/services/replicas.py` (nuevo),
   `backend/tests/test_replicas_service.py` (nuevo)
