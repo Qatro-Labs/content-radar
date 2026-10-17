@@ -10,11 +10,16 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
+from app.schemas.signal import Platform
+
 OUTLIER_RATIO = 3.0
 NOTABLE_RATIO = 2.0
 MIN_REFERENCE = 5  # con menos piezas no hay referencia
 MEDIAN = 0.5
 HN_REFERENCE_QUANTILE = 0.9  # HN tiene cola larga: la mediana no separa nada
+# Las piezas recién publicadas aún no han acumulado métricas: dentro de la referencia hunden la
+# mediana (o el p90) y disparan los ratios del resto. Solo salen de la referencia; sí se puntúan.
+MIN_REFERENCE_AGE = {Platform.YOUTUBE: timedelta(days=2), Platform.HACKERNEWS: timedelta(hours=6)}
 
 
 def age_adjusted(value: int, published_at: datetime, observed_at: datetime) -> float:

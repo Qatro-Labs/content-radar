@@ -1,5 +1,6 @@
 """Ensamblado de oportunidades a partir de piezas ya agrupadas. Sin DB ni modelo de embeddings."""
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from app.intelligence.opportunities import Piece, build_opportunities, outlier_ratios
@@ -44,16 +45,39 @@ def piece(
 def test_hn_outlier_ratios_use_p90_of_same_query():
     pieces = [piece(i, hours_ago=10, points=10) for i in range(10)]
     pieces.append(piece(99, hours_ago=10, points=100))
-    ratios = outlier_ratios(pieces)
-    assert ratios[99] == 10.0  # p90 de la query = 10 puntos
-    assert ratios[0] == 1.0
+    assert outlier_ratios(pieces, AS_OF)[99] == 10.0  # p90 de las otras diez = 10 puntos
     other = piece(50, hours_ago=10, source="HN · OpenAI", points=100)
-    assert outlier_ratios([*pieces, other])[50] is None  # su query no tiene referencia
+    assert outlier_ratios([*pieces, other], AS_OF)[50] is None  # su query no tiene referencia
+
+
+def test_piece_is_excluded_from_its_own_reference():
+    pieces = [piece(i, hours_ago=10, points=10) for i in range(10)]
+    pieces.append(piece(99, hours_ago=10, points=100))
+    # Referencia de una de 10: nueve de 10 + la de 100 → p90 = 19 → 10 / 19.
+    assert outlier_ratios(pieces, AS_OF)[0] == 0.53
+
+
+def test_young_pieces_are_scored_but_not_in_reference():
+    old = [piece(i, hours_ago=10, points=10) for i in range(6)]
+    young = [piece(10 + i, hours_ago=2, points=1) for i in range(5)]
+    hit = piece(99, hours_ago=2, points=100)
+    ratios = outlier_ratios([*old, *young, hit], AS_OF)
+    assert ratios[99] == 10.0  # p90 de las seis de 10 h; las de 2 h no cuentan
+    assert all(ratios[p.item_id] is not None for p in young)
+
+
+def test_youtube_reference_needs_two_days():
+    def video(i, hours_ago):
+        p = piece(i, hours_ago=hours_ago, platform=Platform.YOUTUBE, source="Canal")
+        return replace(p, metrics=Metrics(views=1000))
+
+    videos = [video(i, 72) for i in range(4)] + [video(10 + i, 24) for i in range(3)]
+    assert set(outlier_ratios(videos, AS_OF).values()) == {None}  # referencia de 4 < 5
 
 
 def test_rss_has_no_metrics_and_no_ratio():
     rss = piece(1, hours_ago=5, platform=Platform.RSS, source="Medio")
-    assert outlier_ratios([rss]) == {1: None}
+    assert outlier_ratios([rss], AS_OF) == {1: None}
 
 
 def test_build_opportunities_end_to_end():

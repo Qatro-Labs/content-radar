@@ -370,7 +370,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_build_opportunities.py -q`
 - **Commit:** `Mark manual-sensor evidence in opportunities`
 
-### Paso 5 — Leave-one-out y edad mínima de referencia
+### Paso 5 — Leave-one-out y edad mínima de referencia [HECHO]
 
 - **Archivos:** `backend/app/intelligence/outliers.py`, `backend/app/intelligence/opportunities.py`,
   `backend/tests/test_build_opportunities.py`.

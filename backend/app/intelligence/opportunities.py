@@ -77,23 +77,30 @@ def _performance(p: Piece) -> float | None:
     return float(value)
 
 
-def outlier_ratios(pieces: Sequence[Piece]) -> dict[int, float | None]:
-    """Ratio de cada pieza frente a su misma fuente (canal o query): mediana, o p90 en HN."""
-    by_source: dict[int, list[float]] = defaultdict(list)
+def _is_reference_age(p: Piece, as_of: datetime) -> bool:
+    return as_of - p.published_at >= out.MIN_REFERENCE_AGE.get(p.platform, timedelta(0))
+
+
+def outlier_ratios(pieces: Sequence[Piece], as_of: datetime) -> dict[int, float | None]:
+    """Ratio de cada pieza frente a las otras de su fuente (canal o query) con edad suficiente:
+    mediana, o p90 en HN.
+    """
     perf = {p.item_id: _performance(p) for p in pieces}
+    by_source: dict[int, list[tuple[int, float]]] = defaultdict(list)
     for p in pieces:
-        if perf[p.item_id] is not None:
-            by_source[p.source_id].append(perf[p.item_id])  # type: ignore[arg-type]
-    return {
-        p.item_id: None
-        if perf[p.item_id] is None
-        else out.outlier_ratio(
-            perf[p.item_id],  # type: ignore[arg-type]
-            by_source[p.source_id],
-            out.HN_REFERENCE_QUANTILE if p.platform is Platform.HACKERNEWS else out.MEDIAN,
-        )
-        for p in pieces
-    }
+        value = perf[p.item_id]
+        if value is not None and _is_reference_age(p, as_of):
+            by_source[p.source_id].append((p.item_id, value))
+    ratios: dict[int, float | None] = {}
+    for p in pieces:
+        value = perf[p.item_id]
+        if value is None:
+            ratios[p.item_id] = None
+            continue
+        reference = [v for item_id, v in by_source[p.source_id] if item_id != p.item_id]
+        quantile = out.HN_REFERENCE_QUANTILE if p.platform is Platform.HACKERNEWS else out.MEDIAN
+        ratios[p.item_id] = out.outlier_ratio(value, reference, quantile)
+    return ratios
 
 
 def _rate(p: Piece) -> Rate | None:
@@ -163,7 +170,7 @@ def build_opportunities(
     id_prefix: str,
 ) -> list[TopicResult]:
     corpus = window_counts([p.published_at for p in pieces], as_of)
-    ratios = outlier_ratios(pieces)
+    ratios = outlier_ratios(pieces, as_of)
 
     # Primera pasada: métricas por tema, para normalizar saturación y velocidad entre temas.
     topics = []
