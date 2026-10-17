@@ -74,7 +74,7 @@ const message = computed<string | null>(() => {
   if (opportunities.value.length === 0) {
     return 'El último análisis no encontró temas con datos suficientes.'
   }
-  if (view.value.topicCount === 0) return failedMessage.value
+  if (view.value.loadedTopicCount === 0) return failedMessage.value
   return null
 })
 const canRetry = computed(() => isError.value || failedTopicCount.value > 0)

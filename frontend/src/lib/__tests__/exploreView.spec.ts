@@ -158,7 +158,7 @@ describe('buildExploreView', () => {
     const result = view()
 
     expect(result.publishedRange).toEqual({ from: '10/10', to: '16/10' })
-    expect(result.topicCount).toBe(3)
+    expect(result.loadedTopicCount).toBe(3)
     expect(result.isCapped).toBe(false)
   })
 
@@ -234,7 +234,7 @@ describe('exploreSummary', () => {
   it('describes the served pieces with the real figures', () => {
     const summary = exploreSummary({
       counts: { total: 356, outliers: 27, youtube: 96, hackernews: 145, rss: 115 },
-      topicCount: 38,
+      loadedTopicCount: 38,
       publishedRange: { from: '04/10', to: '17/10' },
       isCapped: true,
     })
@@ -248,7 +248,7 @@ describe('exploreSummary', () => {
   it('uses the singular for one piece, one topic and one day', () => {
     const summary = exploreSummary({
       counts: { total: 1, outliers: 1, youtube: 1, hackernews: 0, rss: 0 },
-      topicCount: 1,
+      loadedTopicCount: 1,
       publishedRange: { from: '07/10', to: '07/10' },
       isCapped: false,
     })
@@ -259,7 +259,7 @@ describe('exploreSummary', () => {
   it('groups thousands', () => {
     const summary = exploreSummary({
       counts: { total: 1363, outliers: 0, youtube: 0, hackernews: 1363, rss: 0 },
-      topicCount: 60,
+      loadedTopicCount: 60,
       publishedRange: { from: '01/10', to: '17/10' },
       isCapped: false,
     })

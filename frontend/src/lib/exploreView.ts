@@ -43,8 +43,7 @@ export interface ExploreViewModel {
   visible: Piece[]
   counts: ExploreCounts
   publishedRange: PublishedRange | null
-  // Los temas cuya evidencia cargó: si alguno falló, la cabecera no lo cuenta.
-  topicCount: number
+  loadedTopicCount: number
   isCapped: boolean
   topTopics: Opportunity[]
   topSources: SourceOutliers[]
@@ -180,7 +179,7 @@ export function buildExploreView(input: ExploreInput): ExploreViewModel {
     visible: filterPieces(pieces, input),
     counts: countByKind(pieces),
     publishedRange: publishedRangeOf(pieces),
-    topicCount: loadedLists.length,
+    loadedTopicCount: loadedLists.length,
     isCapped: loadedLists.some((list) => list.length >= EVIDENCE_LIMIT),
     topTopics: topicsWithMostOutliers(input.opportunities),
     topSources: sourcesWithMostOutliers(pieces),
@@ -189,7 +188,7 @@ export function buildExploreView(input: ExploreInput): ExploreViewModel {
 
 export type ExploreSummaryInput = Pick<
   ExploreViewModel,
-  'counts' | 'topicCount' | 'publishedRange' | 'isCapped'
+  'counts' | 'loadedTopicCount' | 'publishedRange' | 'isCapped'
 >
 
 function describePublished(range: PublishedRange | null, total: number): string {
@@ -200,9 +199,9 @@ function describePublished(range: PublishedRange | null, total: number): string 
 }
 
 export function exploreSummary(input: ExploreSummaryInput): string {
-  const { counts, topicCount, publishedRange, isCapped } = input
+  const { counts, loadedTopicCount, publishedRange, isCapped } = input
   const pieces = countLabel(counts.total, 'pieza', 'piezas')
-  const topics = topicCount === 1 ? '1 tema' : `los ${formatCount(topicCount)} temas`
+  const topics = loadedTopicCount === 1 ? '1 tema' : `los ${formatCount(loadedTopicCount)} temas`
   const outliers = countLabel(counts.outliers, 'rinde', 'rinden')
   const cap = isCapped ? ` Hasta ${EVIDENCE_LIMIT} piezas por tema.` : ''
   return (
