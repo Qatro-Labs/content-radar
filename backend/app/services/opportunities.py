@@ -55,7 +55,10 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
     )
     pieces = []
     for item, source in (await session.execute(stmt)).all():
-        kept = sorted(item.snapshots, key=lambda s: s.observed_at)
+        # El filtro del loader no se aplica a colecciones ya cargadas en la sesión: se repite aquí.
+        kept = sorted(
+            (s for s in item.snapshots if s.observed_at <= as_of), key=lambda s: s.observed_at
+        )
         snapshots = [(s.observed_at, _metrics(s)) for s in kept]
         pieces.append(
             Piece(

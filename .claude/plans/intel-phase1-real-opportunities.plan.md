@@ -26,7 +26,7 @@
 - **Contratos tocados:** `Opportunity` / `Evidence` / OpenAPI (cambio aditivo: todo opcional o con
   default) — **avisado en el canal:** sí (2026-10-17, antes de lanzar `/spec`)
 - **Auditoría tras `/build`:** sí
-- **Estado del gate:** `LISTO`
+- **Estado del gate:** `BLOQUEADO`
 
 ## Problema
 
@@ -388,7 +388,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_build_opportunities.py -q`
 - **Commit:** `Use leave-one-out references and a minimum reference age for outliers`
 
-### Paso 6 — Filtro de `as_of` en `load_pieces` [HECHO]
+### Paso 6 — Filtro de `as_of` en `load_pieces`
 
 - **Archivos:** `backend/app/services/opportunities.py`, `backend/tests/test_load_pieces.py` (nuevo).
 - **Cambio:** D6.
@@ -518,7 +518,16 @@ Más la tasa de outliers HN antes/después y el top 10 del paso 9.
 
 | Fecha | Qué bloqueó | Qué se decidió | Commits que quedaron |
 | --- | --- | --- | --- |
+| 2026-10-17 | Tests de DB sin ejecutar: `radar_test` tiene una tabla `usage_events` de otra rama con FK a `pipeline_runs`, y el `drop_all` del conftest falla (`DependentObjectsStillExistError`) en los 20 tests de DB. El paso 6 (`test_load_pieces.py`) y el 8 (`test_opportunity_routes.py`) no se han visto ni en rojo ni en verde. El paso 6 queda sin `[HECHO]` hasta verlo en verde. | Arreglo para un humano: `DROP TABLE usage_events CASCADE;` en `radar_test` (o `TEST_DATABASE_URL` a una DB nueva) y `uv run pytest tests/test_load_pieces.py tests/test_opportunity_routes.py -q`. Comprobado a mano contra la DB local (solo lectura) que `load_pieces` no devuelve nada posterior a `as_of`; con colecciones ya cargadas en la sesión el filtro del loader no se aplicaba (555 snapshots posteriores) y se añadió el filtro en Python (Riesgos). | Pasos 2–11 commiteados en `intel/phase1-real-opportunities` |
+| 2026-10-17 | Paso 12: la partición de D10 se dispara en 22 de 39 clusters (solo 3 por tamaño > 25; 19 solo por cohesión < 0.6) y los de 5–8 piezas no dan subclusters ≥ 5 a 0.4, así que desaparecen. Piezas en clusters: 381 → 195; oportunidades: 28 → 17. | Pendiente de Melkin (ver Preguntas abiertas). No se tocan umbrales. | Ídem |
 
 ## Preguntas abiertas
 
-- (ninguna)
+- **D10 parte casi todo, no solo el cajón de sastre.** Con datos reales del 17/10 (run 7): antes de
+  partir, 39 clusters y 381 piezas (mayor: 36); se vuelven a agrupar 22 (tamaños 36, 34, 28, 20, 12,
+  10, 9, 9, 8×5, 7×3, 6, 6, 5×4; cohesión 0.54–0.60), y después quedan 25 clusters y 195 piezas
+  (mayor: 24, ninguno amplio); 17 oportunidades frente a 28. La cohesión típica a 0.5 con average
+  linkage ronda 0.55–0.60, así que `SPLIT_MIN_COHESION = 0.6` actúa casi como bajar el umbral
+  global, que D10 descartó. Opciones: (a) dejarlo así; (b) partir solo con tamaño > 25 **y**
+  cohesión < 0.6; (c) un corte de cohesión más bajo (p. ej. 0.5); (d) conservar el cluster original
+  si la partición no deja ningún subcluster ≥ 5. Tasa HN tras el cambio: 4,2 % (en rango).
