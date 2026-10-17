@@ -59,10 +59,11 @@ def test_piece_is_excluded_from_its_own_reference():
 
 def test_young_pieces_are_scored_but_not_in_reference():
     old = [piece(i, hours_ago=10, points=10) for i in range(6)]
-    young = [piece(10 + i, hours_ago=2, points=1) for i in range(5)]
+    young = [piece(10 + i, hours_ago=2, points=50) for i in range(5)]
     hit = piece(99, hours_ago=2, points=100)
     ratios = outlier_ratios([*old, *young, hit], AS_OF)
-    assert ratios[99] == 10.0  # p90 de las seis de 10 h; las de 2 h no cuentan
+    # p90 de las seis de 10 h = 10. Si las de 2 h contaran, el p90 sería 50 y el ratio 2.0.
+    assert ratios[99] == 10.0
     assert all(ratios[p.item_id] is not None for p in young)
 
 
