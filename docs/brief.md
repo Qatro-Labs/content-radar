@@ -66,7 +66,7 @@ y dónde la respondemos.
 | "si es una tendencia que recién empieza o una que ya todos copiaron" | Etapa del ciclo de vida y saturación, no solo volumen | `lifecycle` (`emerging` … `saturated`), `saturation_score` |
 | "por qué funcionó: gancho, formato, tema, momento, quién" | Outliers frente a su referencia y contraste con el resto del tema, presentado como hipótesis | CLAUDE.md §7 (outliers y "por qué funcionó") |
 | "ejecutivos y equipos de Latinoamérica aprendiendo IA" | Encaje con la audiencia evaluado contra el perfil de 30X | `audience_fit_score`, `audience_mix`, `latam_gap` |
-| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. Sus términos tampoco permiten usar su contenido obtenido a través de buscadores sin consentimiento del dueño. **Decidido el 17/10: LinkedIn, Instagram y TikTok no entran en el MVP**, y la curación manual se descartó. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS). Las vías oficiales (API de portabilidad DMA, exports de analítica con consentimiento, embed) quedan en el roadmap. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
+| "en redes" y el ejemplo "en LinkedIn" | LinkedIn no tiene API pública para buscar posts de otros, y el reto prohíbe el login. Sus términos tampoco permiten usar su contenido obtenido a través de buscadores sin consentimiento del dueño. **Decidido el 17/10: LinkedIn y X no entran en el MVP**, y la curación manual se descartó. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS). TikTok, Reddit e Instagram (por perfiles) entran vía ScrapeCreators. Las vías oficiales (API de portabilidad DMA, exports de analítica con consentimiento, embed) quedan en el roadmap. El pitch lo cuenta como respuesta a la restricción, no como carencia | CLAUDE.md §5 · [`sources.md`](sources.md) (LinkedIn) |
 | "la propia comunidad como sensor" | Descartado para el MVP (17/10): sin curación manual | — |
 | "modelos que clasifican y priorizan (JEV)" | **Decidido: usamos [Jev](https://docs.typesafe.ai) (TypeSafe)** para las decisiones atómicas sobre piezas: clasifica cada pieza (relevancia, formato, gancho…), detecta notas replicadas y verifica lo que escribe el LLM. Python prioriza, y el LLM evalúa cada tema y redacta | CLAUDE.md §7 · [`jev.md`](jev.md) |
 | "el mismo problema que tiene cualquier marca, medio o creador" | El perfil de audiencia es un archivo: cambiarlo adapta el radar a otra marca. En la demo basta con contarlo | `data/audiences/30x.yaml` · "varias audiencias" es P2 |
@@ -206,9 +206,9 @@ del domingo a las 12:30 ESP y antes del code freeze (CLAUDE.md §13).
 - Cada juicio de Jev guarda la versión del modelo y su `confidence`. Si hubo clave de Jev, se
   validó con piezas etiquetadas a mano en `data/evaluations/`.
 - El audience fit del LLM coincide, a grandes rasgos, con el ranking que el equipo revisó a mano.
-- El pitch explica por qué LinkedIn, Instagram y TikTok no entran en el MVP (sin login ni
-  scraping, por sus términos), cómo entran sus referentes (canales abiertos) y qué vías oficiales
-  quedan en el roadmap (§2).
+- El pitch explica de dónde vienen los datos de TikTok, Reddit e Instagram (ScrapeCreators, solo
+  contenido público), por qué LinkedIn y X no entran en el MVP (sin búsqueda sin login), cómo
+  entran sus referentes (canales abiertos) y qué vías oficiales quedan en el roadmap (§2).
 
 **Entrega**
 - La app está desplegada y funciona desde una sesión limpia, no solo en local.
