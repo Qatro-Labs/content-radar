@@ -2,11 +2,14 @@
 
 from dataclasses import replace
 
+import pytest
+
 from app.intelligence.audience_fit import (
     FIT_FAILED_NOTE,
     CriterionAssessment,
     actionability_score,
     apply_fit,
+    apply_topic_name,
     audience_fit_score,
     mark_fit_failed,
 )
@@ -172,3 +175,15 @@ def test_rank_puts_opportunity_score_first_then_discarded_then_unscored():
         "discarded-high-score",
         "unscored-high-momentum",
     ]
+
+
+def test_topic_name_replaces_the_representative_title():
+    topic = emerging_topic()
+    named = apply_topic_name(topic, "  Agentes de IA\nen operaciones ")
+    assert named.opportunity.topic == "Agentes de IA en operaciones"
+
+
+@pytest.mark.parametrize("name", ["", "   ", "x" * 81], ids=["empty", "blank", "too-long"])
+def test_unusable_topic_name_keeps_the_title(name):
+    topic = emerging_topic()
+    assert apply_topic_name(topic, name).opportunity.topic == topic.opportunity.topic
