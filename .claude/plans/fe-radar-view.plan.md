@@ -375,7 +375,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm test -- opportunityFormat`
 - **Commit:** `Add opportunity formatting and lifecycle styles`
 
-### Paso 4 — Datos: `useOpportunities` con fixtures explícitos
+### Paso 4 — Datos: `useOpportunities` con fixtures explícitos [HECHO]
 
 - **Archivos:** `frontend/src/api/opportunities.ts`, `frontend/env.d.ts`, `frontend/vite.config.ts`,
   `frontend/tsconfig.app.json` (y `tsconfig.vitest.json` si hace falta), `frontend/src/api/__tests__/opportunities.spec.ts`
@@ -511,7 +511,7 @@ visual del contexto verificado.
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check && pnpm test && pnpm build`
 - **Commit:** `Compose the radar view with loading, empty and error states`
 
-### Paso 12 — Docs
+### Paso 12 — Docs [HECHO]
 
 - **Archivos:** `README.md` (sección frontend), `.claude/rules/frontend.md` (tabla "Librerías y recursos de UI")
 - **Cambio:**
