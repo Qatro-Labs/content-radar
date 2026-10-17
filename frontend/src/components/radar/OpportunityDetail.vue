@@ -132,7 +132,7 @@ const BUTTON_CLASS =
 
     <div class="mt-auto flex flex-wrap gap-2">
       <RouterLink
-        :to="{ name: RouteName.Explore, params: { id: opportunity.id } }"
+        :to="{ name: RouteName.Dossier, params: { id: opportunity.id } }"
         class="bg-secondary text-secondary-foreground hover:bg-secondary-hover"
         :class="BUTTON_CLASS"
       >

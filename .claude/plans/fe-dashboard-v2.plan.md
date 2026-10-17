@@ -309,7 +309,7 @@ Parte 2 **no** importa nada de `components/radar/` (la Parte 1 borra lo que ya n
 
 ### Fase 0 — Coordinador
 
-#### Paso 0.1 — Rutas del expediente y de Explorar
+#### Paso 0.1 — Rutas del expediente y de Explorar [HECHO]
 
 - **Archivos:** `src/router/index.ts`, `src/views/DossierView.vue` (nuevo), `src/components/layout/AppHeader.vue`,
   `src/components/radar/OpportunityDetail.vue`

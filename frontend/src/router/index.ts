@@ -5,6 +5,7 @@ import DiscoverView from '@/views/DiscoverView.vue'
 export const RouteName = {
   Discover: 'discover',
   Explore: 'explore',
+  Dossier: 'dossier',
   Create: 'create',
 } as const
 
@@ -13,9 +14,14 @@ export const router = createRouter({
   routes: [
     { path: '/', name: RouteName.Discover, component: DiscoverView },
     {
-      path: '/explore/:id?',
+      path: '/explore',
       name: RouteName.Explore,
       component: () => import('@/views/ExploreView.vue'),
+    },
+    {
+      path: '/explore/:id',
+      name: RouteName.Dossier,
+      component: () => import('@/views/DossierView.vue'),
     },
     {
       path: '/create',
