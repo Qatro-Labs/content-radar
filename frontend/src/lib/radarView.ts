@@ -1,7 +1,15 @@
 import type { components } from '@/types/api'
 
+import { formatUtcTimestamp } from './format'
 import { LIFECYCLE_STYLE } from './lifecycle'
-import type { Lifecycle, RadarQuery, RankingSort } from './radarQuery'
+import { RECOMMENDATION_LABEL } from './opportunityFormat'
+import {
+  resetViewPatch,
+  type Lifecycle,
+  type RadarQuery,
+  type RankingSort,
+  type Recommendation,
+} from './radarQuery'
 
 type Schemas = components['schemas']
 type Opportunity = Schemas['Opportunity']
@@ -13,6 +21,16 @@ export interface RankedOpportunity extends Opportunity {
 
 export type PlottedOpportunity = RankedOpportunity & { audience_fit_score: number }
 
+export const COUNTER_FILTERS = ['publish_now', 'accelerating', 'emerging', 'unknown'] as const
+export type CounterFilter = (typeof COUNTER_FILTERS)[number]
+
+// D9 del plan fe-dashboard-v2: sin temas «Publicar ya», «Esta semana» enseña los primeros del
+// ranking y lo dice.
+export interface WeekPicks {
+  topics: RankedOpportunity[]
+  hasPublishNow: boolean
+}
+
 // Lo que la vista pinta, ya filtrado, ordenado y contado: los componentes solo lo leen.
 export interface RadarView {
   total: number
@@ -23,7 +41,12 @@ export interface RadarView {
   unevaluatedCount: number
   dimmedIds: Set<string>
   selected: RankedOpportunity | null
-  counts: { accelerating: number; emerging: number; latamGap: number }
+  // Totales fijos sobre todos los temas (D2): con selección única, contar lo filtrado dejaría
+  // los demás contadores a 0.
+  counts: { publishNow: number; accelerating: number; emerging: number; unknown: number }
+  activeCounter: CounterFilter | null
+  weekPicks: WeekPicks
+  outlierPieces: number
 }
 
 // La pregunta del Radar son "los 10 temas que más crecen" (CLAUDE.md §1); si hay menos, la
@@ -45,14 +68,16 @@ function rankInApiOrder(list: OpportunityList | null): RankedOpportunity[] {
 }
 
 function hasFilters(query: RadarQuery): boolean {
-  return query.lifecycle.length > 0 || query.gap
+  return query.lifecycle.length > 0 || query.gap || query.recommendation !== null
 }
 
 function matchesFilters(opportunity: Opportunity, query: RadarQuery): boolean {
   const stageMatches =
     query.lifecycle.length === 0 || query.lifecycle.includes(opportunity.lifecycle)
   const gapMatches = !query.gap || opportunity.latam_gap === true
-  return stageMatches && gapMatches
+  const recommendationMatches =
+    query.recommendation === null || opportunity.recommendation === query.recommendation
+  return stageMatches && gapMatches && recommendationMatches
 }
 
 // Sin encaje no hay posición en X: dibujarla en 0 se leería "encaje 0".
@@ -74,12 +99,64 @@ function collectDimmedIds(
   return new Set(dimmed)
 }
 
-function countVisible(visible: RankedOpportunity[]): RadarView['counts'] {
+const isPublishNow = (opportunity: Opportunity) => opportunity.recommendation === 'publish_now'
+
+const countStage = (topics: Opportunity[], lifecycle: Lifecycle) =>
+  topics.filter((opportunity) => opportunity.lifecycle === lifecycle).length
+
+function countAll(ranked: RankedOpportunity[]): RadarView['counts'] {
   return {
-    accelerating: visible.filter((opportunity) => opportunity.lifecycle === 'accelerating').length,
-    emerging: visible.filter((opportunity) => opportunity.lifecycle === 'emerging').length,
-    latamGap: visible.filter((opportunity) => opportunity.latam_gap === true).length,
+    publishNow: ranked.filter(isPublishNow).length,
+    accelerating: countStage(ranked, 'accelerating'),
+    emerging: countStage(ranked, 'emerging'),
+    unknown: countStage(ranked, 'unknown'),
   }
+}
+
+interface CounterFilterState {
+  lifecycle: Lifecycle[]
+  recommendation: Recommendation | null
+}
+
+const COUNTER_FILTER: Record<CounterFilter, CounterFilterState> = {
+  publish_now: { lifecycle: [], recommendation: 'publish_now' },
+  accelerating: { lifecycle: ['accelerating'], recommendation: null },
+  emerging: { lifecycle: ['emerging'], recommendation: null },
+  unknown: { lifecycle: ['unknown'], recommendation: null },
+}
+
+function sameStages(a: Lifecycle[], b: Lifecycle[]): boolean {
+  return a.length === b.length && a.every((stage) => b.includes(stage))
+}
+
+// D2: un contador está pulsado solo si los filtros son exactamente los suyos; si el agente o la
+// URL ponen otra combinación (varias etapas, `gap`), no hay ninguno pulsado.
+function findActiveCounter(query: RadarQuery): CounterFilter | null {
+  if (query.gap) return null
+  const isActive = (counter: CounterFilter) => {
+    const { lifecycle, recommendation } = COUNTER_FILTER[counter]
+    return query.recommendation === recommendation && sameStages(query.lifecycle, lifecycle)
+  }
+  return COUNTER_FILTERS.find(isActive) ?? null
+}
+
+// D2: selección única. Pulsar un contador sustituye cualquier otro filtro; pulsar el activo lo
+// quita.
+export function counterPatch(counter: CounterFilter, query: RadarQuery): Partial<RadarQuery> {
+  if (findActiveCounter(query) === counter) return resetViewPatch()
+  return { ...resetViewPatch(), ...COUNTER_FILTER[counter] }
+}
+
+const FALLBACK_PICKS = 3
+
+function pickWeek(ranked: RankedOpportunity[]): WeekPicks {
+  const publishNow = ranked.filter(isPublishNow)
+  if (publishNow.length > 0) return { topics: publishNow, hasPublishNow: true }
+  return { topics: ranked.slice(0, FALLBACK_PICKS), hasPublishNow: false }
+}
+
+function sumOutliers(ranked: RankedOpportunity[]): number {
+  return ranked.reduce((sum, opportunity) => sum + opportunity.outlier_count, 0)
 }
 
 export function buildRadarView(list: OpportunityList | null, query: RadarQuery): RadarView {
@@ -88,8 +165,8 @@ export function buildRadarView(list: OpportunityList | null, query: RadarQuery):
     .filter((opportunity) => matchesFilters(opportunity, query))
     .sort(RANKING_ORDER[query.sort])
   const plotted = ranked.filter(hasAudienceFit)
-  const selected =
-    ranked.find((opportunity) => opportunity.id === query.selected) ?? ranked.at(0) ?? null
+  // D7: sin `?selected=` válido no hay tema seleccionado.
+  const selected = ranked.find((opportunity) => opportunity.id === query.selected) ?? null
   return {
     total: ranked.length,
     ranked,
@@ -102,7 +179,10 @@ export function buildRadarView(list: OpportunityList | null, query: RadarQuery):
       selectedId: selected?.id,
     }),
     selected,
-    counts: countVisible(visible),
+    counts: countAll(ranked),
+    activeCounter: findActiveCounter(query),
+    weekPicks: pickWeek(ranked),
+    outlierPieces: sumOutliers(ranked),
   }
 }
 
@@ -111,7 +191,6 @@ interface Noun {
   many: string
 }
 
-const OPPORTUNITY_NOUN: Noun = { one: 'oportunidad', many: 'oportunidades' }
 const TOPIC_NOUN: Noun = { one: 'tema', many: 'temas' }
 // No "con datos suficientes": la cuenta incluye temas preliminares (D14 del plan fe-radar-view).
 const ANALYZED_TOPIC_NOUN: Noun = { one: 'tema analizado', many: 'temas analizados' }
@@ -131,19 +210,60 @@ function describeFilters(query: RadarQuery): string {
   if (query.lifecycle.length > 0) {
     parts.push(`etapa ${query.lifecycle.map(stageLabel).join(STAGE_SEPARATOR)}`)
   }
+  if (query.recommendation) {
+    parts.push(`para ${RECOMMENDATION_LABEL[query.recommendation].toLowerCase()}`)
+  }
   if (query.gap) parts.push('con hueco en LATAM')
   return parts.join(FILTER_SEPARATOR)
 }
 
 export function radarHeadline(view: RadarView, query: RadarQuery): string {
   if (hasFilters(query)) return `${view.visible.length} de ${formatCount(view.total, TOPIC_NOUN)}`
-  return `${formatCount(view.total, OPPORTUNITY_NOUN)} esta semana`
+  return `${formatCount(view.total, TOPIC_NOUN)} esta semana`
 }
 
+const HOW_TO_READ = 'Ordenados por oportunidad. Elija una burbuja o una fila para ver el tema.'
+
 export function radarSubline(view: RadarView, query: RadarQuery): string {
-  if (hasFilters(query)) return `Filtro: ${describeFilters(query)}.`
-  if (view.total < EXPECTED_OPPORTUNITIES) {
-    return `Hay ${formatCount(view.total, ANALYZED_TOPIC_NOUN)} esta semana.`
+  if (hasFilters(query)) {
+    return `Filtro: ${describeFilters(query)}. El resto queda atenuado en el radar.`
   }
-  return 'Los temas de IA que más rápido crecen, ordenados por su encaje con líderes y equipos de LATAM.'
+  if (view.total < EXPECTED_OPPORTUNITIES) {
+    return `Hay ${formatCount(view.total, ANALYZED_TOPIC_NOUN)} esta semana. ${HOW_TO_READ}`
+  }
+  return HOW_TO_READ
+}
+
+// D9 del plan fe-dashboard-v2.
+export function describeWeekPicks({ topics, hasPublishNow }: WeekPicks): string {
+  if (!hasPublishNow) {
+    return 'Ningún tema cumple hoy las condiciones de «Publicar ya». Los primeros del ranking:'
+  }
+  const reason = topics.length === 1 ? 'crece y encaja' : 'crecen y encajan'
+  const count = formatCount(topics.length, TOPIC_NOUN)
+  return `${count} para publicar ya: ${reason} con la audiencia de 30X.`
+}
+
+function missingStageReason(unknownCount: number, preliminaryCount: number): string {
+  const unmatchedCount = unknownCount - preliminaryCount
+  if (preliminaryCount === 0) return 'ninguna regla se cumple'
+  if (unmatchedCount === 0) return 'por falta de datos'
+  return `${preliminaryCount} por falta de datos y ${unmatchedCount} porque ninguna regla se cumple`
+}
+
+// D4 del plan fe-dashboard-v2: `preliminary` = datos insuficientes (CLAUDE.md §7); el resto de
+// los temas sin etapa tiene datos, pero ninguna regla se cumple.
+export function describeStageUnknowns(
+  topics: readonly Opportunity[],
+  monitoringStartedAt: string,
+): string {
+  const since = `Datos desde el ${formatUtcTimestamp(monitoringStartedAt)}.`
+  const unknown = topics.filter((opportunity) => opportunity.lifecycle === 'unknown')
+  if (unknown.length === 0) return `Todos los temas tienen etapa. ${since}`
+  const preliminaryCount = unknown.filter(
+    (opportunity) => opportunity.growth_status === 'preliminary',
+  ).length
+  const verb = unknown.length === 1 ? 'tiene' : 'tienen'
+  const share = `${unknown.length} de ${formatCount(topics.length, TOPIC_NOUN)}`
+  return `${share} no ${verb} etapa: ${missingStageReason(unknown.length, preliminaryCount)}. ${since}`
 }
