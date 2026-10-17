@@ -388,7 +388,7 @@
 - **Verificación:** `cd backend && uv run pytest tests/test_build_opportunities.py -q`
 - **Commit:** `Use leave-one-out references and a minimum reference age for outliers`
 
-### Paso 6 — Filtro de `as_of` en `load_pieces`
+### Paso 6 — Filtro de `as_of` en `load_pieces` [HECHO]
 
 - **Archivos:** `backend/app/services/opportunities.py`, `backend/tests/test_load_pieces.py` (nuevo).
 - **Cambio:** D6.

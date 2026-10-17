@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 from app.intelligence.clustering import cluster, representative
 from app.intelligence.embeddings import embed, embedding_text
 from app.intelligence.opportunities import Piece, TopicResult, build_opportunities
-from app.models import ContentItem, OpportunityRecord, PipelineRun, Source
+from app.models import ContentItem, MetricSnapshot, OpportunityRecord, PipelineRun, Source
 from app.schemas.opportunity import (
     Confidence,
     Evidence,
@@ -44,13 +44,19 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
     stmt = (
         select(ContentItem, Source)
         .join(Source)
-        .where(Source.active.is_(True), ContentItem.published_at > as_of - LOOKBACK)
-        .options(selectinload(ContentItem.snapshots))
+        .where(
+            Source.active.is_(True),
+            ContentItem.published_at > as_of - LOOKBACK,
+            ContentItem.published_at <= as_of,
+        )
+        # Solo lo observado hasta `as_of`: el mismo `as_of` tiene que dar el mismo resultado.
+        .options(selectinload(ContentItem.snapshots.and_(MetricSnapshot.observed_at <= as_of)))
         .order_by(ContentItem.id)
     )
     pieces = []
     for item, source in (await session.execute(stmt)).all():
-        snapshots = [(s.observed_at, _metrics(s)) for s in item.snapshots]
+        kept = sorted(item.snapshots, key=lambda s: s.observed_at)
+        snapshots = [(s.observed_at, _metrics(s)) for s in kept]
         pieces.append(
             Piece(
                 item_id=item.id,
@@ -63,7 +69,7 @@ async def load_pieces(session: AsyncSession, as_of: datetime) -> list[Piece]:
                 segment=Segment(source.segment),
                 language=item.language or source.language,
                 published_at=item.published_at,
-                observed_at=item.last_observed_at,
+                observed_at=snapshots[-1][0] if snapshots else min(item.last_observed_at, as_of),
                 metrics=snapshots[-1][1] if snapshots else Metrics(),
                 source_kind=SourceKind(source.kind),
                 snapshots=snapshots,
