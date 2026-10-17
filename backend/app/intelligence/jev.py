@@ -7,7 +7,7 @@ El texto de la pieza va solo en `state`; nuestras instrucciones, en las pregunta
 import asyncio
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import lru_cache
@@ -197,3 +197,10 @@ def excluded_from_llm(answers: dict[str, Any]) -> bool:
     if answer is None:
         return True
     return answer["noul"] > INJECTION_EXCLUDE
+
+
+def keep_about_ai(pieces: Sequence[Piece], judgments: Mapping[int, PieceJudgment]) -> list[Piece]:
+    # Solo sale lo que Jev dice con seguridad que no trata de IA: incierto o sin clasificar se
+    # queda, para no perder temas por un fallo de Jev.
+    off_topic = {item_id for item_id, j in judgments.items() if j.about_ai is False}
+    return [p for p in pieces if p.item_id not in off_topic]

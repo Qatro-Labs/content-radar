@@ -20,10 +20,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
 from app.db.session import SessionLocal, engine
-from app.intelligence.jev import build_judge
+from app.intelligence.jev import build_judge, to_piece_judgment
 from app.intelligence.opportunities import TopicResult
 from app.models import PipelineRun
-from app.services.classification import ClassificationStats, classify_pieces
+from app.services.classification import ClassificationStats, classify_pieces, load_judgments
 from app.services.costs import record_meter
 from app.services.opportunities import (
     ANALYZE_JOB,
@@ -45,7 +45,10 @@ async def _run(
     meter = UsageMeter()
     jev = await classify_pieces(session, loaded, judge=build_judge(get_settings()), meter=meter)
     await record_meter(session, meter, pipeline_run_id=run_row.id)
-    pieces, results = await compute_opportunities(session, as_of, pieces=loaded)
+    answers = await load_judgments(session, loaded)
+    judgments = {item_id: to_piece_judgment(item_id, a) for item_id, a in answers.items()}
+    computed = await compute_opportunities(session, as_of, pieces=loaded, judgments=judgments)
+    results = computed.results
     await save_opportunities(session, run_row.id, results)
     lifecycles: dict[str, int] = {}
     for r in results:
@@ -53,7 +56,8 @@ async def _run(
         lifecycles[key] = lifecycles.get(key, 0) + 1
     stats: dict[str, Any] = {
         "as_of": as_of.isoformat(),
-        "pieces": pieces,
+        "pieces": computed.analyzed,
+        "off_topic_removed": computed.off_topic_removed,
         "opportunities": len(results),
         "lifecycle": lifecycles,
         "jev": asdict(jev),
@@ -73,6 +77,7 @@ def _print_summary(
         f"✓ run #{run_id}: {stats['pieces']} piezas · {len(results)} oportunidades · "
         f"{stats['lifecycle']}"
     )
+    print(f"  filtro about_ai: {stats['off_topic_removed']} piezas fuera de tema quitadas")
     print(f"  jev: {jev.classified} clasificadas · {jev.cached} de caché · {jev.failed} fallidas")
     if jev.skipped_reason:
         print(f"  jev omitido: {jev.skipped_reason}")

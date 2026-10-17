@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import httpx2
@@ -10,10 +11,12 @@ from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul
 
 from app.core.config import Settings
 from app.intelligence.jev import (
+    PieceJudgment,
     TypeSafeJudge,
     build_judge,
     cache_key,
     excluded_from_llm,
+    keep_about_ai,
     piece_battery,
     piece_state,
     to_piece_judgment,
@@ -178,3 +181,17 @@ async def test_typesafe_judge_parses_response():
 
 def test_build_judge_without_key_is_none():
     assert build_judge(Settings(typesafe_api_key="")) is None
+
+
+def judged(item_id: int, about_ai: float) -> PieceJudgment:
+    return to_piece_judgment(item_id, {"about_ai": noul(about_ai)})
+
+
+def test_about_ai_filter_drops_only_pieces_judged_off_topic():
+    pieces = [replace(make_piece(), item_id=i) for i in range(1, 5)]
+    # 1 fuera de tema (seguro) · 2 sobre IA · 3 incierta · 4 sin clasificar.
+    judgments = {1: judged(1, 0.1), 2: judged(2, 0.9), 3: judged(3, 0.5)}
+
+    kept = keep_about_ai(pieces, judgments)
+
+    assert [p.item_id for p in kept] == [2, 3, 4]

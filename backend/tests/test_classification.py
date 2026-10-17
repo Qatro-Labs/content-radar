@@ -11,7 +11,7 @@ from app.intelligence.opportunities import Piece
 from app.models import ContentItem, Source
 from app.schemas.cost import Provider
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
-from app.services.classification import classify_pieces
+from app.services.classification import classify_pieces, load_judgments
 
 NOW = datetime(2026, 10, 17, 12, tzinfo=UTC)
 ANSWERS = {"relevant": {"type": "noul", "noul": 0.9}}
@@ -132,3 +132,13 @@ async def test_usage_counted_only_for_real_calls(session):
     count = meter.counts[(Provider.TYPESAFE_JEV, "piece_battery")]
     assert (count.calls, count.units) == (3, 300)
     assert not second_meter.counts
+
+
+async def test_load_judgments_reads_the_current_battery_cache_without_judge(session):
+    pieces = await make_pieces(session, n=2)
+    await classify_pieces(session, pieces[:1], judge=FakeJudge(), meter=UsageMeter())
+
+    judgments = await load_judgments(session, pieces)
+
+    assert set(judgments) == {pieces[0].item_id}
+    assert judgments[pieces[0].item_id] == ANSWERS

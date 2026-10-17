@@ -104,6 +104,25 @@ def _requests_by_key(pieces: Sequence[Piece], model: str) -> tuple[list[str], di
     return piece_keys, requests
 
 
+async def load_judgments(
+    session: AsyncSession, pieces: Sequence[Piece]
+) -> dict[int, dict[str, Any]]:
+    """Respuestas de la batería y el modelo actuales por pieza; no llama a Jev."""
+    # Por `cache_key` y no por pieza: una pieza puede tener filas de baterías anteriores.
+    piece_keys, requests = _requests_by_key(pieces, get_settings().jev_model)
+    rows = await session.execute(
+        select(JevJudgment.cache_key, JevJudgment.answers).where(
+            JevJudgment.cache_key.in_(list(requests))
+        )
+    )
+    answers_by_key = {key: answers for key, answers in rows.all()}
+    return {
+        p.item_id: answers_by_key[key]
+        for p, key in zip(pieces, piece_keys, strict=True)
+        if key in answers_by_key
+    }
+
+
 async def classify_pieces(
     session: AsyncSession, pieces: Sequence[Piece], *, judge: Judge | None, meter: UsageMeter
 ) -> ClassificationStats:
