@@ -127,9 +127,26 @@ describe('buildRadarView', () => {
   })
 
   it('picks the topics to publish now for the week, in rank order', () => {
-    const view = buildRadarView(list, query({ lifecycle: ['emerging'] }))
+    // Ordenados por aceleración, opp_005 (+100 %) va antes que opp_002 (+67 %); el filtro deja
+    // fuera a opp_005. «Esta semana» no depende de ninguno de los dos.
+    const publishNow = new Set(['opp_005', 'opp_002'])
+    const twoToPublish = {
+      ...list,
+      items: list.items.map((item) => ({
+        ...item,
+        recommendation: publishNow.has(item.id)
+          ? ('publish_now' as const)
+          : ('find_angle' as const),
+      })),
+    }
 
-    expect(ids(view.weekPicks.topics)).toEqual(['opp_001'])
+    const view = buildRadarView(
+      twoToPublish,
+      query({ lifecycle: ['emerging'], sort: 'acceleration' }),
+    )
+
+    expect(ids(view.weekPicks.topics)).toEqual(['opp_002', 'opp_005'])
+    expect(view.weekPicks.topics.map((item) => item.rank)).toEqual([2, 5])
     expect(view.weekPicks.hasPublishNow).toBe(true)
   })
 
