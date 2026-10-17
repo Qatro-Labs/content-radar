@@ -7,7 +7,13 @@ import pytest
 from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
 from app.intelligence.lifecycle import classify
-from app.intelligence.outliers import age_adjusted, is_outlier, outlier_ratio
+from app.intelligence.outliers import (
+    MEDIAN,
+    age_adjusted,
+    is_outlier,
+    outlier_ratio,
+    reference_quantile,
+)
 from app.intelligence.ranking import (
     confidence,
     evidence_strength,
@@ -26,7 +32,7 @@ from app.schemas.opportunity import (
     ScoreComponentName,
     ScorePenaltyName,
 )
-from app.schemas.signal import Segment
+from app.schemas.signal import Platform, Segment
 
 NOW = datetime(2026, 10, 17, 12, tzinfo=UTC)
 
@@ -78,6 +84,20 @@ def test_outlier_ratio_against_median():
 def test_outlier_ratio_with_quantile_reference():
     # p90 de [1..10] = 9.1
     assert outlier_ratio(91, list(range(1, 11)), quantile=0.9) == 10.0
+
+
+@pytest.mark.parametrize(
+    ("platform", "quantile"),
+    [
+        (Platform.HACKERNEWS, 0.9),
+        (Platform.TIKTOK, 0.9),
+        (Platform.REDDIT, MEDIAN),
+        (Platform.YOUTUBE, MEDIAN),
+        (Platform.INSTAGRAM, MEDIAN),
+    ],
+)
+def test_reference_quantile_per_platform(platform, quantile):
+    assert reference_quantile(platform) == quantile
 
 
 def test_outlier_ratio_without_reference():

@@ -174,10 +174,11 @@ function bubbleItemStyle({ opportunity, dimmed }: Bubble, palette: RadarPalette)
   }
 }
 
-// La seleccionada no lleva etiqueta: su tema ya está en la tarjeta flotante (artboard E).
+// DESIGN.md §8: solo los temas de «Publicar ya» llevan su nombre, y solo sin selección: con un
+// tema elegido, el nombre ya está en el panel lateral.
 function isLabelShown({ opportunity, dimmed }: Bubble, input: RadarChartInput): boolean {
   if (!input.showLabels || input.entering || dimmed) return false
-  return opportunity.id !== input.selectedId
+  return input.selectedId === null && opportunity.recommendation === 'publish_now'
 }
 
 function bubbleLabel(bubble: Bubble, input: RadarChartInput) {

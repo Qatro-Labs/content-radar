@@ -17,9 +17,10 @@ Antes de tocar UI, lee `DESIGN.md`.
    - X = audience fit · Y = momentum · tamaño = evidence strength (normalizado) · color = lifecycle.
    - Cuadrante superior derecho = prioridad. Filtros: periodo y los contadores-filtro de la cabecera (Publicar ya ·
      Acelerando · Emergentes · Sin etapa), todos en la URL. El ranking lleva mini barras de 6 días (`/timeline`).
-   - En el ranking, cada fila muestra la etapa (badge con `lifecycle_reason` en el tooltip), la
-     aceleración (↑ +80 %) y el nº de outliers. Ordenar por aceleración, no por volumen. Si una
-     métrica falta, la UI lo dice; no la rellena.
+   - Ranking (D6, 17/10): Puesto · Tema · Etapa (badge con `lifecycle_reason` en el tooltip) · 6 días ·
+     Aceleración (↑ +80 %, con Observado · Estimado · Preliminar) · Oportunidad. Se ordena por oportunidad;
+     el orden por aceleración se pide por URL (`sort=acceleration`, lo usa el agente) y no tiene botón. Si
+     una métrica falta, la UI lo dice; no la rellena.
    - Avisar de forma visible desde cuándo se monitorea (primer snapshot: 17/10 ~02:50 UTC) para que
      nadie lea los periodos largos como historial medido.
    - **Agente del Radar** (artboard E, aprobado el 17/10): una barra de pregunta fija abajo. El agente
@@ -29,9 +30,9 @@ Antes de tocar UI, lee `DESIGN.md`.
      compartir y repetir. El frontend no llama al LLM ni al MCP: consume el stream de eventos del
      backend. Componentes y movimiento en `DESIGN.md` §4 y §7.
 2. **Explore (Evidencia):** dos estados, los dos con contenido propio.
-   - **Sin tema (`/explore`): «Lo que está funcionando».** Todas las piezas de todos los temas: rendimiento frente a
-     su canal por fecha (dispersión, escala log), tabla de piezas con outliers primero y panel lateral («Dónde está
-     funcionando» o el detalle de la pieza, con enlace a su tema). Necesita un endpoint de piezas de todos los temas;
+   - **Sin tema (`/explore`): «Lo que está funcionando».** Todas las piezas de todos los temas: tabla ordenada por
+     rendimiento frente a su canal (outliers primero; sin gráfico de dispersión, descartado el 17/10) y panel lateral
+     («Dónde está funcionando» o el detalle de la pieza, con enlace a su tema). Necesita un endpoint de piezas de todos los temas;
      mientras no exista, se monta con `/evidence` de cada oportunidad.
    - **Con tema (`/explore/:id`): el expediente** (artboard I). "Cómo se compone" (`score_breakdown`) · timeline de
      la ventana actual frente a la anterior con su confianza · "Por qué importa" completo · criterios de encaje con

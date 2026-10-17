@@ -36,12 +36,13 @@ describe('useRadarQuery', () => {
       highlight: [],
       gap: false,
       sort: 'opportunity',
+      recommendation: null,
     })
   })
 
   it('reads every radar param from the URL', async () => {
     const { radar } = await mountAt(
-      '/?period=24h&lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004&gap=1&sort=acceleration',
+      '/?period=24h&lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004&gap=1&sort=acceleration&recommendation=publish_now',
     )
 
     expect(radar.query.value).toEqual({
@@ -53,15 +54,19 @@ describe('useRadarQuery', () => {
       highlight: ['opp_001', 'opp_004'],
       gap: true,
       sort: 'acceleration',
+      recommendation: 'publish_now',
     })
   })
 
   it('ignores values outside the contract enums', async () => {
-    const { radar } = await mountAt('/?period=1y&lifecycle=viral&confidence=total')
+    const { radar } = await mountAt(
+      '/?period=1y&lifecycle=viral&confidence=total&recommendation=go_viral',
+    )
 
     expect(radar.query.value.period).toBe('7d')
     expect(radar.query.value.lifecycle).toEqual([])
     expect(radar.query.value.confidence).toBeNull()
+    expect(radar.query.value.recommendation).toBeNull()
   })
 
   it('takes the first value when a param is repeated', async () => {
@@ -87,6 +92,16 @@ describe('useRadarQuery', () => {
     expect(router.currentRoute.value.query).toEqual({ gap: '1', sort: 'acceleration' })
   })
 
+  it('reads the recommendation filter and writes it back unchanged', async () => {
+    const { radar, router } = await mountAt('/?recommendation=publish_now')
+
+    expect(radar.query.value.recommendation).toBe('publish_now')
+
+    await radar.update({})
+
+    expect(router.currentRoute.value.query).toEqual({ recommendation: 'publish_now' })
+  })
+
   it('writes a patch to the URL and keeps unrelated params', async () => {
     const { radar, router } = await mountAt('/?lifecycle=peaking&utm=demo')
 
@@ -108,12 +123,12 @@ describe('useRadarQuery', () => {
     expect(router.currentRoute.value.query).toEqual({})
   })
 
-  it('drops the stage, gap and sort params on reset and keeps unrelated params', async () => {
+  it('drops the stage, gap, recommendation and sort params on reset and keeps unrelated params', async () => {
     const { radar, router } = await mountAt(
-      '/?lifecycle=peaking,saturated&gap=1&sort=acceleration&utm=demo',
+      '/?lifecycle=peaking,saturated&gap=1&recommendation=publish_now&sort=acceleration&utm=demo',
     )
 
-    await radar.update({ lifecycle: [], gap: false, sort: 'opportunity' })
+    await radar.update({ lifecycle: [], gap: false, recommendation: null, sort: 'opportunity' })
 
     expect(router.currentRoute.value.query).toEqual({ utm: 'demo' })
   })

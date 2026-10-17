@@ -133,6 +133,7 @@ Solo se afirma en la demo lo que está como "probado" (`docs/brief.md` §7).
   probar la palabra en los dos idiomas. Solo busca en las piezas ya recolectadas de las fuentes
   activas. Puede devolver piezas más nuevas que la ejecución servida: `opportunity_ids` dice cuáles
   entran en el ranking.
-- **LinkedIn, Instagram y TikTok no se monitorean** (CLAUDE.md §2, regla 2).
+- **LinkedIn y X no se monitorean**, e Instagram solo por perfiles concretos: no descubre temas
+  (CLAUDE.md §2, regla 2).
 - Saturación y LATAM Gap son relativos a las fuentes que monitoreamos; el audience fit es una
   evaluación editorial asistida por IA, no una medición.
