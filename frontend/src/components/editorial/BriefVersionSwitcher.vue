@@ -6,7 +6,7 @@ import { SAVED_BRIEF_PARAM, versionLabel } from '@/lib/savedBriefs'
 import type { components } from '@/types/api'
 
 const { versions, currentId } = defineProps<{
-  versions: components['schemas']['SavedBriefVersion'][]
+  versions: components['schemas']['BriefVersion'][]
   currentId: number
 }>()
 

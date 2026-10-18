@@ -7,7 +7,7 @@ import { formatUtcDay, formatUtcTimestamp } from './format'
 
 type Schemas = components['schemas']
 type SavedBriefSummary = Schemas['SavedBriefSummary']
-type SavedBriefVersion = Schemas['SavedBriefVersion']
+type BriefVersion = Schemas['BriefVersion']
 type EditorialBrief = Schemas['EditorialBrief']
 
 // `?brief=<id>` abre un brief guardado: el enlace se puede compartir o recargar.
@@ -48,7 +48,7 @@ export function versionCountLabel(count: number): string | null {
 }
 
 // «v2 · LinkedIn · Post · 18/10, 13:20 UTC»
-export function versionLabel(version: SavedBriefVersion): string {
+export function versionLabel(version: BriefVersion): string {
   return [
     `v${version.version}`,
     BRIEF_PLATFORM_LABEL[version.platform],

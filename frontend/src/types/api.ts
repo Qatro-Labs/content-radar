@@ -187,7 +187,9 @@ export interface paths {
      * Create Brief
      * @description Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
      *     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Con un
-     *     usuario de Supabase (AUTH_REQUIRED activo) se guarda y `id` es el de la fila; sin él, null.
+     *     token válido de Supabase se guarda como versión, esté o no activo AUTH_REQUIRED: con
+     *     `parent_brief_id`, en la cadena de ese brief (404 si no es del usuario). Si ya hay una versión
+     *     con la misma petición, se devuelve esa. Sin usuario, `id` y `version` son null.
      */
     post: operations['create_brief_api_v1_editorial_brief_post']
     delete?: never
@@ -205,7 +207,8 @@ export interface paths {
     }
     /**
      * List Saved Briefs
-     * @description Briefs guardados del usuario del token, más recientes primero (máximo 50).
+     * @description Una fila por cadena de versiones del usuario del token, con su última versión; más
+     *     recientes primero (máximo 50).
      */
     get: operations['list_saved_briefs_api_v1_editorial_briefs_get']
     put?: never
@@ -227,7 +230,10 @@ export interface paths {
     get: operations['read_saved_brief_api_v1_editorial_briefs__brief_id__get']
     put?: never
     post?: never
-    /** Delete Saved Brief */
+    /**
+     * Delete Saved Brief
+     * @description Borra la cadena entera de versiones a la que pertenece el brief.
+     */
     delete: operations['delete_saved_brief_api_v1_editorial_briefs__brief_id__delete']
     options?: never
     head?: never
@@ -377,6 +383,23 @@ export interface components {
       latam_es: number
     }
     /**
+     * BriefCreate
+     * @description Cuerpo de `POST /editorial/brief`. Solo para la ruta: la tool MCP usa `BriefRequest` y el
+     *     asistente no ve `parent_brief_id`.
+     */
+    BriefCreate: {
+      /** Opportunity Id */
+      opportunity_id: string
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      /**
+       * Parent Brief Id
+       * @description Brief del usuario del que se regenera: la nueva versión va a su cadena
+       */
+      parent_brief_id?: number | null
+    }
+    /**
      * BriefFormat
      * @enum {string}
      */
@@ -408,8 +431,21 @@ export interface components {
       platform: components['schemas']['BriefPlatform']
       goal: components['schemas']['BriefGoal']
       format: components['schemas']['BriefFormat']
-      // TODO: regenerate from data/user-briefs
-      parent_brief_id?: number | null
+    }
+    /** BriefVersion */
+    BriefVersion: {
+      /** Id */
+      id: number
+      /** Version */
+      version: number
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
     }
     /** CitedOpportunity */
     CitedOpportunity: {
@@ -467,7 +503,10 @@ export interface components {
        * @description Id del brief guardado; None si no hay usuario y no se guardó
        */
       id?: number | null
-      // TODO: regenerate from data/user-briefs
+      /**
+       * Version
+       * @description Versión dentro de su cadena; None si no se guardó
+       */
       version?: number | null
       /** Opportunity Id */
       opportunity_id: string
@@ -973,10 +1012,10 @@ export interface components {
     SavedBrief: {
       /** Id */
       id: number
-      // TODO: regenerate from data/user-briefs
+      /** Root Id */
       root_id: number
+      /** Version */
       version: number
-      versions: components['schemas']['SavedBriefVersion'][]
       /**
        * Created At
        * Format: date-time
@@ -984,23 +1023,30 @@ export interface components {
       created_at: string
       request: components['schemas']['BriefRequest']
       brief: components['schemas']['EditorialBrief']
+      /**
+       * Versions
+       * @description Toda la cadena, por versión ascendente
+       */
+      versions: components['schemas']['BriefVersion'][]
     }
-    // TODO: regenerate from data/user-briefs
-    SavedBriefVersion: {
-      id: number
-      version: number
-      platform: components['schemas']['BriefPlatform']
-      goal: components['schemas']['BriefGoal']
-      format: components['schemas']['BriefFormat']
-      created_at: string
-    }
-    /** SavedBriefSummary */
+    /**
+     * SavedBriefSummary
+     * @description Una fila por cadena de versiones, con los datos de la última.
+     */
     SavedBriefSummary: {
-      /** Id */
+      /**
+       * Id
+       * @description Id de la última versión
+       */
       id: number
-      // TODO: regenerate from data/user-briefs
+      /** Root Id */
       root_id: number
+      /**
+       * Version
+       * @description Número de la última versión
+       */
       version: number
+      /** Version Count */
       version_count: number
       /** Opportunity Id */
       opportunity_id: string
@@ -1015,6 +1061,7 @@ export interface components {
       /**
        * Created At
        * Format: date-time
+       * @description Cuándo se guardó la última versión
        */
       created_at: string
     }
@@ -1483,7 +1530,7 @@ export interface operations {
     }
     requestBody: {
       content: {
-        'application/json': components['schemas']['BriefRequest']
+        'application/json': components['schemas']['BriefCreate']
       }
     }
     responses: {

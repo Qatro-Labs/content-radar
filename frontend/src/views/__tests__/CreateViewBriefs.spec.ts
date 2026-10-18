@@ -50,7 +50,7 @@ const BRIEF: Schemas['EditorialBrief'] = {
 }
 
 // Una cadena de dos versiones: la 3 es la primera y la 7, la última (la que da la lista).
-const FIRST_VERSION: Schemas['SavedBriefVersion'] = {
+const FIRST_VERSION: Schemas['BriefVersion'] = {
   id: 3,
   version: 1,
   platform: 'linkedin',
@@ -58,7 +58,7 @@ const FIRST_VERSION: Schemas['SavedBriefVersion'] = {
   format: 'post',
   created_at: '2026-10-17T10:00:00Z',
 }
-const LATEST_VERSION: Schemas['SavedBriefVersion'] = {
+const LATEST_VERSION: Schemas['BriefVersion'] = {
   id: 7,
   version: 2,
   platform: 'linkedin',
@@ -77,7 +77,7 @@ const SUMMARY: Schemas['SavedBriefSummary'] = {
   created_at: LATEST_VERSION.created_at,
 }
 
-function savedBrief(version: Schemas['SavedBriefVersion']): Schemas['SavedBrief'] {
+function savedBrief(version: Schemas['BriefVersion']): Schemas['SavedBrief'] {
   const request = { ...REQUEST, platform: version.platform, format: version.format }
   return {
     id: version.id,
