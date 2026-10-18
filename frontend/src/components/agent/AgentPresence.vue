@@ -72,9 +72,11 @@ function ringStyle(box: RingBox) {
         :style="{ animationDuration: `${AGENT_TIMING.tapMs}ms` }"
       />
       <span class="absolute inset-0 rounded-full bg-signal shadow-float ring-2 ring-foreground" />
+      <!-- Como mucho 320 px: cabe en el margen en el que el rótulo cambia de lado
+           (LABEL_FLIP_MARGIN_PX) y una etiqueta larga con el nombre del tema no se sale. -->
       <span
         v-if="presence.label"
-        class="absolute top-1/2 -translate-y-1/2 rounded-[10px] bg-primary px-2.5 py-1 text-[13px] font-semibold whitespace-nowrap text-primary-foreground"
+        class="absolute top-1/2 max-w-[320px] -translate-y-1/2 truncate rounded-[10px] bg-primary px-2.5 py-1 text-[13px] font-semibold text-primary-foreground"
         :style="labelStyle"
       >
         {{ presence.label }}
