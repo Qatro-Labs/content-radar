@@ -30,6 +30,7 @@ from app.intelligence.briefs import BriefDraftParts, CheckedBrief, check_brief
 from app.intelligence.explanation import (
     EXPLANATION_FAILED_NOTE,
     NO_VALID_CLAIM_NOTE,
+    VERIFICATION_INCOMPLETE_NOTE,
     ClaimDraft,
     known_numbers,
 )
@@ -50,7 +51,12 @@ EDITORIAL_BRIEF_OPERATION = "editorial_brief"
 BRAND_NAME = "30X"
 # `explain_opportunity` solo corre con audience fit; con fit y alguna de estas notas,
 # `why_it_matters` sigue siendo la plantilla y no un texto comprobado.
-UNCHECKED_EXPLANATION_NOTES = {EDITORIAL_PENDING_NOTE, EXPLANATION_FAILED_NOTE, NO_VALID_CLAIM_NOTE}
+UNCHECKED_EXPLANATION_NOTES = {
+    EDITORIAL_PENDING_NOTE,
+    EXPLANATION_FAILED_NOTE,
+    NO_VALID_CLAIM_NOTE,
+    VERIFICATION_INCOMPLETE_NOTE,
+}
 
 
 class BriefError(Exception):

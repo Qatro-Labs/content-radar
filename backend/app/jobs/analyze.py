@@ -7,8 +7,8 @@ republicaciones con Jev (cacheado) → scores deterministas → audience fit con
 «por qué importa» con el LLM (cacheado) → verificación de sus afirmaciones con Jev (cacheado, con
 JEV_VERIFY_CLAIMS) → persistir.
 Sin TYPESAFE_API_KEY, o si Jev falla, las piezas quedan sin clasificar, los pares los decide la
-regla de respaldo, con JEV_VERIFY_CLAIMS activo las afirmaciones sin veredicto se publican
-marcadas como no verificadas, y el job sigue. Sin
+regla de respaldo, con JEV_VERIFY_CLAIMS activo las afirmaciones sin veredicto no se publican (un
+tema sin ninguna respaldada conserva los datos medidos con una nota), y el job sigue. Sin
 LLM_API_KEY, o si el LLM falla en un tema, su audience fit queda en null (CLAUDE.md §2, regla 3).
 """
 

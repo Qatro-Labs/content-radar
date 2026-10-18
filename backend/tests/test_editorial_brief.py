@@ -21,7 +21,7 @@ from app.intelligence.briefs import (
     BriefDraftParts,
     check_brief,
 )
-from app.intelligence.explanation import ClaimDraft
+from app.intelligence.explanation import VERIFICATION_INCOMPLETE_NOTE, ClaimDraft
 from app.intelligence.jev import JudgeResult
 from app.main import app
 from app.models import ContentItem, LlmEvaluation, Source, UsageEvent
@@ -190,11 +190,15 @@ async def seed(
     judged: bool = True,
     fitted: bool = True,
     topic: str | None = None,
+    note: str | None = None,
 ) -> str:
     """Un tema (con audience fit por defecto), sus piezas en la DB y sus juicios de Jev."""
     [result, _], _ = await fitted_topics(session) if fitted else two_topics()
     if topic:
         result.opportunity = result.opportunity.model_copy(update={"topic": topic})
+    if note:
+        limitations = [*result.opportunity.limitations, note]
+        result.opportunity = result.opportunity.model_copy(update={"limitations": limitations})
     source = Source(
         platform="hackernews", kind="query", external_id="llm", name="HN · LLM", segment="tech"
     )
@@ -275,6 +279,15 @@ async def test_without_fit_the_brand_name_is_not_an_invented_number(session):
 
     assert brief.angle.startswith("El ángulo de 30X")
     # Sin fit, «por qué importa» es la plantilla: no se manda como texto comprobado.
+    assert briefer.sent[0].why_it_matters is None
+
+
+async def test_unfinished_claim_verification_does_not_send_the_template_as_checked(session):
+    opportunity_id = await seed(session, note=VERIFICATION_INCOMPLETE_NOTE)
+    briefer = FakeBriefer()
+
+    await brief_for(session, opportunity_id, briefer)
+
     assert briefer.sent[0].why_it_matters is None
 
 

@@ -3,7 +3,7 @@ en `jev_judgments` (CLAUDE.md §7, Verificación).
 
 Una afirmación ya juzgada no se vuelve a enviar mientras no cambien su `state`, la batería ni el
 modelo. Sin clave, si Jev falla o si se pasa del tope por ejecución, la afirmación queda sin
-veredicto (`None`) y el tema se publica como «no verificado»; el job sigue.
+veredicto (`None`) y no se publica; el job sigue.
 """
 
 import asyncio
@@ -42,7 +42,7 @@ MAX_CLAIM_VERIFICATIONS_PER_RUN = 200
 
 @dataclass(frozen=True)
 class ClaimVerifier:
-    judge: Judge | None  # None: sin TYPESAFE_API_KEY → temas «no verificados»
+    judge: Judge | None  # None: sin TYPESAFE_API_KEY → solo se publica lo que ya está en caché
     budget: int = MAX_CLAIM_VERIFICATIONS_PER_RUN
 
 
@@ -68,7 +68,7 @@ class VerifyStats:
     over_budget: int = 0
     # Por afirmación y por tema.
     rejected: int = 0  # claim_supported False: no se publican
-    unverified_topics: int = 0
+    unverified_topics: int = 0  # con alguna afirmación sin veredicto, que no se publica
     skipped_reason: str | None = None
 
 

@@ -152,10 +152,14 @@ circular.
   Las afirmaciones rechazadas se quitan siempre del texto, también en un tema no verificado.
 - Si Jev rechaza todas, el tema conserva la plantilla de datos medidos con la nota de «ninguna
   afirmación superó la comprobación de evidencia», como cuando falla Python.
-- Si falta el juicio de alguna afirmación (no hay `TYPESAFE_API_KEY` y no estaba en caché, Jev
-  falló o se agotó el presupuesto), se publican las que pasaron Python y Jev no rechazó, y el tema
-  entero lleva la nota «"Por qué importa" no está verificado por Jev»: no se mezclan en el mismo
-  texto frases verificadas y sin verificar sin decirlo.
+- Una afirmación sin juicio de Jev (no hay `TYPESAFE_API_KEY` y no estaba en caché, Jev falló o se
+  agotó el presupuesto) tampoco se publica: solo se publica lo respaldado (CLAUDE.md §7 y §2,
+  regla 3). La nota dice cuántas: «Jev no pudo verificar N afirmaciones del LLM: no se publican.»
+- Si un tema se queda sin ninguna afirmación respaldada y alguna quedó sin juicio, conserva la
+  plantilla de datos medidos con la nota «No se pudo completar la verificación de "por qué importa"
+  con Jev: se muestran los datos medidos.» Si todas las comprobadas fueron rechazadas, la nota es
+  la de «ninguna afirmación superó la comprobación de evidencia». En los dos casos el brief no
+  recibe ese texto como explicación comprobada.
 
 **Caché y presupuesto:** `jev_judgments` con `battery = "claim"` y `content_item_id` nulo. La clave
 es el hash del `state`, la batería, su versión y el modelo, así que una segunda ejecución con las
