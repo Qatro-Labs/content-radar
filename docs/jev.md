@@ -123,7 +123,7 @@ filas van a `jev_judgments` con `battery = "pair"` y `content_item_id` nulo: la 
 
 **Estado: implementada y apagada por defecto (`JEV_VERIFY_CLAIMS=false`) hasta validarla.** Mientras
 esté apagada, `why_it_matters` solo pasa las comprobaciones de Python y no se puede decir que Jev
-lo verifica. La validación con afirmaciones reales está pendiente (ver más abajo).
+lo verifica. La validación con afirmaciones reales no la superó todavía (ver más abajo).
 
 El LLM devuelve `why_it_matters` como una lista de afirmaciones, cada una con las URLs de la
 evidencia que la respalda. En `analyze`, por cada afirmación:
@@ -163,12 +163,14 @@ mismas explicaciones no llama a Jev. Como mucho 200 llamadas nuevas por ejecuci�
 (`MAX_CLAIM_VERIFICATIONS_PER_RUN`), repartidas en el orden del ranking, para gastar primero en lo
 que se ve arriba del Radar. Cada llamada real cuenta en `usage_events` como `claim_battery`.
 
-**Validación (pendiente):** `data/evaluations/eval_claim_verification.py` prepara una muestra de 40
-afirmaciones reales de la ejecución servida y 10 negativas sintéticas (cita cambiada y hecho
-insertado), etiquetadas antes de ver a Jev. El criterio de adopción está fijado de antemano:
-conserva ≥ 70 % de las respaldadas, filtra ≥ 60 % de las negativas y ≥ 80 % de los temas conservan
-alguna afirmación. Los resultados irán a `data/evaluations/jev_claim_v1_eval.md`. Solo si se cumple
-el criterio, `JEV_VERIFY_CLAIMS` pasa a `true`.
+**Validación (18/10, no adoptada):** 40 afirmaciones reales de la ejecución servida y 10 negativas
+sintéticas, etiquetadas antes de ver a Jev ([`jev_claim_v1_eval.md`](../data/evaluations/jev_claim_v1_eval.md)).
+El criterio estaba fijado de antemano: conserva ≥ 70 % de las respaldadas, filtra ≥ 60 % de las
+negativas y ≥ 80 % de los temas conservan alguna afirmación. `claim.v1` conserva el 58 % y su
+revisión `claim.v2` el 67 %; las dos filtran el 93 %. Por eso `JEV_VERIFY_CLAIMS` sigue en `false`.
+La causa principal es el umbral de `confidence` ≥ 0,8: casi todas las respaldadas que se pierden
+tienen `supports` en las dos preguntas con menos confianza. Bajarlo es una decisión del equipo y
+pide una muestra nueva para medirlo.
 
 **Limitaciones:**
 

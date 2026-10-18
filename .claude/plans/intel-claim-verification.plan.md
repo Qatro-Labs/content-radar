@@ -716,7 +716,7 @@ Se informa también por posición (1, 2, 3) y la variante sin `measured_facts`.
   - **No** ejecutes `python -m app.jobs.analyze`: `backend/.env` apunta a Supabase.
 - **Commit:** `Wire claim verification into the explanation step of analyze`
 
-### Paso 5 — Validación con afirmaciones reales (solo lectura) y decisión de adopción
+### Paso 5 — Validación con afirmaciones reales (solo lectura) y decisión de adopción [HECHO: no adoptada]
 
 - **Archivos:**
   - `data/evaluations/eval_claim_verification.py` (nuevo);
@@ -867,3 +867,4 @@ Supabase. La comprobación de punta a punta con datos reales la hace Melkin al l
 ## Preguntas abiertas
 
 - (ninguna)
+| 2026-10-18 | Paso 5 hecho tras correr Melkin `sample`. Etiquetado a ciegas (36 `supported`, 4 `unsupported`) y commiteado antes de Jev. `claim.v1` con datos: conserva 58 %, filtra 93 %, temas 93 %; sin datos: 22 % / 100 % / 57 %. Revisión `claim.v2` (posición 2 como interpretación editorial): 67 % / 93 % / 100 %. D10 no se cumple: `jev_verify_claims` queda en `False` y el código se mergea apagado. Diagnóstico: casi todas las respaldadas perdidas tienen `supports` doble con `confidence` < 0,8; con v2 y 0,6 sería 78 % / 93 %, pero cambiar el umbral es decisión del equipo y pide muestra nueva. D7 corregido tras la auditoría: lo rechazado por Jev nunca se publica | `20fc68d` muestra etiquetada · commit de validación |
