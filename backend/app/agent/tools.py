@@ -289,8 +289,31 @@ async def _get_timeline(args: IdInput, session: AsyncSession, seen: Seen) -> Too
     return ToolOutcome(StepKind.DATA, labels.timeline_label(o.topic), _as_data(timeline))
 
 
+def _reset_patch() -> RadarPatch:
+    # El mismo parche que `resetViewPatch()` del front (D17; plan fe-radar-agent, D5): el agente
+    # usa los mismos controles que una persona, así que la selección, el periodo y el orden se
+    # conservan. Los None van explícitos para que `exclude_unset` los envíe y quiten el filtro.
+    return RadarPatch(
+        lifecycle=[], gap=False, highlight=[], recommendation=None, confidence=None, topic=None
+    )
+
+
+def _counter_patch(counter: labels.Counter, sort: RadarSort | None) -> RadarPatch:
+    # Como `counterPatch` del front: pulsar un contador sustituye los filtros que hubiera. Si solo
+    # viajaran los campos del modelo, el front los mezclaría con los de antes (p. ej. «Publicar
+    # ya» y «Acelerando» a la vez) y ningún contador quedaría pulsado.
+    patch = _reset_patch()
+    if isinstance(counter, Recommendation):
+        patch.recommendation = counter
+    else:
+        patch.lifecycle = [counter]
+    if sort is not None:
+        patch.sort = sort
+    return patch
+
+
 async def _set_filters(args: FiltersInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
-    label = labels.filters_label(
+    change = labels.FilterChange(
         lifecycle=args.lifecycle,
         recommendation=args.recommendation,
         confidence=args.confidence,
@@ -298,8 +321,12 @@ async def _set_filters(args: FiltersInput, session: AsyncSession, seen: Seen) ->
         gap=args.gap,
         sort=args.sort,
     )
-    patch = RadarPatch.model_validate(args.model_dump(exclude_unset=True))
-    return ToolOutcome(StepKind.VIEW, label, OK_CONTENT, patch=patch)
+    counter = labels.pressed_counter(change)
+    if counter is None:
+        patch = RadarPatch.model_validate(args.model_dump(exclude_unset=True))
+    else:
+        patch = _counter_patch(counter, args.sort)
+    return ToolOutcome(StepKind.VIEW, labels.filters_label(change), OK_CONTENT, patch=patch)
 
 
 async def _highlight(args: HighlightInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
@@ -324,13 +351,7 @@ async def _select(args: IdInput, session: AsyncSession, seen: Seen) -> ToolOutco
 
 
 async def _reset(args: NoInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
-    # El mismo parche que `resetViewPatch()` del front (D17; plan fe-radar-agent, D5): el agente
-    # usa los mismos controles que una persona, así que la selección, el periodo y el orden se
-    # conservan. Los None van explícitos para que `exclude_unset` los envíe y quiten el filtro.
-    patch = RadarPatch(
-        lifecycle=[], gap=False, highlight=[], recommendation=None, confidence=None, topic=None
-    )
-    return ToolOutcome(StepKind.VIEW, labels.RESET_LABEL, OK_CONTENT, patch=patch)
+    return ToolOutcome(StepKind.VIEW, labels.RESET_LABEL, OK_CONTENT, patch=_reset_patch())
 
 
 async def _show_in_dossier(args: DossierInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
@@ -439,8 +460,9 @@ TOOLS: dict[str, Tool] = {
     "set_filters": Tool(
         StepKind.VIEW,
         "Cambia los filtros del Radar que ve el usuario. Solo cambian los campos que envíes; "
-        "null quita ese filtro. gap=true activa «Hueco en LATAM» y recommendation=publish_now "
-        "pulsa «Publicar ya».",
+        "null quita ese filtro. gap=true activa «Hueco en LATAM». recommendation=publish_now, o "
+        "una sola etapa (accelerating, emerging o unknown), pulsa ese contador como una persona: "
+        "sustituye los demás filtros y quita los resaltados.",
         FiltersInput,
         labels.FILTERS_FALLBACK_LABEL,
         _set_filters,

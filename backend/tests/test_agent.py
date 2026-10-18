@@ -137,23 +137,50 @@ async def test_set_filters_label_and_patch(session, seeded):
     assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {"gap": True}
 
 
+# Lo que quita `counterPatch` del front antes de poner el contador (frontend/src/lib/radarView.ts).
+COUNTER_CLEARS = {"gap": False, "highlight": [], "confidence": None, "topic": None}
+
+
 @pytest.mark.parametrize(
-    ("args", "label"),
+    ("args", "label", "patch"),
     [
-        ({"recommendation": "publish_now"}, "Pulsando «Publicar ya»"),
-        ({"lifecycle": ["accelerating"]}, "Pulsando «Acelerando»"),
-        ({"lifecycle": ["peaking", "saturated"]}, "Filtrando por En pico, Saturado"),
+        (
+            {"recommendation": "publish_now"},
+            "Pulsando «Publicar ya»",
+            {**COUNTER_CLEARS, "lifecycle": [], "recommendation": "publish_now"},
+        ),
+        # Con «Publicar ya» pulsado, el parche sin `recommendation: null` dejaba las dos cosas
+        # puestas y ningún contador pulsado: el rótulo mentía.
+        (
+            {"lifecycle": ["accelerating"]},
+            "Pulsando «Acelerando»",
+            {**COUNTER_CLEARS, "lifecycle": ["accelerating"], "recommendation": None},
+        ),
+        (
+            {"lifecycle": ["peaking", "saturated"]},
+            "Filtrando por En pico, Saturado",
+            {"lifecycle": ["peaking", "saturated"]},
+        ),
         # Ordenar por oportunidad es el orden por defecto: el contador sigue siendo lo que pulsa.
-        ({"recommendation": "publish_now", "sort": "opportunity"}, "Pulsando «Publicar ya»"),
+        (
+            {"recommendation": "publish_now", "sort": "opportunity"},
+            "Pulsando «Publicar ya»",
+            {
+                **COUNTER_CLEARS,
+                "lifecycle": [],
+                "recommendation": "publish_now",
+                "sort": "opportunity",
+            },
+        ),
     ],
     ids=["publish-now-counter", "accelerating-counter", "several-stages", "counter-default-sort"],
 )
-async def test_set_filters_names_the_counter_it_presses(session, seeded, args, label):
+async def test_set_filters_presses_the_counter_it_names(session, seeded, args, label, patch):
     outcome = await execute_tool("set_filters", args, session, Seen())
 
     assert outcome.label == label
     assert outcome.patch is not None
-    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == args
+    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == patch
 
 
 async def test_reset_view_patch(session, seeded):
