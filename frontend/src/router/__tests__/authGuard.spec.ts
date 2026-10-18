@@ -33,10 +33,10 @@ describe('auth guard', () => {
     vi.stubEnv('VITE_AUTH_REQUIRED', 'true')
     const router = await loadRouter()
 
-    await router.push('/?period=24h')
+    await router.push('/?tab=ranking')
 
     expect(router.currentRoute.value.name).toBe('login')
-    expect(router.currentRoute.value.query.redirect).toBe('/?period=24h')
+    expect(router.currentRoute.value.query.redirect).toBe('/?tab=ranking')
   })
 
   it('lets a signed-in visitor through when the login is required', async () => {

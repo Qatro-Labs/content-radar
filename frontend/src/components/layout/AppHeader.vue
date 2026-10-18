@@ -10,7 +10,6 @@ import { RouteName } from '@/router'
 import AuthControl from './AuthControl.vue'
 import DataStatus from './DataStatus.vue'
 import HoverHint from './HoverHint.vue'
-import PeriodControl from './PeriodControl.vue'
 import SearchButton from './SearchButton.vue'
 
 const route = useRoute()
@@ -85,7 +84,7 @@ function isCurrent(routes: readonly string[]): boolean {
     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
       <HoverHint :text="HELP.lastCollection"><DataStatus /></HoverHint>
       <HoverHint v-if="route.name === RouteName.Discover" :text="HELP.period">
-        <PeriodControl />
+        <span class="text-[13px] font-medium text-ink-soft">Últimos 7 días</span>
       </HoverHint>
       <span
         v-if="USING_FIXTURES"

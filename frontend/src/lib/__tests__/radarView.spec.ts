@@ -21,7 +21,6 @@ const list = fixture.opportunities as OpportunityList
 
 function query(patch: Partial<RadarQuery> = {}): RadarQuery {
   return {
-    period: '7d',
     lifecycle: [],
     confidence: null,
     topic: null,
@@ -295,7 +294,7 @@ describe('counter filters', () => {
     expect(counterPatch('emerging', query({ lifecycle: ['emerging'] }))).toEqual(resetViewPatch())
   })
 
-  it('clears every filter and highlight on reset, keeping selection, period and sort', () => {
+  it('clears every filter and highlight on reset, keeping selection and sort', () => {
     expect(resetViewPatch()).toEqual({
       lifecycle: [],
       gap: false,

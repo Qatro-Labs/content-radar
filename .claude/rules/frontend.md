@@ -16,7 +16,7 @@ Antes de tocar UI, lee `DESIGN.md`.
      ya»); al elegir una burbuja o una fila pasa a la vista previa del tema, y "Ver expediente" abre
      `/explore/:id`. Ninguna vista pide «elige algo».
    - X = audience fit · Y = momentum · tamaño = evidence strength (normalizado) · color = lifecycle.
-   - Cuadrante superior derecho = prioridad. Filtros: periodo y los contadores-filtro de la cabecera (Publicar ya ·
+   - Cuadrante superior derecho = prioridad. Filtros: los contadores-filtro de la cabecera (Publicar ya ·
      Acelerando · Emergentes; «Sin tendencia clara» solo por URL), todos en la URL. El ranking lleva mini barras
      de 6 días (`/timeline`).
    - Ranking (18/10): Puesto · Tema (punto de etapa) · 6 días · Aceleración (↑ +80 %, piezas de cada ventana

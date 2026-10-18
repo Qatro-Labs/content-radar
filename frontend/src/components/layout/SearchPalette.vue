@@ -11,7 +11,6 @@ import { DialogContent, DialogDescription, DialogTitle } from '@/components/ui/d
 import { countLabel, PLATFORM_LABEL } from '@/lib/evidenceFormat'
 import { EXPLORE_TEXT_PARAM } from '@/lib/exploreView'
 import { formatScore } from '@/lib/opportunityFormat'
-import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 import { buildSearchResults, hasResults, topicDestination } from '@/lib/searchPalette'
 import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
@@ -22,11 +21,7 @@ const route = useRoute()
 const router = useRouter()
 const text = ref('')
 
-const {
-  data: list,
-  isPending: isTopicsPending,
-  isError: isTopicsError,
-} = useOpportunities(DEFAULT_PERIOD)
+const { data: list, isPending: isTopicsPending, isError: isTopicsError } = useOpportunities()
 const opportunities = computed(() => list.value?.items ?? [])
 // Las piezas se piden al abrir la paleta: al cargar la app todavía no hacen falta.
 const {
