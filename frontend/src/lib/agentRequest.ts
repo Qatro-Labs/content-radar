@@ -55,8 +55,7 @@ export interface ViewState {
   radarQuery: RadarQuery
 }
 
-// Solo lo que la persona cambió respecto al Radar por defecto; la selección va en `opportunity_id`
-// y el periodo no es un filtro del agente.
+// Solo lo que la persona cambió respecto al Radar por defecto; la selección va en `opportunity_id`.
 function changedFilters(query: RadarQuery): RadarPatch | null {
   const filters: RadarPatch = {}
   if (query.lifecycle.length > 0) filters.lifecycle = query.lifecycle

@@ -1,8 +1,6 @@
 import { queryOptions, useQuery } from '@tanstack/vue-query'
 import { toValue, type MaybeRefOrGetter } from 'vue'
 
-import type { Period } from '@/lib/radarQuery'
-
 import { api, type Schemas } from './client'
 
 type OpportunityList = Schemas['OpportunityList']
@@ -10,6 +8,9 @@ type Opportunity = Schemas['Opportunity']
 type Evidence = Schemas['Evidence']
 type TopicEvidence = Schemas['TopicEvidence']
 type OpportunityTimeline = Schemas['OpportunityTimeline']
+
+// `analyze` solo calcula sus ventanas de 3 + 3 días: la app siempre pide este periodo.
+const ANALYZED_PERIOD: Schemas['Period'] = '7d'
 
 // Lo que una sección necesita de su consulta (mini barras, evidencia y evolución del expediente)
 // para pintar su estado sin depender del tipo interno de TanStack Query.
@@ -36,9 +37,9 @@ async function loadFixture() {
   }
 }
 
-async function fetchOpportunities(period: Period): Promise<OpportunityList | null> {
+async function fetchOpportunities(): Promise<OpportunityList | null> {
   const { data, error } = await api.GET('/api/v1/opportunities', {
-    params: { query: { period } },
+    params: { query: { period: ANALYZED_PERIOD } },
   })
   if (error !== undefined || data === undefined) throw new Error('GET /opportunities falló')
   return data
@@ -118,11 +119,10 @@ function timelineQueryOptions(id: string) {
   })
 }
 
-export function useOpportunities(period: MaybeRefOrGetter<Period>) {
+export function useOpportunities() {
   return useQuery({
-    queryKey: ['opportunities', period],
-    queryFn: async () =>
-      USING_FIXTURES ? (await loadFixture()).list : fetchOpportunities(toValue(period)),
+    queryKey: ['opportunities'],
+    queryFn: async () => (USING_FIXTURES ? (await loadFixture()).list : fetchOpportunities()),
   })
 }
 

@@ -28,7 +28,6 @@ describe('useRadarQuery', () => {
     const { radar } = await mountAt('/')
 
     expect(radar.query.value).toEqual({
-      period: '7d',
       lifecycle: [],
       confidence: null,
       topic: null,
@@ -43,11 +42,10 @@ describe('useRadarQuery', () => {
 
   it('reads every radar param from the URL', async () => {
     const { radar } = await mountAt(
-      '/?period=24h&lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004&gap=1&sort=acceleration&recommendation=publish_now&tab=ranking',
+      '/?lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004&gap=1&sort=acceleration&recommendation=publish_now&tab=ranking',
     )
 
     expect(radar.query.value).toEqual({
-      period: '24h',
       lifecycle: ['emerging'],
       confidence: 'high',
       topic: 'agentes',
@@ -61,11 +59,8 @@ describe('useRadarQuery', () => {
   })
 
   it('ignores values outside the contract enums', async () => {
-    const { radar } = await mountAt(
-      '/?period=1y&lifecycle=viral&confidence=total&recommendation=go_viral',
-    )
+    const { radar } = await mountAt('/?lifecycle=viral&confidence=total&recommendation=go_viral')
 
-    expect(radar.query.value.period).toBe('7d')
     expect(radar.query.value.lifecycle).toEqual([])
     expect(radar.query.value.confidence).toBeNull()
     expect(radar.query.value.recommendation).toBeNull()
@@ -107,10 +102,9 @@ describe('useRadarQuery', () => {
   it('writes a patch to the URL and keeps unrelated params', async () => {
     const { radar, router } = await mountAt('/?lifecycle=peaking&utm=demo')
 
-    await radar.update({ period: '30d', highlight: ['opp_002', 'opp_003'] })
+    await radar.update({ highlight: ['opp_002', 'opp_003'] })
 
     expect(router.currentRoute.value.query).toEqual({
-      period: '30d',
       lifecycle: 'peaking',
       highlight: 'opp_002,opp_003',
       utm: 'demo',
@@ -118,11 +112,25 @@ describe('useRadarQuery', () => {
   })
 
   it('drops params that go back to their default', async () => {
-    const { radar, router } = await mountAt('/?period=24h&lifecycle=peaking&highlight=opp_001')
+    const { radar, router } = await mountAt('/?lifecycle=peaking&highlight=opp_001')
 
-    await radar.update({ period: '7d', lifecycle: [], highlight: [] })
+    await radar.update({ lifecycle: [], highlight: [] })
 
     expect(router.currentRoute.value.query).toEqual({})
+  })
+
+  it('ignores the retired period param of old links and drops it on the next change', async () => {
+    const { radar, router } = await mountAt('/?period=24h&lifecycle=peaking')
+
+    expect(radar.query.value).not.toHaveProperty('period')
+    expect(radar.query.value.lifecycle).toEqual(['peaking'])
+
+    await radar.update({ highlight: ['opp_001'] })
+
+    expect(router.currentRoute.value.query).toEqual({
+      lifecycle: 'peaking',
+      highlight: 'opp_001',
+    })
   })
 
   it('drops the stage, gap, recommendation and sort params on reset and keeps unrelated params', async () => {

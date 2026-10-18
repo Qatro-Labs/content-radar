@@ -117,11 +117,11 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **Botón primario:** fondo Tinta, texto blanco, radio 12px, alto ≥ 46px, peso 600. Hover #2A2E35; active
   `scale(0.98)`. Nombre del botón = la acción ("Generar brief"). Un primario por panel.
 - **Botón secundario:** fondo #F2F3F5, texto Tinta; hover #E8EAED. Sin contornos.
-- **Segmented control** (periodo, orden): pista #E6E8EB (o #F2F3F5 dentro de una tarjeta), radio 12px, padding 4px;
+- **Segmented control** (orden): pista #E6E8EB (o #F2F3F5 dentro de una tarjeta), radio 12px, padding 4px;
   segmento activo blanco, peso 600; inactivo transparente, Etiqueta. Alto del segmento ≥ 36px dentro de una pista de 44px.
 - **Navegación:** barra plana, sin cristal ni píldora flotante: marca a la izquierda, tres vistas (Radar · Explorar
   · Crear) con icono Lucide de 16px y texto, el buscador ⌘K y, a la derecha, el estado de datos ("Actualizado 17/10,
-  19:09 UTC · 90 fuentes") y el periodo. Vista activa: fondo blanco, radio 10px.
+  19:09 UTC · 90 fuentes") y, en el Radar, el rótulo fijo "Últimos 7 días" (el único periodo que se calcula). Vista activa: fondo blanco, radio 10px.
 - **Buscador ⌘K:** botón blanco (radio 12px, alto 44px) con lupa, "Buscar tema o pieza" en Apagado y la tecla ⌘K en
   una baldosa #F2F3F5. Abre una paleta de comandos (temas, piezas y fuentes).
 - **Chip de etapa:** píldora, fondo y texto según §2, punto de 8px con el relleno (o trazo discontinuo en "Sin
@@ -327,7 +327,7 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   1800ms barrido.
 
 **Radar**
-- **Barrido al cargar y al cambiar de periodo:** un haz pivota en la esquina "Prioridad" (de 170° a 290°, 1.8s,
+- **Barrido al cargar y cuando Rad empieza a leer datos:** un haz pivota en la esquina "Prioridad" (de 170° a 290°, 1.8s,
   0.2s de retardo) con una estela del lavado de señal. Cada burbuja aparece (escala 0.2 → 1 con rebote) cuando el
   haz cruza su ángulo, así que se "detecta" como en un radar.
 - **Ping al seleccionar:** tres ondas del trazo de la etapa, 1.1s, escaladas ×4.6, separadas 160ms. No hay

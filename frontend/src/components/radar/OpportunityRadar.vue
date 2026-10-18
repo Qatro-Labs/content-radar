@@ -37,7 +37,7 @@ const {
 } = defineProps<{
   view: RadarView
   hoveredId: string | null
-  // Cambia con el periodo: remonta el gráfico y repite el barrido (DESIGN.md §7).
+  // Cambia cuando Rad empieza a leer datos: remonta el gráfico y repite el barrido (DESIGN.md §7).
   sweepKey: string
   // Sin filtros, el radar enseña los primeros por oportunidad; `true`, todos.
   showsAll: boolean

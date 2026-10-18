@@ -18,7 +18,6 @@ type OpportunityList = components['schemas']['OpportunityList']
 const list = fixture.opportunities as OpportunityList
 
 const { plotted } = buildRadarView(list, {
-  period: '7d',
   lifecycle: [],
   confidence: null,
   topic: null,

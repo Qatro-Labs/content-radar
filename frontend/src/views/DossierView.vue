@@ -19,7 +19,6 @@ import FitSection from '@/components/dossier/FitSection.vue'
 import WhyItWorked from '@/components/dossier/WhyItWorked.vue'
 import { rankLabel, rankOf } from '@/lib/dossierView'
 import { formatUtcTimestamp } from '@/lib/format'
-import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 import type { components } from '@/types/api'
 
 type Schemas = components['schemas']
@@ -46,7 +45,7 @@ const opportunityQuery = useOpportunity(id)
 const timelineQuery = useOpportunityTimeline(id)
 const evidenceQuery = useOpportunityEvidence(id)
 // La lista solo da el puesto y desde cuándo se monitorea: si falla, el expediente sigue en pie.
-const listQuery = useOpportunities(DEFAULT_PERIOD)
+const listQuery = useOpportunities()
 
 const opportunity = computed(() => opportunityQuery.data.value ?? null)
 const timeline = toQueryState<Schemas['OpportunityTimeline'] | null>(timelineQuery)

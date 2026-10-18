@@ -82,7 +82,7 @@ describe('viewContext', () => {
   })
 
   it('sends only the radar filters that differ from the default', () => {
-    const radarQuery = parseRadarQuery({ lifecycle: 'emerging', confidence: 'high', period: '30d' })
+    const radarQuery = parseRadarQuery({ lifecycle: 'emerging', confidence: 'high' })
 
     expect(viewContext('radar', { ...RADAR_STATE, selected: 'opp_1', radarQuery })).toEqual({
       screen: 'radar',
