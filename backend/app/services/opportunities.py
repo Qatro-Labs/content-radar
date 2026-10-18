@@ -153,8 +153,16 @@ async def compute_opportunities(
     stories, replica_stats = await detect_replicas(
         session, pieces=pieces, clusters=clusters, vectors=vectors, judge=judge, meter=meter
     )
+    business_use = {item_id: j.business_use for item_id, j in (judgments or {}).items()}
     results = _scored_topics(
-        pieces, vectors, clusters, loaded=loaded, stories=stories, as_of=as_of, started=started
+        pieces,
+        vectors,
+        clusters,
+        loaded=loaded,
+        stories=stories,
+        business_use=business_use,
+        as_of=as_of,
+        started=started,
     )
     return ComputedOpportunities(len(pieces), removed, results, replica_stats)
 
@@ -166,6 +174,7 @@ def _scored_topics(
     *,
     loaded: list[Piece],
     stories: StoryAssignment,
+    business_use: Mapping[int, bool | None],
     as_of: datetime,
     started: datetime,
 ) -> list[TopicResult]:
@@ -180,6 +189,7 @@ def _scored_topics(
         # también cuentan las piezas que Jev quita por fuera de tema.
         reference=loaded,
         stories=stories,
+        business_use=business_use,
     )
 
 
