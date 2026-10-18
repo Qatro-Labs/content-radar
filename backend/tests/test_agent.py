@@ -143,8 +143,10 @@ async def test_set_filters_label_and_patch(session, seeded):
         ({"recommendation": "publish_now"}, "Pulsando «Publicar ya»"),
         ({"lifecycle": ["accelerating"]}, "Pulsando «Acelerando»"),
         ({"lifecycle": ["peaking", "saturated"]}, "Filtrando por En pico, Saturado"),
+        # Ordenar por oportunidad es el orden por defecto: el contador sigue siendo lo que pulsa.
+        ({"recommendation": "publish_now", "sort": "opportunity"}, "Pulsando «Publicar ya»"),
     ],
-    ids=["publish-now-counter", "accelerating-counter", "several-stages"],
+    ids=["publish-now-counter", "accelerating-counter", "several-stages", "counter-default-sort"],
 )
 async def test_set_filters_names_the_counter_it_presses(session, seeded, args, label):
     outcome = await execute_tool("set_filters", args, session, Seen())
@@ -207,6 +209,8 @@ async def test_search_pieces_ignores_accents_and_case(session, seeded):
     assert set(seen.opportunities) == {"opp_001"}
     assert seen.evidence_urls == {"https://example.com/mock/1"}
     assert outcome.label == "Buscando piezas: 1 encontrada"
+    # El modelo ve el total, no solo las filas: así su respuesta cuadra con la etiqueta del paso.
+    assert '"total": 1' in outcome.content
     assert "cierre" not in outcome.label.lower()
 
 

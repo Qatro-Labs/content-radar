@@ -46,6 +46,7 @@ SECTION_LABELS = {
     DossierSection.EVIDENCE: "Mostrando la evidencia de",
     DossierSection.LIMITS: "Mostrando qué no sabemos de",
 }
+DEFAULT_SORT: RadarSort = "opportunity"
 GAP_LABEL = "Pulsando «Hueco en LATAM»"
 TOPIC_FILTER_LABEL = "tema"
 RESET_LABEL = "Restableciendo la vista"
@@ -136,7 +137,9 @@ def filters_label(
     if gap:
         return GAP_LABEL
     counter = _counter(lifecycle, recommendation)
-    if counter is not None and not (confidence or filters_topic or sort):
+    # Ordenar por oportunidad es el orden por defecto: no cambia lo que se ve.
+    changes_sort = sort is not None and sort != DEFAULT_SORT
+    if counter is not None and not (confidence or filters_topic or changes_sort):
         return f"Pulsando «{COUNTER_LABELS[counter]}»"
     filters = [LIFECYCLE_LABELS[stage] for stage in lifecycle or []]
     if recommendation:

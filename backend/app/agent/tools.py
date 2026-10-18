@@ -210,6 +210,12 @@ class SearchRow(EvidenceRow):
     topic: str
 
 
+class SearchResult(BaseModel):
+    # El total y no solo las filas: la etiqueta del paso dice cuántas hay y la respuesta cuadra.
+    total: int
+    pieces: list[SearchRow]
+
+
 def _as_data(payload: BaseModel | Sequence[BaseModel]) -> str:
     if isinstance(payload, BaseModel):
         return wrap_data(payload.model_dump(mode="json"))
@@ -370,7 +376,8 @@ async def _search_pieces(args: SearchInput, session: AsyncSession, seen: Seen) -
     for e in shown:
         seen.add(by_id[e.opportunity_id])
         seen.evidence_urls.add(str(e.url))
-    return ToolOutcome(StepKind.DATA, labels.search_label(len(found)), _as_data(rows))
+    result = SearchResult(total=len(found), pieces=rows)
+    return ToolOutcome(StepKind.DATA, labels.search_label(len(found)), _as_data(result))
 
 
 async def _show_pieces(args: ShowPiecesInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
