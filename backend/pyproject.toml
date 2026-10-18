@@ -22,6 +22,7 @@ dependencies = [
     "mcp>=2.3.0",
     "typesafe-sdk==0.7.4",
     "anthropic==1.13.0",
+    "pyjwt[crypto]==2.15.1",
 ]
 
 [dependency-groups]

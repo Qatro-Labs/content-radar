@@ -7,6 +7,7 @@ import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { HELP } from '@/lib/helpText'
 import { RouteName } from '@/router'
 
+import AuthControl from './AuthControl.vue'
 import DataStatus from './DataStatus.vue'
 import HoverHint from './HoverHint.vue'
 import PeriodControl from './PeriodControl.vue'
@@ -92,6 +93,7 @@ function isCurrent(routes: readonly string[]): boolean {
       >
         Datos de ejemplo
       </span>
+      <AuthControl />
     </div>
   </header>
 </template>

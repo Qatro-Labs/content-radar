@@ -12,8 +12,13 @@ import { useAgentPeek } from '@/composables/useAgentPeek'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadIdleLife } from '@/composables/useRadIdleLife'
 import { useRadMorph } from '@/composables/useRadMorph'
+import { RouteName } from '@/router/routeNames'
 
 const agent = useRadarAgent()
+// El login trae su propia marca: sin la cabecera no se piden datos que, con el login obligatorio,
+// la API rechazaría antes de iniciar sesión.
+const route = useRoute()
+const isLoginPage = computed(() => route.name === RouteName.Login)
 const { turns, status, presence, suggestions, isAvailable, isMinimized, hasUnread } = agent
 const { peek } = useAgentPeek()
 
@@ -44,7 +49,6 @@ const lookAt = computed(() => {
 
 // La barra es fija y flota sobre la página: el final de la página deja sitio solo para el campo
 // (o para el ojo, con la barra reducida), nunca para la conversación entera.
-const route = useRoute()
 const fitsViewport = computed(() => route.meta.fitsViewport === true)
 
 const bottomSpace = computed(() => {
@@ -80,7 +84,7 @@ const mark = computed<RadMarkState>(() => {
     class="relative mx-auto flex min-h-[100dvh] max-w-[1440px] flex-col gap-6 px-4 py-4 md:px-8 md:py-6"
     :class="{ 'lg:h-[100dvh]': fitsViewport }"
   >
-    <AppHeader />
+    <AppHeader v-if="!isLoginPage" />
     <main class="flex-1" :class="[bottomSpace, { 'lg:min-h-0': fitsViewport }]">
       <RouterView />
     </main>

@@ -186,9 +186,74 @@ export interface paths {
     /**
      * Create Brief
      * @description Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
-     *     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM.
+     *     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Con un
+     *     token válido de Supabase se guarda como versión, esté o no activo AUTH_REQUIRED: con
+     *     `parent_brief_id`, en la cadena de ese brief (404 si no es del usuario). Si ya hay una versión
+     *     con la misma petición, se devuelve esa. Sin usuario, `id` y `version` son null.
      */
     post: operations['create_brief_api_v1_editorial_brief_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/editorial/briefs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Saved Briefs
+     * @description Una fila por cadena de versiones del usuario del token, con su última versión; más
+     *     recientes primero (máximo 50).
+     */
+    get: operations['list_saved_briefs_api_v1_editorial_briefs_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/editorial/briefs/{brief_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Read Saved Brief */
+    get: operations['read_saved_brief_api_v1_editorial_briefs__brief_id__get']
+    put?: never
+    post?: never
+    /**
+     * Delete Saved Brief
+     * @description Borra la cadena entera de versiones a la que pertenece el brief.
+     */
+    delete: operations['delete_saved_brief_api_v1_editorial_briefs__brief_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/me': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Read Me
+     * @description Usuario del token de Supabase. 401 sin un token válido, esté o no activo AUTH_REQUIRED.
+     */
+    get: operations['read_me_api_v1_me_get']
+    put?: never
+    post?: never
     delete?: never
     options?: never
     head?: never
@@ -318,6 +383,23 @@ export interface components {
       latam_es: number
     }
     /**
+     * BriefCreate
+     * @description Cuerpo de `POST /editorial/brief`. Solo para la ruta: la tool MCP usa `BriefRequest` y el
+     *     asistente no ve `parent_brief_id`.
+     */
+    BriefCreate: {
+      /** Opportunity Id */
+      opportunity_id: string
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      /**
+       * Parent Brief Id
+       * @description Brief del usuario del que se regenera: la nueva versión va a su cadena
+       */
+      parent_brief_id?: number | null
+    }
+    /**
      * BriefFormat
      * @enum {string}
      */
@@ -350,6 +432,21 @@ export interface components {
       goal: components['schemas']['BriefGoal']
       format: components['schemas']['BriefFormat']
     }
+    /** BriefVersion */
+    BriefVersion: {
+      /** Id */
+      id: number
+      /** Version */
+      version: number
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+    }
     /** CitedOpportunity */
     CitedOpportunity: {
       /** Id */
@@ -378,6 +475,13 @@ export interface components {
      * @enum {string}
      */
     CostPeriod: '7d' | '30d'
+    /** CurrentUser */
+    CurrentUser: {
+      /** User Id */
+      user_id: string
+      /** Email */
+      email?: string | null
+    }
     /** DoneEvent */
     DoneEvent: {
       /** Steps */
@@ -394,6 +498,16 @@ export interface components {
     DossierSection: 'score' | 'evolution' | 'fit' | 'evidence' | 'limits'
     /** EditorialBrief */
     EditorialBrief: {
+      /**
+       * Id
+       * @description Id del brief guardado; None si no hay usuario y no se guardó
+       */
+      id?: number | null
+      /**
+       * Version
+       * @description Versión dentro de su cadena; None si no se guardó
+       */
+      version?: number | null
       /** Opportunity Id */
       opportunity_id: string
       /** Topic */
@@ -533,6 +647,38 @@ export interface components {
     HTTPValidationError: {
       /** Detail */
       detail?: components['schemas']['ValidationError'][]
+    }
+    /** HookLift */
+    HookLift: {
+      /**
+       * Hook
+       * @description Tipo de gancho del título, según Jev
+       */
+      hook: string
+      /** Outliers With */
+      outliers_with: number
+      /**
+       * Outliers Total
+       * @description Outliers del tema con gancho clasificado
+       */
+      outliers_total: number
+      /** Rest With */
+      rest_with: number
+      /**
+       * Rest Total
+       * @description Piezas no outlier con ratio y gancho clasificado
+       */
+      rest_total: number
+      /**
+       * Lift
+       * @description % de outliers con el gancho / % del resto; None si el resto no lo usa
+       */
+      lift: number | null
+      /**
+       * Observed Pattern
+       * @description lift ≥ 2 en ≥ 2 outliers: patrón observado; si no, anecdótico
+       */
+      observed_pattern: boolean
     }
     /**
      * Lifecycle
@@ -717,6 +863,8 @@ export interface components {
       why_it_matters: string
       /** Limitations */
       limitations: string[]
+      /** @description None si el tema no tiene outliers con gancho clasificado */
+      outlier_hooks?: components['schemas']['OutlierHooks'] | null
       /**
        * Last Updated
        * Format: date-time
@@ -754,6 +902,24 @@ export interface components {
       window_days: number
       /** Points */
       points: components['schemas']['TimelinePoint'][]
+    }
+    /**
+     * OutlierHooks
+     * @description «Por qué funcionó»: ganchos de los outliers frente al resto del tema, solo con piezas
+     *     originales (sin republicaciones), así que los totales pueden ser menores que `outlier_count`.
+     *     Es una hipótesis con muestra pequeña, nunca causalidad.
+     */
+    OutlierHooks: {
+      /**
+       * Hooks
+       * @description Un elemento por gancho que usa algún outlier
+       */
+      hooks: components['schemas']['HookLift'][]
+      /**
+       * Outliers Unclassified
+       * @description Outliers sin gancho decidido (Jev incierto o sin juicio)
+       */
+      outliers_unclassified: number
     }
     /**
      * Period
@@ -842,6 +1008,63 @@ export interface components {
      * @enum {string}
      */
     Recommendation: 'publish_now' | 'find_angle' | 'wait_for_case' | 'discard'
+    /** SavedBrief */
+    SavedBrief: {
+      /** Id */
+      id: number
+      /** Root Id */
+      root_id: number
+      /** Version */
+      version: number
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      request: components['schemas']['BriefRequest']
+      brief: components['schemas']['EditorialBrief']
+      /**
+       * Versions
+       * @description Toda la cadena, por versión ascendente
+       */
+      versions: components['schemas']['BriefVersion'][]
+    }
+    /**
+     * SavedBriefSummary
+     * @description Una fila por cadena de versiones, con los datos de la última.
+     */
+    SavedBriefSummary: {
+      /**
+       * Id
+       * @description Id de la última versión
+       */
+      id: number
+      /** Root Id */
+      root_id: number
+      /**
+       * Version
+       * @description Número de la última versión
+       */
+      version: number
+      /** Version Count */
+      version_count: number
+      /** Opportunity Id */
+      opportunity_id: string
+      /**
+       * Topic
+       * @description El tema de la oportunidad cuando se generó el brief
+       */
+      topic: string
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      /**
+       * Created At
+       * Format: date-time
+       * @description Cuándo se guardó la última versión
+       */
+      created_at: string
+    }
     /**
      * ScoreBreakdown
      * @description Desglose del Opportunity Score, calculado en Python (CLAUDE.md §7).
@@ -1307,7 +1530,7 @@ export interface operations {
     }
     requestBody: {
       content: {
-        'application/json': components['schemas']['BriefRequest']
+        'application/json': components['schemas']['BriefCreate']
       }
     }
     responses: {
@@ -1363,6 +1586,120 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+    }
+  }
+  list_saved_briefs_api_v1_editorial_briefs_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SavedBriefSummary'][]
+        }
+      }
+    }
+  }
+  read_saved_brief_api_v1_editorial_briefs__brief_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        brief_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SavedBrief']
+        }
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_saved_brief_api_v1_editorial_briefs__brief_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        brief_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  read_me_api_v1_me_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CurrentUser']
+        }
       }
     }
   }

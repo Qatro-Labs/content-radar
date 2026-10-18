@@ -1,5 +1,6 @@
 import type { AgentQuestion, AgentStreamEvent } from '@/lib/agentTypes'
 import { createSseParser, type SseMessage } from '@/lib/sse'
+import { authorizationHeaders } from '@/lib/supabase'
 
 import { API_BASE_URL } from './client'
 
@@ -86,7 +87,11 @@ export async function askAgent(
 ): Promise<void> {
   const response = await fetch(`${API_BASE_URL}${AGENT_PATH}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+      ...(await authorizationHeaders()),
+    },
     body: JSON.stringify(body),
     signal,
   })

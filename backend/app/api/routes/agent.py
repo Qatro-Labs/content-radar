@@ -12,6 +12,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from app.agent.limits import GLOBAL_PER_DAY, PER_IP_PER_HOUR, LimitResult, RateLimiter
 from app.agent.model import AgentModel, build_agent_model
 from app.agent.runner import run_agent
+from app.api.auth import require_user_if_enabled
 from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
 from app.db.session import SessionFactory, SessionLocal
@@ -158,8 +159,12 @@ EVENTS_RESPONSE = {
 }
 
 
+# La sesión se comprueba antes que los cupos: un 401 no gasta el cupo de la IP.
 @router.post(
-    "", response_class=EventSourceResponse, responses={status.HTTP_200_OK: EVENTS_RESPONSE}
+    "",
+    response_class=EventSourceResponse,
+    responses={status.HTTP_200_OK: EVENTS_RESPONSE},
+    dependencies=[Depends(require_user_if_enabled)],
 )
 async def ask_agent(
     body: AgentQuestion,
