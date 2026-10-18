@@ -186,6 +186,7 @@ describe('buildExploreView', () => {
       'hackernews',
       ['https://news.ycombinator.com/item?id=1', 'https://news.ycombinator.com/item?id=3'],
     ],
+    ['rss', ['https://elpais.com/b', 'https://xataka.com/a']],
   ] as const)('keeps only the %s pieces in sorted order', (filter, expected) => {
     expect(urls(view(filter).visible)).toEqual(expected)
   })
@@ -295,7 +296,8 @@ describe('parseExploreFilter', () => {
   it.each([
     ['a valid filter', { filter: 'youtube' }, 'youtube'],
     ['a ScrapeCreators platform', { filter: 'tiktok' }, 'tiktok'],
-    ['an unknown filter', { filter: 'rss' }, null],
+    ['RSS, which has no metrics', { filter: 'rss' }, 'rss'],
+    ['an unknown filter', { filter: 'brave' }, null],
     ['no filter', {}, null],
     ['a repeated param', { filter: ['outliers', 'youtube'] }, 'outliers'],
   ])('reads %s', (_, query, expected) => {
