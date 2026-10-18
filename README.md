@@ -23,15 +23,15 @@ Convierte señales públicas de Internet (YouTube, Hacker News, medios y blogs p
 
 ## Cómo funciona
 
-```
-Colectores (YouTube, HN, RSS, ScrapeCreators) → normalizar, deduplicar y guardar snapshots → PostgreSQL + pgvector
-analyze: Jev clasifica cada pieza → embeddings → clustering → scores en Python → audience fit y textos con el LLM
-Servicios de dominio (Python) → API REST /api/v1 (dashboard Vue) y servidor MCP /mcp (asistentes), con el mismo ranking
-```
+![Arquitectura de 30X Signal: fuentes públicas, jobs collect y analyze en GitHub Actions, Supabase, la app de Railway con REST, MCP y Rad, y los clientes](docs/diagrams/arquitectura.svg)
 
 - `collect` corre cada 2 h en GitHub Actions y `analyze` corre después de cada recolección correcta. La API y el MCP sirven la última ejecución correcta, o la fijada con `DEMO_RUN_ID`.
 - Los scores se calculan en Python, de forma determinista. El LLM evalúa y redacta; no calcula. Jev (TypeSafe) responde preguntas tipadas sobre cada pieza.
 - Detalle: [docs/architecture.md](docs/architecture.md) (arquitectura) y [docs/scoring.md](docs/scoring.md) (motor).
+
+Cada paso del producto responde una pregunta y se ve en el dashboard y en el MCP:
+
+![De la señal a la oportunidad: cinco pasos con su pregunta, su vista del dashboard y su tool MCP](docs/diagrams/flujo-senal-oportunidad.svg)
 
 ## Fuentes
 
@@ -47,6 +47,8 @@ Servicios de dominio (Python) → API REST /api/v1 (dashboard Vue) y servidor MC
 Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales. Límites, costes y vías oficiales del roadmap: [docs/sources.md](docs/sources.md). Fuentes dadas de alta: [`data/sources.yaml`](data/sources.yaml).
 
 ## Cómo se prioriza
+
+![Pipeline de analyze: once pasos, quién hace cada uno (Python, Jev, embeddings o LLM) y las reglas de la recomendación](docs/diagrams/pipeline-scoring.svg)
 
 - **Velocidad y aceleración, no popularidad.** Cuenta cuántas piezas nuevas salen al día en los últimos 3 días frente a los 3 anteriores, con un ajuste por volumen. El total de views nunca entra en un score.
 - **Outliers.** Una pieza es outlier si rinde 3× o más sobre la referencia de su canal o fuente. El "por qué funcionó" que se deriva de los outliers es una hipótesis, no una causa.
@@ -71,7 +73,7 @@ Cada llamada a una API externa (YouTube, ScrapeCreators, Jev, LLM) queda registr
 
 ## Limitaciones y pendiente
 
-- **En curso:** deduplicación de notas de prensa replicadas (de momento, una regla de similitud) y verificación con Jev de las afirmaciones del LLM.
+- **Pendiente:** el «por qué funcionó» solo compara el gancho del título de los outliers con el resto del tema (`outlier_hooks`), sin hipótesis redactada. Brave Search no tiene colector.
 - La saturación y el LATAM Gap son relativos a las fuentes que monitoreamos, no a todo Internet ni a todo el mercado LATAM.
 - El audience fit es una evaluación editorial asistida por IA, no una medición.
 - La velocidad de una pieza necesita dos snapshots o más. Sin ellos, la evidencia se marca `estimated` o `preliminary`. El historial empieza el 17/10.
@@ -84,7 +86,7 @@ Cada llamada a una API externa (YouTube, ScrapeCreators, Jev, LLM) queda registr
 |---|---|
 | Steven | Data & Backend: conectores, DB, jobs, API, despliegue |
 | Melkin | AI & Intelligence: clustering, scoring, Jev, LLM, MCP |
-| <!-- TODO Melkin: nombre del frontend lead --> Frontend lead | Product & Frontend: Vue, visualizaciones, UX, demo |
+| David | Product & Frontend: Vue, visualizaciones, UX, demo |
 
 ---
 
@@ -132,10 +134,12 @@ Solo en el backend (`backend/.env`; plantilla en [`.env.example`](.env.example))
 | `YOUTUBE_API_KEY` | Colector de YouTube | Para YouTube |
 | `SCRAPECREATORS_API_KEY` | TikTok, Reddit e Instagram (se paga por llamada) | Para esas fuentes |
 | `TYPESAFE_API_KEY` · `JEV_MODEL` | Jev: clasificación por pieza (versión fijada, `jev-1.13.0`) | Para `analyze` completo |
+| `JEV_VERIFY_CLAIMS` | Jev verifica cada afirmación de «por qué importa»; vacía = `true`, `false` solo para depurar | No |
 | `LLM_API_KEY` · `LLM_MODEL` | Clave de Anthropic y modelo (`claude-haiku-5-5`, con precio en `pricing.yaml`) | Para `analyze` completo, briefs y agente |
 | `CORS_ALLOWED_ORIGINS` | Orígenes del frontend, separados por coma | En producción |
 | `MCP_PUBLIC_URL` | URL pública exacta del MCP; con otro `Host`, responde 421 | En producción |
 | `APP_ENV` | `local`, `ci` o `production` | No |
+| `AUTH_REQUIRED` · `SUPABASE_URL` | Supabase Auth opcional: con `true`, el agente y los briefs piden token. Con sesión, los briefs se guardan por usuario aunque sea `false` | No |
 | `DEMO_RUN_ID` | Ejecución de `analyze` fijada para la demo; vacía = la última correcta | No |
 | `BRAVE_API_KEY` | Reservada: Brave aún no tiene colector | No |
 

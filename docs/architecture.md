@@ -1,7 +1,7 @@
 # Arquitectura
 
 > Cómo está montado 30X Signal: componentes, pipeline, dónde corre cada pieza, qué hace cada modelo
-> y cómo se protege. Describe el código de `main` en el commit `d6b833b` (18/10/2026). Las decisiones viven en
+> y cómo se protege. Describe el código de `main` en el commit `08fe5c0` (18/10/2026). Las decisiones viven en
 > [`CLAUDE.md`](../CLAUDE.md) §4; el algoritmo de priorización, en [`scoring.md`](scoring.md); el
 > coste medido, en [`costs.md`](costs.md).
 
@@ -14,29 +14,9 @@ frontend ni el MCP calculan nada: leen lo que ya calculó `analyze`.
 
 ## Diagrama
 
-```mermaid
-flowchart TD
-    subgraph GA["GitHub Actions (cron)"]
-        C["collect · cada 2 h<br/>YouTube · HN · RSS · ScrapeCreators"]
-        A["analyze · tras cada collect correcto<br/>Jev → embeddings → clustering → scores → LLM"]
-    end
-    DB[("Supabase · PostgreSQL<br/>sources · content_items · metric_snapshots<br/>jev_judgments · llm_evaluations<br/>pipeline_runs · opportunities · usage_events")]
-    subgraph RW["Railway · una imagen (FastAPI, sin torch)"]
-        S["services/<br/>opportunities · signals · editorial · costs"]
-        R["REST /api/v1"]
-        M["MCP /mcp<br/>Streamable HTTP"]
-        G["Agente del Radar<br/>POST /api/v1/agent (SSE)"]
-    end
-    V["Vue 3 · build estático<br/>(configurado para Vercel)"]
-    X["Claude · ChatGPT · Grok"]
+![Arquitectura de 30X Signal: fuentes públicas, jobs collect y analyze en GitHub Actions, Supabase, la app de Railway con REST, MCP y Rad, y los clientes](diagrams/arquitectura.svg)
 
-    C -->|piezas + snapshots| DB
-    A -->|lee piezas · escribe una ejecución| DB
-    DB --> S
-    S --> R --> V
-    S --> M --> X
-    S --> G --> V
-```
+El paso a paso de `analyze`, en [`diagrams/pipeline-scoring.svg`](diagrams/pipeline-scoring.svg). Los diagramas se generan con `python3 docs/diagrams/build_diagrams.py`.
 
 ## Componentes
 
@@ -52,6 +32,7 @@ flowchart TD
 | **API REST** | Rutas delgadas bajo `/api/v1`: oportunidades (listado, detalle, evidencia, timeline y lecturas en bloque `/evidence` y `/timelines`), fuentes, coste, briefs y agente | `backend/app/api/routes/`, `backend/app/main.py:38` |
 | **Servidor MCP** | Las mismas consultas desde un asistente de IA. Detalle: [`mcp.md`](mcp.md) | `backend/app/mcp/` |
 | **Agente del Radar** | Responde preguntas del usuario sobre la ejecución servida y propone cambios de vista | `backend/app/agent/`, `backend/app/api/routes/agent.py` |
+| **Login y Mis briefs** | Supabase Auth opcional (`AUTH_REQUIRED`, apagado por defecto). Con sesión, cada brief se guarda por usuario en `editorial_briefs`, con versiones | `backend/app/api/auth.py`, `backend/app/services/user_briefs.py` |
 | **Dashboard** | Vue 3 + TypeScript. Habla solo con la API REST | `frontend/` |
 
 Las fuentes activas están en [`data/sources.yaml`](../data/sources.yaml) y su acceso, coste y
