@@ -37,6 +37,7 @@ from app.services.audience_fit import evaluate_topics
 from app.services.explanation import explain_topics
 from app.services.verification import ClaimVerifier
 from tests.test_audience_fit_service import FakeEvaluator, two_topics
+from tests.test_topic_evaluation import TOPIC_NAME, safe, topic
 from tests.test_verification import FakeClaimJudge
 
 URL = "https://example.com/0"
@@ -188,6 +189,27 @@ def test_jev_drop_note_plural_and_none():
 
 
 # --- prompt -------------------------------------------------------------------------------
+
+
+async def test_explanation_gets_the_final_topic_name_not_a_piece_title(session):
+    [result, _], answers = await fitted_topics(session)
+
+    explain = build_explain_input(result, build_topic_input(result, answers))
+
+    assert result.opportunity.topic == TOPIC_NAME
+    assert explain.label == TOPIC_NAME
+
+
+def test_a_topic_named_after_an_excluded_piece_is_labelled_with_a_safe_one():
+    result = topic()
+    rep = result.pieces[0]
+    result.opportunity = result.opportunity.model_copy(update={"topic": rep.title})
+    answers = {p.item_id: safe() for p in result.pieces[1:]}
+    answers[rep.item_id] = {"injection": {"type": "noul", "noul": 0.9}}
+
+    explain = build_explain_input(result, build_topic_input(result, answers))
+
+    assert explain.label == result.pieces[1].title
 
 
 async def test_external_text_goes_escaped_in_the_user_message_only(session):

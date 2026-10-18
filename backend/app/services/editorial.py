@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
-from app.editorial.audience import MAX_PIECES, evidence_piece, safe_label
+from app.editorial.audience import MAX_PIECES, evidence_piece, named_label
 from app.editorial.briefs import (
     PROMPT_VERSION,
     BriefDraft,
@@ -112,7 +112,7 @@ async def _prepare(session: AsyncSession, request: BriefRequest, now: datetime) 
         goal=goal,
         format=fmt,
         # El nombre del tema puede ser el título de una pieza que Jev no marcó como segura.
-        label=safe_label(o.topic, [p for p, _ in safe]),
+        label=named_label(o.topic, [e.title for e in served.evidence], [p for p, _ in safe]),
         facts=opportunity_facts(o, served.timeline),
         why_it_matters=o.why_it_matters if checked_why else None,
         fit=fit_notes(o),

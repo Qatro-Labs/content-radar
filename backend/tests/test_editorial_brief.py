@@ -282,6 +282,15 @@ async def test_without_fit_the_brand_name_is_not_an_invented_number(session):
     assert briefer.sent[0].why_it_matters is None
 
 
+async def test_brief_gets_the_final_topic_name_not_a_piece_title(session):
+    opportunity_id = await seed(session, topic="Adopción de agentes en empresas")
+    briefer = FakeBriefer()
+
+    await brief_for(session, opportunity_id, briefer)
+
+    assert briefer.sent[0].label == "Adopción de agentes en empresas"
+
+
 async def test_unfinished_claim_verification_does_not_send_the_template_as_checked(session):
     opportunity_id = await seed(session, note=VERIFICATION_INCOMPLETE_NOTE)
     briefer = FakeBriefer()

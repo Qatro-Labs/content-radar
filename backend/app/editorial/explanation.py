@@ -16,7 +16,13 @@ from anthropic import AsyncAnthropic
 from pydantic import BaseModel
 
 from app.core.config import Settings
-from app.editorial.audience import EvidencePiece, TopicInput, escape, evidence_block
+from app.editorial.audience import (
+    EvidencePiece,
+    TopicInput,
+    escape,
+    evidence_block,
+    named_label,
+)
 from app.editorial.evaluator import LLM_CONCURRENCY, LlmResult, StructuredLlm
 from app.intelligence.opportunities import TopicResult
 from app.schemas.opportunity import (
@@ -131,8 +137,11 @@ def fit_notes(o: Opportunity) -> list[FitNote]:
 
 
 def build_explain_input(result: TopicResult, topic: TopicInput) -> ExplainInput:
+    sent = {p.url for p in topic.pieces}
+    safe = [p for p in result.pieces if p.url in sent]
+    titles = [p.title for p in result.pieces]
     return ExplainInput(
-        label=topic.label,
+        label=named_label(result.opportunity.topic, titles, safe),
         facts=opportunity_facts(result.opportunity, result.timeline),
         fit=fit_notes(result.opportunity),
         pieces=topic.pieces,

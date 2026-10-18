@@ -9,7 +9,7 @@ import hashlib
 import html
 import json
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -133,6 +133,15 @@ def safe_label(label: str, safe: Sequence[Piece]) -> str:
     if any(p.title == label for p in safe):
         return label
     return safe[0].title if safe else ""
+
+
+def named_label(topic: str, piece_titles: Iterable[str], safe: Sequence[Piece]) -> str:
+    """El nombre final del tema para los prompts que corren después del audience fit."""
+    # Con `topic_name` del LLM, el nombre no es el título de ninguna pieza y va tal cual. Si el
+    # tema conservó el título de su pieza representativa, solo entra si esa pieza es segura.
+    if topic in set(piece_titles):
+        return safe_label(topic, safe)
+    return topic
 
 
 def build_topic_input(result: TopicResult, answers: Mapping[int, dict[str, Any]]) -> TopicInput:
