@@ -1,5 +1,6 @@
 """Ensamblado de oportunidades a partir de piezas ya agrupadas. Sin DB ni modelo de embeddings."""
 
+import zlib
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
@@ -41,7 +42,8 @@ def piece(
         title=f"Pieza {i}",
         description=None,
         platform=platform,
-        source_id=hash(source) % 1000,
+        # `hash()` cambia con PYTHONHASHSEED: dos fuentes podían caer en el mismo id.
+        source_id=zlib.crc32(source.encode()),
         source_name=source,
         segment=seg or Segment.TECH,
         language="en",
