@@ -26,6 +26,9 @@ const counters = computed<Counter[]>(() => [
     label: PLATFORM_LABEL[platform],
     value: count,
   })),
+  ...(view.counts.rss > 0
+    ? [{ filter: 'rss' as const, label: PLATFORM_LABEL.rss, value: view.counts.rss }]
+    : []),
 ])
 
 // Un segmented control en una fila (como el periodo): siete baldosas grandes empujaban la tabla

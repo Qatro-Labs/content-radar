@@ -23,7 +23,9 @@ export const FILTERABLE_PLATFORMS = [
 ] as const satisfies readonly Platform[]
 export type FilterablePlatform = (typeof FILTERABLE_PLATFORMS)[number]
 
-export const EXPLORE_FILTERS = ['outliers', ...FILTERABLE_PLATFORMS] as const
+// RSS también se filtra: sus piezas no tienen ratio y, sin filtro, quedan al final de la tabla, detrás
+// de las cientos que sí lo tienen. Filtradas, van de la más reciente a la más antigua.
+export const EXPLORE_FILTERS = ['outliers', ...FILTERABLE_PLATFORMS, 'rss'] as const
 export type ExploreFilter = (typeof EXPLORE_FILTERS)[number]
 export const EXPLORE_FILTER_PARAM = 'filter'
 // El texto va en la URL para que la paleta ⌘K pueda abrir Explorar con una fuente ya filtrada.

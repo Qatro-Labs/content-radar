@@ -4,13 +4,7 @@ import fixture from '@fixtures/opportunities.json'
 import type { components } from '@/types/api'
 
 import { resetViewPatch, type RadarQuery } from '../radarQuery'
-import {
-  buildRadarView,
-  counterPatch,
-  radarHeadline,
-  radarSubline,
-  stagePatch,
-} from '../radarView'
+import { buildRadarView, counterPatch, radarHeadline, radarSubline, stagePatch } from '../radarView'
 
 type Schemas = components['schemas']
 type OpportunityList = Schemas['OpportunityList']
