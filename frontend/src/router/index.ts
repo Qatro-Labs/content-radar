@@ -1,8 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import { hasSession } from '@/composables/useAuth'
 import { BRIEF_PARAM } from '@/lib/briefView'
+import { AUTH_REQUIRED, supabase } from '@/lib/supabase'
 import DiscoverView from '@/views/DiscoverView.vue'
 
+import { createAuthGuard } from './authGuard'
 import { RouteName } from './routeNames'
 
 export { RouteName }
@@ -35,6 +38,15 @@ export const router = createRouter({
       name: RouteName.Create,
       component: () => import('@/views/CreateView.vue'),
     },
+    {
+      path: '/login',
+      name: RouteName.Login,
+      component: () => import('@/views/LoginView.vue'),
+    },
     { path: '/:pathMatch(.*)*', redirect: { name: RouteName.Discover } },
   ],
 })
+
+// Login opcional por defecto: sin `VITE_AUTH_REQUIRED=true` no hay guard y la app se ve igual. Sin
+// Supabase configurado tampoco: nadie podría iniciar sesión y la app quedaría cerrada.
+if (AUTH_REQUIRED && supabase !== null) router.beforeEach(createAuthGuard(hasSession))

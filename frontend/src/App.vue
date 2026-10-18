@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useElementBounding, useMouse, usePreferredReducedMotion } from '@vueuse/core'
 import { computed, useTemplateRef } from 'vue'
+import { useRoute } from 'vue-router'
 
 import AgentDock from '@/components/agent/AgentDock.vue'
 import AgentLauncher from '@/components/agent/AgentLauncher.vue'
@@ -10,8 +11,13 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadIdleLife } from '@/composables/useRadIdleLife'
 import { useRadMorph } from '@/composables/useRadMorph'
+import { RouteName } from '@/router/routeNames'
 
 const agent = useRadarAgent()
+// El login trae su propia marca: sin la cabecera no se piden datos que, con el login obligatorio,
+// la API rechazaría antes de iniciar sesión.
+const route = useRoute()
+const isLoginPage = computed(() => route.name === RouteName.Login)
 const { turns, status, presence, suggestions, isAvailable, isMinimized, hasUnread } = agent
 
 // En reposo, Rad mira el cursor (y de vez en cuando, otro sitio de la página); mientras trabaja,
@@ -67,7 +73,7 @@ const mark = computed<RadMarkState>(() => {
     data-agent-root
     class="relative mx-auto flex min-h-[100dvh] max-w-[1440px] flex-col gap-6 px-4 py-4 md:px-8 md:py-6"
   >
-    <AppHeader />
+    <AppHeader v-if="!isLoginPage" />
     <main class="flex-1" :class="bottomSpace">
       <RouterView />
     </main>
