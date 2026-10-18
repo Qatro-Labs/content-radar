@@ -13,13 +13,20 @@ from app.api.routes.agent import client_ip
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.editorial.briefs import Briefer, build_briefer
-from app.schemas.editorial import BriefRequest, EditorialBrief, SavedBrief, SavedBriefSummary
+from app.schemas.editorial import (
+    BriefCreate,
+    BriefRequest,
+    EditorialBrief,
+    SavedBrief,
+    SavedBriefSummary,
+)
 from app.services import editorial, user_briefs
 
 router = APIRouter(prefix="/editorial", tags=["editorial"])
 
 ERROR_STATUS: dict[type[editorial.BriefError], int] = {
     editorial.OpportunityNotFound: status.HTTP_404_NOT_FOUND,
+    user_briefs.ParentBriefNotFound: status.HTTP_404_NOT_FOUND,
     editorial.NoSafeEvidence: status.HTTP_409_CONFLICT,
     editorial.BriefFailed: status.HTTP_502_BAD_GATEWAY,
     editorial.BriefUnavailable: status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -51,7 +58,7 @@ def get_brief_limiter() -> RateLimiter:
 
 async def admit_brief(
     # Sin uso aquí: obliga a FastAPI a validar el cuerpo antes, así un 422 no gasta cupo.
-    body: BriefRequest,
+    body: BriefCreate,
     request: Request,
     limiter: Annotated[RateLimiter, Depends(get_brief_limiter)],
 ) -> AsyncIterator[None]:
@@ -76,7 +83,7 @@ async def admit_brief(
 )
 async def create_brief(
     # Mismo nombre que en `admit_brief`: con otro, FastAPI esperaría dos cuerpos anidados.
-    body: BriefRequest,
+    body: BriefCreate,
     session: Annotated[AsyncSession, Depends(get_session)],
     briefer: Annotated[Briefer | None, Depends(get_briefer)],
     # La misma dependencia que en `dependencies`: FastAPI la resuelve una vez y en ese orden.
@@ -84,13 +91,15 @@ async def create_brief(
 ):
     """Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Con un
-    token válido de Supabase se guarda, esté o no activo AUTH_REQUIRED, y `id` es el de la fila;
-    sin él, null."""
+    token válido de Supabase se guarda como versión, esté o no activo AUTH_REQUIRED: con
+    `parent_brief_id`, en la cadena de ese brief (404 si no es del usuario). Si ya hay una versión
+    con la misma petición, se devuelve esa. Sin usuario, `id` y `version` son null."""
     try:
         return await user_briefs.create_brief(
             session,
-            body,
+            BriefRequest.model_validate(body.model_dump(exclude={"parent_brief_id"})),
             user_id=user.user_id if user else None,
+            parent_brief_id=body.parent_brief_id,
             briefer=briefer,
             now=datetime.now(UTC),
         )
@@ -105,7 +114,8 @@ async def list_saved_briefs(
     user: Annotated[CurrentUser, Depends(require_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    """Briefs guardados del usuario del token, más recientes primero (máximo 50)."""
+    """Una fila por cadena de versiones del usuario del token, con su última versión; más
+    recientes primero (máximo 50)."""
     return await user_briefs.list_briefs(session, user.user_id)
 
 
@@ -135,6 +145,7 @@ async def delete_saved_brief(
     user: Annotated[CurrentUser, Depends(require_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Response:
+    """Borra la cadena entera de versiones a la que pertenece el brief."""
     if not await user_briefs.delete_brief(session, user.user_id, brief_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, BRIEF_NOT_FOUND)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

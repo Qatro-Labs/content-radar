@@ -51,6 +51,9 @@ class EditorialBrief(BaseModel):
     id: int | None = Field(
         default=None, description="Id del brief guardado; None si no hay usuario y no se guardó"
     )
+    version: int | None = Field(
+        default=None, description="Versión dentro de su cadena; None si no se guardó"
+    )
     opportunity_id: str
     topic: str
     platform: BriefPlatform
@@ -70,10 +73,34 @@ class EditorialBrief(BaseModel):
     model: str
 
 
+class BriefCreate(BriefRequest):
+    """Cuerpo de `POST /editorial/brief`. Solo para la ruta: la tool MCP usa `BriefRequest` y el
+    asistente no ve `parent_brief_id`."""
+
+    parent_brief_id: int | None = Field(
+        default=None,
+        description="Brief del usuario del que se regenera: la nueva versión va a su cadena",
+    )
+
+
 class SavedBriefSummary(BaseModel):
-    id: int
+    """Una fila por cadena de versiones, con los datos de la última."""
+
+    id: int = Field(description="Id de la última versión")
+    root_id: int
+    version: int = Field(description="Número de la última versión")
+    version_count: int
     opportunity_id: str
     topic: str = Field(description="El tema de la oportunidad cuando se generó el brief")
+    platform: BriefPlatform
+    goal: BriefGoal
+    format: BriefFormat
+    created_at: datetime = Field(description="Cuándo se guardó la última versión")
+
+
+class BriefVersion(BaseModel):
+    id: int
+    version: int
     platform: BriefPlatform
     goal: BriefGoal
     format: BriefFormat
@@ -82,6 +109,9 @@ class SavedBriefSummary(BaseModel):
 
 class SavedBrief(BaseModel):
     id: int
+    root_id: int
+    version: int
     created_at: datetime
     request: BriefRequest
     brief: EditorialBrief
+    versions: list[BriefVersion] = Field(description="Toda la cadena, por versión ascendente")
