@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { useElementHover, useFocus } from '@vueuse/core'
+import { computed, useTemplateRef } from 'vue'
+
+import { useRadIdleScan } from '@/composables/useRadIdleScan'
 
 import RadMark, { type RadMarkState } from './RadMark.vue'
 
@@ -10,20 +13,35 @@ const emit = defineEmits<{ open: [] }>()
 const LAUNCHER_SIZE_PX = 56
 
 const label = computed(() => (hasUnread ? 'Abrir Rad: hay una respuesta nueva' : 'Abrir Rad'))
+
+// Reducido y en reposo, Rad pasa su haz de vez en cuando; con el cursor o el foco encima, no.
+const button = useTemplateRef<HTMLButtonElement>('button')
+const isHovered = useElementHover(button)
+const { focused } = useFocus(button)
+const scan = useRadIdleScan({
+  enabled: () => !mark.working && !isHovered.value && !focused.value,
+  blinkKey: () => mark.blinkKey,
+})
+const shownMark = computed<RadMarkState>(() => {
+  const blinkKey = scan.blinkKey.value
+  if (mark.working) return { ...mark, blinkKey }
+  return { ...mark, working: scan.isOpen.value, scanKey: scan.scanKey.value, blinkKey }
+})
 </script>
 
 <template>
   <!-- DESIGN.md §4: con la barra reducida, Rad queda como su ojo flotando abajo a la derecha. Sigue
-       vivo: se abre en radar mientras trabaja y mira hacia su presencia. Es el ancla «composer» de
-       la presencia mientras la barra está reducida. -->
+       vivo: se abre en radar mientras trabaja (y de vez en cuando en reposo) y mira hacia su
+       presencia. Es el ancla «composer» de la presencia mientras la barra está reducida. -->
   <button
+    ref="button"
     type="button"
     data-agent="composer"
     :aria-label="label"
     class="group fixed right-4 bottom-4 z-40 rounded-[16px] shadow-float transition-transform duration-150 ease-out hover:scale-[1.04] active:scale-[0.96] motion-reduce:transition-none md:right-8 md:bottom-6"
     @click="emit('open')"
   >
-    <RadMark :state="mark" :size="LAUNCHER_SIZE_PX" />
+    <RadMark :state="shownMark" :size="LAUNCHER_SIZE_PX" />
     <span
       v-if="hasUnread"
       class="absolute -top-1 -right-1 size-3.5 rounded-full bg-signal ring-2 ring-card"
