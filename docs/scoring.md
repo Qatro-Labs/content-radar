@@ -167,28 +167,31 @@ respaldo, `limitations` lo dice.
 
 ## 8. Etapa (`lifecycle`)
 
-Primera regla que se cumple, en este orden (`backend/app/intelligence/lifecycle.py:36`). El texto de
+Primera regla que se cumple, en este orden (`backend/app/intelligence/lifecycle.py:37`). El texto de
 la regla queda en `lifecycle_reason`.
 
 | # | Etapa | Regla | Constantes |
 |---|---|---|---|
-| 1 | `unknown` (datos insuficientes) | < 5 notas (§7) **o** < 2 fuentes independientes | `lifecycle.py:11`, `:32` |
-| 2 | `saturated` | saturación ≥ 75 y aceleración < 0 | `lifecycle.py:12` |
-| 3 | `peaking` | saturación ≥ 60 y \|aceleración\| < 0,2 | `lifecycle.py:13`, `:14` |
-| 4 | `accelerating` | aceleración ≥ 0,5, ≥ 3 fuentes independientes **y p ≤ 0,10** | `lifecycle.py:15`, `:16`, `:21` |
-| 5 | `emerging` | aceleración > 0, ≤ 3 fuentes independientes, saturación < 40 **y p ≤ 0,10** | `lifecycle.py:17`, `:18`, `:21` |
-| 6 | `unknown` ("sin demostrar") | Cumple 4 o 5 salvo el p-valor: la subida puede ser azar | `lifecycle.py:64` |
-| 7 | `unknown` ("en descenso") | aceleración < 0 sin cumplir las anteriores | `lifecycle.py:71` |
-| 8 | `unknown` | Ninguna regla se cumple | `lifecycle.py:78` |
+| 1 | `unknown` (datos insuficientes) | < 5 notas (§7) **o** < 2 fuentes independientes | `lifecycle.py:12`, `:33` |
+| 2 | `saturated` | saturación ≥ 75 y aceleración < 0 | `lifecycle.py:13` |
+| 3 | `peaking` | saturación ≥ 60 y \|aceleración\| < 0,2 | `lifecycle.py:14`, `:15` |
+| 4 | `accelerating` | aceleración ≥ 0,5, ≥ 3 fuentes independientes **y p ≤ 0,10** | `lifecycle.py:16`, `:17`, `:22` |
+| 5 | `emerging` | aceleración > 0, ≤ 3 fuentes independientes y saturación < 40 (sin puerta de p) | `lifecycle.py:18`, `:19` |
+| 6 | `unknown` ("sin demostrar") | Cumple 4 salvo el p-valor y no cumple 5: la subida puede ser azar | `lifecycle.py:83` |
+| 7 | `unknown` ("en descenso") | aceleración < 0 sin cumplir las anteriores | `lifecycle.py:89` |
+| 8 | `unknown` | Ninguna regla se cumple | `lifecycle.py:96` |
 
 Las rutas son relativas a `backend/app/intelligence/`. Como un tema tiene al menos 5 piezas, en la
 práctica la regla 1 salta por tener una sola fuente.
 
-`p` es el p-valor de la aceleración (§4). `accelerating` y `emerging` afirman que el tema crece,
-así que exigen que la subida no se explique por azar; `saturated` y `peaking` no llevan esa
-puerta. El umbral es por tema, sin corregir por comparaciones múltiples (ver Limitaciones). La
-razón de `accelerating` y `emerging` incluye el p-valor; la de la regla 6 explica por qué no se
-asigna etapa. Un `unknown` de la regla 6 tiene datos: si no lo frenan antes las reglas de
+`p` es el p-valor de la aceleración (§4). `accelerating` afirma un crecimiento sostenido, así que
+exige que la subida no se explique por azar. `emerging` es temprano por definición y no lleva la
+puerta: con temas de ≤ 4 notas, solo pasaría uno con 4 notas, todas en la ventana actual. Su razón
+incluye el p-valor y, si pasa de 0,10, avisa: "Señal temprana: con tan pocas piezas, la subida aún
+puede ser azar" (`lifecycle.py:103`). `saturated` y `peaking` tampoco llevan puerta. Un tema que
+falla `accelerating` solo por el p-valor puede quedar `emerging` si cumple esa regla; si no, queda
+`unknown` "sin demostrar". El umbral es por tema, sin corregir por comparaciones múltiples (ver
+Limitaciones). Un `unknown` de la regla 6 tiene datos: si no lo frenan antes las reglas de
 `wait_for_case` (confianza baja o ningún caso real), recomienda `find_angle` (§14).
 
 **`growth_status`** depende de los datos, no de la etapa (`backend/app/intelligence/ranking.py:118`):
@@ -371,7 +374,7 @@ Lo que estos números **no** dicen (CLAUDE.md §2, regla 3; [`brief.md`](brief.m
   ventanas de 3 días, lo que casi siempre es parte del backfill, no historial observado en vivo. La
   velocidad de una pieza necesita dos snapshots, y muchas solo tienen unas horas de historial.
 - **El p-valor de la aceleración es por tema.** Con ~50 temas y p ≤ 0,10, cabe esperar hasta ~5
-  `accelerating` o `emerging` por azar aunque ningún tema creciera de verdad. Corregir por
+  `accelerating` por azar aunque ningún tema creciera de verdad. Corregir por
   comparaciones múltiples (Benjamini–Hochberg) no deja pasar ninguno con 3 días de datos: en la
   ejecución 37 el mejor p era ≈ 0,02 frente a un primer umbral de ≈ 0,002. La etapa es una señal
   para priorizar, no una prueba.
@@ -403,7 +406,7 @@ momentum y la regla de negocio del LATAM gap; el resto de CLAUDE.md no se ha toc
 | 5 | Saturación (§7) | Volumen de contenido similar en la ventana reciente | Percentil del volumen del tema frente a los demás temas activos (`backend/app/intelligence/cross_source.py:33`). Los umbrales de etapa (75, 60, 40) se aplican a ese percentil |
 | 6 | Notas replicadas (§7) | Regla provisional de similitud coseno ≥ umbral y fuente distinta; después, la batería de pares de Jev | Implementado por capas: enlace compartido, Jev `pair.v1` (coseno ≥ 0,70, máx. 250 llamadas) y respaldo (título idéntico de ≥ 5 palabras o coseno ≥ 0,90) (`backend/app/intelligence/replicas.py:29`, `backend/app/services/replicas.py:48`). Solo dentro de cada tema. Fuentes, saturación y etapa cuentan notas; velocidad, outliers y `audience_mix` siguen contando piezas |
 | 7 | Penalizaciones (§7) | Datos pobres, fuentes duplicadas, muestra pequeña | Solo `single_source` (−10) y `small_sample` (−10) (`backend/app/intelligence/ranking.py:34`, `:35`) |
-| 8 | Etapa (§7) | Cinco reglas | Añade un `unknown` "sin demostrar" cuando solo falla el p-valor (`backend/app/intelligence/lifecycle.py:64`) y otro "en descenso" con aceleración < 0 (`backend/app/intelligence/lifecycle.py:71`). Con clusters de ≥ 5 piezas, "menos de 5 piezas" no llega a darse |
+| 8 | Etapa (§7) | Cinco reglas | Añade un `unknown` "sin demostrar" cuando `accelerating` solo falla por el p-valor (`backend/app/intelligence/lifecycle.py:83`) y otro "en descenso" con aceleración < 0 (`backend/app/intelligence/lifecycle.py:89`). Con clusters de ≥ 5 piezas, "menos de 5 piezas" no llega a darse |
 | 9 | Audience mix (§7) | Ponderado por el engagement normalizado | Ponderado por el outlier ratio acotado a [0,5, 3,0], 1,0 sin ratio (`backend/app/intelligence/opportunities.py:193`) |
 | 10 | LATAM gap ([`brief.md`](brief.md) §7) | Se sostiene "cuando ambos grupos de fuentes tienen cobertura suficiente" | No comprueba la cobertura del grupo A (global); solo la proporción LATAM y la conversación de negocio (`backend/app/intelligence/audience_mix.py:63`) |
 | 11 | Verificación de afirmaciones (§7) | Jev verifica cada afirmación del LLM; se publica con `confidence` ≥ 0,8 | No hay batería de verificación. Python exige que cada afirmación cite una pieza enviada y que sus cifras estén en los datos (`backend/app/intelligence/explanation.py:52`) |

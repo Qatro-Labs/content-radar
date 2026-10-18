@@ -1,7 +1,8 @@
 """Etapa de la tendencia (CLAUDE.md §7). Primera regla que se cumple; `unknown` va primero.
 
-`accelerating` y `emerging` afirman que el tema crece, así que además exigen que la subida no
-se explique por azar (`acceleration_p_value` ≤ `ACCELERATION_MAX_P`). Si no, queda `unknown`.
+`accelerating` afirma un crecimiento sostenido, así que además exige que la subida no se explique
+por azar (`acceleration_p_value` ≤ `ACCELERATION_MAX_P`). `emerging` es temprano por definición:
+no lleva esa puerta, pero su razón avisa cuando la subida aún puede ser azar.
 """
 
 from dataclasses import dataclass
@@ -59,33 +60,10 @@ def classify(
             f"Saturación {saturation:.0f} ≥ {PEAKING_MIN} y |aceleración| "
             f"{abs(acceleration):.2f} < {PEAKING_MAX_ABS_ACCEL}.",
         )
-    rising = _rising(acceleration, p_value, saturation, source_count)
-    if rising is not None:
-        if p_value > ACCELERATION_MAX_P:
-            return Stage(
-                Lifecycle.UNKNOWN,
-                f"Aceleración {acceleration:+.2f} sin demostrar: p = {p_value:.2f} > "
-                f"{ACCELERATION_MAX_P}, con tan pocas piezas la subida puede ser azar.",
-            )
-        return rising
-    if acceleration < 0:
-        # Sin etapa `declining` en el contrato: el texto explica que el tema se enfría.
-        return Stage(
-            Lifecycle.UNKNOWN,
-            f"En descenso: aceleración {acceleration:+.0%}, saturación {saturation:.0f}, "
-            f"{source_count} fuentes. Ninguna etapa aplica.",
-        )
-    return Stage(
-        Lifecycle.UNKNOWN,
-        f"Ninguna regla se cumple (aceleración {acceleration:+.2f}, saturación {saturation:.0f}, "
-        f"{source_count} fuentes).",
+    accelerating = (
+        acceleration >= ACCELERATING_MIN_ACCEL and source_count >= ACCELERATING_MIN_SOURCES
     )
-
-
-def _rising(
-    acceleration: float, p_value: float, saturation: float, source_count: int
-) -> Stage | None:
-    if acceleration >= ACCELERATING_MIN_ACCEL and source_count >= ACCELERATING_MIN_SOURCES:
+    if accelerating and p_value <= ACCELERATION_MAX_P:
         return Stage(
             Lifecycle.ACCELERATING,
             f"Aceleración {acceleration:+.2f} ≥ {ACCELERATING_MIN_ACCEL} (p = {p_value:.2f}) y "
@@ -100,6 +78,29 @@ def _rising(
             Lifecycle.EMERGING,
             f"Aceleración {acceleration:+.2f} > 0 (p = {p_value:.2f}), {source_count} fuentes "
             f"independientes (≤ {EMERGING_MAX_SOURCES}) y saturación {saturation:.0f} "
-            f"< {EMERGING_MAX_SATURATION}.",
+            f"< {EMERGING_MAX_SATURATION}.{_unproven_note(p_value)}",
         )
-    return None
+    if accelerating:
+        return Stage(
+            Lifecycle.UNKNOWN,
+            f"Aceleración {acceleration:+.2f} sin demostrar: p = {p_value:.2f} > "
+            f"{ACCELERATION_MAX_P}, con tan pocas piezas la subida puede ser azar.",
+        )
+    if acceleration < 0:
+        # Sin etapa `declining` en el contrato: el texto explica que el tema se enfría.
+        return Stage(
+            Lifecycle.UNKNOWN,
+            f"En descenso: aceleración {acceleration:+.0%}, saturación {saturation:.0f}, "
+            f"{source_count} fuentes. Ninguna etapa aplica.",
+        )
+    return Stage(
+        Lifecycle.UNKNOWN,
+        f"Ninguna regla se cumple (aceleración {acceleration:+.2f}, saturación {saturation:.0f}, "
+        f"{source_count} fuentes).",
+    )
+
+
+def _unproven_note(p_value: float) -> str:
+    if p_value <= ACCELERATION_MAX_P:
+        return ""
+    return " Señal temprana: con tan pocas piezas, la subida aún puede ser azar."

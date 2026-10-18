@@ -194,17 +194,30 @@ def test_lifecycle_rules(acc, sat, sources, expected):
     assert result.reason
 
 
-@pytest.mark.parametrize(("acc", "sat", "sources"), [(0.6, 50, 3), (0.6, 30, 2)])
-def test_rising_stages_need_a_significant_acceleration(acc, sat, sources):
-    # Cumple accelerating o emerging, pero la subida puede ser azar: no se afirma la etapa.
-    result = stage(acc=acc, sat=sat, sources=sources, p=0.27)
+def test_accelerating_needs_a_significant_acceleration():
+    # Cumple accelerating, pero la subida puede ser azar: no se afirma la etapa.
+    result = stage(acc=0.6, sat=50, sources=3, p=0.27)
     assert result.lifecycle is Lifecycle.UNKNOWN
     assert not result.insufficient
     assert result.reason.startswith("Aceleración +0.60 sin demostrar: p = 0.27")
-    assert stage(acc=acc, sat=sat, sources=sources, p=ACCELERATION_MAX_P).lifecycle in (
-        Lifecycle.ACCELERATING,
-        Lifecycle.EMERGING,
+    assert stage(acc=0.6, sat=50, sources=3, p=ACCELERATION_MAX_P).lifecycle is (
+        Lifecycle.ACCELERATING
     )
+
+
+def test_emerging_warns_instead_of_gating():
+    # Temprano por definición: queda emerging, pero la razón avisa de que puede ser azar.
+    unproven = stage(acc=0.6, sat=30, sources=2, p=0.27)
+    assert unproven.lifecycle is Lifecycle.EMERGING
+    assert "(p = 0.27)" in unproven.reason and "puede ser azar" in unproven.reason
+    proven = stage(acc=0.6, sat=30, sources=2, p=0.05)
+    assert proven.lifecycle is Lifecycle.EMERGING
+    assert "azar" not in proven.reason
+
+
+def test_unproven_acceleration_falls_back_to_emerging():
+    # 3 fuentes y saturación baja: falla accelerating por el p-valor y cumple emerging.
+    assert stage(acc=0.6, sat=30, sources=3, p=0.27).lifecycle is Lifecycle.EMERGING
 
 
 def test_significance_does_not_gate_saturated_or_peaking():

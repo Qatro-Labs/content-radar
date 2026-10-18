@@ -216,9 +216,9 @@ GET  /health
   | `saturated` | saturation ≥ 75 y aceleración < 0 |
   | `peaking` | saturation ≥ 60 y \|aceleración\| < 0.2 |
   | `accelerating` | aceleración ≥ 0.5, ≥ 3 fuentes independientes y p ≤ 0.10 |
-  | `emerging` | aceleración > 0, ≤ 3 fuentes independientes, saturation < 40 y p ≤ 0.10 |
+  | `emerging` | aceleración > 0, ≤ 3 fuentes independientes y saturation < 40 |
   | `unknown` | datos insuficientes (menos de 5 piezas o una sola fuente) |
-  Decidido el 18/10: `accelerating` y `emerging` afirman que el tema crece, así que exigen que la subida no sea azar (p de la aceleración ≤ 0.10, por tema, sin corregir por comparaciones múltiples). Si solo falla el p-valor, el tema queda `unknown` "sin demostrar" y `lifecycle_reason` lo explica.
+  Decidido el 18/10: `accelerating` afirma un crecimiento sostenido, así que exige que la subida no sea azar (p de la aceleración ≤ 0.10, por tema, sin corregir por comparaciones múltiples). Si solo falla el p-valor, se prueba `emerging`; si tampoco aplica, queda `unknown` "sin demostrar". `emerging` es temprano por definición y no lleva la puerta (con ≤ 4 notas casi nunca pasaría), pero su `lifecycle_reason` muestra el p-valor y avisa cuando la subida aún puede ser azar.
   `growth_status` depende de los datos, no de la etapa: `preliminary` = datos insuficientes, `estimated` = ventana anterior vacía, `observed` = dos ventanas con datos. Un `unknown` porque ninguna regla se cumple sí tiene datos (recomendación `find_angle`); un `unknown` por datos insuficientes espera caso.
   `unknown` se evalúa **antes** que las demás: con datos insuficientes no se asigna etapa aunque otra regla se cumpla. Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
 - **Para quién importa (estilo SparkToro).** `audience_mix` = proporción de la evidencia de cada `segment`, ponderada por el engagement normalizado. Lectura editorial:
