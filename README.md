@@ -1,33 +1,53 @@
-# 30X Signal
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <img src="docs/assets/logo-light.svg" alt="30X Signal" width="300">
+  </picture>
+</p>
 
-Radar de inteligencia editorial para el reto **30X · Media**. Responde a una pregunta:
+<p align="center">
+  <strong>Radar de inteligencia editorial sobre IA para ejecutivos y equipos de Latinoamérica.</strong>
+</p>
 
-> ¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?
+<p align="center">
+  <a href="https://signal-pi-black.vercel.app/">Dashboard</a> ·
+  <a href="https://content-radar-production-9453.up.railway.app/docs">API</a> ·
+  <a href="#conectar-el-mcp">MCP</a> ·
+  <a href="docs/architecture.md">Arquitectura</a> ·
+  <a href="docs/scoring.md">Algoritmo</a>
+</p>
 
-Convierte señales públicas de Internet (YouTube, Hacker News, medios y blogs por RSS, TikTok, Reddit e Instagram) en oportunidades editoriales con evidencia enlazada. Se consultan desde un dashboard en Vue o desde un asistente de IA (Claude, ChatGPT, Grok) vía MCP. Si hay menos de 10 temas con datos suficientes, enseña los que hay: no inventa ninguno.
+<p align="center">
+  <a href="LICENSE"><img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-c6f432?style=flat-square&labelColor=121418"></a>
+  <img alt="Python 3.12" src="https://img.shields.io/badge/python-3.12-121418?style=flat-square">
+  <img alt="Vue 3" src="https://img.shields.io/badge/vue-3-121418?style=flat-square">
+  <img alt="MCP" src="https://img.shields.io/badge/MCP-Streamable%20HTTP-121418?style=flat-square">
+</p>
 
-- **Por qué y para quién:** [docs/brief.md](docs/brief.md)
-- **Decisiones, reglas y contratos:** [CLAUDE.md](CLAUDE.md)
-- **Arquitectura y coste de operación medido:** [docs/architecture.md](docs/architecture.md) · [docs/costs.md](docs/costs.md)
-- **Algoritmo de priorización:** [docs/scoring.md](docs/scoring.md)
+---
+
+> **¿Cuáles son los 10 temas de IA que más están creciendo esta semana, por qué funcionan y cómo los adapta 30X para ejecutivos y equipos de Latinoamérica?**
+
+30X Signal responde a esa pregunta, el reto **30X · Media** del Hackathon del 17–18 de octubre de 2026. Convierte señales públicas de Internet en oportunidades editoriales con evidencia enlazada, y se consulta desde un dashboard o desde un asistente de IA (Claude, ChatGPT, Grok) por MCP.
+
+- **Detecta temprano.** Mide velocidad y aceleración, no popularidad: un tema que acelera pesa más que uno que ya es grande.
+- **Explica por qué.** Cada oportunidad trae sus piezas de evidencia, la etapa del tema y para quién importa.
+- **Piensa en 30X.** Evalúa el encaje con su audiencia y señala los temas que aún no se cubren en Latinoamérica.
+- **No inventa.** Los scores los calcula Python; la IA evalúa y redacta, y lo que escribe se verifica contra la evidencia. Si hay 7 temas con datos suficientes, se muestran 7.
 
 ## En vivo
 
-| Qué | URL |
+| | |
 |---|---|
-| Dashboard (Vercel) | https://signal-pi-black.vercel.app/ |
-| API REST | https://content-radar-production-9453.up.railway.app/api/v1/opportunities |
-| Documentación de la API (OpenAPI) | https://content-radar-production-9453.up.railway.app/docs |
+| Dashboard | https://signal-pi-black.vercel.app/ |
+| API REST y su documentación | https://content-radar-production-9453.up.railway.app/docs |
 | Servidor MCP | https://content-radar-production-9453.up.railway.app/mcp |
-| Estado de las fuentes (piezas por fuente) | https://content-radar-production-9453.up.railway.app/api/v1/sources/status |
 
 ## Cómo funciona
 
 ![Componentes de 30X Signal: fuentes públicas, colectores, motor de análisis con modelos de IA, base de datos, servicios, API REST, agente Rad y servidor MCP, y los clientes](docs/diagrams/arquitectura.svg)
 
-- Los colectores recogen señales públicas de forma periódica y el motor de análisis las convierte en un ranking de temas.
-- Los scores se calculan en Python, de forma determinista. Los modelos de IA clasifican, evalúan y redactan; no calculan.
-- Qué hace cada componente: [docs/architecture.md](docs/architecture.md). El algoritmo: [docs/scoring.md](docs/scoring.md).
+Los colectores recogen señales públicas de forma periódica y el motor de análisis las convierte en un ranking de temas. Qué hace cada componente: [docs/architecture.md](docs/architecture.md).
 
 Cada paso del producto responde una pregunta:
 
@@ -41,50 +61,48 @@ Cada paso del producto responde una pregunta:
 | Hacker News | API de Algolia |
 | Medios y blogs (tech, negocio, LATAM) | RSS |
 | TikTok · Reddit | ScrapeCreators, un proveedor de datos públicos: búsquedas por palabra clave y subreddits |
-| Instagram | ScrapeCreators, solo los reels de perfiles elegidos a mano (no descubre temas) |
-| LinkedIn · X | **Fuera del MVP.** Sin login no se puede buscar su contenido, y por Google llega poco y tarde. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS) |
+| Instagram | ScrapeCreators, solo los reels de perfiles elegidos a mano |
+| LinkedIn · X | **Fuera del MVP.** Sin login no se puede buscar su contenido. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS) |
 
-Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales. Límites, costes y vías oficiales del roadmap: [docs/sources.md](docs/sources.md). Fuentes dadas de alta: [`data/sources.yaml`](data/sources.yaml).
+Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales. Límites de cada fuente: [docs/sources.md](docs/sources.md).
 
 ## Cómo se prioriza
 
-- **Velocidad y aceleración, no popularidad.** Cuenta cuántas piezas nuevas salen al día en los últimos 3 días frente a los 3 anteriores, con un ajuste por volumen. El total de views nunca entra en un score.
-- **Outliers.** Una pieza es outlier si rinde 3× o más sobre la referencia de su canal o fuente. El "por qué funcionó" que se deriva de los outliers es una hipótesis, no una causa.
-- **Etapa del tema** (emerging → saturated), validación entre fuentes independientes, saturación, **para quién importa** (tech, negocio, español) y **LATAM Opportunity Gap**.
-- **Opportunity Score** = 0,30·momentum + 0,25·audience fit + 0,20·cross-source + 0,15·(100 − saturación) + 0,10·accionabilidad. La confianza se muestra aparte. Cada oportunidad trae una recomendación (`publish_now`, `find_angle`, `wait_for_case` o `discard`) junto con la regla que la produjo.
+- **Velocidad y aceleración, no popularidad.** Piezas nuevas al día en los últimos 3 días frente a los 3 anteriores, ajustadas por volumen. El total de views nunca entra en un score.
+- **Outliers.** Piezas que rinden 3× o más sobre la referencia de su canal o fuente. Lo que se deriva de ellas es una hipótesis, no una causa.
+- **Etapa del tema** (emerging → saturated), fuentes independientes, saturación, **para quién importa** y **LATAM Opportunity Gap**.
+- **Opportunity Score** = 0,30·momentum + 0,25·audience fit + 0,20·fuentes independientes + 0,15·(100 − saturación) + 0,10·accionabilidad. La confianza se muestra aparte, y cada oportunidad trae una recomendación con la regla que la produjo: publicar ya, buscar ángulo, esperar caso o descartar.
 
-Fórmulas, umbrales y reglas, tal como están en el código: [docs/scoring.md](docs/scoring.md). Jev: [docs/jev.md](docs/jev.md).
+El pipeline paso a paso, las fórmulas y los umbrales: [docs/scoring.md](docs/scoring.md).
 
 ## Conectar el MCP
 
-Solo lectura, sin autenticación y con datos públicos. Tiene seis tools: oportunidades en tendencia, análisis de una oportunidad, búsqueda de señales, comparación de audience fit, coste de operación y brief editorial.
+Solo lectura y con datos públicos. Seis tools: oportunidades en tendencia, análisis de una oportunidad, búsqueda de señales, comparación de audience fit, coste de operación y brief editorial.
 
 ```bash
 claude mcp add --transport http 30x-signal https://content-radar-production-9453.up.railway.app/mcp
 ```
 
-Claude web, MCP Inspector y otros clientes, qué clientes se han probado y sus limitaciones: [docs/mcp.md](docs/mcp.md).
+Otros clientes (Claude web, MCP Inspector): [docs/mcp.md](docs/mcp.md).
 
 ## Coste de operación
 
-Cada llamada a una API externa (YouTube, ScrapeCreators, Jev, LLM) queda registrada en `usage_events`, con su coste calculado a partir de [`data/pricing.yaml`](data/pricing.yaml). Ahí está cada precio con su fuente y su fecha. `GET /api/v1/costs` y la tool MCP `get_operating_cost` dan el coste medido y la proyección mensual por separado. La proyección es una estimación. Coste medido y su lectura: [docs/costs.md](docs/costs.md).
+Cada llamada a una API externa registra su consumo y su coste, con precios de fuente y fecha conocidas ([`data/pricing.yaml`](data/pricing.yaml)). `GET /api/v1/costs` y la tool MCP `get_operating_cost` dan el coste medido y la proyección mensual por separado; la proyección es una estimación. Detalle: [docs/costs.md](docs/costs.md).
 
-## Limitaciones y pendiente
+## Limitaciones
 
-- **Pendiente:** el «por qué funcionó» solo compara el gancho del título de los outliers con el resto del tema (`outlier_hooks`), sin hipótesis redactada. Brave Search no tiene colector.
 - La saturación y el LATAM Gap son relativos a las fuentes que monitoreamos, no a todo Internet ni a todo el mercado LATAM.
 - El audience fit es una evaluación editorial asistida por IA, no una medición.
-- La velocidad de una pieza necesita dos snapshots o más. Sin ellos, la evidencia se marca `estimated` o `preliminary`. El historial empieza el 17/10.
-- TikTok y Reddit solo traen el top de la semana en curso, y una pieza solo se vuelve a medir si sigue saliendo en la búsqueda.
-- El MCP no tiene autenticación, y su cupo de briefs es compartido por todos los clientes.
+- El historial empieza el 17/10: la velocidad de una pieza necesita dos mediciones o más, y sin ellas la evidencia se marca como estimada o preliminar.
+- El «por qué funcionó» compara solo el gancho del título de los outliers con el resto del tema.
 
 ## Equipo
 
-| Persona | Área |
+| | Área |
 |---|---|
-| Steven | Data & Backend: conectores, DB, jobs, API, despliegue |
-| Melkin | AI & Intelligence: clustering, scoring, Jev, LLM, MCP |
-| David | Product & Frontend: Vue, visualizaciones, UX, demo |
+| **Steven** | Data & Backend: conectores, base de datos, jobs, API y despliegue |
+| **Melkin** | AI & Intelligence: clustering, scoring, Jev, LLM y MCP |
+| **David** | Product & Frontend: Vue, visualizaciones, UX y demo |
 
 ---
 
@@ -182,6 +200,8 @@ docs/            brief, fuentes, Jev, MCP
 
 ## Cómo trabajamos
 
-- Una rama por tarea (`data/…`, `intel/…`, `fe/…`), con PRs pequeños. `main` siempre desplegable. Cualquiera del equipo mergea con los tests en verde; Claude nunca mergea.
-- Antes de coger una tarea, pasa el filtro de valor ([CLAUDE.md §12](CLAUDE.md#12-prioridades)). Los cambios de contrato (`Opportunity`, `Evidence`, OpenAPI) se avisan antes, y las decisiones se escriben en `CLAUDE.md`.
-- Para tareas de 1 h o más con un contrato claro: `/spec` y después `/build`. Estándares de código: [`.claude/rules/engineering-standards.md`](.claude/rules/engineering-standards.md).
+Una rama corta por tarea (`data/…`, `intel/…`, `fe/…`) y PRs pequeños; `main` siempre desplegable y con los tests en verde. Las decisiones y los contratos viven en [CLAUDE.md](CLAUDE.md).
+
+## Licencia
+
+[MIT](LICENSE) © 2026 Qatro Labs.
