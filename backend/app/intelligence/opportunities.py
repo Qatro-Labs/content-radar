@@ -37,6 +37,7 @@ from app.intelligence.replicas import (
 from app.intelligence.velocity import (
     TopicVelocity,
     WindowCounts,
+    acceleration_p_value,
     topic_velocity,
     window_counts,
 )
@@ -91,6 +92,8 @@ class _ActiveTopic:
     counts: WindowCounts
     velocity: TopicVelocity
     broad: bool
+    story_counts: WindowCounts  # solo notas originales: son las muestras independientes
+    p_value: float  # de la aceleración, sobre las notas originales
 
 
 @dataclass
@@ -158,8 +161,12 @@ def _active_topics(
     representatives: Sequence[int],
     broad: Sequence[bool],
     as_of: datetime,
+    stories: StoryAssignment,
 ) -> list[_ActiveTopic]:
     corpus = window_counts([p.published_at for p in pieces], as_of)
+    # Una republicación no es una observación independiente: el test de la aceleración cuenta
+    # notas, en el tema y en el corpus (CLAUDE.md §7, "Cross-source").
+    story_corpus = window_counts([p.published_at for p in _originals(pieces, stories)], as_of)
     topics = []
     for members, rep, is_broad in zip(clusters, representatives, broad, strict=True):
         group = [pieces[i] for i in members]
@@ -167,7 +174,11 @@ def _active_topics(
         if counts.current + counts.previous < MIN_RECENT_ITEMS:
             continue
         velocity = topic_velocity(counts, corpus)
-        topics.append(_ActiveTopic(group, pieces[rep], counts, velocity, is_broad))
+        story_counts = window_counts([p.published_at for p in _originals(group, stories)], as_of)
+        p_value = acceleration_p_value(story_counts, story_corpus)
+        topics.append(
+            _ActiveTopic(group, pieces[rep], counts, velocity, is_broad, story_counts, p_value)
+        )
     return topics
 
 
@@ -266,12 +277,13 @@ def _score_topic(
     source_count = len(facts.outlets)
     stage = classify(
         acceleration=acceleration,
+        p_value=topic.p_value,
         saturation=saturation,
         source_count=source_count,
         item_count=item_count,
     )
     growth = growth_status(stage.insufficient, topic.counts.previous)
-    momentum = momentum_score(velocity_percentile, acceleration, facts.outlier_count)
+    momentum = momentum_score(velocity_percentile, topic.velocity.log_ratio, facts.outlier_count)
     cross = cross_source_score(facts.outlets, {p.value for p in facts.original_platforms})
     breakdown = score_breakdown(
         momentum=momentum,
@@ -415,21 +427,12 @@ def _topic_result(
     return TopicResult(opportunity, evidence, points, stage, pieces, facts.replica_ids)
 
 
-def _story_saturation(
-    topics: Sequence[_ActiveTopic], stories: StoryAssignment, as_of: datetime
-) -> list[float]:
-    # Cuenta notas, no copias (CLAUDE.md §7); la velocidad sigue por pieza.
-    counts = [
-        window_counts([p.published_at for p in _originals(t.group, stories)], as_of) for t in topics
-    ]
-    return saturation_scores([c.current + c.previous for c in counts])
-
-
-def _across_topics(
-    topics: Sequence[_ActiveTopic], stories: StoryAssignment, as_of: datetime
-) -> list[tuple[float, float]]:
+def _across_topics(topics: Sequence[_ActiveTopic]) -> list[tuple[float, float]]:
     # Saturación y percentil de velocidad se normalizan entre temas: necesitan todos los activos.
-    saturation = _story_saturation(topics, stories, as_of)
+    # La saturación cuenta notas, no copias (CLAUDE.md §7); la velocidad sigue por pieza.
+    saturation = saturation_scores(
+        [t.story_counts.current + t.story_counts.previous for t in topics]
+    )
     velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
     return list(zip(saturation, velocity_pct, strict=True))
 
@@ -447,7 +450,7 @@ def build_opportunities(
 ) -> list[TopicResult]:
     stories = stories if stories is not None else NO_REPLICAS
     broad_flags = broad if broad is not None else [False] * len(clusters)
-    topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of)
+    topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of, stories)
     ratios = outlier_ratios(pieces, as_of, reference=reference)
     results = [
         _topic_result(
@@ -459,9 +462,7 @@ def build_opportunities(
             as_of=as_of,
             monitoring_started_at=monitoring_started_at,
         )
-        for topic, (sat, vel_pct) in zip(
-            topics, _across_topics(topics, stories, as_of), strict=True
-        )
+        for topic, (sat, vel_pct) in zip(topics, _across_topics(topics), strict=True)
     ]
     return rank(results)
 

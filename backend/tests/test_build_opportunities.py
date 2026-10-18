@@ -11,6 +11,7 @@ from app.intelligence.replicas import (
     REPLICAS_UNVERIFIED_NOTE,
     ReplicaBasis,
     ReplicaEdge,
+    StoryAssignment,
     group_stories,
     topic_pairs,
 )
@@ -141,8 +142,14 @@ def test_build_opportunities_end_to_end():
         for i in range(3)
     ]  # fmt: skip
     pieces = hn + rss
+    # Resto del corpus, fuera del tema: sin piezas en la ventana anterior no se puede demostrar
+    # que el tema acelera más que el corpus.
+    background = [
+        piece(100 + i, hours_ago=80 + i, platform=Platform.RSS, source=f"Otro {i}")
+        for i in range(10)
+    ]
     results = build_opportunities(
-        pieces,
+        pieces + background,
         [list(range(len(pieces)))],
         [0],
         as_of=AS_OF,
@@ -467,3 +474,41 @@ def test_velocity_and_timeline_still_count_pieces():
     assert after.opportunity.velocity == before.opportunity.velocity
     assert after.opportunity.acceleration == before.opportunity.acceleration
     assert sum(p.count for p in after.timeline.points) == len(pieces)
+
+
+def _rising_topic():
+    # 9 piezas en la ventana actual frente a 1 en la anterior, de 4 fuentes, sobre un corpus
+    # estable (30 y 30 piezas de fuera del tema).
+    topic = [
+        piece(i, hours_ago=5 + i, platform=Platform.RSS, source=f"Medio {i % 4}") for i in range(9)
+    ]
+    topic.append(piece(9, hours_ago=100, platform=Platform.RSS, source="Medio 1"))
+    background = [
+        piece(100 + i, hours_ago=h, platform=Platform.RSS, source=f"Otro {i}")
+        for i, h in enumerate([*range(10, 40), *range(80, 110)])
+    ]
+    return topic, background
+
+
+def test_rising_topic_is_accelerating_with_its_p_value():
+    topic, background = _rising_topic()
+    [r] = build_opportunities(
+        topic + background, [list(range(len(topic)))], [0], as_of=AS_OF,
+        monitoring_started_at=STARTED,
+    )  # fmt: skip
+    assert r.opportunity.lifecycle is Lifecycle.ACCELERATING
+    # p0 = 39 / 70 (cuota del corpus en la ventana actual); P(X ≥ 9 | n = 10) ≈ 0,03.
+    assert "(p = 0.03)" in r.opportunity.lifecycle_reason
+
+
+def test_replicas_do_not_count_as_evidence_of_acceleration():
+    # Las mismas piezas, pero 5 de las actuales son republicaciones de la nota 0: quedan 4 notas
+    # frente a 1, y eso puede ser azar.
+    topic, background = _rising_topic()
+    stories = StoryAssignment({i: 0 for i in range(1, 6)}, frozenset())
+    [r] = build_opportunities(
+        topic + background, [list(range(len(topic)))], [0], as_of=AS_OF,
+        monitoring_started_at=STARTED, stories=stories,
+    )  # fmt: skip
+    assert r.opportunity.lifecycle is Lifecycle.UNKNOWN
+    assert "sin demostrar" in r.opportunity.lifecycle_reason

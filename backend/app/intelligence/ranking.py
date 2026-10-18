@@ -19,7 +19,10 @@ from app.schemas.opportunity import (
 W_VELOCITY = 0.4
 W_ACCELERATION = 0.4
 W_OUTLIERS = 0.2
-ACCELERATION_CAP = 1.0  # +100 % o más = máximo
+# La aceleración entra como log2 de la razón de tasas suavizada (`TopicVelocity.log_ratio`):
+# multiplicar la tasa por 8 o más es el máximo. Con el tope anterior (+100 %), 2 frente a 1 y
+# 70 frente a 5 puntuaban igual.
+LOG_RATIO_CAP = 3.0
 POINTS_PER_OUTLIER = 25
 
 # Opportunity Score.
@@ -37,9 +40,9 @@ EVIDENCE_POINTS_PER_ITEM = 4
 EVIDENCE_FULL_SOURCES = 3
 
 
-def momentum_score(velocity_percentile: float, acceleration: float, outlier_count: int) -> float:
-    accel = max(-ACCELERATION_CAP, min(acceleration, ACCELERATION_CAP))
-    accel_norm = 50 + 50 * accel / ACCELERATION_CAP
+def momentum_score(velocity_percentile: float, log_ratio: float, outlier_count: int) -> float:
+    ratio = max(-LOG_RATIO_CAP, min(log_ratio, LOG_RATIO_CAP))
+    accel_norm = 50 + 50 * ratio / LOG_RATIO_CAP
     outliers_norm = min(100, POINTS_PER_OUTLIER * outlier_count)
     score = (
         W_VELOCITY * velocity_percentile + W_ACCELERATION * accel_norm + W_OUTLIERS * outliers_norm

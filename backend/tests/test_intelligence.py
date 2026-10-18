@@ -6,7 +6,7 @@ import pytest
 
 from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
-from app.intelligence.lifecycle import classify
+from app.intelligence.lifecycle import ACCELERATION_MAX_P, classify
 from app.intelligence.outliers import (
     MEDIAN,
     age_adjusted,
@@ -23,7 +23,13 @@ from app.intelligence.ranking import (
     recommend,
     score_breakdown,
 )
-from app.intelligence.velocity import WindowCounts, piece_rate, topic_velocity, window_counts
+from app.intelligence.velocity import (
+    WindowCounts,
+    acceleration_p_value,
+    piece_rate,
+    topic_velocity,
+    window_counts,
+)
 from app.schemas.opportunity import (
     Confidence,
     GrowthStatus,
@@ -63,6 +69,39 @@ def test_acceleration_with_empty_previous_window():
     # (v − 0) / max(0, 1): no divide por cero.
     assert topic_velocity(WindowCounts(4, 0), corpus=WindowCounts(50, 0)).acceleration == 4.0
     assert topic_velocity(WindowCounts(0, 0), corpus=WindowCounts(0, 0)).acceleration == 0
+
+
+def test_log_ratio_separates_small_from_large_jumps():
+    # Con el cambio relativo, 2 frente a 1 y 70 frente a 5 eran "+100 % o más" por igual.
+    small = topic_velocity(WindowCounts(2, 1), corpus=WindowCounts(100, 100))
+    large = topic_velocity(WindowCounts(70, 5), corpus=WindowCounts(100, 100))
+    assert small.acceleration == 1.0 and large.acceleration == 13.0
+    assert small.log_ratio == pytest.approx(0.585, abs=0.001)  # log2(3 / 2)
+    assert large.log_ratio == pytest.approx(3.564, abs=0.001)  # log2(71 / 6)
+    assert topic_velocity(WindowCounts(0, 0), corpus=WindowCounts(0, 0)).log_ratio == 0
+
+
+def test_acceleration_p_value_is_exact_binomial_tail():
+    # Corpus estable (p0 = 0,5): 5 frente a 0 sale por azar con probabilidad 0,5^5.
+    assert acceleration_p_value(WindowCounts(5, 0), WindowCounts(100, 100)) == pytest.approx(
+        0.031, abs=0.001
+    )
+    # 2 frente a 1 no demuestra nada: P(X ≥ 2 | n = 3) = 0,5.
+    assert acceleration_p_value(WindowCounts(2, 1), WindowCounts(100, 100)) == 0.5
+    # Un tema que baja nunca es significativo.
+    assert acceleration_p_value(WindowCounts(1, 6), WindowCounts(100, 100)) > 0.9
+
+
+def test_acceleration_p_value_uses_the_corpus_share():
+    # Si el corpus se duplica en la ventana actual, 8 frente a 4 es lo esperado: no acelera.
+    assert acceleration_p_value(WindowCounts(8, 4), WindowCounts(200, 100)) > 0.5
+    assert acceleration_p_value(WindowCounts(8, 4), WindowCounts(100, 100)) < 0.2
+
+
+def test_acceleration_p_value_without_data_is_one():
+    assert acceleration_p_value(WindowCounts(0, 0), WindowCounts(100, 100)) == 1.0
+    # Sin corpus en la ventana anterior (monitoreo recién empezado) no se puede demostrar.
+    assert acceleration_p_value(WindowCounts(5, 0), WindowCounts(50, 0)) == 1.0
 
 
 def test_piece_rate_needs_two_snapshots():
@@ -114,8 +153,10 @@ def test_age_adjusted_has_one_day_floor():
 # --- lifecycle ---
 
 
-def stage(acc=0.0, sat=50.0, sources=4, items=20):
-    return classify(acceleration=acc, saturation=sat, source_count=sources, item_count=items)
+def stage(acc=0.0, sat=50.0, sources=4, items=20, p=0.01):
+    return classify(
+        acceleration=acc, p_value=p, saturation=sat, source_count=sources, item_count=items
+    )
 
 
 def test_unknown_goes_first():
@@ -140,6 +181,24 @@ def test_lifecycle_rules(acc, sat, sources, expected):
     result = stage(acc=acc, sat=sat, sources=sources)
     assert result.lifecycle is expected
     assert result.reason
+
+
+@pytest.mark.parametrize(("acc", "sat", "sources"), [(0.6, 50, 3), (0.6, 30, 2)])
+def test_rising_stages_need_a_significant_acceleration(acc, sat, sources):
+    # Cumple accelerating o emerging, pero la subida puede ser azar: no se afirma la etapa.
+    result = stage(acc=acc, sat=sat, sources=sources, p=0.27)
+    assert result.lifecycle is Lifecycle.UNKNOWN
+    assert not result.insufficient
+    assert result.reason.startswith("Aceleración +0.60 sin demostrar: p = 0.27")
+    assert stage(acc=acc, sat=sat, sources=sources, p=ACCELERATION_MAX_P).lifecycle in (
+        Lifecycle.ACCELERATING,
+        Lifecycle.EMERGING,
+    )
+
+
+def test_significance_does_not_gate_saturated_or_peaking():
+    assert stage(acc=-0.3, sat=80, sources=6, p=1.0).lifecycle is Lifecycle.SATURATED
+    assert stage(acc=0.1, sat=65, sources=6, p=1.0).lifecycle is Lifecycle.PEAKING
 
 
 # --- audience mix ---
@@ -202,11 +261,11 @@ def test_saturation_percentiles():
 
 
 def test_declining_topic_reason():
-    stage = classify(acceleration=-0.52, saturation=22, source_count=5, item_count=10)
+    stage = classify(acceleration=-0.52, p_value=1.0, saturation=22, source_count=5, item_count=10)
     assert stage.lifecycle is Lifecycle.UNKNOWN
     assert stage.insufficient is False
     assert stage.reason.startswith("En descenso: aceleración -52%")
-    rising = classify(acceleration=0.43, saturation=82, source_count=5, item_count=10)
+    rising = classify(acceleration=0.43, p_value=0.2, saturation=82, source_count=5, item_count=10)
     assert rising.reason.startswith("Ninguna regla se cumple")
 
 
@@ -216,6 +275,14 @@ def test_declining_topic_reason():
 def test_momentum_bounds():
     assert momentum_score(0, -5, 0) == 0
     assert momentum_score(100, 5, 10) == 100
+
+
+def test_momentum_grows_with_the_log_ratio_beyond_doubling():
+    # Antes, todo lo que pasaba de +100 % puntuaba igual.
+    doubled = momentum_score(50, 1.0, 0)
+    eightfold = momentum_score(50, 3.0, 0)
+    assert doubled < eightfold
+    assert momentum_score(50, 0.0, 0) == 40.0  # sin cambio: aceleración neutra (50)
 
 
 def test_opportunity_score_is_none_without_fit():
