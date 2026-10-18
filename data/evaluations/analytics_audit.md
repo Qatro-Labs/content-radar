@@ -45,9 +45,10 @@ investigadores o el propio proveedor no cuentan.
 contratación) coinciden con lo que dicen los artículos. Limitación: 1 tema sin determinar y
 varios medios sin leer.
 
-**Hallazgo aparte:** el tema "Oferta de empleo de Anthropic para principiantes" no se sostiene con
-sus piezas: ninguna de las dos newsletters menciona esa oferta. Es un problema de nombre o de
-clustering; conviene revisarlo a mano antes de fijar `DEMO_RUN_ID`.
+**Hallazgo aparte:** el tema "Oferta de empleo de Anthropic para principiantes" parece llevar el
+nombre de una sola pieza (un TikTok sobre esa oferta), mientras que las dos newsletters leídas
+tratan de noticias generales de IA. Solo se leyeron 2 de sus 7 piezas, así que no está probado que
+el tema esté mal agrupado; conviene revisarlo a mano antes de fijar `DEMO_RUN_ID`.
 
 ## 3. LATAM gap: los 28 `null` del run 37
 
@@ -99,10 +100,13 @@ Momentum es lo que más ordena; `cross_source` cambia 2 temas del top 10, no má
 ## 5. Repeticiones en el top 10
 
 Centroide de cada tema = media de los embeddings de sus piezas (`paraphrase-multilingual-MiniLM-L12-v2`).
-Coseno con el tema más cercano, en los 53 temas del run 37: p50 0,75, p90 0,83, máximo 0,85. Ningún
-par del top 10 supera 0,83. Comparten palabras ("agentes de IA"), pero son ángulos distintos
-(ejecución en empresas, riesgos de seguridad, accesos indebidos). No se aplica MMR: escondería
-oportunidades distintas.
+Coseno con el tema más cercano, en los 53 temas del run 37: p50 0,75, p90 0,83, máximo 0,85.
+
+Top 10 con las reglas de las dos ramas (frente al del PR #62 solo, entra "Avances de la IA en
+matemáticas y ciencia" y sale "Agentes de IA de OpenAI que acceden a sistemas ajenos"): el par más
+parecido tiene 0,78 ("Agentes de IA que ejecutan tareas en empresas" y "Riesgos de seguridad de los
+agentes de IA"), por debajo del p90 del corpus. Comparten palabras ("agentes de IA"), pero son
+ángulos distintos. No se aplica MMR: escondería oportunidades distintas.
 
 Limitación: el centroide medio comprime los vectores hacia una dirección común (p50 0,75), así
 que la métrica discrimina poco.

@@ -193,7 +193,7 @@ práctica la regla 1 salta por tener una sola fuente.
 
 `p` es el p-valor de la aceleración (§4). `accelerating` afirma un crecimiento sostenido, así que
 exige que la subida no se explique por azar. `emerging` es temprano por definición y no lleva la
-puerta: con temas de ≤ 4 notas, solo pasaría uno con 4 notas, todas en la ventana actual. Su razón
+puerta: con tan pocas notas, exigirla dejaría fuera casi toda señal temprana. Su razón
 incluye el p-valor y, si pasa de 0,10, avisa: "Señal temprana: con tan pocas piezas, la subida aún
 puede ser azar" (`lifecycle.py:103`). `saturated` y `peaking` tampoco llevan puerta. Un tema que
 falla `accelerating` solo por el p-valor puede quedar `emerging` si cumple esa regla; si no, queda
