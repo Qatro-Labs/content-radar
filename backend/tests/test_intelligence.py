@@ -103,6 +103,12 @@ def test_acceleration_p_value_uses_the_corpus_share():
     assert acceleration_p_value(WindowCounts(8, 4), WindowCounts(100, 100)) < 0.2
 
 
+def test_acceleration_p_value_handles_large_topics():
+    # math.comb(2000, 1000) no cabe en un float: el cálculo va en logaritmos.
+    assert acceleration_p_value(WindowCounts(1000, 1000), WindowCounts(5000, 5000)) > 0.4
+    assert acceleration_p_value(WindowCounts(1500, 500), WindowCounts(5000, 5000)) < 0.001
+
+
 def test_acceleration_p_value_without_data_is_one():
     assert acceleration_p_value(WindowCounts(0, 0), WindowCounts(100, 100)) == 1.0
     # Sin corpus en la ventana anterior (monitoreo recién empezado) no se puede demostrar.

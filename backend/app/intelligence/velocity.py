@@ -83,8 +83,14 @@ def acceleration_p_value(topic: WindowCounts, corpus: WindowCounts) -> float:
     if n == 0 or corpus.current == 0 or corpus.previous == 0:
         return 1.0
     p0 = corpus.current / (corpus.current + corpus.previous)
-    tail = sum(math.comb(n, k) * p0**k * (1 - p0) ** (n - k) for k in range(topic.current, n + 1))
+    tail = sum(math.exp(_log_binomial_pmf(k, n, p0)) for k in range(topic.current, n + 1))
     return round(min(tail, 1.0), 3)
+
+
+def _log_binomial_pmf(k: int, n: int, p: float) -> float:
+    # En logaritmos: con más de ~1.000 piezas, `math.comb(n, k)` ya no cabe en un float.
+    log_comb = math.lgamma(n + 1) - math.lgamma(k + 1) - math.lgamma(n - k + 1)
+    return log_comb + k * math.log(p) + (n - k) * math.log1p(-p)
 
 
 def piece_rate(snapshots: Sequence[tuple[datetime, int | None]]) -> float | None:
