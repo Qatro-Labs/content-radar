@@ -279,8 +279,8 @@ def test_claim_battery_has_support_and_its_reverse():
 @pytest.mark.parametrize(
     ("answers", "expected"),
     [
-        ({"support": choice("supports", 0.85), "support_rev": choice("supports", 0.8)}, True),
-        ({"support": choice("supports", 0.79), "support_rev": choice("supports", 0.9)}, False),
+        ({"support": choice("supports", 0.6), "support_rev": choice("supports", 0.8)}, True),
+        ({"support": choice("supports", 0.59), "support_rev": choice("supports", 0.9)}, False),
         ({"support": choice("supports", 0.9), "support_rev": choice("says_nothing", 0.7)}, False),
         (
             {"support": choice("contradicts", 0.95), "support_rev": choice("contradicts", 0.9)},

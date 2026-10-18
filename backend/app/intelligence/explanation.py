@@ -2,7 +2,7 @@
 
 Aquí no hay LLM ni DB: entran las afirmaciones tal cual y salen solo las que citan una pieza que
 el LLM recibió y no traen cifras que no estén en los datos o en la evidencia. Con la verificación
-de Jev activa, el texto se compone en una segunda etapa con lo que Jev respaldó y sus notas.
+de Jev activa, el texto se compone en una segunda etapa solo con lo que Jev respaldó y sus notas.
 """
 
 import re
@@ -21,9 +21,9 @@ EXPLANATION_FAILED_NOTE = "No se pudo redactar «por qué importa»: se muestran
 NO_VALID_CLAIM_NOTE = (
     "Ninguna afirmación del LLM superó la comprobación de evidencia: se muestran los datos medidos."
 )
-UNVERIFIED_NOTE = (
-    "«Por qué importa» no está verificado por Jev: solo pasó las comprobaciones de Python "
-    "(pieza citada y cifras observadas)."
+VERIFICATION_INCOMPLETE_NOTE = (
+    "No se pudo completar la verificación de «por qué importa» con Jev: se muestran los datos "
+    "medidos."
 )
 
 
@@ -86,6 +86,13 @@ def jev_drop_note(dropped: int) -> str | None:
     )
 
 
+def jev_unverified_note(unverified: int) -> str | None:
+    if not unverified:
+        return None
+    verb = "no se publica" if unverified == 1 else "no se publican"
+    return f"Jev no pudo verificar {_claims_count(unverified)} del LLM: {verb}."
+
+
 def compose_explanation(
     result: TopicResult,
     published: Sequence[ClaimDraft],
@@ -120,3 +127,7 @@ def apply_explanation(
 
 def mark_explanation_failed(result: TopicResult) -> TopicResult:
     return _with_notes(result, None, [EXPLANATION_FAILED_NOTE])
+
+
+def mark_verification_incomplete(result: TopicResult) -> TopicResult:
+    return _with_notes(result, None, [VERIFICATION_INCOMPLETE_NOTE])
