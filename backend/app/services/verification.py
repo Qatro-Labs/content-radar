@@ -67,7 +67,7 @@ class VerifyStats:
     failed: int = 0  # JudgeError
     over_budget: int = 0
     # Por afirmación y por tema.
-    rejected: int = 0  # claim_supported False
+    rejected: int = 0  # claim_supported False: no se publican
     unverified_topics: int = 0
     skipped_reason: str | None = None
 
@@ -150,7 +150,11 @@ async def _judge_missing(
 
 
 def _stats(
-    checks: Sequence[ClaimCheck], keys: Sequence[str], verdicts: dict[str, bool | None], j: _Judged
+    checks: Sequence[ClaimCheck],
+    keys: Sequence[str],
+    *,
+    verdicts: dict[str, bool | None],
+    j: _Judged,
 ) -> VerifyStats:
     unverified = {c.topic_index for c, k in zip(checks, keys, strict=True) if verdicts[k] is None}
     return VerifyStats(
@@ -177,6 +181,6 @@ async def verify_claims(
     judged = await _judge_missing(session, states, cached, verifier=verifier, meter=meter)
 
     verdicts = {key: claim_supported(judged.answers.get(key, {})) for key in states}
-    stats = _stats(checks, keys, verdicts, judged)
+    stats = _stats(checks, keys, verdicts=verdicts, j=judged)
     stats.skipped_reason = SKIPPED_WITHOUT_KEY if verifier.judge is None else None
     return verdicts, stats

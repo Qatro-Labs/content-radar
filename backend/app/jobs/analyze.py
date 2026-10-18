@@ -7,7 +7,8 @@ republicaciones con Jev (cacheado) → scores deterministas → audience fit con
 «por qué importa» con el LLM (cacheado) → verificación de sus afirmaciones con Jev (cacheado, con
 JEV_VERIFY_CLAIMS) → persistir.
 Sin TYPESAFE_API_KEY, o si Jev falla, las piezas quedan sin clasificar, los pares los decide la
-regla de respaldo, las afirmaciones se publican marcadas como no verificadas y el job sigue. Sin
+regla de respaldo, con JEV_VERIFY_CLAIMS activo las afirmaciones sin veredicto se publican
+marcadas como no verificadas, y el job sigue. Sin
 LLM_API_KEY, o si el LLM falla en un tema, su audience fit queda en null (CLAUDE.md §2, regla 3).
 """
 
@@ -115,8 +116,7 @@ def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
         "jev": asdict(e.jev),
         "replicas": asdict(e.computed.replicas),
         "llm": asdict(e.fit),
-        "explain": asdict(e.explain),
-        "claim_verification": asdict(e.explain.verification) if e.explain.verification else None,
+        "explain": asdict(e.explain),  # incluye `verification`
     }
 
 

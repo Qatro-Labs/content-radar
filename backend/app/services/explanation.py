@@ -143,25 +143,25 @@ def _claim_checks(results: Sequence[TopicResult], ready: Mapping[int, _Ready]) -
 def _apply_verified(
     result: TopicResult,
     ready: _Ready,
+    *,
     checks: Sequence[ClaimCheck],
     verdicts: Mapping[str, bool | None],
 ) -> TopicResult:
     valid = [c.claim for c in checks]
     python_note = python_drop_note(len(ready.drafts) - len(valid))
     topic_verdicts = [verdicts[claim_cache_key(c.state)] for c in checks]
-    # Un tema se verifica entero o queda «no verificado»: mezclar frases verificadas y no
-    # verificadas en el mismo texto presentaría como verificado lo que no lo está.
-    if any(v is None for v in topic_verdicts):
-        published, jev_note = valid, UNVERIFIED_NOTE
-    else:
-        published = [c for c, v in zip(valid, topic_verdicts, strict=True) if v]
-        jev_note = jev_drop_note(len(valid) - len(published))
+    # Lo que Jev rechaza nunca se publica (CLAUDE.md §2, regla 3). Si alguna afirmación quedó sin
+    # veredicto, el tema entero lleva la nota: mezclar frases verificadas y no verificadas en el
+    # mismo texto presentaría como verificado lo que no lo está.
+    published = [c for c, v in zip(valid, topic_verdicts, strict=True) if v is not False]
+    unverified_note = UNVERIFIED_NOTE if None in topic_verdicts else None
+    jev_note = jev_drop_note(len(valid) - len(published))
     return compose_explanation(
         result,
         published,
         ready.output.limitations,
         numbers=ready.numbers,
-        notes=[python_note, jev_note],
+        notes=[python_note, jev_note, unverified_note],
     )
 
 
@@ -178,7 +178,10 @@ async def _verify_and_apply(
     by_topic: defaultdict[int, list[ClaimCheck]] = defaultdict(list)
     for check in checks:
         by_topic[check.topic_index].append(check)
-    applied = {i: _apply_verified(results[i], r, by_topic[i], verdicts) for i, r in ready.items()}
+    applied = {
+        i: _apply_verified(results[i], r, checks=by_topic[i], verdicts=verdicts)
+        for i, r in ready.items()
+    }
     return applied, stats
 
 
@@ -234,7 +237,9 @@ async def explain_topics(
         applied, verification = await _verify_and_apply(
             session, results, ready, verifier=verifier, meter=meter
         )
-    final = [_final(i, result, requests, applied) for i, result in enumerate(results)]
+    final = [
+        _final(i, result, requests=requests, applied=applied) for i, result in enumerate(results)
+    ]
     stats = ExplainStats(
         explained=sum(r.key in explained for r in requests.values()),
         cached=sum(r.key in cached for r in requests.values()),
@@ -261,6 +266,7 @@ def _requests(
 def _final(
     i: int,
     result: TopicResult,
+    *,
     requests: Mapping[int, _Request],
     applied: Mapping[int, TopicResult],
 ) -> TopicResult:

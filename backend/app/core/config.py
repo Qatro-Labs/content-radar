@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     typesafe_api_key: str = ""
     jev_model: str = "jev-1.13.0"
     # Jev verifica cada afirmación de «por qué importa». Apagado hasta que la validación con
-    # afirmaciones reales cumpla su criterio de adopción (data/evaluations/jev_claim_v1_eval.md).
+    # afirmaciones reales cumpla su criterio de adopción (docs/jev.md §3, «Validación (pendiente)»).
     jev_verify_claims: bool = False
 
     llm_api_key: str = ""

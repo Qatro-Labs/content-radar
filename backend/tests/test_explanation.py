@@ -114,7 +114,7 @@ async def test_without_any_valid_claim_the_measured_template_stays(session):
 OTHER = "Ninguna pieza muestra resultados medidos."
 
 
-async def test_jev_rejected_claims_are_not_published_and_counted(session):
+async def test_composed_explanation_joins_the_published_claims_and_adds_the_jev_note(session):
     [result, _], _ = await fitted_topics(session)
     checked = python_checked(
         [ClaimDraft(WHY, [URL]), ClaimDraft(OTHER, [URL])], sent_urls={URL}, numbers=set()
@@ -143,7 +143,7 @@ async def test_all_claims_rejected_by_jev_keep_the_measured_template(session):
     assert not any("Jev" in n for n in o.limitations)
 
 
-async def test_unverified_explanation_publishes_python_checked_claims_with_a_note(session):
+async def test_composed_explanation_keeps_the_notes_in_order_and_skips_none(session):
     [result, _], _ = await fitted_topics(session)
     checked = python_checked(
         [ClaimDraft(WHY, [URL]), ClaimDraft(OTHER, [])], sent_urls={URL}, numbers=set()
@@ -284,6 +284,26 @@ async def test_verified_explanation_publishes_only_supported_claims(session):
     )
     assert not any(UNVERIFIED_NOTE in r.opportunity.limitations for r in out)
     assert stats.verification is not None and stats.verification.rejected == 2
+
+
+THIRD = "Varias consultoras ofrecen ya implantaciones a medida."
+
+
+async def test_rejected_claim_is_never_published_even_if_another_has_no_verdict(session):
+    judge = FakeClaimJudge(rejected=frozenset({OTHER}), fail=THIRD)
+    explainer = FakeExplainer(texts=(WHY, OTHER, THIRD))
+
+    out, stats = await explain_verified(session, ClaimVerifier(judge=judge), explainer)
+
+    for r in out:
+        assert r.opportunity.why_it_matters == f"{WHY} {THIRD}"
+        assert r.opportunity.limitations[-2:] == [
+            "Jev no encontró respaldo en la evidencia citada para 1 afirmación del LLM: "
+            "no se publica.",
+            UNVERIFIED_NOTE,
+        ]
+    assert stats.verification is not None
+    assert (stats.verification.rejected, stats.verification.unverified_topics) == (2, 2)
 
 
 async def test_with_verification_on_and_no_key_topics_are_marked_unverified(session):

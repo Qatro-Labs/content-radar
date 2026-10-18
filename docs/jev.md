@@ -149,12 +149,13 @@ circular.
 **Notas en `limitations`** (sin cambio de contrato; la UI las muestra en «Qué no sabemos»):
 
 - «Jev no encontró respaldo en la evidencia citada para N afirmaciones del LLM: no se publican.»
-  Las afirmaciones rechazadas se quitan del texto.
+  Las afirmaciones rechazadas se quitan siempre del texto, también en un tema no verificado.
 - Si Jev rechaza todas, el tema conserva la plantilla de datos medidos con la nota de «ninguna
   afirmación superó la comprobación de evidencia», como cuando falla Python.
-- Un tema se verifica entero o no se verifica. Si falta el juicio de alguna de sus afirmaciones
-  (no hay `TYPESAFE_API_KEY` y no estaba en caché, Jev falló o se agotó el presupuesto), se publican
-  las que pasaron Python con la nota «"Por qué importa" no está verificado por Jev».
+- Si falta el juicio de alguna afirmación (no hay `TYPESAFE_API_KEY` y no estaba en caché, Jev
+  falló o se agotó el presupuesto), se publican las que pasaron Python y Jev no rechazó, y el tema
+  entero lleva la nota «"Por qué importa" no está verificado por Jev»: no se mezclan en el mismo
+  texto frases verificadas y sin verificar sin decirlo.
 
 **Caché y presupuesto:** `jev_judgments` con `battery = "claim"` y `content_item_id` nulo. La clave
 es el hash del `state`, la batería, su versión y el modelo, así que una segunda ejecución con las
