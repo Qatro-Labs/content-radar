@@ -14,7 +14,8 @@ import { RouteName } from '@/router'
 
 import { CARD_CLASS, CARD_TITLE_CLASS, SECONDARY_BUTTON_CLASS } from './dossierClasses'
 
-const { state } = defineProps<{ state: DossierPlaceholder }>()
+// Crear reutiliza estos estados con su propio título.
+const { state, title = 'Expediente' } = defineProps<{ state: DossierPlaceholder; title?: string }>()
 
 const emit = defineEmits<{ retry: [] }>()
 
@@ -79,8 +80,8 @@ const SKELETON_PIECES = 4
     </div>
   </div>
 
-  <section v-else aria-label="Expediente del tema" :class="[CARD_CLASS, 'flex-col mt-3 gap-4']">
-    <h1 :class="CARD_TITLE_CLASS">Expediente</h1>
+  <section v-else :aria-label="title" :class="[CARD_CLASS, 'flex-col mt-3 gap-4']">
+    <h1 :class="CARD_TITLE_CLASS">{{ title }}</h1>
     <template v-if="state === DossierPlaceholder.NotFound">
       <p class="text-[17px] leading-[1.55] text-ink-soft">
         Este tema no está en el análisis servido: los temas cambian entre ejecuciones.

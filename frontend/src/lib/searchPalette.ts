@@ -1,5 +1,9 @@
+import type { RouteLocationNormalizedLoaded, RouteLocationRaw } from 'vue-router'
+
+import { RouteName } from '@/router/routeNames'
 import type { components } from '@/types/api'
 
+import { BRIEF_PARAM } from './briefView'
 import { collectPieces, foldForSearch, type LoadedEvidence, type Piece } from './exploreView'
 
 type Opportunity = components['schemas']['Opportunity']
@@ -57,4 +61,16 @@ export function buildSearchResults({ text, ...loaded }: SearchInput): SearchResu
 
 export function hasResults({ topics, pieces, sources }: SearchResults): boolean {
   return topics.length + pieces.length + sources.length > 0
+}
+
+// Quien busca desde Crear quiere escribir de ese tema: se abre su brief, con una query nueva para
+// no arrastrar las opciones del tema anterior. En el resto de vistas, su expediente.
+export function topicDestination(
+  routeName: RouteLocationNormalizedLoaded['name'],
+  opportunityId: string,
+): RouteLocationRaw {
+  if (routeName === RouteName.Create) {
+    return { name: RouteName.Create, query: { [BRIEF_PARAM.opportunity]: opportunityId } }
+  }
+  return { name: RouteName.Dossier, params: { id: opportunityId } }
 }

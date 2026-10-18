@@ -86,6 +86,22 @@ export function formatRatio(ratio: number): string {
   return `${formatDecimal(ratio)}×`
 }
 
+// DESIGN.md §4: el badge de outlier es Lima señal, y solo lo lleva lo que la API marca como
+// outlier; una pieza destacada (2×) no lo es.
+export function outlierBadge(piece: Pick<Evidence, 'is_outlier' | 'outlier_ratio'>): string | null {
+  if (piece.is_outlier !== true || piece.outlier_ratio == null) return null
+  return formatRatio(piece.outlier_ratio)
+}
+
+// Sin ratio no hay rendimiento que comparar: esas piezas van al final, nunca como si fueran 0.
+export function compareRatios(a: Evidence, b: Evidence): number {
+  const ratioA = a.outlier_ratio ?? null
+  const ratioB = b.outlier_ratio ?? null
+  if (ratioA !== null && ratioB !== null) return ratioB - ratioA
+  if (ratioA === ratioB) return 0
+  return ratioA === null ? 1 : -1
+}
+
 // CLAUDE.md §7: ≥ 3× es outlier (lo decide la API con `is_outlier`) y ≥ 2× es destacada.
 export const HIGHLIGHT_RATIO_MIN = 2
 

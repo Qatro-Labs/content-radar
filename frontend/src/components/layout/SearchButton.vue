@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Search } from '@lucide/vue'
 import { onKeyStroke } from '@vueuse/core'
-import { ref } from 'vue'
 
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
+import { useSearchPalette } from '@/composables/useSearchPalette'
 
 import SearchPalette from './SearchPalette.vue'
 
 const LABEL = 'Buscar tema o pieza'
 
-const open = ref(false)
+const { open } = useSearchPalette()
 
 // ⌘K en Mac y Ctrl+K en el resto. Sin `preventDefault`, Ctrl+K lleva el foco a la barra de
 // búsqueda del navegador.

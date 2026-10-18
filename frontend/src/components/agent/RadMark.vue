@@ -4,6 +4,9 @@
 export interface RadMarkState {
   working: boolean
   scanKey: number
+  // El haz gira sin parar en lugar de dar una pasada por paso: para una espera que no informa de
+  // su progreso, como redactar un brief (DESIGN.md §7, «Crear: Rad redactando»).
+  sweeping?: boolean
   blinkKey: number
   lookAt: { x: number; y: number } | null
 }
@@ -55,12 +58,13 @@ function gazeToward(lookAt: RadMarkState['lookAt']): Point {
   return { x: (dx / distance) * reach, y: (dy / distance) * reach }
 }
 
+// Abierto en radar, el iris es el centro del radar: se queda quieto al frente mientras gira el haz.
 function updateGaze() {
-  gaze.value = gazeToward(state.lookAt)
+  gaze.value = state.working ? LOOK_AHEAD : gazeToward(state.lookAt)
 }
 
 onMounted(updateGaze)
-watch(() => state.lookAt, updateGaze, { deep: true })
+watch([() => state.lookAt, () => state.working], updateGaze, { deep: true })
 
 const containerStyle = computed(() => ({
   width: `${size}px`,
@@ -69,7 +73,8 @@ const containerStyle = computed(() => ({
 }))
 // Un parpadeo al terminar, nunca mientras trabaja; una pasada del haz por cada paso de datos.
 const isBlinking = computed(() => state.blinkKey > 0 && !state.working)
-const isScanning = computed(() => state.working && state.scanKey > 0)
+const isSweeping = computed(() => state.working && state.sweeping === true)
+const isScanning = computed(() => state.working && state.scanKey > 0 && !isSweeping.value)
 </script>
 
 <template>
@@ -108,7 +113,11 @@ const isScanning = computed(() => state.working && state.scanKey > 0)
             vector-effect="non-scaling-stroke"
           />
         </g>
-        <g :key="state.scanKey" class="rad-layer rad-beam" :class="{ 'rad-sweep': isScanning }">
+        <g
+          :key="state.scanKey"
+          class="rad-layer rad-beam"
+          :class="{ 'rad-sweep': isScanning, 'rad-sweep-loop': isSweeping }"
+        >
           <path
             d="M20 20 L20 7 A13 13 0 0 1 29.96 11.64 Z"
             class="fill-signal"
@@ -161,6 +170,13 @@ const isScanning = computed(() => state.working && state.scanKey > 0)
   animation: rad-sweep 1100ms linear both;
 }
 
+/* La excepción: mientras se redacta un brief, el haz gira sin parar. Codifica que Rad sigue
+   trabajando en una espera que no da progreso, y se para al llegar la respuesta. */
+.rad-sweep-loop {
+  opacity: 1;
+  animation: rad-spin 1600ms linear infinite;
+}
+
 /* Se cierra rápido y se abre con un leve rebote: más vivo que un parpadeo simétrico. */
 .rad-blink {
   animation: rad-blink 300ms cubic-bezier(0.3, 0, 0.4, 1);
@@ -172,8 +188,15 @@ const isScanning = computed(() => state.working && state.scanKey > 0)
   }
 
   .rad-sweep,
+  .rad-sweep-loop,
   .rad-blink {
     animation: none;
+  }
+}
+
+@keyframes rad-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

@@ -19,8 +19,11 @@ interface Counter {
 // fe-dashboard-v2): cuentan todas las piezas, no lo filtrado.
 const counters = computed<Counter[]>(() => [
   { filter: 'outliers', label: 'Outliers', value: view.counts.outliers },
-  { filter: 'youtube', label: PLATFORM_LABEL.youtube, value: view.counts.youtube },
-  { filter: 'hackernews', label: PLATFORM_LABEL.hackernews, value: view.counts.hackernews },
+  ...view.counts.platforms.map(({ platform, count }) => ({
+    filter: platform,
+    label: PLATFORM_LABEL[platform],
+    value: count,
+  })),
 ])
 
 // DESIGN.md §4, contador-filtro: baldosa blanca de radio 16px y cifra Bricolage de 32px.

@@ -26,6 +26,17 @@ describe('RadMark', () => {
     expect(screen.getByTestId('rad-pupil').style.opacity).toBe('0')
   })
 
+  it('keeps the beam sweeping while asked to, and stops it when Rad stops working', async () => {
+    const { container, rerender } = render(RadMark, {
+      props: { state: { ...RESTING, working: true, sweeping: true } },
+    })
+    expect(container.querySelector('.rad-sweep-loop')).not.toBeNull()
+
+    await rerender({ state: { ...RESTING, sweeping: true } })
+
+    expect(container.querySelector('.rad-sweep-loop')).toBeNull()
+  })
+
   it('looks straight ahead when there is nothing to look at', () => {
     render(RadMark, { props: { state: RESTING } })
 
@@ -53,5 +64,22 @@ describe('RadMark', () => {
     await nextTick()
 
     expect(screen.getByTestId('rad-gaze').style.transform).toBe(transform)
+  })
+
+  it('keeps the iris centred while it works as a radar, whatever it follows', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return this.hasAttribute('data-agent-root') ? box(0, 0, 1000) : box(10, 10, 40)
+    })
+    const state: RadMarkState = { ...RESTING, working: true, lookAt: { x: 430, y: 30 } }
+    const App = defineComponent({
+      render: () => h('div', { 'data-agent-root': '' }, [h(RadMark, { state })]),
+    })
+
+    render(App)
+    await nextTick()
+
+    expect(screen.getByTestId('rad-gaze').style.transform).toBe('translate(0px, 0px)')
   })
 })
