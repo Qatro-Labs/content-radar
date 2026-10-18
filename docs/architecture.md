@@ -83,7 +83,7 @@ ser la servida. Un `pg_try_advisory_lock` impide que corran dos a la vez
 
 | Paso | Qué pasa | Quién |
 |---|---|---|
-| 1. Cargar | Piezas de fuentes activas publicadas en los últimos 14 días, con sus snapshots hasta `as_of` | Python (`backend/app/services/opportunities.py:55`) |
+| 1. Cargar | Piezas de fuentes activas publicadas en los últimos 14 días, con sus snapshots hasta `as_of` | Python (`backend/app/services/opportunities.py:53`) |
 | 2. Clasificar | Una llamada a Jev por pieza nueva con la batería `piece.v3`; lo ya clasificado sale de la caché `jev_judgments` | **Jev** |
 | 3. Filtrar | Sale una pieza solo si Jev dice con seguridad que ni el tema ni el título son de IA | Python |
 | 4. Agrupar | Embeddings multilingües (ES y EN en el mismo espacio) y clustering aglomerativo por coseno | sentence-transformers + scikit-learn |
@@ -125,7 +125,7 @@ verificación de cada afirmación con Jev que describe CLAUDE.md §7 no está im
 
 Cada `analyze` correcto es una ejecución con su propio ranking; los clusters cambian entre
 ejecuciones. La API, el MCP y el agente leen siempre la misma, elegida en
-`backend/app/services/opportunities.py:198`:
+`backend/app/services/opportunities.py:208`:
 
 - Con `DEMO_RUN_ID` fijado en Railway, esa ejecución. Si no existe o no terminó bien, **no se sirve
   nada**: una demo fijada a una ejecución inexistente tiene que notarse.
