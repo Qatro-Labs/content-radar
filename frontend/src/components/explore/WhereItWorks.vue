@@ -16,11 +16,6 @@ const { topTopics, topSources } = defineProps<{
   topSources: SourceOutliers[]
 }>()
 
-// HN no tiene canal: su referencia es el p90 de la búsqueda (CLAUDE.md §7).
-const LIMITATION =
-  'Que una pieza rinda 3× su referencia no explica por qué funcionó: es una señal para ' +
-  'revisarla, no una causa. En Hacker News la referencia es el p90 de la búsqueda, no un canal.'
-
 const hasOutliers = computed(() => topTopics.length > 0 || topSources.length > 0)
 
 function outlierLabel(count: number): string {
@@ -81,11 +76,6 @@ function outlierLabel(count: number): string {
           </span>
         </li>
       </ul>
-    </div>
-
-    <div class="flex flex-col gap-1.5 rounded-tile bg-notice px-4 py-3.5">
-      <p class="text-sm font-semibold text-notice-foreground">Qué no sabemos</p>
-      <p class="text-sm text-ink-soft">{{ LIMITATION }}</p>
     </div>
   </div>
 </template>

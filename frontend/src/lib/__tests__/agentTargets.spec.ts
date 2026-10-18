@@ -133,7 +133,7 @@ describe('navigationTargets', () => {
       nav: { screen: 'dossier', opportunity_id: 'opp_001', section: 'limits' },
       from: { screen: 'radar', opportunityId: 'opp_001', previewOpen: true },
       before: { anchor: 'open-dossier', kind: 'control' },
-      after: { anchor: 'limit', kind: 'block' },
+      after: { anchor: 'dossier-why', kind: 'block' },
     },
     {
       case: 'dossier from anywhere else: «Explorar» in the nav, score by default',

@@ -44,7 +44,7 @@ export interface AgentTurnView {
   answer: AnswerEvent | null
   // Palabras de `answer.text` ya mostradas (DESIGN.md §7: la respuesta aparece palabra a palabra).
   visibleWords: number
-  // «Citadas», «Qué no sabemos» y los enlaces: solo cuando la respuesta ya está entera.
+  // «Citadas» y los enlaces: solo cuando la respuesta ya está entera.
   showEnding: boolean
   summary: DoneEvent | null
   // Mensaje en español, listo para pintar.

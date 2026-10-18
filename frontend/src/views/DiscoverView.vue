@@ -118,14 +118,7 @@ function hover(id: string | null) {
         <RadarFootnote class="shrink-0" :monitoring-started-at="data.monitoring_started_at" />
       </div>
 
-      <RadarSidePanel
-        :view
-        :peeked
-        :monitoring-started-at="data.monitoring_started_at"
-        @select="select"
-        @hover="hover"
-        @clear="clearSelection"
-      />
+      <RadarSidePanel :view :peeked @select="select" @hover="hover" @clear="clearSelection" />
     </div>
   </div>
 </template>

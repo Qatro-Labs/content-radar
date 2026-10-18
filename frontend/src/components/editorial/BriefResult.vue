@@ -2,13 +2,7 @@
 import { ArrowUpRight } from '@lucide/vue'
 import { computed } from 'vue'
 
-import {
-  briefFootnote,
-  briefPoints,
-  HOOK_MISSING,
-  NO_LIMITATIONS,
-  WHY_IT_FITS_MISSING,
-} from '@/lib/briefView'
+import { briefFootnote, briefPoints, HOOK_MISSING, WHY_IT_FITS_MISSING } from '@/lib/briefView'
 import type { components } from '@/types/api'
 
 import BriefResultHeader from './BriefResultHeader.vue'
@@ -104,27 +98,8 @@ const points = computed(() => briefPoints(brief))
         <p v-else class="text-[15px] text-muted-foreground">{{ WHY_IT_FITS_MISSING }}</p>
       </div>
 
-      <!-- DESIGN.md §4: «Qué no sabemos» es obligatorio en todo detalle. -->
-      <div
-        :class="BLOCK_ENTER_CLASS"
-        :style="enter(5)"
-        class="flex flex-col gap-1.5 rounded-tile bg-notice px-5 py-[18px]"
-      >
-        <h3 class="text-[15px] font-semibold text-notice-foreground">Qué no sabemos</h3>
-        <template v-if="brief.limitations.length > 0">
-          <p
-            v-for="(limitation, index) in brief.limitations"
-            :key="index"
-            class="text-[14.5px] leading-[1.5] text-ink-soft"
-          >
-            {{ limitation }}
-          </p>
-        </template>
-        <p v-else class="text-[14.5px] leading-[1.5] text-ink-soft">{{ NO_LIMITATIONS }}</p>
-      </div>
-
       <!-- DESIGN.md §9: el texto del LLM se rotula como evaluación editorial, con su modelo. -->
-      <p :class="BLOCK_ENTER_CLASS" :style="enter(6)" class="text-[13.5px] text-muted-foreground">
+      <p :class="BLOCK_ENTER_CLASS" :style="enter(5)" class="text-[13.5px] text-muted-foreground">
         {{ briefFootnote(brief) }}
       </p>
     </div>

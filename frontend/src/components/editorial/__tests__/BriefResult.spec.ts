@@ -100,7 +100,6 @@ describe('BriefResult', () => {
 
     expect(screen.getByText(HOOK_MISSING)).toBeTruthy()
     expect(screen.getByText(/Encaje no disponible/)).toBeTruthy()
-    expect(screen.getByText('No hay limitaciones registradas para este brief.')).toBeTruthy()
   })
 
   it('links each key point to its sources in a new tab', () => {

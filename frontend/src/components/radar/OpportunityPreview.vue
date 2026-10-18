@@ -74,7 +74,8 @@ const BUTTON_CLASS =
 </script>
 
 <template>
-  <div data-agent="detail" class="flex flex-col gap-4">
+  <!-- Ocupa todo el alto del panel: los botones (`mt-auto`) quedan siempre al fondo. -->
+  <div data-agent="detail" class="flex grow flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <HoverHint :text="HELP.backToWeek">
         <button

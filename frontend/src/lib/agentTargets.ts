@@ -35,7 +35,8 @@ export const SECTION_ANCHOR: Record<DossierSection, string> = {
   evolution: 'dossier-evolution',
   fit: 'dossier-fit',
   evidence: 'dossier-evidence',
-  limits: 'limit',
+  // «Qué no sabemos» salió de la UI (18/10): la sección lleva a «Por qué importa».
+  limits: 'dossier-why',
 }
 
 const DEFAULT_SECTION: DossierSection = 'score'

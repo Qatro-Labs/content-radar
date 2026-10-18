@@ -186,7 +186,6 @@ describe('briefPlainText', () => {
         'Estructura\n1. El problema\n2. Tres cifras',
         `Puntos clave\n- Los equipos miden latencia, no resultados.\n  ${HN}\n  ${YT}`,
         'Por qué encaja con 30X\nHabla de decisiones de negocio.',
-        'Qué no sabemos\n- Solo hay dos fuentes.',
         'Redactado por claude-haiku-5-5 a partir de 2 piezas. Evaluación editorial, no una medición.',
       ].join('\n\n'),
     )

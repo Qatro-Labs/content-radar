@@ -1,7 +1,6 @@
 import type { components } from '@/types/api'
 
 import { countLabel } from './evidenceFormat'
-import { formatUtcTimestamp } from './format'
 import { LIFECYCLE_STYLE } from './lifecycle'
 import { CONFIDENCE_LABEL, RECOMMENDATION_LABEL } from './opportunityFormat'
 import {
@@ -296,28 +295,4 @@ export function radarSubline(view: RadarView, query: RadarQuery): string {
     return `Hay ${analyzedTopicsLabel(view.total)} esta semana. ${howToRead(query)}`
   }
   return howToRead(query)
-}
-
-function missingStageReason(unknownCount: number, preliminaryCount: number): string {
-  const unmatchedCount = unknownCount - preliminaryCount
-  if (preliminaryCount === 0) return 'ninguna regla se cumple'
-  if (unmatchedCount === 0) return 'por falta de datos'
-  return `${preliminaryCount} por falta de datos y ${unmatchedCount} porque ninguna regla se cumple`
-}
-
-// D4 del plan fe-dashboard-v2: `preliminary` = datos insuficientes (CLAUDE.md §7); el resto de
-// los temas sin etapa tiene datos, pero ninguna regla se cumple.
-export function describeStageUnknowns(
-  topics: readonly Opportunity[],
-  monitoringStartedAt: string,
-): string {
-  const since = `Datos desde el ${formatUtcTimestamp(monitoringStartedAt)}.`
-  const unknown = topics.filter((opportunity) => opportunity.lifecycle === 'unknown')
-  if (unknown.length === 0) return `Todos los temas tienen una tendencia clara. ${since}`
-  const preliminaryCount = unknown.filter(
-    (opportunity) => opportunity.growth_status === 'preliminary',
-  ).length
-  const verb = unknown.length === 1 ? 'tiene' : 'tienen'
-  const share = `${unknown.length} de ${topicsLabel(topics.length)}`
-  return `${share} no ${verb} una tendencia clara: ${missingStageReason(unknown.length, preliminaryCount)}. ${since}`
 }
