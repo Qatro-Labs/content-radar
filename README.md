@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-    <img src="docs/assets/logo-light.svg" alt="30X Signal" width="300">
+    <img src="docs/assets/logo-light.svg" alt="30X Signal" width="440">
   </picture>
 </p>
 
