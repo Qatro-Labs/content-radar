@@ -44,8 +44,8 @@ const SKELETON_COUNTERS = 3
 const SKELETON_PICKS = 3
 const RETRY_BUTTON =
   'min-h-11 rounded-xl px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]'
-// Sobre el fondo del gráfico el secundario va en blanco, como "Restablecer vista" sobre el
-// lienzo (DESIGN.md §4): el gris de siempre casi no se distingue de ese fondo.
+// Sobre el fondo del gráfico el secundario va en blanco, como sobre el lienzo (DESIGN.md §4): el
+// gris de siempre casi no se distingue de ese fondo.
 const RETRY_ON_PLOT = 'bg-card'
 const RETRY_ON_CARD = 'bg-secondary'
 </script>

@@ -12,8 +12,8 @@ const BUTTON_CLASS =
   'inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-4 text-[15px] font-semibold transition-[background-color,scale] duration-150 ease-out active:scale-[0.98]'
 export const PRIMARY_BUTTON_CLASS = `${BUTTON_CLASS} bg-primary text-primary-foreground hover:bg-primary-hover`
 export const SECONDARY_BUTTON_CLASS = `${BUTTON_CLASS} bg-secondary text-secondary-foreground hover:bg-secondary-hover`
-// Sobre el lienzo el secundario va en blanco, como «Restablecer vista»: el gris de siempre casi
-// no se distingue del fondo (DESIGN.md §4).
+// Sobre el lienzo el secundario va en blanco: el gris de siempre casi no se distingue del fondo
+// (DESIGN.md §4).
 export const SECONDARY_ON_CANVAS_CLASS = `${BUTTON_CLASS} bg-card text-foreground hover:bg-secondary-hover`
 
 // DESIGN.md §2 «Audiencia»: Tech en Tinta, Negocio en gris y En español en Lima señal.

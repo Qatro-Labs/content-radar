@@ -72,7 +72,7 @@ export const HELP = {
   generateBrief: 'Prepara un brief de contenido a partir de este tema y su evidencia.',
   rad: 'Rad, el agente del Radar: pregúntale en lenguaje natural y responde moviendo la página, con los mismos filtros que usas tú y citando la evidencia.',
   minimizeRad: 'Minimizar',
-  resetView: 'Quita los filtros y los resaltados y vuelve a la vista de todos los temas.',
+  counterAll: 'Todos los temas de la semana: quita los filtros y los resaltados.',
 
   // Explorar
   exploreFilter:

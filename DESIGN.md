@@ -43,6 +43,7 @@ con lectura en una frase. De ninguna: monoespaciada decorativa, glows, cristal n
 Una sola familia de grises fríos (sin mezclar con grises cálidos). Nunca negro puro.
 
 **Base**
+
 - **Lienzo** (#F2F3F5) — fondo de la página.
 - **Superficie** (#FFFFFF) — tarjetas, panel, tabla, tooltips.
 - **Superficie hundida** (#F6F7F8) — baldosas dentro de una tarjeta (stats), hover de filas.
@@ -52,6 +53,7 @@ Una sola familia de grises fríos (sin mezclar con grises cálidos). Nunca negro
 - **Línea de dato** (#E2E5E9) — solo ejes y líneas medias del radar. **Línea de tabla** (#EEF0F2) — solo filas del ranking.
 
 **Tinta**
+
 - **Tinta** (#121418) — texto principal, botón primario, anillo de score, barras de score y selección.
 - **Tinta de lectura** (#22262C) — párrafos largos ("Por qué importa").
 - **Tinta suave** (#3D434C) — texto secundario y celdas de tabla.
@@ -59,6 +61,7 @@ Una sola familia de grises fríos (sin mezclar con grises cálidos). Nunca negro
 - **Apagado** (#626873) — metadatos, ejes, nota al pie. Mínimo para texto: no usar grises más claros.
 
 **Señal (único acento)**
+
 - **Lima señal** (#C6F432) — solo como **relleno bajo tinta**: "Publicar ya", cuadrante "Prioridad", fila
   seleccionada, segmento "En español" de "Para quién importa", marca del logo. Nunca como texto ni como línea fina
   sobre blanco (no tiene contraste).
@@ -66,15 +69,16 @@ Una sola familia de grises fríos (sin mezclar con grises cálidos). Nunca negro
 
 **Etapa del ciclo de vida** (son estados, no acentos; se distinguen también por luminosidad)
 
-| Etapa | Relleno (burbuja) | Trazo (ping, latido) | Fondo del chip | Texto del chip |
-|---|---|---|---|---|
-| Emergente | #3D7BFF | #3D7BFF | #E8F0FF | #1D4FC4 |
-| Acelerando | #B5E61D | #6E8F00 | #EEF9CC | #3C5A00 |
-| En pico | #FF9A3C | #E07A14 | #FFF0E0 | #9A4A00 |
-| Saturado | #F0565C | #F0565C | #FDE8E9 | #B0262C |
-| Sin etapa | hueco (blanco) | #8A919C discontinuo | #F0F1F3 | #50565F |
+| Etapa      | Relleno (burbuja) | Trazo (ping, latido) | Fondo del chip | Texto del chip |
+| ---------- | ----------------- | -------------------- | -------------- | -------------- |
+| Emergente  | #3D7BFF           | #3D7BFF              | #E8F0FF        | #1D4FC4        |
+| Acelerando | #B5E61D           | #6E8F00              | #EEF9CC        | #3C5A00        |
+| En pico    | #FF9A3C           | #E07A14              | #FFF0E0        | #9A4A00        |
+| Saturado   | #F0565C           | #F0565C              | #FDE8E9        | #B0262C        |
+| Sin etapa  | hueco (blanco)    | #8A919C discontinuo  | #F0F1F3        | #50565F        |
 
 **Otros roles**
+
 - **Aviso** (#FFF4E5, texto #8A4B00) — avisos y chip "Datos de ejemplo": #FFF0DC / #8A4B00.
 - **Negativo** (#B0262C) — aceleración negativa, "Descartar" (fondo #FDE8E9).
 - **Neutro de acción** (#F0F1F3, texto #22262C) — "Buscar ángulo" y "Esperar caso".
@@ -91,17 +95,17 @@ ejemplo un snippet de conexión MCP).
 - **UI y texto: Geist** (400, 500, 600). Todo lo demás. Paquete: `@fontsource-variable/geist`.
 - **Cifras tabulares siempre** (`font-variant-numeric: tabular-nums`) para que las columnas y los contadores no bailen.
 
-| Uso | Familia | Tamaño / interlineado | Peso | Tracking |
-|---|---|---|---|---|
-| H1 de vista | Bricolage | `clamp(2.25rem, 4vw, 3.5rem)` / 1.0 | 600 | −0.04em |
-| Tema seleccionado (panel) | Bricolage | 30px / 1.08 | 600 | −0.03em |
-| Título de tarjeta | Bricolage | 20–22px / 1.2 | 600 | −0.02em |
-| Número grande (score, contadores) | Bricolage | 36–38px / 1.0 | 600 | −0.03 a −0.04em |
-| Número de baldosa | Bricolage | 20–28px / 1.1 | 600 | −0.02em |
-| Frase destacada | Geist | 17–18px / 1.55 | 400 | 0 |
-| Texto base | Geist | 15px / 1.5 | 400–500 | 0 |
-| Secundario, celdas | Geist | 14px / 1.5 | 400–500 | 0 |
-| Chips, ejes, metadatos | Geist | 12–13px / 1.4 | 500–600 | 0 |
+| Uso                               | Familia   | Tamaño / interlineado               | Peso    | Tracking        |
+| --------------------------------- | --------- | ----------------------------------- | ------- | --------------- |
+| H1 de vista                       | Bricolage | `clamp(2.25rem, 4vw, 3.5rem)` / 1.0 | 600     | −0.04em         |
+| Tema seleccionado (panel)         | Bricolage | 30px / 1.08                         | 600     | −0.03em         |
+| Título de tarjeta                 | Bricolage | 20–22px / 1.2                       | 600     | −0.02em         |
+| Número grande (score, contadores) | Bricolage | 36–38px / 1.0                       | 600     | −0.03 a −0.04em |
+| Número de baldosa                 | Bricolage | 20–28px / 1.1                       | 600     | −0.02em         |
+| Frase destacada                   | Geist     | 17–18px / 1.55                      | 400     | 0               |
+| Texto base                        | Geist     | 15px / 1.5                          | 400–500 | 0               |
+| Secundario, celdas                | Geist     | 14px / 1.5                          | 400–500 | 0               |
+| Chips, ejes, metadatos            | Geist     | 12–13px / 1.4                       | 500–600 | 0               |
 
 - Siempre en minúscula de oración ("Para quién importa"), nunca en mayúsculas con tracking.
 - Títulos de dos líneas como máximo; ancho de lectura de párrafo ≤ 720px (~65 caracteres).
@@ -138,9 +142,15 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **"Qué no sabemos":** retirado de toda la UI el 18/10 (Radar, Explorar, expediente, brief y Rad). Un dato
   ausente se sigue diciendo donde está ("no disponible"), p. ej. el hueco en LATAM en la cabecera del expediente.
 - **Contador-filtro:** baldosa blanca radio 16px, cifra Bricolage 32px y debajo la etiqueta con su muestra de color
-  ("Publicar ya", "Acelerando", "Emergentes", "Sin etapa"). Es un botón (`aria-pressed`) que escribe el mismo estado
-  de la URL que el resto de filtros; activo, anillo de Tinta de 2px. Sin textos de ayuda debajo. Muestra el **total**
-  (no cambia al filtrar) y la selección es **única**: pulsar otro lo sustituye y pulsar el activo lo quita.
+  ("Todos", "Publicar ya", "Acelerando", "Emergentes"). El grupo es de selección **única** (`role="radiogroup"`,
+  «Filtrar por»; cada baldosa `role="radio"` con `aria-checked`) y escribe el mismo estado de la URL que el resto de
+  filtros. La primera baldosa, **«Todos»**, cuenta todos los temas de la ejecución y su muestra es un círculo hueco
+  (anillo interior de 1,5px en Apagado); está marcada cuando no hay filtros ni resaltados, y pulsarla quita filtros y
+  resaltados de Rad (sustituye al antiguo botón «Restablecer vista», que aparecía al filtrar y movía la fila).
+  **Activa:** relleno de Tinta, cifra en blanco, etiqueta en gris claro (#D5D8DD, `--on-ink-muted`) y la muestra
+  visible (el anillo de «Todos» pasa a ese gris). Sin anillo: se confundía con el foco del teclado. Inactiva, al
+  pasar el cursor, #E8EAED (`secondary-hover`). Sin textos de ayuda debajo. Cada cifra es el **total** (no cambia al
+  filtrar): pulsar otra baldosa la sustituye y pulsar la activa la quita (vuelve a «Todos»).
 - **Tooltip / tarjeta flotante del radar:** blanca, radio 14px, la única con sombra (§5). Chip de etapa, tema,
   "Oportunidad 79 · ↑ +80 %".
 - **Tabla de ranking:** filas de 54–56px con línea #EEF0F2; hover #F6F7F8; seleccionada en lavado de señal y puesto
@@ -174,14 +184,15 @@ El agente se llama **Rad** y vive en Radar, Explorar y el expediente. En Crear n
 aparece para firmar el brief y mientras lo redacta (§7, «Crear: Rad redactando»). Sus pantallas y su movimiento se
 decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 
-- **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando»,
-  «Emergentes» y «Sin etapa» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`. La leyenda de etapas pasa
+- **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando» y
+  «Emergentes» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`; «Todos» los quita. La leyenda de etapas pasa
   a la cabecera de la tarjeta del radar y también filtra (18/10): cada chip es un botón (`aria-pressed`) que escribe
   `lifecycle` con la misma selección única que los contadores, activo con el anillo de Tinta de 2px. Es la vía para
   las etapas sin contador (En pico, Saturado, Sin tendencia clara). "Hueco en LATAM" sale de la vista mientras
   `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
-  filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista"; si la vista es justo
-  la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
+  filtro activo, el H1 dice "3 de 38 temas" y la baldosa «Todos» se desmarca: pulsarla restablece la vista (también
+  la usa Rad: lleva el ancla `reset`). Si la vista es justo la que dejó Rad, junto a las baldosas va la frase
+  "Filtros puestos por Rad".
 - **Barra de pregunta:** fija abajo y centrada (`position: fixed`, ancho máximo 840px), tarjeta blanca de radio 20px
   con la sombra flotante (§5), porque flota sobre la página: la conversación no reserva espacio y el final de la
   página solo deja sitio para la barra. Arriba, una cabecera: el botón «−» «Minimizar Rad» (32px, Lucide `Minus`,
@@ -321,12 +332,14 @@ Radar ese efecto es el **escaneo**; todo lo demás es discreto y sigue a la acci
 el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cuando el agente lee datos.
 
 **Curvas y tiempos**
+
 - UI: `cubic-bezier(0.16, 1, 0.3, 1)` (ease-out). Rebote solo en la aparición de burbujas: `cubic-bezier(0.34, 1.4, 0.64, 1)`.
   Barrido: lineal.
 - 150ms hover · 200–320ms selección y desplazamientos · 420ms barras · 480ms aparición de burbuja · 1100ms ping ·
   1800ms barrido.
 
 **Radar**
+
 - **Barrido al cargar y cuando Rad empieza a leer datos:** un haz pivota en la esquina "Prioridad" (de 170° a 290°, 1.8s,
   0.2s de retardo) con una estela del lavado de señal. Cada burbuja aparece (escala 0.2 → 1 con rebote) cuando el
   haz cruza su ángulo, así que se "detecta" como en un radar.
@@ -335,13 +348,13 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - **Latido con significado:** solo laten los temas que crecen, y la frecuencia codifica la aceleración. La nota al
   pie lo dice ("las burbujas que laten están creciendo").
 
-  | Aceleración | Periodo del latido |
-  |---|---|
-  | ≥ 1.0 (+100 %) | 1.4s |
-  | ≥ 0.5 | 2.0s |
-  | > 0.2 | 2.8s |
-  | > 0 | 3.6s |
-  | ≤ 0, sin dato o "Sin etapa" | estática |
+  | Aceleración                 | Periodo del latido |
+  | --------------------------- | ------------------ |
+  | ≥ 1.0 (+100 %)              | 1.4s               |
+  | ≥ 0.5                       | 2.0s               |
+  | > 0.2                       | 2.8s               |
+  | > 0                         | 3.6s               |
+  | ≤ 0, sin dato o "Sin etapa" | estática           |
 
 - **Selección:** la mira y las lecturas de los ejes se deslizan a la nueva burbuja (320ms) y el panel lateral pasa a
   la vista previa (fundido, 280ms). La tarjeta flotante sigue al cursor, no a la selección.
@@ -349,11 +362,13 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - Burbuja: hover `scale(1.12)`, active `scale(0.94)`.
 
 **Panel y listas**
+
 - El anillo de score se dibuja al cargar (1.1s) y la cifra cuenta hasta el nuevo valor al cambiar de selección (450ms).
 - Barras de métrica y de audiencia crecen hasta su valor (420ms); textos del panel con fundido y 4px de subida (300ms).
 - Ranking: entrada escalonada de 40ms por fila y barras de score que crecen.
 
 **Crear: Rad redactando** (el efecto llamativo de Crear; artboard C1, 18/10)
+
 - La API devuelve el brief entero en unos 15 s y no informa de su progreso. Las etapas son las del backend, en orden,
   con tiempos estimados: leer la evidencia → redactar → comprobar las citas. La última espera a la respuesta. Sin
   porcentajes ni contadores inventados.
@@ -373,6 +388,7 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   y el brief aparece al llegar.
 
 **Agente**
+
 - **Primero llega, después actúa.** La presencia viaja hasta el objetivo (680ms, ease-out) y la acción se aplica al
   llegar: el filtro se activa, la burbuja se selecciona y hace ping, el radar se atenúa. Cada paso dura unos 1,6s.
 - El anillo de foco se desplaza con la presencia (600ms) y se funde (240ms) cuando el objetivo es una burbuja.
@@ -386,6 +402,7 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - **`prefers-reduced-motion`:** la presencia salta sin viajar, los pasos duran 0,7s y la respuesta aparece entera.
 
 **Implementación**
+
 - El latido es nativo de ECharts: serie `effectScatter` con `rippleEffect.period` calculado desde `acceleration` y
   `brushType: 'stroke'`. El ping, un `effectScatter` temporal o `graphic`. El barrido, una capa CSS sobre el canvas.
 - Fuera del gráfico, `<Transition>` / `<TransitionGroup>` y CSS; `motion-v` solo si no alcanza.
@@ -482,69 +499,82 @@ no el acento de marca; el acento de marca es `--signal`.
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #F2F3F5;
+  --background: #f2f3f5;
   --foreground: #121418;
-  --card: #FFFFFF;
+  --card: #ffffff;
   --card-foreground: #121418;
-  --popover: #FFFFFF;
+  --popover: #ffffff;
   --popover-foreground: #121418;
   --primary: #121418;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F2F3F5;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f3f5;
   --secondary-foreground: #121418;
-  --muted: #F6F7F8;
+  --muted: #f6f7f8;
   --muted-foreground: #626873;
-  --accent: #F2F3F5;
+  --accent: #f2f3f5;
   --accent-foreground: #121418;
-  --destructive: #B0262C;
-  --border: #E6E8EB;
-  --input: #E6E8EB;
+  --destructive: #b0262c;
+  --border: #e6e8eb;
+  --input: #e6e8eb;
   --ring: #121418;
   --radius: 0.75rem;
 
-  --signal: #C6F432;
+  --signal: #c6f432;
   --signal-foreground: #121418;
   --signal-wash: rgb(198 244 50 / 0.16);
-  --ink-soft: #3D434C;
-  --track: #ECEEF1;
-  --sunken: #F6F7F8;
-  --plot: #F7F8F9;
-  --notice: #FFF4E5;
-  --notice-foreground: #8A4B00;
-  --label: #4A505A;            /* Etiqueta */
-  --data-line: #E2E5E9;        /* Línea de dato: ejes y líneas medias del radar */
-  --table-line: #EEF0F2;       /* Línea de tabla: filas del ranking */
-  --sample: #FFF0DC;           /* Chip "Datos de ejemplo" (texto --notice-foreground) */
-  --secondary-hover: #E8EAED;  /* Hover del botón secundario */
-  --primary-hover: #2A2E35;    /* Hover del botón primario */
-  --ink-read: #22262C;         /* Tinta de lectura */
-  --neutral-action: #F0F1F3;   /* "Buscar ángulo" y "Esperar caso" */
-  --negative-bg: #FDE8E9;      /* "Descartar" */
-  --audience-business: #8A919C; /* Segmento Negocio de "Para quién importa" */
-  --saturation: #FF9A3C;       /* Barra de saturación */
-  --window-previous: #C9CED6;  /* Ventana anterior del timeline y de las mini barras */
-  --window-empty: #D5D9DF;     /* Periodo sin piezas */
-  --reference-mark: #8A919C;   /* Marca 1× y barra de rendimiento que no es outlier */
+  --ink-soft: #3d434c;
+  --track: #eceef1;
+  --sunken: #f6f7f8;
+  --plot: #f7f8f9;
+  --notice: #fff4e5;
+  --notice-foreground: #8a4b00;
+  --label: #4a505a; /* Etiqueta */
+  --data-line: #e2e5e9; /* Línea de dato: ejes y líneas medias del radar */
+  --table-line: #eef0f2; /* Línea de tabla: filas del ranking */
+  --sample: #fff0dc; /* Chip "Datos de ejemplo" (texto --notice-foreground) */
+  --secondary-hover: #e8eaed; /* Hover del botón secundario */
+  --primary-hover: #2a2e35; /* Hover del botón primario */
+  --ink-read: #22262c; /* Tinta de lectura */
+  --neutral-action: #f0f1f3; /* "Buscar ángulo" y "Esperar caso" */
+  --negative-bg: #fde8e9; /* "Descartar" */
+  --audience-business: #8a919c; /* Segmento Negocio de "Para quién importa" */
+  --saturation: #ff9a3c; /* Barra de saturación */
+  --window-previous: #c9ced6; /* Ventana anterior del timeline y de las mini barras */
+  --window-empty: #d5d9df; /* Periodo sin piezas */
+  --reference-mark: #8a919c; /* Marca 1× y barra de rendimiento que no es outlier */
 
-  --lc-emerging: #3D7BFF;      --lc-emerging-bg: #E8F0FF;      --lc-emerging-fg: #1D4FC4;
-  --lc-accelerating: #B5E61D;  --lc-accelerating-stroke: #6E8F00;
-  --lc-accelerating-bg: #EEF9CC; --lc-accelerating-fg: #3C5A00;
-  --lc-peaking: #FF9A3C;       --lc-peaking-stroke: #E07A14;
-  --lc-peaking-bg: #FFF0E0;    --lc-peaking-fg: #9A4A00;
-  --lc-saturated: #F0565C;     --lc-saturated-bg: #FDE8E9;     --lc-saturated-fg: #B0262C;
-  --lc-unknown: #8A919C;       --lc-unknown-bg: #F0F1F3;       --lc-unknown-fg: #50565F;
+  --lc-emerging: #3d7bff;
+  --lc-emerging-bg: #e8f0ff;
+  --lc-emerging-fg: #1d4fc4;
+  --lc-accelerating: #b5e61d;
+  --lc-accelerating-stroke: #6e8f00;
+  --lc-accelerating-bg: #eef9cc;
+  --lc-accelerating-fg: #3c5a00;
+  --lc-peaking: #ff9a3c;
+  --lc-peaking-stroke: #e07a14;
+  --lc-peaking-bg: #fff0e0;
+  --lc-peaking-fg: #9a4a00;
+  --lc-saturated: #f0565c;
+  --lc-saturated-bg: #fde8e9;
+  --lc-saturated-fg: #b0262c;
+  --lc-unknown: #8a919c;
+  --lc-unknown-bg: #f0f1f3;
+  --lc-unknown-fg: #50565f;
 }
 
 @theme {
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
-  --shadow-float: 0 14px 32px -10px rgb(18 20 24 / 0.22), 0 2px 6px rgb(18 20 24 / 0.06);
+  --shadow-float:
+    0 14px 32px -10px rgb(18 20 24 / 0.22), 0 2px 6px rgb(18 20 24 / 0.06);
 }
 
 @theme inline {
-  --font-sans: 'Geist Variable', system-ui, sans-serif;
-  --font-display: 'Bricolage Grotesque Variable', 'Geist Variable', sans-serif;
-  --font-heading: var(--font-display);   /* los títulos de shadcn-vue usan font-heading */
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Geist Variable", sans-serif;
+  --font-heading: var(
+    --font-display
+  ); /* los títulos de shadcn-vue usan font-heading */
   --color-signal: var(--signal);
   --color-signal-foreground: var(--signal-foreground);
   --color-ink-soft: var(--ink-soft);

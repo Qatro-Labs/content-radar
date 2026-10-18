@@ -94,14 +94,14 @@ describe('patchTarget', () => {
       target: { anchor: 'radar', kind: 'block' },
     },
     {
-      case: 'a reset presses «Restablecer vista»',
+      case: 'a reset presses the «Todos» counter',
       patch: RESET,
       anchors: ['reset'],
       query: { ...DEFAULT_QUERY, lifecycle: ['peaking'] },
       target: { anchor: 'reset', kind: 'control' },
     },
     {
-      case: 'a reset without the button goes to the radar',
+      case: 'a reset without the «Todos» counter goes to the radar',
       patch: RESET,
       anchors: [],
       target: { anchor: 'radar', kind: 'block' },

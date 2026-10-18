@@ -14,6 +14,7 @@ import { activeCounterOf, activeStageOf, type CounterFilter } from './radarView'
 // las de la mirada de su marca, son relativas a ella.
 export const AGENT_ROOT_SELECTOR = '[data-agent-root]'
 
+// `reset` es el contador «Todos» de la cabecera del Radar: restablece la vista.
 export const AGENT_ANCHOR = {
   radar: 'radar',
   ranking: 'ranking',
