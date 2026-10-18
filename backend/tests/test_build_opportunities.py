@@ -1,5 +1,6 @@
 """Ensamblado de oportunidades a partir de piezas ya agrupadas. Sin DB ni modelo de embeddings."""
 
+import zlib
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
@@ -41,7 +42,8 @@ def piece(
         title=f"Pieza {i}",
         description=None,
         platform=platform,
-        source_id=hash(source) % 1000,
+        # `hash()` cambia con PYTHONHASHSEED: dos fuentes podían caer en el mismo id.
+        source_id=zlib.crc32(source.encode()),
         source_name=source,
         segment=seg or Segment.TECH,
         language="en",
@@ -394,7 +396,12 @@ def test_replicas_do_not_raise_saturation():
     copied = [
         piece(10 + i, hours_ago=5 + i * 6, platform=Platform.RSS, source=f"B{i}") for i in range(6)
     ]
-    pieces = plain + copied
+    # Corpus de fondo: la saturación es la cuota del tema en las notas del corpus.
+    background = [
+        piece(100 + i, hours_ago=1 + i % 140, platform=Platform.RSS, source=f"Otro {i}")
+        for i in range(500)
+    ]
+    pieces = plain + copied + background
     edges = [ReplicaEdge(15, 10 + i, ReplicaBasis.SAME_LINK) for i in range(3)]
     plain_r, copied_r = (
         {r.opportunity.id: r for r in build_opportunities(

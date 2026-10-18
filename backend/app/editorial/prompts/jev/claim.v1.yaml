@@ -1,0 +1,57 @@
+# Batería de afirmación de Jev, v1 (docs/jev.md, "3. Verificación"). Una llamada por afirmación de
+# «por qué importa» que pasó las comprobaciones de Python en `analyze`. El `state` lleva la
+# afirmación, los datos medidos que recibió el LLM y las piezas citadas (fuente, título y
+# descripción). Las ausencias y las hipótesis se nombran a propósito: son casi la mitad de las
+# afirmaciones reales. `support_rev` repite la pregunta con las opciones en orden inverso para
+# detectar el sesgo hacia la primera opción. Python publica la afirmación solo si las dos dicen
+# `supports` y `support` lo dice con confianza ≥ 0,8 (`claim_supported`).
+version: 1
+questions:
+  - id: support
+    type: choice
+    instructions: >-
+      ¿Los datos medidos (`measured_facts`) y las piezas citadas (`evidence`) respaldan la
+      afirmación (`claim`)?
+    criteria:
+      supports:
+        what: >-
+          todo lo que la afirmación da por hecho aparece en `measured_facts` o en el título o la
+          descripción de alguna pieza de `evidence`, aunque sea con otras palabras. Lo que presenta
+          como hipótesis ("puede", "sugiere") o como recomendación coherente con `measured_facts`
+          no necesita más respaldo. Una ausencia ("ninguna pieza muestra…") está respaldada si
+          ninguna pieza de `evidence` lo muestra
+        not_for: >-
+          afirmaciones que añaden hechos, cifras, nombres, empresas o resultados que no están en
+          `measured_facts` ni en `evidence`
+      contradicts:
+        what: algún dato de la afirmación choca con `measured_facts` o con lo que dicen las piezas
+        not_for: afirmaciones que solo añaden algo que los datos y las piezas no mencionan
+      says_nothing:
+        what: >-
+          la afirmación da por hecho algo que ni `measured_facts` ni las piezas de `evidence`
+          mencionan
+        not_for: afirmaciones cuyo contenido sí aparece, aunque sea con otras palabras
+  - id: support_rev
+    type: choice
+    instructions: >-
+      ¿Los datos medidos (`measured_facts`) y las piezas citadas (`evidence`) respaldan la
+      afirmación (`claim`)?
+    criteria:
+      says_nothing:
+        what: >-
+          la afirmación da por hecho algo que ni `measured_facts` ni las piezas de `evidence`
+          mencionan
+        not_for: afirmaciones cuyo contenido sí aparece, aunque sea con otras palabras
+      contradicts:
+        what: algún dato de la afirmación choca con `measured_facts` o con lo que dicen las piezas
+        not_for: afirmaciones que solo añaden algo que los datos y las piezas no mencionan
+      supports:
+        what: >-
+          todo lo que la afirmación da por hecho aparece en `measured_facts` o en el título o la
+          descripción de alguna pieza de `evidence`, aunque sea con otras palabras. Lo que presenta
+          como hipótesis ("puede", "sugiere") o como recomendación coherente con `measured_facts`
+          no necesita más respaldo. Una ausencia ("ninguna pieza muestra…") está respaldada si
+          ninguna pieza de `evidence` lo muestra
+        not_for: >-
+          afirmaciones que añaden hechos, cifras, nombres, empresas o resultados que no están en
+          `measured_facts` ni en `evidence`
