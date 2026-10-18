@@ -15,11 +15,19 @@ import { hasAudienceFit, type PlottedOpportunity, type RankedOpportunity } from 
 
 import RadarFloatingCard from './RadarFloatingCard.vue'
 
-const { selected, hovered, size, sweeping } = defineProps<{
+const {
+  selected,
+  hovered,
+  size,
+  sweeping,
+  hoverCard = true,
+} = defineProps<{
   selected: RankedOpportunity | null
   hovered: RankedOpportunity | null
   size: PlotSize
   sweeping: boolean
+  // `false`: el hover marca la burbuja sin su tarjeta flotante.
+  hoverCard?: boolean
 }>()
 
 // DESIGN.md §7: tres ondas del trazo de la etapa, separadas 160 ms.
@@ -144,6 +152,7 @@ const hoverSpot = computed(() => (hovered?.id === selected?.id ? null : spotOf(h
     <template v-if="hoverSpot">
       <span :class="[RING, SLIDE, 'ring-foreground/30']" :style="ringBox(hoverSpot)" />
       <RadarFloatingCard
+        v-if="hoverCard"
         :opportunity="hoverSpot.opportunity"
         :point="hoverSpot.point"
         class="absolute top-0 left-0 z-[4]"

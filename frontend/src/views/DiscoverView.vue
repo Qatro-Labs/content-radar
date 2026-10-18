@@ -96,6 +96,7 @@ function hover(id: string | null) {
             :hovered-id="hovered"
             :sweep-key="`${query.period}:${sweepCount}`"
             :shows-all="showsAllBubbles"
+            :shows-hover-card="peekedId === null"
             @select="select"
             @hover="hover"
             @toggle-all="showsAllBubbles = !showsAllBubbles"
