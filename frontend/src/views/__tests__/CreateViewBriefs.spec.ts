@@ -49,12 +49,51 @@ const BRIEF: Schemas['EditorialBrief'] = {
   model: 'claude-haiku-5-5',
 }
 
-const SUMMARY: Schemas['SavedBriefSummary'] = {
+// Una cadena de dos versiones: la 3 es la primera y la 7, la última (la que da la lista).
+const FIRST_VERSION: Schemas['SavedBriefVersion'] = {
+  id: 3,
+  version: 1,
+  platform: 'linkedin',
+  goal: 'educate',
+  format: 'post',
+  created_at: '2026-10-17T10:00:00Z',
+}
+const LATEST_VERSION: Schemas['SavedBriefVersion'] = {
   id: 7,
-  ...REQUEST,
-  topic: BRIEF.topic,
+  version: 2,
+  platform: 'linkedin',
+  goal: 'educate',
+  format: 'carousel',
   created_at: '2026-10-17T19:00:00Z',
 }
+
+const SUMMARY: Schemas['SavedBriefSummary'] = {
+  id: LATEST_VERSION.id,
+  root_id: FIRST_VERSION.id,
+  version: LATEST_VERSION.version,
+  version_count: 2,
+  ...REQUEST,
+  topic: BRIEF.topic,
+  created_at: LATEST_VERSION.created_at,
+}
+
+function savedBrief(version: Schemas['SavedBriefVersion']): Schemas['SavedBrief'] {
+  const request = { ...REQUEST, platform: version.platform, format: version.format }
+  return {
+    id: version.id,
+    root_id: FIRST_VERSION.id,
+    version: version.version,
+    created_at: version.created_at,
+    request,
+    brief: { ...BRIEF, ...request, id: version.id, version: version.version },
+    versions: [FIRST_VERSION, LATEST_VERSION],
+  }
+}
+
+const SAVED_BY_ID = new Map(
+  [FIRST_VERSION, LATEST_VERSION].map((version) => [version.id, savedBrief(version)]),
+)
+const SAVED_BRIEF_PATH = /^\/api\/v1\/editorial\/briefs\/(\d+)$/
 
 interface ApiStub {
   savedBriefs?: Schemas['SavedBriefSummary'][]
@@ -68,13 +107,13 @@ function json(body: unknown): Response {
 function respond(request: Request, stub: ApiStub): Response {
   const path = new URL(request.url).pathname
   if (path === '/api/v1/editorial/briefs') return json(stub.savedBriefs ?? [])
-  if (path === `/api/v1/editorial/briefs/${SUMMARY.id}` && request.method === 'DELETE') {
-    stub.savedBriefs = (stub.savedBriefs ?? []).filter((saved) => saved.id !== SUMMARY.id)
+  const savedId = Number(SAVED_BRIEF_PATH.exec(path)?.[1])
+  if (savedId && request.method === 'DELETE') {
+    stub.savedBriefs = (stub.savedBriefs ?? []).filter((saved) => saved.id !== savedId)
     return new Response(null, { status: 204 })
   }
-  if (path === `/api/v1/editorial/briefs/${SUMMARY.id}`) {
-    return json({ id: SUMMARY.id, created_at: SUMMARY.created_at, request: REQUEST, brief: BRIEF })
-  }
+  const saved = SAVED_BY_ID.get(savedId)
+  if (saved) return json(saved)
   if (path === '/api/v1/editorial/brief') return json(stub.postedBrief ?? BRIEF)
   if (path === `/api/v1/opportunities/${OPPORTUNITY.id}`) return json(OPPORTUNITY)
   if (path === `/api/v1/opportunities/${OPPORTUNITY.id}/evidence`) return json(EVIDENCE)
@@ -92,6 +131,13 @@ function stubApi(stub: ApiStub = {}) {
   })
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
+}
+
+async function postedBodies(fetchMock: ReturnType<typeof stubApi>): Promise<unknown[]> {
+  const posts = fetchMock.mock.calls
+    .map(([input]) => input)
+    .filter((input): input is Request => input instanceof Request && input.method === 'POST')
+  return Promise.all(posts.map((post) => post.clone().json()))
 }
 
 function requestedPaths(fetchMock: ReturnType<typeof stubApi>): string[] {
@@ -173,16 +219,75 @@ describe('CreateView · Mis briefs', () => {
 
       await vi.waitFor(() => expect(router.currentRoute.value.query.brief).toBe('7'))
       expect(await screen.findByText(`«${BRIEF.hook}»`)).toBeTruthy()
-      expect(screen.getByText('Brief guardado el 17/10, 19:00 UTC')).toBeTruthy()
+      expect(screen.getByText('Versión 2 · guardada el 17/10, 19:00 UTC')).toBeTruthy()
+    })
+
+    it('never invites to sign in while a signed-in session is still loading', async () => {
+      let resolveSession: (value: unknown) => void = () => {}
+      auth.getSession.mockReturnValue(new Promise((done) => (resolveSession = done)))
+      stubApi({ savedBriefs: [SUMMARY] })
+      await renderCreateAt(`/create?brief=${SUMMARY.id}`)
+
+      expect(screen.queryByText(/Inicia sesión/)).toBeNull()
+
+      resolveSession({ data: { session: SESSION }, error: null })
+
+      expect(await screen.findByRole('link', { name: /Evaluación de agentes de IA/ })).toBeTruthy()
+      expect(screen.queryByText(/Inicia sesión/)).toBeNull()
+    })
+
+    it('shows the version count only for chains with two or more versions', async () => {
+      const single = { ...SUMMARY, id: 20, root_id: 20, version: 1, version_count: 1 }
+      stubApi({ savedBriefs: [SUMMARY, { ...single, topic: 'Agentes en banca' }] })
+      await renderCreateAt('/create')
+
+      const chain = await screen.findByRole('link', { name: /Evaluación de agentes de IA/ })
+      const lone = screen.getByRole('link', { name: /Agentes en banca/ })
+      expect(chain.textContent).toContain('2 versiones')
+      expect(lone.textContent).not.toContain('versiones')
+    })
+
+    it('switches versions through ?brief', async () => {
+      stubApi({ savedBriefs: [SUMMARY] })
+      const router = await renderCreateAt(`/create?brief=${LATEST_VERSION.id}`)
+
+      const switcher = await screen.findByLabelText('Versión')
+      expect(screen.getByRole('option', { name: 'v1 · LinkedIn · Post · 17/10, 10:00 UTC' }))
+      await fireEvent.update(switcher, String(FIRST_VERSION.id))
+
+      await vi.waitFor(() => expect(router.currentRoute.value.query.brief).toBe('3'))
+      expect(await screen.findByText('Versión 1 · guardada el 17/10, 10:00 UTC')).toBeTruthy()
+    })
+
+    it('regenerates from a saved brief as a new version and opens it', async () => {
+      const fetchMock = stubApi({
+        savedBriefs: [SUMMARY],
+        postedBrief: { ...BRIEF, id: FIRST_VERSION.id, version: 1 },
+      })
+      const router = await renderCreateAt(`/create?brief=${LATEST_VERSION.id}`)
+
+      await fireEvent.click(await screen.findByRole('button', { name: 'Cambiar enfoque' }))
+      await fireEvent.click(await screen.findByRole('button', { name: /Generar brief/ }))
+
+      await vi.waitFor(async () =>
+        expect(await postedBodies(fetchMock)).toEqual([
+          { ...REQUEST, parent_brief_id: LATEST_VERSION.id },
+        ]),
+      )
+      await vi.waitFor(() =>
+        expect(router.currentRoute.value.query).toEqual({ brief: String(FIRST_VERSION.id) }),
+      )
     })
 
     it('deletes a saved brief and closes it when it was open', async () => {
-      const fetchMock = stubApi({ savedBriefs: [SUMMARY] })
+      const fetchMock = stubApi({ savedBriefs: [{ ...SUMMARY, version_count: 3 }] })
       const router = await renderCreateAt(`/create?brief=${SUMMARY.id}`)
 
       await fireEvent.click(
         await screen.findByRole('button', { name: `Borrar el brief «${SUMMARY.topic}»` }),
       )
+      expect(screen.getByText('Se borrarán las 3 versiones de este brief.')).toBeTruthy()
+      await fireEvent.click(screen.getByRole('button', { name: 'Borrar' }))
 
       expect(await screen.findByText('Todavía no has creado briefs.')).toBeTruthy()
       await vi.waitFor(() => expect(router.currentRoute.value.query.brief).toBeUndefined())
@@ -214,6 +319,16 @@ describe('CreateView · Mis briefs', () => {
           requestedPaths(fetchMock).filter((path) => path === '/api/v1/editorial/briefs'),
         ).toHaveLength(2),
       )
+    })
+
+    it('says which version a regenerated brief was saved as', async () => {
+      stubApi({ savedBriefs: [], postedBrief: { ...BRIEF, id: 12, version: 3 } })
+
+      await renderCreateAt(
+        `/create?opportunity=${OPPORTUNITY.id}&platform=linkedin&goal=educate&format=carousel`,
+      )
+
+      expect(await screen.findByText('Guardado como versión 3')).toBeTruthy()
     })
 
     it('does not mark the brief as saved without an id', async () => {

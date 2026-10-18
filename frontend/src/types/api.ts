@@ -408,6 +408,8 @@ export interface components {
       platform: components['schemas']['BriefPlatform']
       goal: components['schemas']['BriefGoal']
       format: components['schemas']['BriefFormat']
+      // TODO: regenerate from data/user-briefs
+      parent_brief_id?: number | null
     }
     /** CitedOpportunity */
     CitedOpportunity: {
@@ -465,6 +467,8 @@ export interface components {
        * @description Id del brief guardado; None si no hay usuario y no se guardó
        */
       id?: number | null
+      // TODO: regenerate from data/user-briefs
+      version?: number | null
       /** Opportunity Id */
       opportunity_id: string
       /** Topic */
@@ -969,6 +973,10 @@ export interface components {
     SavedBrief: {
       /** Id */
       id: number
+      // TODO: regenerate from data/user-briefs
+      root_id: number
+      version: number
+      versions: components['schemas']['SavedBriefVersion'][]
       /**
        * Created At
        * Format: date-time
@@ -977,10 +985,23 @@ export interface components {
       request: components['schemas']['BriefRequest']
       brief: components['schemas']['EditorialBrief']
     }
+    // TODO: regenerate from data/user-briefs
+    SavedBriefVersion: {
+      id: number
+      version: number
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      created_at: string
+    }
     /** SavedBriefSummary */
     SavedBriefSummary: {
       /** Id */
       id: number
+      // TODO: regenerate from data/user-briefs
+      root_id: number
+      version: number
+      version_count: number
       /** Opportunity Id */
       opportunity_id: string
       /**

@@ -13,6 +13,12 @@ import {
   sameRequest,
   serializeBriefQuery,
 } from '@/lib/briefView'
+import {
+  PARENT_BRIEF_PARAM,
+  parseParentBriefId,
+  SAVED_BRIEF_PARAM,
+  savedBriefNote,
+} from '@/lib/savedBriefs'
 import type { components } from '@/types/api'
 
 import BriefComposer from './BriefComposer.vue'
@@ -22,6 +28,7 @@ import BriefResult from './BriefResult.vue'
 import CreateHeader from './CreateHeader.vue'
 
 type BriefRequest = components['schemas']['BriefRequest']
+type EditorialBrief = components['schemas']['EditorialBrief']
 
 const { opportunityId } = defineProps<{ opportunityId: string }>()
 
@@ -54,10 +61,15 @@ const options = computed<BriefOptions>({
   set: (next) => void router.replace({ query: { ...route.query, ...next } }),
 })
 
+// Desde «Cambiar enfoque» de un brief guardado: lo que se genere es una versión nueva de ese.
+const parentBriefId = computed(() => parseParentBriefId(route.query))
+
 const request = computed<BriefRequest>(() => ({
   opportunity_id: opportunityId,
   ...options.value,
+  ...(parentBriefId.value === null ? {} : { parent_brief_id: parentBriefId.value }),
 }))
+const savedNote = computed(() => (brief.data.value ? savedBriefNote(brief.data.value) : null))
 
 // La respuesta en pantalla es de la última petición: con otras opciones, vuelve la frase.
 const isCurrent = computed(() => sameRequest(brief.variables.value, request.value))
@@ -94,8 +106,16 @@ function generate() {
   // Con las opciones del brief que ya hay, la API devolvería el mismo (lo cachea): se vuelve a él
   // sin pedirlo otra vez.
   if (hasCurrentBrief.value) return
-  void router.replace({ query: serializeBriefQuery(request.value) })
-  brief.mutate(request.value)
+  const parentQuery =
+    parentBriefId.value === null ? {} : { [PARENT_BRIEF_PARAM]: String(parentBriefId.value) }
+  void router.replace({ query: { ...serializeBriefQuery(request.value), ...parentQuery } })
+  brief.mutate(request.value, { onSuccess: openNewVersion })
+}
+
+// Una versión nueva se abre como brief guardado, con su selector de versiones.
+function openNewVersion(generated: EditorialBrief) {
+  if (parentBriefId.value === null || generated.id == null) return
+  void router.replace({ query: { [SAVED_BRIEF_PARAM]: String(generated.id) } })
 }
 
 // El brief es más largo que la frase: sin subir, la página quedaría abajo, a media tarjeta.
@@ -106,7 +126,9 @@ function editBrief() {
 
 // Un enlace con las cuatro opciones abre su brief: la API lo devuelve cacheado, sin LLM. Cuenta la
 // URL con la que se abrió la vista; elegir opciones después también las escribe, y eso no genera.
-let pendingBriefLink = briefQuery.value.isComplete
+// Con `?parent=` se llega desde un brief guardado para cambiarle el enfoque: se abre la frase, no se
+// regenera el mismo brief.
+let pendingBriefLink = briefQuery.value.isComplete && parentBriefId.value === null
 watch(
   opportunity,
   (loaded) => {
@@ -142,11 +164,11 @@ watch(
     <template v-else-if="showsResult && brief.data.value">
       <!-- Solo con sesión la API lo guarda y devuelve su id. -->
       <p
-        v-if="brief.data.value.id != null"
+        v-if="savedNote"
         class="-mb-3 flex items-center gap-1.5 px-1 text-[13.5px] text-muted-foreground"
       >
         <Check class="size-3.5" :stroke-width="2.5" aria-hidden="true" />
-        Guardado en Mis briefs
+        {{ savedNote }}
       </p>
       <BriefResult :brief="brief.data.value" @edit="editBrief" />
     </template>

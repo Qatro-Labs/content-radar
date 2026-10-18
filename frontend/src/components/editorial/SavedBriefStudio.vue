@@ -7,18 +7,20 @@ import { CARD_CLASS, SECONDARY_BUTTON_CLASS } from '@/components/dossier/dossier
 import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import { useAuth } from '@/composables/useAuth'
 import { serializeBriefQuery } from '@/lib/briefView'
+import { PARENT_BRIEF_PARAM } from '@/lib/savedBriefs'
 import { formatUtcTimestamp } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { RouteName } from '@/router/routeNames'
 import { REDIRECT_PARAM } from '@/router/authGuard'
 
 import BriefResult from './BriefResult.vue'
+import BriefVersionSwitcher from './BriefVersionSwitcher.vue'
 
 const { briefId } = defineProps<{ briefId: number }>()
 
 const route = useRoute()
 const router = useRouter()
-const { isSignedIn } = useAuth()
+const { isReady, isSignedIn } = useAuth()
 const savedQuery = useSavedBrief(() => briefId)
 
 const saved = computed(() => savedQuery.data.value ?? null)
@@ -27,16 +29,23 @@ const loginLink = computed(() => ({
   query: { [REDIRECT_PARAM]: route.fullPath },
 }))
 
-// Cambiar el enfoque vuelve al estudio del tema con las opciones de este brief.
+// Cambiar el enfoque vuelve al estudio del tema con las opciones de este brief, y lo que se genere
+// allí será una versión nueva de este.
 function editBrief() {
   if (saved.value === null) return
-  void router.push({ name: RouteName.Create, query: serializeBriefQuery(saved.value.request) })
+  void router.push({
+    name: RouteName.Create,
+    query: {
+      ...serializeBriefQuery(saved.value.request),
+      [PARENT_BRIEF_PARAM]: String(saved.value.id),
+    },
+  })
 }
 </script>
 
 <template>
   <section
-    v-if="!isSignedIn"
+    v-if="isReady && !isSignedIn"
     aria-label="Brief guardado"
     :class="cn(CARD_CLASS, 'flex-col items-start')"
   >
@@ -45,7 +54,11 @@ function editBrief() {
     </RouterLink>
   </section>
 
-  <div v-else-if="savedQuery.isPending.value" class="flex flex-col gap-4" aria-busy="true">
+  <div
+    v-else-if="!isReady || savedQuery.isPending.value"
+    class="flex flex-col gap-4"
+    aria-busy="true"
+  >
     <SkeletonBone class="h-[72px] rounded-card" />
     <SkeletonBone class="h-[420px] rounded-card" />
   </div>
@@ -66,9 +79,16 @@ function editBrief() {
   </section>
 
   <div v-else class="flex flex-col gap-2">
-    <p class="px-1 text-[13.5px] text-muted-foreground">
-      Brief guardado el {{ formatUtcTimestamp(saved.created_at) }}
-    </p>
+    <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+      <p class="text-[13.5px] text-muted-foreground">
+        Versión {{ saved.version }} · guardada el {{ formatUtcTimestamp(saved.created_at) }}
+      </p>
+      <BriefVersionSwitcher
+        v-if="saved.versions.length > 1"
+        :versions="saved.versions"
+        :current-id="saved.id"
+      />
+    </div>
     <BriefResult :brief="saved.brief" @edit="editBrief" />
   </div>
 </template>
