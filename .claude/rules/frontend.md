@@ -39,11 +39,12 @@ Antes de tocar UI, lee `DESIGN.md`.
      rendimiento frente a su canal (outliers primero; sin gráfico de dispersión, descartado el 17/10) y panel lateral
      («Dónde está funcionando» o el detalle de la pieza, con enlace a su tema). Necesita un endpoint de piezas de todos los temas;
      mientras no exista, se monta con `/evidence` de cada oportunidad.
-   - **Con tema (`/explore/:id`): el expediente** (artboard I). "Cómo se compone" (`score_breakdown`) · timeline de
+   - **Con tema (`/explore/:id`): el expediente** (artboard I). "Cómo se calcula" (`score_breakdown`, en un popover
+     junto al anillo) · timeline de
      la ventana actual frente a la anterior con su confianza · "Por qué importa" completo · criterios de encaje con
      citas que resaltan su evidencia · **barra apilada de `audience_mix`** · evidencia por plataforma (enlaces
      originales, fechas, métricas, velocidad y **badge de outlier `6.1×`** con la barra 1×/3×; outliers primero) ·
-     **qué no podemos saber** · "Generar brief".
+     "Generar brief". Sin bloque «Qué no sabemos» (retirado el 18/10).
 3. **Create (Content Studio, P1):** oportunidad + plataforma + objetivo + formato → brief (ángulo,
    gancho, estructura, evidencias, por qué encaja). Se puede copiar. No es un editor.
 
