@@ -33,7 +33,7 @@ const COLUMNS = [
   { label: '#', name: 'el puesto', help: HELP.colRank },
   { label: 'Tema', name: 'la columna Tema', help: HELP.colTopic },
   { label: '6 días', name: 'las barras de 6 días', help: HELP.colBars },
-  { label: 'Nuevas', name: 'las piezas nuevas', help: HELP.colNewPieces },
+  { label: 'Aceleración', name: 'la aceleración', help: HELP.colAcceleration },
   { label: 'Oportunidad', name: 'la oportunidad', help: HELP.colScore },
 ] as const
 // DESIGN.md §4: el ranking enseña 10 filas y el resto se despliega.

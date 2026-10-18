@@ -7,6 +7,7 @@ import {
   citationChips,
   componentRows,
   describePenalties,
+  dossierLimitations,
   rankOf,
   splitTimeline,
 } from '../dossierView'
@@ -32,6 +33,23 @@ function flatTimeline(): Schemas['OpportunityTimeline'] {
     })),
   }
 }
+
+describe('dossierLimitations', () => {
+  const opportunity = list.items[0]!
+
+  // CLAUDE.md §2.3: el dato ausente se dice, sin inventarle una causa.
+  it('says the LATAM gap is not available, without a cause', () => {
+    expect(dossierLimitations({ ...opportunity, latam_gap: null, limitations: [] })).toEqual([
+      'Hueco en LATAM: no disponible.',
+    ])
+  })
+
+  it('adds nothing when the gap is known', () => {
+    expect(dossierLimitations({ ...opportunity, latam_gap: true, limitations: ['A'] })).toEqual([
+      'A',
+    ])
+  })
+})
 
 describe('rankOf', () => {
   it('finds the position of a topic in the served list', () => {

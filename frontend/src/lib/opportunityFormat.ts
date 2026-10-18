@@ -25,6 +25,7 @@ function roundedPercent(acceleration: number): number {
 }
 
 export function formatAcceleration(acceleration: number): string {
+  if (!Number.isFinite(acceleration)) return NOT_AVAILABLE
   const percent = roundedPercent(acceleration)
   if (percent > 0) return `↑ +${percent}${PERCENT_SUFFIX}`
   if (percent < 0) return `↓ ${MINUS_SIGN}${Math.abs(percent)}${PERCENT_SUFFIX}`
@@ -33,7 +34,7 @@ export function formatAcceleration(acceleration: number): string {
 
 // Sobre la cifra que se muestra: −0,004 se lee "→ 0 %" y no debe pintarse como descenso.
 export function isDeclining(acceleration: number): boolean {
-  return roundedPercent(acceleration) < 0
+  return Number.isFinite(acceleration) && roundedPercent(acceleration) < 0
 }
 
 export function formatShare(share: number): string {
@@ -148,14 +149,21 @@ export const RECOMMENDATION_LABEL: Record<Recommendation, string> = {
   discard: 'Descartar',
 }
 
-// El motivo que escribe el backend empieza a veces con la etiqueta («Buscar ángulo: tema en
-// crecimiento…»); junto al chip, la etiqueta sobra.
+// Cómo repiten el chip los motivos de backend/app/intelligence/ranking.py («Publicar: …»,
+// «Esperar: …»); junto al chip, sobra. «Publicar ya con ángulo propio: …» conserva el matiz
+// («Con ángulo propio: …») y «Tema saturado: …» se queda: es la causa, no la etiqueta.
+const RESTATED_LABEL: Record<Recommendation, RegExp | null> = {
+  publish_now: /^Publicar(?: ya)?:?\s*/,
+  find_angle: /^Buscar ángulo:\s*/,
+  wait_for_case: /^Esperar(?: caso)?:\s*/,
+  discard: null,
+}
+
 export function recommendationReasonText(opportunity: Opportunity): string | null {
   const reason = opportunity.recommendation_reason
   if (!reason) return null
-  const prefix = `${RECOMMENDATION_LABEL[opportunity.recommendation]}:`
-  if (!reason.startsWith(prefix)) return reason
-  const rest = reason.slice(prefix.length).trim()
+  const restated = RESTATED_LABEL[opportunity.recommendation]
+  const rest = restated ? reason.replace(restated, '') : reason
   return rest.charAt(0).toUpperCase() + rest.slice(1)
 }
 
@@ -176,8 +184,8 @@ export interface WindowTotals {
   previous: number
 }
 
-// Piezas nuevas de cada ventana del timeline. Con bases tan pequeñas, «7 · antes 1» se lee mejor
-// que «↑ +604 %», que además va ajustado por volumen y no es la resta de estas cifras.
+// Piezas nuevas de cada ventana del timeline. Acompañan a la aceleración, no la sustituyen: la
+// aceleración va ajustada por volumen (CLAUDE.md §7) y no es la resta de estas cifras.
 export function windowTotals(points: readonly TimelinePoint[]): WindowTotals | null {
   if (points.length === 0) return null
   const sum = (window: TimelinePoint['window']) =>

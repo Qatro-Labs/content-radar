@@ -10,17 +10,14 @@ import ScoreRing from '@/components/opportunities/ScoreRing.vue'
 import { countLabel } from '@/lib/evidenceFormat'
 import { HELP } from '@/lib/helpText'
 import { TEXT_ENTER_CLASS } from '@/lib/motion'
-import { useAllTimelines } from '@/api/opportunities'
 import {
   CONFIDENCE_LABEL,
+  formatAcceleration,
   formatFit,
   GROWTH_LABEL,
-  NOT_AVAILABLE,
   recommendationReasonText,
-  windowTotals,
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
-import { cn } from '@/lib/utils'
 import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { RouteName } from '@/router'
 
@@ -47,22 +44,14 @@ const evidenceSummary = computed(() =>
   ].join(SUMMARY_SEPARATOR),
 )
 
-// La misma consulta que las mini barras del ranking: ya está en caché.
-const { data: timelines } = useAllTimelines()
-const newPieces = computed(() => {
-  const totals = windowTotals(timelines.value?.get(opportunity.id)?.points ?? [])
-  return totals ? `${totals.current} · antes ${totals.previous}` : NOT_AVAILABLE
-})
 const reason = computed(() => recommendationReasonText(opportunity))
 
 const tiles = computed<StatTile[]>(() => [
-  // Piezas de los últimos 3 días frente a los 3 anteriores: con bases pequeñas, un porcentaje
-  // exagera (+104 % son 2 piezas frente a 1).
   {
-    label: 'Nuevas',
-    value: newPieces.value,
-    valueClass: cn('whitespace-nowrap'),
-    help: HELP.tileNewPieces,
+    label: 'Aceleración',
+    value: formatAcceleration(opportunity.acceleration),
+    valueClass: 'whitespace-nowrap',
+    help: HELP.tileAcceleration,
   },
   {
     label: 'Encaje',

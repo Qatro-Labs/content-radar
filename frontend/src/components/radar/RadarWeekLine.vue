@@ -42,7 +42,7 @@ const PILL_CLASS =
       <template v-if="picks.length > 0">
         <span class="inline-flex items-center gap-1">
           Para publicar ya:
-          <InfoTip label="Publicar ya" :text="HELP.counterPublishNow" />
+          <InfoTip label="Publicar ya" :text="HELP.weekPublishNow" />
         </span>
         <template v-for="(topic, index) in picks" :key="topic.id">
           <button

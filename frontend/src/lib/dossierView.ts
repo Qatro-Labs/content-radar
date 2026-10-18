@@ -41,8 +41,8 @@ export function dossierStatusLine(opportunity: Opportunity): string {
   return parts.join(LIST_SEPARATOR)
 }
 
-const LATAM_GAP_UNKNOWN =
-  'Hueco en LATAM: no disponible, no hay piezas suficientes para calcularlo.'
+// Sin causa: el backend da `null` por varios motivos (sobre todo, poca señal de negocio).
+const LATAM_GAP_UNKNOWN = 'Hueco en LATAM: no disponible.'
 
 // CLAUDE.md §2.3: un dato ausente se dice; aquí, junto al resto de lo que no sabemos.
 export function dossierLimitations(opportunity: Opportunity): string[] {

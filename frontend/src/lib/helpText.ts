@@ -6,7 +6,8 @@ type Schemas = components['schemas']
 // publicar. Un solo módulo para que el vocabulario no se contradiga entre vistas.
 
 export const RECOMMENDATION_HELP: Record<Schemas['Recommendation'], string> = {
-  publish_now: 'Crece y encaja con la audiencia de 30X: conviene publicarlo esta semana.',
+  publish_now:
+    'Encaja con la audiencia de 30X y conviene publicarlo esta semana. En algunos temas el crecimiento aún no está demostrado: lo dice su motivo.',
   find_angle:
     'Interesa, pero hace falta un enfoque propio antes de publicar: ya hay cobertura o el encaje es medio.',
   wait_for_case: 'Aún no hay un caso real o datos suficientes: mejor esperar.',
@@ -33,7 +34,9 @@ export const HELP = {
 
   // Radar
   counterPublishNow:
-    'Temas que crecen y encajan con la audiencia de 30X: los recomendados para publicar ya. Pulsa para ver solo esos.',
+    'Temas que encajan con la audiencia de 30X y conviene publicar esta semana. En algunos el crecimiento aún no está demostrado. Pulsa para ver solo esos.',
+  weekPublishNow:
+    'Temas que encajan con la audiencia de 30X y conviene publicar esta semana. En algunos el crecimiento aún no está demostrado.',
   counterAccelerating:
     'Temas con más del 50 % de piezas nuevas que los 3 días anteriores, en 3 fuentes o más. Pulsa para ver solo esos.',
   counterEmerging:
@@ -57,8 +60,8 @@ export const HELP = {
     'Nombre del tema. El punto de color es su etapa (pasa el cursor para ver cuál) y, si toca, aparece «Publicar ya».',
   colBars:
     'Piezas nuevas cada 24 h durante 6 días: en gris los 3 días anteriores, en negro los últimos 3.',
-  colNewPieces:
-    'Piezas nuevas en los últimos 3 días y, al lado, las de los 3 días anteriores. Si dice «Estimado» o «Preliminar», hay pocos datos.',
+  colAcceleration:
+    'Cuánto más rápido aparecen piezas en los últimos 3 días que en los 3 anteriores, ajustado por el volumen de las fuentes. Debajo, las piezas nuevas de cada ventana. Si dice «Estimado» o «Preliminar», hay pocos datos.',
   colScore:
     'Oportunidad (0–100): combina crecimiento, encaje con 30X, número de fuentes, lo poco cubierto que está y lo fácil que es llevarlo a contenido.',
   outliers:
@@ -84,6 +87,8 @@ export const HELP = {
   opportunityRing:
     'Oportunidad (0–100) y puesto en el ranking. «Cómo se calcula» abre el desglose al final de la página.',
   tileNewPieces: 'Piezas nuevas del tema en los últimos 3 días, frente a los 3 días anteriores.',
+  tileAcceleration:
+    'Cuánto más rápido aparecen piezas en los últimos 3 días que en los 3 anteriores, ajustado por el volumen de las fuentes.',
   tileFit: 'Encaje con 30X: evaluación editorial de seis criterios, no una medición.',
   tileSources:
     'Fuentes independientes en las que aparece el tema. Un medio o un canal cuenta una vez, y las republicaciones no suman.',
