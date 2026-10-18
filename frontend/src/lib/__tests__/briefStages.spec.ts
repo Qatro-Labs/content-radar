@@ -14,7 +14,6 @@ import {
   generationTimelineAt,
   pieceStatus,
   READ_PER_PIECE_MS,
-  trackerStatus,
 } from '../briefStages'
 
 type Evidence = components['schemas']['Evidence']
@@ -139,18 +138,6 @@ describe('pieceStatus', () => {
       'reading',
       'pending',
     ])
-  })
-})
-
-describe('trackerStatus', () => {
-  it('shows earlier steps done, the current one in progress and the rest pending', () => {
-    expect(trackerStatus('read', 'draft')).toBe('done')
-    expect(trackerStatus('draft', 'draft')).toBe('current')
-    expect(trackerStatus('check', 'draft')).toBe('pending')
-  })
-
-  it('shows every step done once the brief is ready', () => {
-    expect(trackerStatus('check', 'done')).toBe('done')
   })
 })
 

@@ -2,7 +2,12 @@ import { cleanup, render, screen, within } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
-import { CHECK_EXPECTED_AT_MS, FINISH_HOLD_MS, READ_PER_PIECE_MS } from '@/lib/briefStages'
+import {
+  CHECK_EXPECTED_AT_MS,
+  DRAFT_REVEAL_MS,
+  FINISH_HOLD_MS,
+  READ_PER_PIECE_MS,
+} from '@/lib/briefStages'
 import { DEFAULT_BRIEF_OPTIONS } from '@/lib/briefView'
 import type { components } from '@/types/api'
 
@@ -138,8 +143,10 @@ describe('BriefGenerating', () => {
     await advance(0)
 
     expect(stageTitle()).toBe('Brief listo')
-    expect(screen.getAllByRole('img', { name: 'Leída' })).toHaveLength(PIECES.length)
-    await advance(2 * FINISH_HOLD_MS)
+    // Leídas todas, Rad las absorbe: siguen en el DOM, ocultas a los lectores de pantalla.
+    expect(screen.getAllByRole('img', { name: 'Leída', hidden: true })).toHaveLength(PIECES.length)
+    // El cierre espera a que el borrador, que nace tras la absorción, termine de dibujarse.
+    await advance(DRAFT_REVEAL_MS + FINISH_HOLD_MS)
     expect(emitted().finished).toHaveLength(1)
   })
 

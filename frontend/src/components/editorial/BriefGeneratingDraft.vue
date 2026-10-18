@@ -8,13 +8,22 @@ export interface CitationView {
 <script setup lang="ts">
 import { Check } from '@lucide/vue'
 
-import { BONE_DRAW_MS, BONE_LEAD_MS, BONE_STAGGER_MS, DRAFT_SKETCH } from '@/lib/briefStages'
+import {
+  BONE_DRAW_MS,
+  BONE_LEAD_MS,
+  BONE_STAGGER_MS,
+  DRAFT_ENTER_DELAY_MS,
+  DRAFT_SKETCH,
+} from '@/lib/briefStages'
 import { TEXT_ENTER_CLASS } from '@/lib/motion'
 
 // Vacío hasta que empieza la comprobación de citas.
 const { citations } = defineProps<{ citations: readonly CitationView[] }>()
 
 // Los huesos se dibujan de izquierda a derecha, escalonados a lo largo de todas las secciones.
+// Nace cuando Rad ya ha absorbido las piezas que ocupaban su sitio.
+const enterStyle = { animationDelay: `${DRAFT_ENTER_DELAY_MS}ms` }
+
 const sections = DRAFT_SKETCH.map((section, sectionIndex) => {
   const before = DRAFT_SKETCH.slice(0, sectionIndex).reduce(
     (total, previous) => total + previous.bones.length,
@@ -37,7 +46,11 @@ const sections = DRAFT_SKETCH.map((section, sectionIndex) => {
   <div
     data-generating-draft
     aria-hidden="true"
-    :class="[TEXT_ENTER_CLASS, 'flex flex-col gap-4 rounded-tile bg-sunken p-5']"
+    :class="[
+      TEXT_ENTER_CLASS,
+      'flex flex-col gap-4 rounded-tile bg-sunken p-5 fill-mode-backwards',
+    ]"
+    :style="enterStyle"
   >
     <div v-for="section in sections" :key="section.label" class="flex flex-col gap-2">
       <span class="text-[13px] font-semibold text-label">{{ section.label }}</span>

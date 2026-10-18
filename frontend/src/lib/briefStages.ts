@@ -19,13 +19,6 @@ export const GenerationStage = {
 } as const
 export type GenerationStage = (typeof GenerationStage)[keyof typeof GenerationStage]
 
-const STAGE_ORDER: readonly GenerationStage[] = [
-  GenerationStage.Read,
-  GenerationStage.Draft,
-  GenerationStage.Check,
-  GenerationStage.Done,
-]
-
 export const GENERATION_TITLE: Record<GenerationStage, string> = {
   read: 'Leyendo las piezas del tema',
   draft: 'Redactando el gancho y el ángulo',
@@ -35,12 +28,6 @@ export const GENERATION_TITLE: Record<GenerationStage, string> = {
 
 // La misma estimación que da la frase de Crear («Unos 15 segundos»).
 export const TYPICAL_WAIT_LABEL = 'unos 15 s'
-
-export const GENERATION_STEPS = [
-  { stage: GenerationStage.Read, label: 'Leer la evidencia' },
-  { stage: GenerationStage.Draft, label: 'Redactar' },
-  { stage: GenerationStage.Check, label: 'Comprobar citas' },
-] as const
 
 // Lo que tarda Rad en leer cada pieza destacada: el subrayado, el check y la fuente que vuela
 // hasta él.
@@ -65,7 +52,12 @@ export const DRAFT_SKETCH = [
   { label: 'Ángulo', bones: [100, 96, 58], isTall: false },
   { label: 'Puntos clave', bones: [88], isTall: false },
 ] as const
-export const BONE_LEAD_MS = 100
+// Al terminar de leer, Rad absorbe las piezas (vuelan hasta él, escalonadas) y el borrador nace
+// en su sitio cuando ya se han ido.
+export const ABSORB_MS = 620
+export const ABSORB_STAGGER_MS = 60
+export const DRAFT_ENTER_DELAY_MS = ABSORB_MS
+export const BONE_LEAD_MS = DRAFT_ENTER_DELAY_MS + 100
 export const BONE_STAGGER_MS = 130
 export const BONE_DRAW_MS = 520
 const BONE_COUNT = DRAFT_SKETCH.reduce((total, section) => total + section.bones.length, 0)
@@ -154,14 +146,6 @@ export function generationTimelineAt(input: GenerationInput): GenerationTimeline
 
 export function isSameTimeline(a: GenerationTimeline, b: GenerationTimeline): boolean {
   return (Object.keys(a) as (keyof GenerationTimeline)[]).every((key) => a[key] === b[key])
-}
-
-export type TrackerStatus = 'done' | 'current' | 'pending'
-
-export function trackerStatus(step: GenerationStage, current: GenerationStage): TrackerStatus {
-  const distance = STAGE_ORDER.indexOf(step) - STAGE_ORDER.indexOf(current)
-  if (distance < 0) return 'done'
-  return distance === 0 ? 'current' : 'pending'
 }
 
 export type PieceStatus = 'pending' | 'reading' | 'read'

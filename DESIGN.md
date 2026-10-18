@@ -319,11 +319,13 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - La API devuelve el brief entero en unos 15 s y no informa de su progreso. Las etapas son las del backend, en orden,
   con tiempos estimados: leer la evidencia → redactar → comprobar las citas. La última espera a la respuesta. Sin
   porcentajes ni contadores inventados.
-- **Leer:** Rad (56px) mira cada pieza. La fila sube 4px, un rotulador lima subraya su título (650ms, `scaleX`) y una
-  píldora con el nombre de la fuente vuela hasta Rad. Unos 1,1s por pieza.
-- **Redactar:** Rad se abre en radar, con una pasada del haz por etapa. Aparece el bloque Gancho · Ángulo · Puntos
-  clave y sus huesos se entintan de izquierda a derecha. Nunca se escribe texto antes de tenerlo: llega con la
-  respuesta.
+- **Composición:** Rad grande (96px) y centrado arriba, con el título de la etapa y la frase debajo; las tres piezas
+  en fila (una columna en móvil). La tarjeta reserva desde el principio el alto del borrador y sube a la vista.
+- **Leer:** Rad mira cada pieza. La tarjeta sube 6px, un rotulador lima subraya su título línea a línea (650ms) y
+  una píldora con el nombre de la fuente vuela hasta Rad. Unos 1,1s por pieza.
+- **Redactar:** Rad absorbe las piezas (vuelan hasta él, escalonadas 60ms, 620ms) y se abre en radar, con una
+  pasada del haz por etapa. En el sitio de las piezas nace el bloque Gancho · Ángulo · Puntos clave y sus huesos se
+  entintan de izquierda a derecha. Nunca se escribe texto antes de tenerlo: llega con la respuesta.
 - **Comprobar:** las citas, con el nombre real de cada fuente, pasan a lima una a una.
 - **Al llegar la respuesta:** un cierre corto (las citas que faltan en lima, «Brief listo», Rad parpadea) y entra el
   brief escalonado 80ms. Una respuesta cacheada, que llega en menos de un segundo, no muestra la animación.

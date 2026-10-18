@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import { Check } from '@lucide/vue'
 import { useIntervalFn, usePreferredReducedMotion } from '@vueuse/core'
 import { computed, onMounted, ref, useTemplateRef, watch, watchEffect } from 'vue'
 
 import RadMark, { type RadMarkState } from '@/components/agent/RadMark.vue'
 import { CARD_CLASS } from '@/components/dossier/dossierClasses'
 import {
+  ABSORB_STAGGER_MS,
   citationSources,
-  GENERATION_STEPS,
   GENERATION_TITLE,
   GenerationStage,
   type GenerationTimeline,
   generationTimelineAt,
   isSameTimeline,
   pieceStatus,
-  trackerStatus,
-  type TrackerStatus,
   TYPICAL_WAIT_LABEL,
 } from '@/lib/briefStages'
 import { type BriefOptions, briefSentence } from '@/lib/briefView'
@@ -43,16 +40,12 @@ const { pieces, pieceCount, options, done } = defineProps<{
 // Tras el cierre: quien la monta enseña el brief.
 const emit = defineEmits<{ finished: [] }>()
 
-const RAD_SIZE_PX = 56
+// Artboard C1: Rad grande y centrado, protagonista de la espera; las piezas vuelan hasta él.
+const RAD_SIZE_PX = 96
 // Las etapas duran segundos y lo que pasa dentro de cada una lo anima CSS: basta con mirar el
 // reloj diez veces por segundo.
 const CLOCK_TICK_MS = 100
 const WORKING_STAGES: readonly GenerationStage[] = [GenerationStage.Draft, GenerationStage.Check]
-const TRACKER_STYLE: Record<TrackerStatus, { label: string; textClass: string }> = {
-  done: { label: 'Hecho', textClass: 'text-ink-soft' },
-  current: { label: 'En curso', textClass: 'font-semibold text-foreground' },
-  pending: { label: 'Pendiente', textClass: 'text-muted-foreground' },
-}
 
 const motionPreference = usePreferredReducedMotion()
 const isReduced = computed(() => motionPreference.value === 'reduce')
@@ -95,12 +88,8 @@ watchEffect(() => {
   emit('finished')
 })
 
-const steps = computed(() =>
-  GENERATION_STEPS.map((step) => ({
-    ...step,
-    status: trackerStatus(step.stage, timeline.value.stage),
-  })),
-)
+// Leídas todas, Rad absorbe las piezas y el borrador ocupa su sitio.
+const isAbsorbed = computed(() => timeline.value.stage !== GenerationStage.Read)
 const subtitle = computed(() => `${briefSentence(options)} · ${TYPICAL_WAIT_LABEL}`)
 const morePieces = computed(() => (pieceCount === null ? 0 : pieceCount - pieces.length))
 const citationViews = computed<CitationView[]>(() => {
@@ -135,8 +124,8 @@ function updateGaze() {
   lookAt.value = gazeTarget()
 }
 
-// La tarjeta crece hacia abajo (piezas y luego el borrador): bajo la cabecera del tema, en una pantalla
-// de portátil el borrador quedaría fuera de la vista. Se sube la tarjeta arriba al empezar.
+// Bajo la cabecera del tema, en una pantalla de portátil las piezas y el borrador quedarían fuera de
+// la vista. Se sube la tarjeta arriba al empezar.
 const SCROLL_MARGIN_PX = 16
 
 function bringIntoView() {
@@ -171,66 +160,54 @@ const mark = computed<RadMarkState>(() => {
     data-agent-root
     aria-busy="true"
     aria-label="Generando el brief"
-    :class="[CARD_CLASS, 'flex-col gap-[22px]']"
+    :class="[CARD_CLASS, 'flex-col items-center gap-7 py-8']"
   >
-    <div class="flex items-center gap-4">
+    <div class="flex flex-col items-center gap-3 text-center">
       <RadMark data-rad-mark :state="mark" :size="RAD_SIZE_PX" />
-      <div class="flex min-w-0 flex-col gap-1">
-        <p
-          role="status"
-          aria-live="polite"
-          class="font-display text-2xl leading-[1.15] font-semibold tracking-[-0.02em]"
-        >
-          {{ GENERATION_TITLE[timeline.stage] }}
-        </p>
-        <p class="text-sm text-muted-foreground">{{ subtitle }}</p>
-      </div>
-    </div>
-
-    <ol class="flex flex-wrap gap-x-[18px] gap-y-2">
-      <li
-        v-for="step in steps"
-        :key="step.stage"
-        class="flex items-center gap-2 text-sm"
-        :class="TRACKER_STYLE[step.status].textClass"
+      <p
+        role="status"
+        aria-live="polite"
+        class="pt-2 font-display text-[22px] leading-[1.15] font-semibold tracking-[-0.02em] sm:text-2xl"
       >
-        <span
-          role="img"
-          :aria-label="TRACKER_STYLE[step.status].label"
-          class="flex size-[18px] shrink-0 items-center justify-center"
-        >
-          <span
-            v-if="step.status === 'done'"
-            class="flex size-[18px] items-center justify-center rounded-full bg-primary"
-          >
-            <Check class="size-[11px] text-signal" :stroke-width="3.4" aria-hidden="true" />
-          </span>
-          <span
-            v-else
-            class="size-[9px] rounded-full"
-            :class="step.status === 'current' ? 'bg-foreground' : 'bg-window-empty'"
-          />
-        </span>
-        {{ step.label }}
-      </li>
-    </ol>
-
-    <div v-if="pieces.length > 0" class="flex flex-col gap-2.5">
-      <BriefGeneratingPiece
-        v-for="(piece, index) in pieces"
-        :key="piece.url"
-        :data-generating-piece="index"
-        :piece
-        :status="pieceStatus(timeline, index)"
-      />
-      <p v-if="morePieces > 0" class="pl-0.5 text-[13px] text-label">
-        y {{ countLabel(morePieces, 'pieza más', 'piezas más') }} del tema
+        {{ GENERATION_TITLE[timeline.stage] }}
       </p>
+      <p class="text-sm text-muted-foreground">{{ subtitle }}</p>
     </div>
 
-    <BriefGeneratingDraft
-      v-if="timeline.stage !== GenerationStage.Read"
-      :citations="citationViews"
-    />
+    <!-- Piezas y borrador comparten celda: las piezas se van hacia Rad y el borrador nace donde
+         estaban. La celda reserva desde el principio el alto del borrador con sus citas (316 px):
+         la tarjeta no salta y el scroll del principio ya la deja entera a la vista. -->
+    <div class="grid min-h-[316px] w-full">
+      <div
+        v-if="pieces.length > 0"
+        class="flex flex-col gap-2.5 self-center [grid-area:1/1]"
+        :aria-hidden="isAbsorbed"
+      >
+        <ul class="grid gap-2.5 sm:grid-cols-3">
+          <BriefGeneratingPiece
+            v-for="(piece, index) in pieces"
+            :key="piece.url"
+            :data-generating-piece="index"
+            :piece
+            :status="pieceStatus(timeline, index)"
+            :absorbed="isAbsorbed"
+            :absorb-delay-ms="index * ABSORB_STAGGER_MS"
+          />
+        </ul>
+        <p
+          v-if="morePieces > 0"
+          class="text-center text-[13px] text-label transition-opacity duration-300 ease-out"
+          :class="{ 'opacity-0': isAbsorbed }"
+        >
+          y {{ countLabel(morePieces, 'pieza más', 'piezas más') }} del tema
+        </p>
+      </div>
+
+      <BriefGeneratingDraft
+        v-if="isAbsorbed"
+        class="w-full max-w-[680px] self-start justify-self-center [grid-area:1/1]"
+        :citations="citationViews"
+      />
+    </div>
   </section>
 </template>
