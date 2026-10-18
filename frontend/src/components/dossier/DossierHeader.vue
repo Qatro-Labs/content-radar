@@ -6,6 +6,7 @@ import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { dossierStatusLine } from '@/lib/dossierView'
 import { recommendationReasonText } from '@/lib/opportunityFormat'
+import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
 
@@ -27,7 +28,11 @@ const reason = computed(() => recommendationReasonText(opportunity))
       <ChevronLeft class="size-4 text-ink-soft" aria-hidden="true" />
       Radar
     </RouterLink>
-    <LifecycleChip :lifecycle="opportunity.lifecycle" class="self-start" />
+    <LifecycleChip
+      :lifecycle="opportunity.lifecycle"
+      :descending="isDescending(opportunity)"
+      class="self-start"
+    />
     <h1
       class="max-w-[860px] font-display text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-semibold tracking-[-0.04em]"
     >

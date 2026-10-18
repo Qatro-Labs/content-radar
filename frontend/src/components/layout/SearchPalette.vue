@@ -13,6 +13,7 @@ import { EXPLORE_TEXT_PARAM } from '@/lib/exploreView'
 import { formatScore } from '@/lib/opportunityFormat'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 import { buildSearchResults, hasResults, topicDestination } from '@/lib/searchPalette'
+import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
 
 const open = defineModel<boolean>('open', { required: true })
@@ -126,7 +127,7 @@ const META_CLASS = 'truncate text-[13px] text-muted-foreground'
             :class="ITEM_CLASS"
             @select="openTopic(topic.id)"
           >
-            <StageDot :lifecycle="topic.lifecycle" />
+            <StageDot :lifecycle="topic.lifecycle" :descending="isDescending(topic)" />
             <span class="min-w-0 flex-1 truncate font-medium">{{ topic.topic }}</span>
             <span class="shrink-0 text-[13px] text-muted-foreground">
               Oportunidad

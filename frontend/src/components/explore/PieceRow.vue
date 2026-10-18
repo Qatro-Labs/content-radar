@@ -11,6 +11,7 @@ export const PIECES_GRID_CLASS =
 import { formatRatio, missingRatioLabel, PLATFORM_LABEL } from '@/lib/evidenceFormat'
 import type { Piece } from '@/lib/exploreView'
 import { formatUtcDay } from '@/lib/format'
+import { isDescending } from '@/lib/lifecycle'
 
 import StageDot from './StageDot.vue'
 
@@ -39,7 +40,10 @@ const emit = defineEmits<{ select: [url: string] }>()
       </span>
     </span>
     <span class="flex min-w-0 items-center gap-1.5 text-[13.5px] text-ink-soft">
-      <StageDot :lifecycle="piece.opportunity.lifecycle" />
+      <StageDot
+        :lifecycle="piece.opportunity.lifecycle"
+        :descending="isDescending(piece.opportunity)"
+      />
       <span class="truncate" :title="piece.opportunity.topic">{{ piece.opportunity.topic }}</span>
     </span>
     <!-- Sin ratio no hay cifra: se dice por qué, nunca 0 (CLAUDE.md §2.3). -->

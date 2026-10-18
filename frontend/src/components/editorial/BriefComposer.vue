@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { QueryState } from '@/api/opportunities'
 import { CARD_CLASS, PRIMARY_BUTTON_CLASS } from '@/components/dossier/dossierClasses'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { type BriefOptions, isAdvisedAgainst } from '@/lib/briefView'
+import { recommendationReasonText } from '@/lib/opportunityFormat'
 import type { components } from '@/types/api'
 
 import BriefRadMark from './BriefRadMark.vue'
@@ -21,6 +24,9 @@ const { opportunity, evidence, pending } = defineProps<{
 const options = defineModel<BriefOptions>('options', { required: true })
 
 const emit = defineEmits<{ generate: [] }>()
+
+// El chip ya dice la etiqueta: el motivo va sin repetirla, como en la vista previa y el expediente.
+const reason = computed(() => recommendationReasonText(opportunity))
 </script>
 
 <template>
@@ -43,9 +49,7 @@ const emit = defineEmits<{ generate: [] }>()
       class="flex flex-col items-start gap-2 rounded-tile bg-sunken px-4 py-3.5"
     >
       <RecommendationChip :recommendation="opportunity.recommendation" size="sm" />
-      <p v-if="opportunity.recommendation_reason" class="text-sm text-ink-soft">
-        {{ opportunity.recommendation_reason }}
-      </p>
+      <p v-if="reason" class="text-sm text-ink-soft">{{ reason }}</p>
     </div>
 
     <div class="flex flex-wrap items-center justify-between gap-3.5 pt-1">

@@ -2,14 +2,18 @@
 import { computed } from 'vue'
 
 import HoverHint from '@/components/layout/HoverHint.vue'
-import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
+import { DESCENDING_STYLE, LIFECYCLE_STYLE } from '@/lib/lifecycle'
 import type { Lifecycle } from '@/lib/radarQuery'
 
 // El chip va dentro del tooltip: las clases de quien lo usa van al chip, no al tooltip.
 defineOptions({ inheritAttrs: false })
 type ChipSize = 'sm' | 'md'
 
-const { lifecycle, size = 'md' } = defineProps<{ lifecycle: Lifecycle; size?: ChipSize }>()
+const {
+  lifecycle,
+  descending = false,
+  size = 'md',
+} = defineProps<{ lifecycle: Lifecycle; descending?: boolean; size?: ChipSize }>()
 
 // `md` para el panel y el ranking; `sm` para la tarjeta flotante del radar.
 const SIZE_CLASS: Record<ChipSize, string> = {
@@ -17,7 +21,7 @@ const SIZE_CLASS: Record<ChipSize, string> = {
   md: 'px-2.5 py-1 text-[13px]',
 }
 
-const style = computed(() => LIFECYCLE_STYLE[lifecycle])
+const style = computed(() => (descending ? DESCENDING_STYLE : LIFECYCLE_STYLE[lifecycle]))
 const help = computed(() => `${style.value.label}: ${style.value.meaning}`)
 
 const chipColors = computed(() => ({

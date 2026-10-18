@@ -19,6 +19,7 @@ import {
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
 import { AGENT_ANCHOR } from '@/lib/agentTargets'
+import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
 
 const { opportunity, total } = defineProps<{ opportunity: RankedOpportunity; total: number }>()
@@ -86,7 +87,7 @@ const BUTTON_CLASS =
         </button>
       </HoverHint>
       <div class="flex flex-wrap items-center gap-2">
-        <LifecycleChip :lifecycle="opportunity.lifecycle" />
+        <LifecycleChip :lifecycle="opportunity.lifecycle" :descending="isDescending(opportunity)" />
         <RecommendationChip :recommendation="opportunity.recommendation" />
       </div>
     </div>

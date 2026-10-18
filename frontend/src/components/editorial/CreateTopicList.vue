@@ -9,6 +9,7 @@ import { BRIEF_PARAM } from '@/lib/briefView'
 import { buildTopicList } from '@/lib/createPicker'
 import { formatScore, SCORE_MAX } from '@/lib/opportunityFormat'
 import { cn } from '@/lib/utils'
+import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
 
@@ -80,7 +81,7 @@ const ROW_GAP_CLASS = 'gap-2.5 sm:gap-4'
             :class="ROW_GAP_CLASS"
           >
             <span :class="STAGE_COLUMN_CLASS">
-              <LifecycleChip :lifecycle="topic.lifecycle" />
+              <LifecycleChip :lifecycle="topic.lifecycle" :descending="isDescending(topic)" />
             </span>
             <span class="min-w-0 flex-1 text-[15px] leading-[1.35] font-medium">
               {{ topic.topic }}
