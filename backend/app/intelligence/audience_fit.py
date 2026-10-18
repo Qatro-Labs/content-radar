@@ -97,6 +97,7 @@ def apply_fit(
         audience_fit=fit,
         org_application=levels[FitCriterion.ORG_APPLICATION],
         latam_gap=o.latam_gap,
+        acceleration=o.acceleration,
     )
     opportunity = o.model_copy(
         update={

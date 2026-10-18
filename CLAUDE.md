@@ -243,7 +243,9 @@ GET  /health
   | `discard` | `lifecycle` es `saturated` |
   | `wait_for_case` | datos insuficientes o `confidence` baja |
   | `wait_for_case` | criterio "aplicación real en organizaciones" ≤ 1: ninguna pieza muestra un caso real |
-  | `find_angle` | `lifecycle` es `peaking`, o `unknown` porque ninguna regla se cumple |
+  | `find_angle` | `lifecycle` es `peaking` |
+  | `publish_now` | `unknown` con datos, aceleración > 0, `latam_gap = true`, `org_application` ≥ 2 y `audience_fit_score` ≥ 60: hueco LATAM, con la razón "el crecimiento todavía no está demostrado" (decidido el 18/10) |
+  | `find_angle` | `unknown` porque ninguna regla se cumple (o en descenso) |
   | `find_angle` | `latam_gap = false`: ya hay mucha cobertura en fuentes latinoamericanas |
   | `publish_now` | `emerging` o `accelerating`, y `audience_fit_score` ≥ 60 |
   | `find_angle` | cualquier otro caso (también mientras no haya audience fit) |

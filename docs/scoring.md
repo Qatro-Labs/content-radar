@@ -337,7 +337,7 @@ Sin audience fit o sin actionability, el score es `null`: no se rellena con un s
 
 ## 14. Recomendación
 
-Primera regla que se cumple (`backend/app/intelligence/ranking.py:170`); el texto va en
+Primera regla que se cumple (`backend/app/intelligence/ranking.py:175`); el texto va en
 `recommendation_reason`:
 
 | # | Recomendación | Regla |
@@ -347,13 +347,21 @@ Primera regla que se cumple (`backend/app/intelligence/ranking.py:170`); el text
 | 3 | `wait_for_case` | Confianza `low` |
 | 4 | `wait_for_case` | `org_application` ≤ 1: ninguna pieza muestra una organización real (`backend/app/intelligence/ranking.py:140`) |
 | 5 | `find_angle` | Etapa `peaking` |
-| 6 | `find_angle` | Etapa `unknown` con datos (ninguna regla de etapa se cumple, o en descenso) |
-| 7 | `find_angle` | `latam_gap = false`: ya hay cobertura en fuentes latinoamericanas |
-| 8 | `find_angle` | Sin audience fit |
-| 9 | `publish_now` | Llega aquí (`emerging` o `accelerating`) con audience fit ≥ 60 (`backend/app/intelligence/ranking.py:38`) |
-| 10 | `find_angle` | Audience fit < 60 |
+| 6 | `publish_now` | Etapa `unknown` con datos, aceleración > 0, `latam_gap = true`, `org_application` ≥ 2 (`backend/app/intelligence/ranking.py:141`) y audience fit ≥ 60: hueco LATAM con subida sin demostrar |
+| 7 | `find_angle` | Etapa `unknown` con datos (ninguna regla de etapa se cumple, o en descenso) |
+| 8 | `find_angle` | `latam_gap = false`: ya hay cobertura en fuentes latinoamericanas |
+| 9 | `find_angle` | Sin audience fit |
+| 10 | `publish_now` | Llega aquí (`emerging` o `accelerating`) con audience fit ≥ 60 (`backend/app/intelligence/ranking.py:38`) |
+| 11 | `find_angle` | Audience fit < 60 |
 
 Un fit bajo no descarta: da `find_angle` y la UI muestra la banda.
+
+La regla 6 (decidida el 18/10) publica un tema cuya subida no pasa la puerta de `accelerating`
+(p > 0,10) o que no encaja en ninguna etapa, si el encaje es alto, hay un caso real y la región aún
+no lo cubre. Las reglas 1–4 ya excluyen los temas saturados, con confianza baja o sin caso; la
+aceleración > 0 excluye los temas en descenso. Su `recommendation_reason` dice que el crecimiento
+no está demostrado, así que la UI y el MCP no lo presentan como tendencia comprobada. En el run 41
+cambia 1 de 54 temas ("Control del gasto en IA para empresas": 3 notas frente a 2, p = 0,48).
 
 ## 15. Orden del ranking
 
