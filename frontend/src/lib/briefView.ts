@@ -173,7 +173,6 @@ export function featuredPiecesCaption(total: number): string {
 
 export const HOOK_MISSING = 'Gancho no disponible: no superó la comprobación de evidencia.'
 export const WHY_IT_FITS_MISSING = 'Encaje no disponible: no se pudo comprobar con la evidencia.'
-export const NO_LIMITATIONS = 'No hay limitaciones registradas para este brief.'
 
 // La frase del estudio sin el artículo ni el punto, para rotular un brief: «Post en LinkedIn para
 // educar».
@@ -212,8 +211,6 @@ export function briefPlainText(brief: EditorialBrief): string {
   const points = brief.key_points.map((point) =>
     [`- ${point.text}`, ...point.evidence_urls.map((url) => `  ${url}`)].join('\n'),
   )
-  const limitations =
-    brief.limitations.length > 0 ? brief.limitations.map((item) => `- ${item}`) : [NO_LIMITATIONS]
   return [
     `${brief.topic}\n${briefSentence(brief)}`,
     section('Gancho', [brief.hook ?? HOOK_MISSING]),
@@ -224,7 +221,6 @@ export function briefPlainText(brief: EditorialBrief): string {
     ),
     section('Puntos clave', points),
     section('Por qué encaja con 30X', [brief.why_it_fits ?? WHY_IT_FITS_MISSING]),
-    section('Qué no sabemos', limitations),
     briefFootnote(brief),
   ].join('\n\n')
 }

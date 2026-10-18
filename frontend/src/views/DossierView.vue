@@ -16,7 +16,6 @@ import DossierStates, { DossierPlaceholder } from '@/components/dossier/DossierS
 import DossierSummary from '@/components/dossier/DossierSummary.vue'
 import EvidenceSection from '@/components/dossier/EvidenceSection.vue'
 import FitSection from '@/components/dossier/FitSection.vue'
-import ScoreComposition from '@/components/dossier/ScoreComposition.vue'
 import WhyItWorked from '@/components/dossier/WhyItWorked.vue'
 import { rankLabel, rankOf } from '@/lib/dossierView'
 import { formatUtcTimestamp } from '@/lib/format'
@@ -81,8 +80,8 @@ const monitoringStartedAt = computed(() => listQuery.data.value?.monitoring_star
   <DossierStates v-if="placeholder" :state="placeholder" @retry="opportunityQuery.refetch()" />
 
   <div v-else-if="opportunity" class="flex flex-col gap-4">
-    <!-- Primero qué hacer y por qué (cabecera, acción, resumen y «Qué no sabemos»); después el
-         detalle: evolución, encaje, evidencia y, plegado, cómo se calcula el score. -->
+    <!-- Primero qué hacer y por qué (cabecera, acción con el desglose del score y resumen);
+         después el detalle: evolución, encaje y evidencia. -->
     <div class="flex flex-wrap items-start gap-4 pt-3">
       <DossierHeader :opportunity />
       <DossierActions :opportunity :rank-text="rankText" />
@@ -100,7 +99,6 @@ const monitoringStartedAt = computed(() => listQuery.data.value?.monitoring_star
       :cited-url="citedUrl"
       @retry="evidenceQuery.refetch()"
     />
-    <ScoreComposition :opportunity :rank-text="rankText" />
 
     <!-- DESIGN.md §9: desde cuándo se monitorea va siempre a la vista, y el encaje y la saturación
          se rotulan para que no se lean como mediciones absolutas (CLAUDE.md §2.3). -->

@@ -48,7 +48,8 @@ SECTION_LABELS = {
     DossierSection.EVOLUTION: "Mostrando la evolución de",
     DossierSection.FIT: "Mostrando el encaje de",
     DossierSection.EVIDENCE: "Mostrando la evidencia de",
-    DossierSection.LIMITS: "Mostrando qué no sabemos de",
+    # La UI ya no tiene «Qué no sabemos» (18/10): la sección lleva a «Por qué importa».
+    DossierSection.LIMITS: "Explicando por qué importa",
 }
 DEFAULT_SORT: RadarSort = "opportunity"
 GAP_LABEL = "Pulsando «Hueco en LATAM»"

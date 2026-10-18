@@ -93,10 +93,10 @@ function askFromAssistant() {
 }
 
 const hasCited = computed(() => answer.cited.length > 0)
-// Sin «Citadas», el escalonado empieza en «Qué no sabemos».
-const unknownsOrder = computed(() => (hasCited.value ? 1 : 0))
+// Sin «Citadas», el escalonado empieza en los enlaces.
+const linksOrder = computed(() => (hasCited.value ? 1 : 0))
 
-// DESIGN.md §7: «Citadas», «Qué no sabemos» y los enlaces entran escalonados.
+// DESIGN.md §7: «Citadas» y los enlaces entran escalonados.
 function staggerStyle(order: number) {
   return { animationDelay: `${order * AGENT_TIMING.endingStaggerMs}ms` }
 }
@@ -138,23 +138,10 @@ function staggerStyle(order: number) {
     <!-- El vistazo atenúa este envoltorio y no cada bloque: la entrada escalonada de los bloques
          (`duration-300`) pisaría su fundido de 150 ms. -->
     <div class="flex flex-col gap-4" :class="PEEK_DIM_CLASS">
-      <!-- DESIGN.md §9: la respuesta del agente siempre termina con «Qué no sabemos». -->
-      <section
-        class="flex flex-col gap-1.5 rounded-tile bg-notice px-4 py-3.5"
-        :class="ENDING_BLOCK_CLASS"
-        :style="staggerStyle(unknownsOrder)"
-      >
-        <h3 class="text-[15px] font-semibold text-notice-foreground">Qué no sabemos</h3>
-        <ul class="flex list-disc flex-col gap-1 pl-5 text-[14.5px] text-ink-soft">
-          <!-- Por índice: el modelo puede repetir una limitación y la clave dejaría de ser única. -->
-          <li v-for="(unknown, index) in answer.unknowns" :key="index">{{ unknown }}</li>
-        </ul>
-      </section>
-
       <div
         class="flex flex-wrap items-center gap-x-5"
         :class="ENDING_BLOCK_CLASS"
-        :style="staggerStyle(unknownsOrder + 1)"
+        :style="staggerStyle(linksOrder)"
       >
         <span class="inline-flex items-center gap-2">
           <button type="button" :class="LINK_CLASS" @click="copyLink">

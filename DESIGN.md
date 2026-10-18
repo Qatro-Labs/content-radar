@@ -75,7 +75,7 @@ Una sola familia de grises fríos (sin mezclar con grises cálidos). Nunca negro
 | Sin etapa | hueco (blanco) | #8A919C discontinuo | #F0F1F3 | #50565F |
 
 **Otros roles**
-- **Aviso** (#FFF4E5, texto #8A4B00) — bloque "Qué no sabemos". Chip "Datos de ejemplo": #FFF0DC / #8A4B00.
+- **Aviso** (#FFF4E5, texto #8A4B00) — avisos y chip "Datos de ejemplo": #FFF0DC / #8A4B00.
 - **Negativo** (#B0262C) — aceleración negativa, "Descartar" (fondo #FDE8E9).
 - **Neutro de acción** (#F0F1F3, texto #22262C) — "Buscar ángulo" y "Esperar caso".
 - **Saturación** (#FF9A3C) — barra de saturación (es una alerta suave, no un logro).
@@ -135,7 +135,8 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   izquierda (120px), valor a la derecha con banda cuando aplica ("Alto · 82").
 - **Barra apilada "Para quién importa":** alto 12px, radio completo, 3px entre segmentos; debajo, tres cifras
   grandes con su leyenda y una frase de lectura.
-- **"Qué no sabemos":** bloque Aviso con título en negrita y la limitación. Obligatorio en todo detalle.
+- **"Qué no sabemos":** retirado de toda la UI el 18/10 (Radar, Explorar, expediente, brief y Rad). Un dato
+  ausente se sigue diciendo donde está ("no disponible"), p. ej. el hueco en LATAM en la cabecera del expediente.
 - **Contador-filtro:** baldosa blanca radio 16px, cifra Bricolage 32px y debajo la etiqueta con su muestra de color
   ("Publicar ya", "Acelerando", "Emergentes", "Sin etapa"). Es un botón (`aria-pressed`) que escribe el mismo estado
   de la URL que el resto de filtros; activo, anillo de Tinta de 2px. Sin textos de ayuda debajo. Muestra el **total**
@@ -150,8 +151,9 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   a todas las filas (5 piezas/día llenan la barra) para poder compararlas; `aria-label` con los valores.
 - **Panel lateral:** tarjeta blanca a la derecha (`flex: 1 1 360px`), `position: sticky; top: 16px`, visible
   mientras se baja por el ranking. Sin selección muestra «Esta semana» (Radar: los temas de «Publicar ya», una línea
-  hacia Explorar y "Qué no sabemos" en una frase) o «Dónde está funcionando» (Explorar). Con selección muestra la vista
-  previa del tema o de la pieza, con "← Esta semana" / "← Resumen" para volver. Cambia con fundido y 6px de subida.
+  hacia Explorar) o «Dónde está funcionando» (Explorar). Con selección muestra la vista previa del tema o de la pieza,
+  con "← Esta semana" / "← Resumen" para volver; la vista previa ocupa todo el alto del panel y sus botones van
+  siempre al fondo. Cambia con fundido y 6px de subida.
 - **Vista previa del tema:** chip de etapa, tema (Bricolage 28px), "Observado · confianza media · 8 fuentes", anillo
   de 104px con el puesto y el chip de recomendación, `recommendation_reason`, el inicio de "Por qué importa" (3
   líneas) y tres baldosas (Aceleración · Encaje · Outliers). Primario "Ver expediente →"; secundario "Generar brief".
@@ -159,7 +161,7 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   las dos ventanas de la evolución lado a lado, "Por qué importa" completo, criterios de encaje con chips de las
   fuentes que citan (al pulsar uno se resaltan sus piezas, las demás bajan a 0.4 y la página baja hasta ellas),
   evidencia en una lista con outliers primero y la barra **"Rendimiento frente a su canal"** (marcas en 1× y 3×, escala
-  hasta 6×), "Para quién importa" en la cabecera de la evidencia y "Siguiente paso" junto a "Qué no sabemos".
+  hasta 6×) y "Para quién importa" en la cabecera de la evidencia.
 - **Carga:** skeletons con la forma exacta del contenido (#ECEEF1 → #F2F3F5, 1.6s). Nada de spinners circulares.
 - **Vacío:** si hay menos oportunidades que las esperadas, se muestran las que hay y una frase que explica por qué
   ("Hay 7 temas analizados esta semana"). Nunca se rellena.
@@ -174,7 +176,9 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 
 - **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando»,
   «Emergentes» y «Sin etapa» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`. La leyenda de etapas pasa
-  a la cabecera de la tarjeta del radar (chips no interactivos). "Hueco en LATAM" sale de la vista mientras
+  a la cabecera de la tarjeta del radar y también filtra (18/10): cada chip es un botón (`aria-pressed`) que escribe
+  `lifecycle` con la misma selección única que los contadores, activo con el anillo de Tinta de 2px. Es la vía para
+  las etapas sin contador (En pico, Saturado, Sin tendencia clara). "Hueco en LATAM" sale de la vista mientras
   `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
   filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista"; si la vista es justo
   la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
@@ -197,8 +201,11 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   descartó por la pausa en lo alto) mientras la barra se funde y se encoge hacia allí; al abrir, vuelve igual a la
   barra, que aparece con un fundido. Al aterrizar parpadea. Solo `transform` y `opacity`.
 - **Rad vivo en reposo:** parpadea cada 3–7 s (a veces dos veces; uno de «hola» al cargar) y, si el cursor lleva
-  2,5 s quieto, mira un momento (1,3 s) a otro punto de la página y vuelve. Es la única excepción a «nada de bucles»
-  (§7): es su personaje, no un dato. Se para mientras trabaja, con la pestaña oculta y con movimiento reducido.
+  2,5 s quieto, mira un momento (1,3 s) a otro punto de la página y vuelve. Reducido, además, cada 25–45 s (nunca
+  al cargar ni al reducir) se abre en radar, su haz da una sola pasada y vuelve a ser un ojo que parpadea, con la
+  misma transformación que al trabajar; el cursor o el foco encima la cancelan y vuelve a ojo sin pausas, y no
+  parpadea a mitad de la pasada. Es la única excepción a «nada de bucles» (§7): es su personaje, no un dato. Se para
+  mientras trabaja, con la pestaña oculta y con movimiento reducido.
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
   un ojo que mira el cursor (de reojo si está cerca, hasta el borde si está lejos; al frente con movimiento
   reducido); mientras trabaja se abre en un radar (dos anillos) con el iris quieto en el centro, y su haz da una
@@ -210,7 +217,7 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
     **Datos** (#F0F1F3) si lee o **Vista** (Lima) si mueve la página;
   - la respuesta en Geist 16px / 1.55, Tinta de lectura, ancho ≤ 720px;
   - al terminar: "Citadas" (chips #F2F3F5 con el punto de etapa y la cifra de oportunidad; seleccionan la
-    oportunidad), el bloque "Qué no sabemos" y dos enlaces: "Copiar enlace a esta vista" y "Hacer esta pregunta desde
+    oportunidad) y dos enlaces: "Copiar enlace a esta vista" y "Hacer esta pregunta desde
     un asistente (MCP)" (copia la pregunta y abre `docs/mcp.md`; nombrará un cliente cuando haya uno probado). Los
     pasos se pliegan en una línea subrayada ("Hizo 6 pasos: 3 de datos y 3 en la vista") que los vuelve a abrir;
   - una conversación: los turnos anteriores quedan plegados encima del actual y "Nueva conversación" los borra.
@@ -233,7 +240,8 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   objetivo más 6px. Sobre una burbuja no hay anillo de foco: basta la selección. Al pulsar algo deja una onda de
   Tinta. Para cambiar de pantalla, la presencia pulsa el control que lleva allí ("Ver expediente →" de la vista
   previa o "Explorar" en la navegación) y, en la pantalla nueva, va a la sección que Rad nombra (composición del
-  score, evolución, encaje, evidencia o "Qué no sabemos") o a la tabla de piezas con la búsqueda puesta.
+  score, evolución, encaje o evidencia; `limits`, de antes, lleva a "Por qué importa") o a la tabla de piezas con
+  la búsqueda puesta.
 
 ## 5. Layout, espaciado y elevación
 
@@ -262,7 +270,8 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   frente a su canal → a la derecha el panel lateral («Dónde está funcionando» o el detalle de la pieza). Sin gráfico:
   la dispersión por fecha se descartó el 17/10 porque no respondía nada que la tabla no diga.
 - **Expediente (`/explore/:id`):** cabecera (tema, recomendación y motivo; a la derecha el anillo con "Cómo se
-  compone") → evolución → por qué importa y encaje → evidencia → siguiente paso con "Qué no sabemos".
+  calcula", que abre un popover con el desglose del score) → por qué importa, a todo el ancho → evolución → encaje →
+  evidencia.
 - **Crear (`/create`)**, aprobado el 18/10 en el canvas
   [30X Signal — Crear v2](https://claude.ai/artifact/2mZfTjdXVfrSSQPMkefZF2) (privado; artboards A, B1 y C1):
   - **Sin tema:** «¿De qué conviene escribir esta semana?». Arriba, cada tema de «Publicar ya» en una tarjeta
@@ -389,8 +398,8 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   controles.
 - **`prefers-reduced-motion: reduce`:** sin barrido, ping, latido ni entradas; los datos aparecen al instante. Se
   mantiene el feedback de hover y active.
-- Nada de bucles infinitos fuera del latido, de la vida en reposo de Rad (§4) y de su haz mientras redacta un brief
-  («Crear: Rad redactando»). Nada de puntos "live" que parpadean.
+- Nada de bucles infinitos fuera del latido, de la vida en reposo de Rad (§4: parpadeos, miradas y, reducido, una
+  pasada del haz de vez en cuando) y de su haz mientras redacta un brief («Crear: Rad redactando»). Nada de puntos "live" que parpadean.
 
 ## 8. Gráficos (ECharts + `vue-echarts`)
 
@@ -422,14 +431,14 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - **Etiquetas fijas:** Emergente · Acelerando · En pico · Saturado · Sin etapa | Publicar ya · Buscar ángulo ·
   Esperar caso · Descartar | Observado · Estimado · Preliminar | confianza alta · media · baja | Datos · Vista (pasos
   del agente).
-- **Texto del agente:** cada paso dice qué hace con un verbo ("Pulsando «Hueco en LATAM»", "Revisando qué no
-  sabemos"). La respuesta nombra el tema primero, da las cifras con su formato (↑ +80 %, "Alto · 82") y cita las
-  oportunidades en las que se apoya. Si un dato falta, dice "no disponible". Siempre termina con "Qué no sabemos".
+- **Texto del agente:** cada paso dice qué hace con un verbo ("Pulsando «Hueco en LATAM»", "Mostrando la
+  evidencia de…"). La respuesta nombra el tema primero, da las cifras con su formato (↑ +80 %, "Alto · 82") y cita las
+  oportunidades en las que se apoya. Si un dato falta, dice "no disponible".
   Una ejecución grabada o guionizada lleva el chip "Ejecución de ejemplo", igual que los datos de ejemplo.
 - **Banda de encaje:** Alto ≥ 67 · Medio ≥ 34 · Bajo < 34 (umbrales iniciales, ajustables con Melkin). Se muestra la
   banda junto a la cifra, no la cifra sola.
 - **Honestidad de datos** (`CLAUDE.md` §2): un dato ausente se escribe "no disponible", nunca 0 ni guion. Si hay 7
-  oportunidades, se muestran 7. La confianza va aparte del score. Cada detalle lleva "Qué no sabemos". La
+  oportunidades, se muestran 7. La confianza va aparte del score. La
   saturación se rotula "dentro de las fuentes monitoreadas" y el encaje "evaluación editorial, no una medición". El
   segmento `latam_es` se rotula "En español". Visible siempre: desde cuándo se monitorea ("Datos desde el 17/10,
   02:50 UTC").

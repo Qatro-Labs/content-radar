@@ -23,10 +23,6 @@ const { piece } = defineProps<{ piece: Piece }>()
 const emit = defineEmits<{ clear: [] }>()
 
 const META_SEPARATOR = ' · '
-// DESIGN.md §4: "Qué no sabemos" es obligatorio en todo detalle.
-const LIMITATION =
-  'Que una pieza rinda más que su referencia no explica por qué funcionó: es una señal para revisarla, no una causa.'
-
 // Sin ratio no hay rótulo: PerformanceBar ya dice por qué falta (D10 del plan fe-dashboard-v2).
 const RATIO_CAPTION: Record<RatioLabel, string> = {
   Outlier: 'rinde 3× o más que su canal',
@@ -102,11 +98,6 @@ const BUTTON_CLASS =
       <span class="text-[13.5px] text-label">
         {{ topicStageStyle(piece.opportunity).label }}
       </span>
-    </div>
-
-    <div class="flex flex-col gap-1.5 rounded-tile bg-notice px-4 py-3.5">
-      <p class="text-sm font-semibold text-notice-foreground">Qué no sabemos</p>
-      <p class="text-sm text-ink-soft">{{ LIMITATION }}</p>
     </div>
 
     <div class="flex flex-wrap gap-2">

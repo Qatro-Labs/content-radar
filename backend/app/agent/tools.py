@@ -378,8 +378,7 @@ TOOLS: dict[str, Tool] = {
     "show_in_dossier": Tool(
         StepKind.VIEW,
         "Abre el expediente de una oportunidad y lleva la vista a una sección: score (cómo se "
-        "compone), evolution, fit (encaje con la audiencia), evidence (piezas) o limits (qué no "
-        "sabemos).",
+        "compone), evolution, fit (encaje con la audiencia) o evidence (piezas).",
         DossierInput,
         labels.SECTION_PENDING_LABEL,
         _show_in_dossier,

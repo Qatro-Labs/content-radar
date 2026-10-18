@@ -6,11 +6,10 @@ import type { RadarView, RankedOpportunity } from '@/lib/radarView'
 import OpportunityPreview from './OpportunityPreview.vue'
 import WeekSummary from './WeekSummary.vue'
 
-const { view, peeked, monitoringStartedAt } = defineProps<{
+const { view, peeked } = defineProps<{
   view: RadarView
   // El tema citado por el que pasa el vistazo de Rad: se ve mientras dura, sin seleccionarlo.
   peeked: RankedOpportunity | null
-  monitoringStartedAt: string
 }>()
 
 const emit = defineEmits<{
@@ -45,7 +44,6 @@ const previewed = computed(() => peeked ?? view.selected)
       <WeekSummary
         v-else
         :view
-        :monitoring-started-at="monitoringStartedAt"
         @select="(id) => emit('select', id)"
         @hover="(id) => emit('hover', id)"
       />

@@ -76,6 +76,18 @@ describe('patchTarget', () => {
       target: { anchor: 'filter-rec-publish_now', kind: 'control' },
     },
     {
+      case: 'a stage without a counter presses its chip in the legend',
+      patch: { lifecycle: ['peaking'] },
+      anchors: ['reset', 'legend-lc-peaking'],
+      target: { anchor: 'legend-lc-peaking', kind: 'control' },
+    },
+    {
+      case: 'a stage with a counter presses the counter, not the legend',
+      patch: { lifecycle: ['emerging'] },
+      anchors: ['filter-lc-emerging', 'legend-lc-emerging'],
+      target: { anchor: 'filter-lc-emerging', kind: 'control' },
+    },
+    {
       case: 'a counter that is not on screen leaves the presence on the radar',
       patch: { lifecycle: ['unknown'] },
       anchors: [],
@@ -133,7 +145,7 @@ describe('navigationTargets', () => {
       nav: { screen: 'dossier', opportunity_id: 'opp_001', section: 'limits' },
       from: { screen: 'radar', opportunityId: 'opp_001', previewOpen: true },
       before: { anchor: 'open-dossier', kind: 'control' },
-      after: { anchor: 'limit', kind: 'block' },
+      after: { anchor: 'dossier-why', kind: 'block' },
     },
     {
       case: 'dossier from anywhere else: «Explorar» in the nav, score by default',

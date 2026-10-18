@@ -11,7 +11,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import HoverHint from '@/components/layout/HoverHint.vue'
 import InfoTip from '@/components/layout/InfoTip.vue'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
-import { bubbleAnchor } from '@/lib/agentTargets'
+import { bubbleAnchor, stageAnchor } from '@/lib/agentTargets'
 import { VChart } from '@/lib/echarts'
 import { HELP } from '@/lib/helpText'
 import {
@@ -22,7 +22,7 @@ import {
   SWEEP,
   translateTo,
 } from '@/lib/radarChart'
-import { LIFECYCLES } from '@/lib/radarQuery'
+import { LIFECYCLES, type Lifecycle } from '@/lib/radarQuery'
 import { RADAR_TOP, type RadarView } from '@/lib/radarView'
 
 import RadarSelectionLayer from './RadarSelectionLayer.vue'
@@ -49,12 +49,16 @@ const emit = defineEmits<{
   select: [id: string]
   hover: [id: string | null]
   toggleAll: []
+  filterStage: [stage: Lifecycle]
 }>()
 
 // DESIGN.md §6: en un área estrecha las etiquetas se pisan y queda la tarjeta flotante.
 const LABELS_MIN_WIDTH_PX = 640
 const DATA_LINE = 'absolute bg-data-line'
 const QUADRANT_NOTE = 'absolute z-[1] cursor-help text-[13px] text-muted-foreground'
+// La misma selección que los contadores (CounterFilter): activo, anillo de Tinta de 2 px.
+const STAGE_FILTER_CLASS =
+  'rounded-full transition-[box-shadow,scale] duration-150 ease-out hover:not-aria-pressed:ring-1 hover:not-aria-pressed:ring-foreground/25 active:scale-[0.98] aria-pressed:ring-2 aria-pressed:ring-foreground'
 // Capas del área: nombres de cuadrante y mira (z-1) quedan bajo las burbujas; anillos, ping y
 // tarjeta flotante (z-3 y z-4, RadarSelectionLayer) van encima.
 const CHART_LAYER = 'relative z-[2]'
@@ -145,12 +149,21 @@ const leaveBubble = () => emit('hover', null)
           <InfoTip label="el radar" :text="HELP.radar" />
         </h2>
       </slot>
-      <!-- La leyenda es HTML para que sea accesible (DESIGN.md §8); no filtra. -->
-      <ul aria-label="Etapas" class="flex flex-wrap gap-1.5">
-        <li v-for="lifecycle in LIFECYCLES" :key="lifecycle">
+      <!-- La leyenda es HTML para que sea accesible (DESIGN.md §8) y filtra por etapa, como los
+           contadores de la cabecera; el chip explica la etapa al pasar el cursor. -->
+      <div role="group" aria-label="Filtrar por etapa" class="flex flex-wrap gap-1.5">
+        <button
+          v-for="lifecycle in LIFECYCLES"
+          :key="lifecycle"
+          type="button"
+          :data-agent="stageAnchor(lifecycle)"
+          :aria-pressed="view.activeStage === lifecycle"
+          :class="STAGE_FILTER_CLASS"
+          @click="emit('filterStage', lifecycle)"
+        >
           <LifecycleChip :lifecycle size="sm" />
-        </li>
-      </ul>
+        </button>
+      </div>
     </div>
     <div class="relative flex flex-col pt-1 pb-[30px] pl-[30px] lg:min-h-0 lg:flex-1">
       <HoverHint :text="HELP.axisGrowth">

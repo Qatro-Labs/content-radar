@@ -14,13 +14,10 @@ import {
   isDeclining,
   recommendationReasonText,
 } from '@/lib/opportunityFormat'
-import { describeStageUnknowns, type RadarView } from '@/lib/radarView'
+import type { RadarView } from '@/lib/radarView'
 import { RouteName } from '@/router'
 
-const { view, monitoringStartedAt } = defineProps<{
-  view: RadarView
-  monitoringStartedAt: string
-}>()
+const { view } = defineProps<{ view: RadarView }>()
 
 const emit = defineEmits<{
   select: [id: string]
@@ -119,10 +116,5 @@ const TILE_CLASS =
         <span class="shrink-0 font-semibold">Ver ›</span>
       </RouterLink>
     </HoverHint>
-
-    <p class="rounded-tile bg-notice px-3.5 py-3 text-[13.5px] leading-normal text-ink-soft">
-      <strong class="font-semibold text-notice-foreground">Qué no sabemos.</strong>
-      {{ describeStageUnknowns(view.ranked, monitoringStartedAt) }}
-    </p>
   </div>
 </template>

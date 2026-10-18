@@ -67,7 +67,6 @@ export const HELP = {
     'Oportunidad (0–100): combina crecimiento, encaje con 30X, número de fuentes, lo poco cubierto que está y lo fácil que es llevarlo a contenido.',
   outliers:
     'Un outlier es una pieza que rinde 3× o más que lo normal en su canal. Señala qué está funcionando, no por qué.',
-  limits: 'Lo que los datos no permiten afirmar. Conviene leerlo antes de publicar.',
   backToWeek: 'Vuelve a «Esta semana» sin quitar los filtros.',
   openDossier: 'Abre el expediente completo: evolución, encaje con 30X y toda la evidencia.',
   generateBrief: 'Prepara un brief de contenido a partir de este tema y su evidencia.',
@@ -87,7 +86,7 @@ export const HELP = {
 
   // Expediente
   opportunityRing:
-    'Oportunidad (0–100) y puesto en el ranking. «Cómo se calcula» abre el desglose al final de la página.',
+    'Oportunidad (0–100) y puesto en el ranking. «Cómo se calcula» abre el desglose del score.',
   tileNewPieces: 'Piezas nuevas del tema en los últimos 3 días, frente a los 3 días anteriores.',
   tileAcceleration:
     'Cuánto más rápido aparecen piezas en los últimos 3 días que en los 3 anteriores, ajustado por el volumen de las fuentes.',

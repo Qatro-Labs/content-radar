@@ -17,7 +17,8 @@ Antes de tocar UI, lee `DESIGN.md`.
      `/explore/:id`. Ninguna vista pide «elige algo».
    - X = audience fit · Y = momentum · tamaño = evidence strength (normalizado) · color = lifecycle.
    - Cuadrante superior derecho = prioridad. Filtros: los contadores-filtro de la cabecera (Publicar ya ·
-     Acelerando · Emergentes; «Sin tendencia clara» solo por URL), todos en la URL. El ranking lleva mini barras
+     Acelerando · Emergentes) y los chips de etapa de la leyenda del radar (todas las etapas, también En pico,
+     Saturado y Sin tendencia clara; selección única, como los contadores), todos en la URL. El ranking lleva mini barras
      de 6 días (`/timeline`).
    - Ranking (18/10): Puesto · Tema (punto de etapa) · 6 días · Aceleración (↑ +80 %, piezas de cada ventana
      debajo, y Estimado · Preliminar cuando toca) · Recomendación (chip con el motivo) · Oportunidad. Se ordena por oportunidad;
@@ -38,11 +39,12 @@ Antes de tocar UI, lee `DESIGN.md`.
      rendimiento frente a su canal (outliers primero; sin gráfico de dispersión, descartado el 17/10) y panel lateral
      («Dónde está funcionando» o el detalle de la pieza, con enlace a su tema). Necesita un endpoint de piezas de todos los temas;
      mientras no exista, se monta con `/evidence` de cada oportunidad.
-   - **Con tema (`/explore/:id`): el expediente** (artboard I). "Cómo se compone" (`score_breakdown`) · timeline de
+   - **Con tema (`/explore/:id`): el expediente** (artboard I). "Cómo se calcula" (`score_breakdown`, en un popover
+     junto al anillo) · timeline de
      la ventana actual frente a la anterior con su confianza · "Por qué importa" completo · criterios de encaje con
      citas que resaltan su evidencia · **barra apilada de `audience_mix`** · evidencia por plataforma (enlaces
      originales, fechas, métricas, velocidad y **badge de outlier `6.1×`** con la barra 1×/3×; outliers primero) ·
-     **qué no podemos saber** · "Generar brief".
+     "Generar brief". Sin bloque «Qué no sabemos» (retirado el 18/10).
 3. **Create (Content Studio, P1):** oportunidad + plataforma + objetivo + formato → brief (ángulo,
    gancho, estructura, evidencias, por qué encaja). Se puede copiar. No es un editor.
 

@@ -46,8 +46,8 @@ afirmar nada.
 - Para comparar o señalar varias oportunidades, `highlight`; para una concreta,
   `select_opportunity`.
 - Para explicar un tema a fondo, ábrelo con `show_in_dossier` y recorre sus secciones mientras lo
-  explicas: `score` (cómo se compone), `evolution`, `fit` (encaje), `evidence` (piezas) y `limits`
-  (qué no sabemos). Como mucho tres secciones.
+  explicas: `score` (cómo se compone), `evolution`, `fit` (encaje) y `evidence` (piezas). Como
+  mucho tres secciones.
 - Para buscar piezas, `search_pieces` y después `show_pieces` con la misma búsqueda.
 - Si los filtros puestos dejarían fuera lo que vas a enseñar, quítalos antes con `reset_view`.
 

@@ -29,26 +29,15 @@ const MINUS_SIGN = '−'
 const RANGE_DASH = '–'
 const LIST_SEPARATOR = ' · '
 
-// Tres datos. «Observado» va con la evolución, y un hueco en LATAM sin calcular pasa a «Qué no
-// sabemos» (`dossierLimitations`): la cabecera no enumera lo que falta.
+// «Observado» va con la evolución. CLAUDE.md §2.3: un hueco en LATAM sin calcular se dice («no
+// disponible»), sin inventarle una causa: el backend da `null` por varios motivos.
 export function dossierStatusLine(opportunity: Opportunity): string {
-  const parts = [
+  return [
     `confianza ${CONFIDENCE_LABEL[opportunity.confidence]}`,
     countLabel(opportunity.source_count, 'fuente', 'fuentes'),
-  ]
-  if (opportunity.latam_gap !== null) parts.push(latamGapLabel(opportunity.latam_gap))
-  parts.push(`actualizado el ${formatUtcTimestamp(opportunity.last_updated)}`)
-  return parts.join(LIST_SEPARATOR)
-}
-
-// Sin causa: el backend da `null` por varios motivos (sobre todo, poca señal de negocio).
-const LATAM_GAP_UNKNOWN = 'Hueco en LATAM: no disponible.'
-
-// CLAUDE.md §2.3: un dato ausente se dice; aquí, junto al resto de lo que no sabemos.
-export function dossierLimitations(opportunity: Opportunity): string[] {
-  const limitations = [...opportunity.limitations]
-  if (opportunity.latam_gap === null) limitations.push(LATAM_GAP_UNKNOWN)
-  return limitations
+    latamGapLabel(opportunity.latam_gap),
+    `actualizado el ${formatUtcTimestamp(opportunity.last_updated)}`,
+  ].join(LIST_SEPARATOR)
 }
 
 export interface TopicRank {

@@ -9,7 +9,7 @@ export const AGENT_TIMING = {
   stepMs: 1600,
   reducedStepMs: 700,
   wordMs: 45,
-  // «Citadas», «Qué no sabemos» y los enlaces entran escalonados.
+  // «Citadas» y los enlaces entran escalonados.
   endingStaggerMs: 80,
   // Lo que se espera a que aparezca un objetivo tras navegar (el expediente carga sus datos).
   anchorWaitMs: 3000,

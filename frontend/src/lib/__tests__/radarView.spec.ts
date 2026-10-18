@@ -7,13 +7,12 @@ import { resetViewPatch, type RadarQuery } from '../radarQuery'
 import {
   buildRadarView,
   counterPatch,
-  describeStageUnknowns,
   radarHeadline,
   radarSubline,
+  stagePatch,
 } from '../radarView'
 
 type Schemas = components['schemas']
-type Opportunity = Schemas['Opportunity']
 type OpportunityList = Schemas['OpportunityList']
 
 // TS lee los enums del JSON como `string`; el fixture cumple el contrato `OpportunityList`.
@@ -235,6 +234,7 @@ describe('buildRadarView', () => {
       selected: null,
       counts: { publishNow: 0, accelerating: 0, emerging: 0, unknown: 0 },
       activeCounter: null,
+      activeStage: null,
       weekPicks: { topics: [], hasPublishNow: false },
       outlierPieces: 0,
     })
@@ -306,45 +306,44 @@ describe('counter filters', () => {
   })
 })
 
-describe('describeStageUnknowns', () => {
-  const MONITORING_STARTED_AT = '2026-10-16T00:00:00Z'
-  const [template] = list.items as [Opportunity]
-
-  // Como el run servido del 17/10: 38 temas y, de los que no tienen etapa, 8 preliminares.
-  function topics({ preliminary, unmatched }: { preliminary: number; unmatched: number }) {
-    const staged = 38 - preliminary - unmatched
-    const make = (count: number, patch: Partial<Opportunity>) =>
-      Array.from({ length: count }, () => ({ ...template, ...patch }))
-    return [
-      ...make(preliminary, { lifecycle: 'unknown', growth_status: 'preliminary' }),
-      ...make(unmatched, { lifecycle: 'unknown', growth_status: 'observed' }),
-      ...make(staged, { lifecycle: 'accelerating', growth_status: 'observed' }),
-    ]
-  }
-
+describe('legend stage filters', () => {
   it.each([
+    { case: 'one stage without a counter', filter: { lifecycle: ['peaking'] }, active: 'peaking' },
+    { case: 'one stage with a counter', filter: { lifecycle: ['emerging'] }, active: 'emerging' },
+    { case: 'no filter', filter: {}, active: null },
+    { case: 'two stages', filter: { lifecycle: ['peaking', 'saturated'] }, active: null },
     {
-      case: 'for lack of data and because no rule matches',
-      counts: { preliminary: 8, unmatched: 11 },
-      text: '19 de 38 temas no tienen una tendencia clara: 8 por falta de datos y 11 porque ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      case: 'a stage and publish now',
+      filter: { lifecycle: ['accelerating'], recommendation: 'publish_now' },
+      active: null,
     },
     {
-      case: 'only because no rule matches',
-      counts: { preliminary: 0, unmatched: 19 },
-      text: '19 de 38 temas no tienen una tendencia clara: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      case: 'a stage and a topic',
+      filter: { lifecycle: ['saturated'], topic: 'agentes' },
+      active: null,
     },
-    {
-      case: 'one topic, in the singular',
-      counts: { preliminary: 0, unmatched: 1 },
-      text: '1 de 38 temas no tiene una tendencia clara: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+  ] satisfies { case: string; filter: Partial<RadarQuery>; active: string | null }[])(
+    'active stage with $case',
+    ({ filter, active }) => {
+      expect(buildRadarView(list, query(filter)).activeStage).toBe(active)
     },
-    {
-      case: 'every topic has a stage',
-      counts: { preliminary: 0, unmatched: 0 },
-      text: 'Todos los temas tienen una tendencia clara. Datos desde el 16/10, 00:00 UTC.',
-    },
-  ])('$case', ({ counts, text }) => {
-    expect(describeStageUnknowns(topics(counts), MONITORING_STARTED_AT)).toBe(text)
+  )
+
+  it('replaces any other filter with the pressed stage', () => {
+    const current = query({ recommendation: 'publish_now', gap: true, highlight: ['opp_001'] })
+
+    expect(stagePatch('saturated', current)).toEqual({
+      lifecycle: ['saturated'],
+      gap: false,
+      highlight: [],
+      recommendation: null,
+      confidence: null,
+      topic: null,
+    })
+  })
+
+  it('resets the view when the active stage is pressed again', () => {
+    expect(stagePatch('peaking', query({ lifecycle: ['peaking'] }))).toEqual(resetViewPatch())
   })
 })
 
