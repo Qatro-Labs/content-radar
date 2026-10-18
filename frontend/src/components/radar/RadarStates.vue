@@ -11,7 +11,10 @@ export type RadarPlaceholder = (typeof RadarPlaceholder)[keyof typeof RadarPlace
 </script>
 
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
+
 import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
+import { useRadarQuery } from '@/composables/useRadarQuery'
 import { PLOT_ASPECT } from '@/lib/radarChart'
 
 const { state } = defineProps<{ state: RadarPlaceholder }>()
@@ -26,9 +29,16 @@ const ERROR_MESSAGE = 'No se pudieron cargar las oportunidades.'
 
 const CARD = 'flex min-w-0 flex-col rounded-card bg-card'
 const CARD_TITLE = 'font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]'
-// Cinco filas dan la forma de la tabla sin alargar la página mientras carga.
-const SKELETON_ROWS = 5
-// Los cuatro contadores-filtro de la cabecera y los tres temas que «Esta semana» enseña como
+// La misma forma que la vista cargada (DiscoverView): la pestaña de la URL decide si se dibuja el
+// radar o la tabla, y en escritorio también cabe en la ventana, así que nada salta al cargar.
+const { query } = useRadarQuery()
+const fillsHeight = useMediaQuery('(min-width: 1024px)')
+const SKELETON_ROWS = 8
+// Sobre el lienzo el hueso pulsa hasta el mismo gris del fondo y desaparece: ahí va quieto y un
+// punto más oscuro, como un contador sin cifra.
+const ON_CANVAS = '!animate-none !bg-secondary-hover'
+const SKELETON_LEGEND = 5
+// Los tres contadores-filtro de la cabecera y los tres temas que «Esta semana» enseña como
 // mínimo (D9 del plan fe-dashboard-v2).
 const SKELETON_COUNTERS = 3
 const SKELETON_PICKS = 3
@@ -43,14 +53,14 @@ const RETRY_ON_CARD = 'bg-secondary'
 <template>
   <div
     v-if="state === RadarPlaceholder.Loading"
-    class="flex flex-col gap-4"
+    class="flex flex-col gap-4 lg:h-full"
     aria-busy="true"
     aria-label="Cargando oportunidades"
   >
-    <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-5 pb-1">
-      <div class="flex w-full max-w-[600px] flex-col gap-3">
-        <SkeletonBone class="h-14 w-4/5 rounded-xl" />
-        <SkeletonBone class="h-5 w-full rounded-full" />
+    <div class="flex shrink-0 flex-wrap items-end justify-between gap-x-8 gap-y-4 pt-2">
+      <div class="flex min-w-0 flex-[1_1_420px] flex-col gap-3">
+        <SkeletonBone :class="[ON_CANVAS, 'h-14 w-full max-w-[520px] rounded-xl']" />
+        <SkeletonBone :class="[ON_CANVAS, 'h-5 w-full max-w-[600px] rounded-full']" />
       </div>
       <div class="flex flex-wrap gap-2">
         <div
@@ -64,31 +74,82 @@ const RETRY_ON_CARD = 'bg-secondary'
       </div>
     </div>
 
-    <div class="flex flex-wrap items-start gap-4">
-      <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-4">
-        <div :class="[CARD, 'gap-3.5 px-6 pt-5 pb-[22px]']">
-          <SkeletonBone class="h-7 w-24 rounded-lg" />
-          <div class="pt-1 pb-[30px] pl-[30px]">
-            <SkeletonBone
-              class="min-h-[300px] max-w-full rounded-tile"
-              :style="{ aspectRatio: PLOT_ASPECT }"
-            />
+    <div
+      class="flex flex-wrap items-start gap-4 lg:min-h-[440px] lg:flex-1 lg:flex-nowrap lg:items-stretch"
+    >
+      <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-3 lg:min-h-0">
+        <div :class="[CARD, 'gap-3 px-5 pt-5 pb-4 lg:min-h-0 lg:flex-1']">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <!-- Las dos pestañas, la de la URL en blanco como en RadarTabs. -->
+            <div class="flex gap-1 rounded-[14px] bg-secondary p-1">
+              <div
+                v-for="tab in ['radar', 'ranking'] as const"
+                :key="tab"
+                class="flex h-14 w-[200px] items-center gap-3 rounded-[11px] px-4 sm:w-[220px]"
+                :class="query.tab === tab ? 'bg-card' : ''"
+              >
+                <SkeletonBone class="size-5 shrink-0 rounded-md" />
+                <span class="flex grow flex-col gap-1.5">
+                  <SkeletonBone class="h-4 w-16 rounded-md" />
+                  <SkeletonBone class="h-3 w-32 rounded-full" />
+                </span>
+              </div>
+            </div>
+            <SkeletonBone v-if="query.tab === 'ranking'" class="h-3.5 w-48 rounded-full" />
           </div>
+
+          <template v-if="query.tab === 'radar'">
+            <div class="flex flex-wrap gap-1.5">
+              <SkeletonBone
+                v-for="chip in SKELETON_LEGEND"
+                :key="chip"
+                class="h-6 w-24 rounded-full"
+              />
+            </div>
+            <div class="flex flex-col pt-1 pb-[30px] pl-[30px] lg:min-h-0 lg:flex-1">
+              <SkeletonBone
+                class="min-h-[240px] max-w-full rounded-tile lg:flex-1"
+                :style="fillsHeight ? undefined : { aspectRatio: PLOT_ASPECT }"
+              />
+            </div>
+            <SkeletonBone class="h-3.5 w-80 max-w-full rounded-full" />
+          </template>
+
+          <template v-else>
+            <div class="flex flex-col gap-1.5 overflow-hidden lg:min-h-0 lg:flex-1">
+              <SkeletonBone class="mb-1 h-4 w-full rounded-full" />
+              <SkeletonBone
+                v-for="row in SKELETON_ROWS"
+                :key="row"
+                class="h-12 shrink-0 rounded-lg"
+              />
+            </div>
+            <div class="flex shrink-0 items-center justify-between gap-3 pt-2">
+              <SkeletonBone class="h-3.5 w-28 rounded-full" />
+              <SkeletonBone class="h-9 w-72 rounded-[10px]" />
+            </div>
+          </template>
         </div>
-        <div :class="[CARD, 'gap-1.5 px-5 pt-5 pb-3']">
-          <SkeletonBone class="mx-1 mb-3 h-7 w-28 rounded-lg" />
-          <SkeletonBone v-for="row in SKELETON_ROWS" :key="row" class="h-14 rounded-lg" />
-        </div>
+        <SkeletonBone :class="[ON_CANVAS, 'h-3.5 w-2/3 shrink-0 rounded-full']" />
       </div>
 
-      <div :class="[CARD, 'flex-[1_1_360px] gap-[18px] p-[22px]']">
+      <div
+        :class="[
+          CARD,
+          'flex-[1_1_360px] gap-[18px] p-[22px] lg:min-h-0 lg:self-stretch lg:overflow-hidden',
+        ]"
+      >
         <div class="flex flex-col gap-2">
           <SkeletonBone class="h-7 w-36 rounded-lg" />
           <SkeletonBone class="h-4 w-4/5 rounded-full" />
         </div>
-        <SkeletonBone v-for="pick in SKELETON_PICKS" :key="pick" class="h-[68px] rounded-tile" />
-        <SkeletonBone class="h-12 rounded-tile" />
-        <SkeletonBone class="h-16 rounded-tile" />
+        <SkeletonBone
+          v-for="pick in SKELETON_PICKS"
+          :key="pick"
+          class="h-[68px] shrink-0 rounded-tile"
+        />
+        <SkeletonBone class="h-12 shrink-0 rounded-tile" />
+        <SkeletonBone class="h-20 shrink-0 rounded-tile" />
       </div>
     </div>
   </div>
