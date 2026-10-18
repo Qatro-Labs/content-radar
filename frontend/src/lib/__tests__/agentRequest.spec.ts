@@ -106,6 +106,16 @@ describe('viewContext', () => {
 
     expect(viewContext('explore', { ...RADAR_STATE, search })?.search).toBe(search.slice(0, 60))
   })
+
+  // El tema del Radar sale de la URL y va al modelo: como mucho lo que acepta el `topic` del agente.
+  it('cuts a long topic filter like the agent tools do', () => {
+    const topic = 'agentes '.repeat(20)
+    const radarQuery = parseRadarQuery({ topic })
+
+    expect(viewContext('radar', { ...RADAR_STATE, radarQuery })?.filters?.topic).toBe(
+      topic.slice(0, 60),
+    )
+  })
 })
 
 // D9 del plan fe-radar-agent.

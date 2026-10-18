@@ -1,4 +1,6 @@
-"""Agente del Radar: límites, tools, bucle y ruta SSE (plan data-radar-agent)."""
+"""Agente del Radar: límites, bucle y ruta SSE (plan data-radar-agent). Las tools, una a una, en
+test_agent_tools.py.
+"""
 
 import asyncio
 from contextlib import asynccontextmanager
@@ -20,7 +22,7 @@ from app.agent.limits import MAX_ANSWER_WORDS, MAX_STEPS, LimitResult, RateLimit
 from app.agent.model import ModelTurn, ToolCall, system_prompt
 from app.agent.runner import AGENT_OPERATION, DEFAULT_UNKNOWN, run_agent
 from app.agent.sanitize import CANARY, wrap_question
-from app.agent.tools import FINAL_ANSWER, Seen, execute_tool
+from app.agent.tools import FINAL_ANSWER
 from app.api.routes.agent import (
     ask_agent,
     get_agent_model,
@@ -34,17 +36,15 @@ from app.models import UsageEvent
 from app.schemas.agent import (
     ActionEvent,
     AgentQuestion,
-    AgentScreen,
     AnswerEvent,
     DoneEvent,
-    DossierSection,
     ErrorCode,
     ErrorEvent,
-    Navigation,
     RadarPatch,
     StepKind,
 )
 from app.schemas.cost import Provider
+from tests.test_agent_tools import SEEDED_TOPIC
 from tests.test_opportunity_routes import add_run, fixture_results
 
 T0 = datetime(2026, 10, 17, 12, tzinfo=UTC)
@@ -89,140 +89,6 @@ def test_action_patch_keeps_explicit_nulls():
 
     assert dumped["patch"] == {"selected": None, "gap": False}
     assert "lifecycle" not in dumped["patch"]
-
-
-@pytest.fixture
-async def seeded(session):
-    await add_run(session, fixture_results())
-
-
-async def test_list_tool_filters_and_records_seen_ids(session, seeded):
-    seen = Seen()
-
-    outcome = await execute_tool("list_opportunities", {"lifecycle": ["emerging"]}, session, seen)
-
-    assert outcome.kind is StepKind.DATA
-    assert not outcome.is_error
-    assert outcome.content.startswith("<datos>")
-    assert '"opp_002"' in outcome.content
-    assert '"opp_001"' not in outcome.content
-    assert set(seen.opportunities) == {"opp_002"}
-
-
-async def test_list_tool_filters_by_recommendation_before_the_limit(session, seeded):
-    # En producción, 2 de los 4 «publicar ya» quedaban fuera del top 10 y el agente decía que
-    # había solo dos: el filtro tiene que ir antes del corte.
-    args = {"recommendation": ["find_angle"], "limit": 1}
-
-    outcome = await execute_tool("list_opportunities", args, session, Seen())
-
-    assert not outcome.is_error
-    assert '"opp_001"' not in outcome.content  # publish_now, primero por score
-    assert '"opp_002"' in outcome.content or '"opp_003"' in outcome.content
-
-
-async def test_view_tool_rejects_unknown_id(session, seeded):
-    outcome = await execute_tool("select_opportunity", {"id": "opp_nope"}, session, Seen())
-
-    assert outcome.kind is StepKind.VIEW
-    assert outcome.is_error
-    assert outcome.patch is None
-
-
-async def test_set_filters_label_and_patch(session, seeded):
-    outcome = await execute_tool("set_filters", {"gap": True}, session, Seen())
-
-    assert outcome.label == "Pulsando «Hueco en LATAM»"
-    assert outcome.patch is not None
-    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {"gap": True}
-
-
-@pytest.mark.parametrize(
-    ("args", "label"),
-    [
-        ({"recommendation": "publish_now"}, "Pulsando «Publicar ya»"),
-        ({"lifecycle": ["accelerating"]}, "Pulsando «Acelerando»"),
-        ({"lifecycle": ["peaking", "saturated"]}, "Filtrando por En pico, Saturado"),
-        # Ordenar por oportunidad es el orden por defecto: el contador sigue siendo lo que pulsa.
-        ({"recommendation": "publish_now", "sort": "opportunity"}, "Pulsando «Publicar ya»"),
-    ],
-    ids=["publish-now-counter", "accelerating-counter", "several-stages", "counter-default-sort"],
-)
-async def test_set_filters_names_the_counter_it_presses(session, seeded, args, label):
-    outcome = await execute_tool("set_filters", args, session, Seen())
-
-    assert outcome.label == label
-    assert outcome.patch is not None
-    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == args
-
-
-async def test_reset_view_patch(session, seeded):
-    outcome = await execute_tool("reset_view", {}, session, Seen())
-
-    assert outcome.patch is not None
-    # El mismo parche que `resetViewPatch()` en frontend/src/lib/radarQuery.ts (plan
-    # fe-radar-agent, D5).
-    assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {
-        "lifecycle": [],
-        "gap": False,
-        "highlight": [],
-        "recommendation": None,
-        "confidence": None,
-        "topic": None,
-    }
-
-
-SEEDED_TOPIC = "[MOCK] Agentes de IA en operaciones empresariales"
-
-
-async def test_show_in_dossier_navigates_to_the_section(session, seeded):
-    args = {"id": "opp_001", "section": "evidence"}
-
-    outcome = await execute_tool("show_in_dossier", args, session, Seen())
-
-    assert outcome.kind is StepKind.VIEW
-    assert not outcome.is_error
-    assert outcome.label == f"Mostrando la evidencia de «{SEEDED_TOPIC}»"
-    assert outcome.navigate == Navigation(
-        screen=AgentScreen.DOSSIER, opportunity_id="opp_001", section=DossierSection.EVIDENCE
-    )
-
-
-async def test_show_in_dossier_rejects_unknown_id(session, seeded):
-    outcome = await execute_tool("show_in_dossier", {"id": "opp_nope"}, session, Seen())
-
-    assert outcome.kind is StepKind.VIEW
-    assert outcome.is_error
-    assert outcome.navigate is None
-
-
-async def test_search_pieces_ignores_accents_and_case(session, seeded):
-    seen = Seen()
-    query = "AUTOMATIZO EL CIERRE"
-
-    outcome = await execute_tool("search_pieces", {"query": query}, session, seen)
-
-    assert outcome.kind is StepKind.DATA
-    assert not outcome.is_error
-    assert outcome.content.startswith("<datos>")
-    assert "Cómo un CFO automatizó el cierre mensual" in outcome.content
-    assert set(seen.opportunities) == {"opp_001"}
-    assert seen.evidence_urls == {"https://example.com/mock/1"}
-    assert outcome.label == "Buscando piezas: 1 encontrada"
-    # El modelo ve el total, no solo las filas: así su respuesta cuadra con la etiqueta del paso.
-    assert '"total": 1' in outcome.content
-    assert "cierre" not in outcome.label.lower()
-
-
-async def test_show_pieces_opens_explore_with_a_clean_search(session, seeded):
-    outcome = await execute_tool("show_pieces", {"search": "<b>agentes</b>"}, session, Seen())
-
-    assert outcome.kind is StepKind.VIEW
-    assert outcome.navigate is not None
-    assert outcome.navigate.model_dump(mode="json", exclude_unset=True) == {
-        "screen": "explore",
-        "search": "＜b＞agentes＜/b＞",
-    }
 
 
 def turn(*calls: tuple[str, dict], tokens: tuple[int, int] = (100, 20)) -> ModelTurn:
@@ -443,6 +309,34 @@ async def test_view_step_before_the_answer_skips_the_fallback(session, seeded):
     assert events[-1] == DoneEvent(steps=2, data_steps=1, view_steps=1)
 
 
+async def test_failed_view_step_does_not_skip_the_fallback(session, seeded):
+    # Un paso de vista fallido no movió la página: la respuesta con citas sigue sin enseñar nada.
+    model = ScriptedModel(
+        [
+            turn(("list_opportunities", {})),
+            turn(("highlight", {"ids": ["opp_nope"]})),
+            final(cited=["opp_001"]),
+        ]
+    )
+
+    events = await run(session, model)
+
+    assert kinds(events) == [
+        *["step", "step"],  # leer
+        *["step", "step"],  # resaltar, fallido
+        *["step", "step", "action"],  # respaldo
+        *["answer", "done"],
+    ]
+    assert events[3].status == "failed"
+    action = events[6]
+    assert isinstance(action, ActionEvent)
+    assert action.model_dump(mode="json", exclude_unset=True) == {
+        "step_id": 3,
+        "patch": {"highlight": ["opp_001"], "selected": "opp_001"},
+    }
+    assert events[-1] == DoneEvent(steps=3, data_steps=1, view_steps=2)
+
+
 async def test_fallback_in_the_dossier_shows_the_fit_of_the_open_topic(session, seeded):
     model = ScriptedModel([turn(("get_opportunity", {"id": "opp_001"})), final(cited=["opp_001"])])
 
@@ -618,35 +512,6 @@ async def test_external_text_reaches_model_neutralized(session):
     assert ZERO_WIDTH_SPACE not in sent_question + sent_data
 
 
-@pytest.mark.parametrize(
-    ("name", "args"),
-    [
-        ("drop_table", {}),
-        ("list_opportunities", {"limit": 3, "sql": "select 1"}),
-        ("set_filters", {"topic": "x" * 61}),
-        ("select_opportunity", {"id": "../etc/passwd"}),
-        ("search_pieces", {"query": "a"}),
-        ("show_in_dossier", {"id": "opp_001", "section": "cover"}),
-    ],
-    ids=[
-        "unknown-tool",
-        "extra-field",
-        "long-topic",
-        "bad-id-format",
-        "one-char-search",
-        "unknown-section",
-    ],
-)
-async def test_invalid_tool_input_is_rejected(session, seeded, name, args):
-    outcome = await execute_tool(name, args, session, Seen())
-
-    assert outcome.is_error
-    assert outcome.patch is None
-    assert outcome.navigate is None
-    assert "drop_table" not in outcome.content
-    assert "passwd" not in outcome.content
-
-
 async def test_answer_drops_unseen_bare_domains(session, seeded):
     text = "Lee www.evil.example o evil.example/x; también https://example.com/mock/1."
     model = ScriptedModel([turn(("get_evidence", {"id": "opp_001"})), final(text=text)])
@@ -813,8 +678,7 @@ def test_system_prompt_takes_limits_from_code():
     assert "{{" not in prompt
     assert f"{MAX_STEPS} pasos" in prompt
     assert f"{MAX_ANSWER_WORDS} palabras" in prompt
-    # Plan fe-radar-agent: el v2 enseña el expediente, lee el contexto y sube a 10 pasos (D11).
-    assert "10 pasos" in prompt
+    # Plan fe-radar-agent: el v2 enseña el expediente y lee el contexto.
     assert "show_in_dossier" in prompt
     assert "<contexto>" in prompt
 

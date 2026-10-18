@@ -7,7 +7,8 @@ Los nombres de tema salen de la ejecución servida y los ids que no están en el
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent import labels
-from app.agent.tools import MAX_HIGHLIGHTED, OK_CONTENT, ToolOutcome
+from app.agent.tool_base import OK_CONTENT, ToolOutcome
+from app.agent.tools import MAX_HIGHLIGHTED
 from app.schemas.agent import (
     AgentQuestion,
     AgentScreen,

@@ -13,11 +13,9 @@ import {
   RING_EXTRA_RADIUS_PX,
   RING_GAP_PX,
 } from '@/lib/agentMotion'
+import { AGENT_ROOT_SELECTOR } from '@/lib/agentTargets'
 import type { AgentTarget, PresenceView, RingBox } from '@/lib/agentTypes'
 
-// La presencia es una capa absoluta sobre `[data-agent-root]` (DESIGN.md §7): todas las
-// coordenadas son relativas a esa raíz.
-const ROOT_SELECTOR = '[data-agent-root]'
 const DOCK_SELECTOR = '[data-agent-dock]'
 const ANCHOR_SELECTOR = '[data-agent]'
 // Por encima de esta línea la cabecera tapa el objetivo; por debajo, hasta la barra del agente.
@@ -118,7 +116,7 @@ export function useAgentPresence() {
   // objetivo. Salta sin viajar la primera vez y con movimiento reducido.
   async function moveTo(target: AgentTarget, label: string): Promise<void> {
     const element = findAnchor(target.anchor)
-    root.value = document.querySelector<HTMLElement>(ROOT_SELECTOR)
+    root.value = document.querySelector<HTMLElement>(AGENT_ROOT_SELECTOR)
     if (element === null || root.value === null) return hide()
     const instant = isReducedMotion.value || !presence.value.visible
     scrollIntoGap(element, isReducedMotion.value ? 'auto' : 'smooth')

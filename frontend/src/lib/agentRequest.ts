@@ -17,6 +17,9 @@ const MAX_FOCUS_IDS = 6
 // (backend/app/schemas/agent.py).
 const OPPORTUNITY_ID = /^opp_[A-Za-z0-9_]{1,64}$/
 const MAX_SEARCH_CHARS = 60
+// La API no acota el tema de los filtros y va entero al modelo: se acota como el `topic` de las
+// tools del agente (`MAX_TOPIC_ARG_CHARS`, backend/app/agent/tools.py).
+const MAX_TOPIC_CHARS = 60
 
 function validOpportunityId(id: string | null): string | null {
   return id !== null && OPPORTUNITY_ID.test(id) ? id : null
@@ -59,7 +62,7 @@ function changedFilters(query: RadarQuery): RadarPatch | null {
   if (query.lifecycle.length > 0) filters.lifecycle = query.lifecycle
   if (query.recommendation !== null) filters.recommendation = query.recommendation
   if (query.confidence !== null) filters.confidence = query.confidence
-  if (query.topic !== null) filters.topic = query.topic
+  if (query.topic !== null) filters.topic = query.topic.slice(0, MAX_TOPIC_CHARS)
   if (query.gap) filters.gap = query.gap
   if (query.sort !== DEFAULT_RANKING_SORT) filters.sort = query.sort
   if (query.highlight.length > 0) filters.highlight = query.highlight

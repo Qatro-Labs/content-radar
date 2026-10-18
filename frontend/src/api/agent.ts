@@ -16,8 +16,9 @@ const AGENT_EVENTS = [
 ] as const satisfies readonly AgentStreamEvent['type'][]
 
 const HTTP_UNPROCESSABLE = 422
-// El 422 de FastAPI trae la lista de errores de Pydantic, en inglés: la UI dice el límite.
-const INVALID_QUESTION_MESSAGE = 'La pregunta no es válida: como mucho 300 caracteres.'
+// El 422 de FastAPI trae la lista de errores de Pydantic, en inglés. No se culpa a la longitud:
+// el campo ya la corta, así que el rechazo suele venir del contexto que manda el navegador.
+const INVALID_QUESTION_MESSAGE = 'Rad no pudo leer esta pregunta. Prueba a escribirla de nuevo.'
 const NO_RESPONSE_MESSAGE = 'El asistente no respondió.'
 
 // La API rechazó la pregunta antes de abrir el stream (429 y 503 traen su mensaje en español).
