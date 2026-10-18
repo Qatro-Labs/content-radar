@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useBrief } from '@/api/editorial'
@@ -7,18 +7,16 @@ import { useOpportunity, useOpportunityEvidence } from '@/api/opportunities'
 import DossierStates, { DossierPlaceholder } from '@/components/dossier/DossierStates.vue'
 import {
   type BriefOptions,
-  briefPlainText,
   parseBriefQuery,
   sameRequest,
   serializeBriefQuery,
 } from '@/lib/briefView'
 import type { components } from '@/types/api'
 
+import BriefComposer from './BriefComposer.vue'
 import BriefErrorCard from './BriefErrorCard.vue'
-import BriefPanel, { BriefStage } from './BriefPanel.vue'
 import BriefResult from './BriefResult.vue'
 import BriefSkeleton from './BriefSkeleton.vue'
-import BriefSources from './BriefSources.vue'
 import CreateHeader from './CreateHeader.vue'
 
 type BriefRequest = components['schemas']['BriefRequest']
@@ -59,21 +57,27 @@ const request = computed<BriefRequest>(() => ({
   ...options.value,
 }))
 
-// El brief en pantalla es de la última petición; si la persona cambia una opción, sigue visible
-// pero el primario vuelve a ser «Generar brief».
+// La respuesta en pantalla es de la última petición: con otras opciones, vuelve la frase.
 const isCurrent = computed(() => sameRequest(brief.variables.value, request.value))
-const stage = computed<BriefStage>(() => {
-  if (brief.isPending.value) return BriefStage.Pending
-  if (brief.isSuccess.value && isCurrent.value) return BriefStage.Ready
-  return BriefStage.Idle
-})
-const plainText = computed(() =>
-  stage.value === BriefStage.Ready && brief.data.value ? briefPlainText(brief.data.value) : null,
-)
+const hasCurrentBrief = computed(() => brief.isSuccess.value && isCurrent.value)
+// «Cambiar enfoque» vuelve a la frase sin perder el brief; generar lo cierra.
+const editing = ref(false)
+const showsResult = computed(() => hasCurrentBrief.value && !editing.value)
+const showsError = computed(() => brief.isError.value && isCurrent.value)
 
 function generate() {
+  editing.value = false
+  // Con las opciones del brief que ya hay, la API devolvería el mismo (lo cachea): se vuelve a él
+  // sin pedirlo otra vez.
+  if (hasCurrentBrief.value) return
   void router.replace({ query: serializeBriefQuery(request.value) })
   brief.mutate(request.value)
+}
+
+// El brief es más largo que la frase: sin subir, la página quedaría abajo, a media tarjeta.
+function editBrief() {
+  editing.value = true
+  window.scrollTo({ top: 0 })
 }
 
 // Un enlace con las cuatro opciones abre su brief: la API lo devuelve cacheado, sin LLM. Cuenta la
@@ -98,34 +102,32 @@ watch(
     @retry="opportunityQuery.refetch()"
   />
 
-  <div v-else-if="opportunity" class="flex flex-col gap-4">
+  <!-- Artboard B1 «Estudio en una columna»: la cabecera y una sola tarjeta que pasa de la frase
+       al brief. Sin panel lateral, no queda hueco en blanco debajo. -->
+  <div v-else-if="opportunity" class="mx-auto flex w-full max-w-[880px] flex-col gap-5">
     <CreateHeader :opportunity />
 
-    <!-- La rejilla del Radar y de Explorar: contenido a la izquierda y panel sticky a la derecha.
-         Por debajo de 768 px el panel sube encima, para tener el primario a mano. -->
-    <div class="flex flex-wrap items-start gap-4">
-      <div class="flex min-w-0 flex-[999_1_640px] flex-col gap-4">
-        <BriefSkeleton
-          v-if="stage === BriefStage.Pending"
-          :pieces="evidence.data?.length ?? null"
-        />
-        <BriefErrorCard
-          v-else-if="brief.isError.value && brief.error.value"
-          :error="brief.error.value"
-          @retry="generate"
-        />
-        <BriefResult v-else-if="brief.data.value" :brief="brief.data.value" />
-        <BriefSources v-else :opportunity :evidence />
-      </div>
-      <div class="flex min-w-0 flex-[1_1_360px] flex-col max-md:order-first md:sticky md:top-4">
-        <BriefPanel
-          v-model:options="options"
-          :opportunity
-          :stage
-          :plain-text="plainText"
-          @generate="generate"
-        />
-      </div>
-    </div>
+    <!-- Provisional: BriefGenerating sustituye a este skeleton. -->
+    <BriefSkeleton v-if="brief.isPending.value" :pieces="evidence.data?.length ?? null" />
+    <BriefResult
+      v-else-if="showsResult && brief.data.value"
+      :brief="brief.data.value"
+      @edit="editBrief"
+    />
+    <template v-else>
+      <!-- DESIGN.md §4: el error va inline y la frase sigue debajo, para cambiar de opciones. -->
+      <BriefErrorCard
+        v-if="showsError && brief.error.value"
+        :error="brief.error.value"
+        @retry="generate"
+      />
+      <BriefComposer
+        v-model:options="options"
+        :opportunity
+        :evidence
+        :pending="brief.isPending.value"
+        @generate="generate"
+      />
+    </template>
   </div>
 </template>

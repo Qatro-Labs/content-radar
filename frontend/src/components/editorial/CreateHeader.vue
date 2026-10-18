@@ -26,23 +26,29 @@ const statusLine = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 pt-4 pb-1">
-    <RouterLink
-      :to="{ name: RouteName.Dossier, params: { id: opportunity.id } }"
-      :class="[SECONDARY_ON_CANVAS_CLASS, 'self-start']"
-    >
-      <ChevronLeft class="size-4 text-ink-soft" aria-hidden="true" />
-      Expediente
-    </RouterLink>
-    <div class="flex flex-wrap items-center gap-2.5">
+  <!-- Artboard B1: cabecera compacta, para que la frase del brief quede a la vista sin bajar. -->
+  <div class="flex flex-col gap-3.5 pt-3">
+    <div class="flex flex-wrap gap-2">
+      <RouterLink :to="{ name: RouteName.Create }" :class="SECONDARY_ON_CANVAS_CLASS">
+        <ChevronLeft class="size-4 text-ink-soft" aria-hidden="true" />
+        Otro tema
+      </RouterLink>
+      <RouterLink
+        :to="{ name: RouteName.Dossier, params: { id: opportunity.id } }"
+        :class="SECONDARY_ON_CANVAS_CLASS"
+      >
+        Ver expediente
+      </RouterLink>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
       <LifecycleChip :lifecycle="opportunity.lifecycle" />
       <RecommendationChip :recommendation="opportunity.recommendation" size="sm" />
     </div>
     <h1
-      class="max-w-[860px] font-display text-[clamp(2.25rem,4vw,3.5rem)] leading-none font-semibold tracking-[-0.04em]"
+      class="font-display text-[clamp(2.125rem,5vw,2.875rem)] leading-[1.02] font-semibold tracking-[-0.04em] text-balance"
     >
       {{ opportunity.topic }}
     </h1>
-    <p class="text-base text-label">{{ statusLine }}</p>
+    <p class="text-[15px] text-label">{{ statusLine }}</p>
   </div>
 </template>
