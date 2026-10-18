@@ -76,7 +76,7 @@ describe('audienceReading', () => {
   const TRANSLATE_TO_BUSINESS =
     'Mucho tech y poco negocio: todavía no llegó a ejecutivos. Hay que traducirlo a negocio.'
   const LATAM_GAP =
-    'Ya lo empujan fuentes de negocio y casi no hay evidencia de fuentes latinoamericanas.'
+    'Ya se habla de su uso en empresas y casi no hay evidencia de fuentes latinoamericanas.'
   const LATAM_COVERED = 'Ya hay cobertura en fuentes latinoamericanas: conviene buscar otro ángulo.'
   const NO_READING = 'Con estos datos no hay una lectura clara de audiencia.'
 

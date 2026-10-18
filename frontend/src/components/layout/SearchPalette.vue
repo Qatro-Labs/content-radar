@@ -2,7 +2,7 @@
 import { Search } from '@lucide/vue'
 import { ListboxFilter } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
-import { useRouter, type RouteLocationRaw } from 'vue-router'
+import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
 import { useAllEvidence, useOpportunities } from '@/api/opportunities'
 import StageDot from '@/components/explore/StageDot.vue'
@@ -12,11 +12,12 @@ import { countLabel, PLATFORM_LABEL } from '@/lib/evidenceFormat'
 import { EXPLORE_TEXT_PARAM } from '@/lib/exploreView'
 import { formatScore } from '@/lib/opportunityFormat'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
-import { buildSearchResults, hasResults } from '@/lib/searchPalette'
+import { buildSearchResults, hasResults, topicDestination } from '@/lib/searchPalette'
 import { RouteName } from '@/router'
 
 const open = defineModel<boolean>('open', { required: true })
 
+const route = useRoute()
 const router = useRouter()
 const text = ref('')
 
@@ -69,8 +70,9 @@ function go(to: RouteLocationRaw) {
   void router.push(to)
 }
 
-function openDossier(id: string) {
-  go({ name: RouteName.Dossier, params: { id } })
+// En Crear, un tema o una pieza abren el brief de su tema; en el resto, su expediente.
+function openTopic(id: string) {
+  go(topicDestination(route.name, id))
 }
 
 function openSourceInExplore(source: string) {
@@ -122,7 +124,7 @@ const META_CLASS = 'truncate text-[13px] text-muted-foreground'
             :key="topic.id"
             :value="`topic:${topic.id}`"
             :class="ITEM_CLASS"
-            @select="openDossier(topic.id)"
+            @select="openTopic(topic.id)"
           >
             <StageDot :lifecycle="topic.lifecycle" />
             <span class="min-w-0 flex-1 truncate font-medium">{{ topic.topic }}</span>
@@ -145,7 +147,7 @@ const META_CLASS = 'truncate text-[13px] text-muted-foreground'
             :key="piece.url"
             :value="`piece:${piece.url}`"
             :class="ITEM_CLASS"
-            @select="openDossier(piece.opportunity.id)"
+            @select="openTopic(piece.opportunity.id)"
           >
             <span class="flex min-w-0 flex-1 flex-col">
               <span class="truncate font-medium">{{ piece.title }}</span>

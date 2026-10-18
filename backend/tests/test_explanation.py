@@ -1,6 +1,6 @@
 """«Por qué importa»: comprobaciones en Python, prompt y servicio con caché (contra radar_test)."""
 
-from collections.abc import Set
+from collections.abc import Sequence, Set
 from dataclasses import replace
 
 from sqlalchemy import func, select
@@ -14,6 +14,7 @@ from app.editorial.explanation import (
     ExplanationResult,
     OpportunityExplanation,
     build_explain_input,
+    opportunity_facts,
     system_prompt,
     user_message,
 )
@@ -21,14 +22,23 @@ from app.intelligence.audience_fit import EDITORIAL_PENDING_NOTE
 from app.intelligence.explanation import (
     EXPLANATION_FAILED_NOTE,
     NO_VALID_CLAIM_NOTE,
+    VERIFICATION_INCOMPLETE_NOTE,
     ClaimDraft,
     apply_explanation,
+    compose_explanation,
+    jev_drop_note,
+    jev_unverified_note,
     known_numbers,
+    python_checked,
+    python_drop_note,
 )
 from app.models import LlmEvaluation
 from app.services.audience_fit import evaluate_topics
 from app.services.explanation import explain_topics
+from app.services.verification import ClaimVerifier
 from tests.test_audience_fit_service import FakeEvaluator, two_topics
+from tests.test_topic_evaluation import TOPIC_NAME, safe, topic
+from tests.test_verification import FakeClaimJudge
 
 URL = "https://example.com/0"
 WHY = "Las empresas empiezan a usar agentes de IA en operaciones."
@@ -49,6 +59,14 @@ def explained(result, claims, limitations=(), *, numbers: Set[str] = frozenset()
 
 
 # --- comprobaciones en Python -------------------------------------------------------------
+
+
+def test_facts_carry_the_business_count_that_decides_the_latam_gap():
+    [result, _], _ = two_topics()
+    note = "3 de 7 piezas clasificadas tratan del uso de la IA en organizaciones."
+    o = result.opportunity.model_copy(update={"description": f"Tema agrupado. {note}"})
+
+    assert any(note in fact for fact in opportunity_facts(o, result.timeline))
 
 
 async def test_valid_claims_replace_the_template_and_the_pending_note(session):
@@ -101,7 +119,97 @@ async def test_without_any_valid_claim_the_measured_template_stays(session):
     assert NO_VALID_CLAIM_NOTE in o.limitations
 
 
+# --- tras el veredicto de Jev -------------------------------------------------------------
+
+
+OTHER = "Ninguna pieza muestra resultados medidos."
+
+
+async def test_composed_explanation_joins_the_published_claims_and_adds_the_jev_note(session):
+    [result, _], _ = await fitted_topics(session)
+    checked = python_checked(
+        [ClaimDraft(WHY, [URL]), ClaimDraft(OTHER, [URL])], sent_urls={URL}, numbers=set()
+    )
+
+    o = compose_explanation(
+        result, checked[:1], [], numbers=set(), notes=[jev_drop_note(len(checked) - 1)]
+    ).opportunity
+
+    assert o.why_it_matters == WHY
+    assert (
+        "Jev no encontró respaldo en la evidencia citada para 1 afirmación del LLM: no se publica."
+        in o.limitations
+    )
+
+
+async def test_all_claims_rejected_by_jev_keep_the_measured_template(session):
+    [result, _], _ = await fitted_topics(session)
+    template = result.opportunity.why_it_matters
+
+    o = compose_explanation(result, [], [], numbers=set(), notes=[jev_drop_note(2)]).opportunity
+
+    assert o.why_it_matters == template
+    assert o.limitations[-1:] == [NO_VALID_CLAIM_NOTE]
+    assert EDITORIAL_PENDING_NOTE not in o.limitations
+    assert not any("Jev" in n for n in o.limitations)
+
+
+async def test_composed_explanation_keeps_the_notes_in_order_and_skips_none(session):
+    [result, _], _ = await fitted_topics(session)
+    checked = python_checked(
+        [ClaimDraft(WHY, [URL]), ClaimDraft(OTHER, [])], sent_urls={URL}, numbers=set()
+    )
+
+    o = compose_explanation(
+        result,
+        checked,
+        [],
+        numbers=set(),
+        notes=[python_drop_note(1), None, jev_unverified_note(1)],
+    ).opportunity
+
+    assert o.why_it_matters == WHY
+    assert o.limitations[-2:] == [
+        "Se descartaron 1 afirmación del LLM sin evidencia o con cifras no observadas.",
+        "Jev no pudo verificar 1 afirmación del LLM: no se publica.",
+    ]
+
+
+def test_jev_unverified_note_plural_and_none():
+    assert jev_unverified_note(0) is None
+    assert jev_unverified_note(2) == "Jev no pudo verificar 2 afirmaciones del LLM: no se publican."
+
+
+def test_jev_drop_note_plural_and_none():
+    assert jev_drop_note(0) is None
+    assert jev_drop_note(3) == (
+        "Jev no encontró respaldo en la evidencia citada para 3 afirmaciones del LLM: "
+        "no se publican."
+    )
+
+
 # --- prompt -------------------------------------------------------------------------------
+
+
+async def test_explanation_gets_the_final_topic_name_not_a_piece_title(session):
+    [result, _], answers = await fitted_topics(session)
+
+    explain = build_explain_input(result, build_topic_input(result, answers))
+
+    assert result.opportunity.topic == TOPIC_NAME
+    assert explain.label == TOPIC_NAME
+
+
+def test_a_topic_named_after_an_excluded_piece_is_labelled_with_a_safe_one():
+    result = topic()
+    rep = result.pieces[0]
+    result.opportunity = result.opportunity.model_copy(update={"topic": rep.title})
+    answers = {p.item_id: safe() for p in result.pieces[1:]}
+    answers[rep.item_id] = {"injection": {"type": "noul", "noul": 0.9}}
+
+    explain = build_explain_input(result, build_topic_input(result, answers))
+
+    assert explain.label == result.pieces[1].title
 
 
 async def test_external_text_goes_escaped_in_the_user_message_only(session):
@@ -121,19 +229,20 @@ async def test_external_text_goes_escaped_in_the_user_message_only(session):
 
 
 class FakeExplainer:
-    def __init__(self, *, fail: bool = False) -> None:
+    def __init__(self, *, fail: bool = False, texts: Sequence[str] = (WHY,), extra_url: str = ""):
         self.calls = 0
         self.fail = fail
+        self.texts, self.extra_url = texts, extra_url
 
     async def explain(self, explain: ExplainInput) -> ExplanationResult:
         self.calls += 1
         if self.fail:
             raise EvaluationError("stop_reason=max_tokens")
-        url = explain.pieces[0].url
+        urls = [explain.pieces[0].url] + ([self.extra_url] if self.extra_url else [])
         return ExplanationResult(
             model="claude-haiku-5-5",
             output=OpportunityExplanation(
-                claims=[Claim(text=WHY, evidence_urls=[url])],
+                claims=[Claim(text=t, evidence_urls=urls) for t in self.texts],
                 limitations=[],
             ),
             input_tokens=900,
@@ -182,3 +291,136 @@ async def test_failed_explanation_keeps_the_template_with_a_note_and_is_not_cach
     assert all(EXPLANATION_FAILED_NOTE in r.opportunity.limitations for r in out)
     assert out[0].opportunity.why_it_matters == fitted[0].opportunity.why_it_matters
     assert await session.scalar(select(func.count()).select_from(LlmEvaluation)) == before
+
+
+# --- servicio con verificación de Jev -----------------------------------------------------
+
+
+async def explain_verified(session, verifier, explainer=None):
+    fitted, answers = await fitted_topics(session)
+    return await explain_topics(
+        session,
+        fitted,
+        answers=answers,
+        explainer=explainer or FakeExplainer(texts=(WHY, OTHER)),
+        meter=UsageMeter(),
+        verifier=verifier,
+    )
+
+
+async def test_verified_explanation_publishes_only_supported_claims(session):
+    judge = FakeClaimJudge(rejected=frozenset({OTHER}))
+
+    out, stats = await explain_verified(session, ClaimVerifier(judge=judge))
+
+    assert all(r.opportunity.why_it_matters == WHY for r in out)
+    assert all(
+        "Jev no encontró respaldo en la evidencia citada para 1 afirmación del LLM: no se publica."
+        in r.opportunity.limitations
+        for r in out
+    )
+    assert not any(VERIFICATION_INCOMPLETE_NOTE in r.opportunity.limitations for r in out)
+    assert stats.verification is not None and stats.verification.rejected == 2
+
+
+THIRD = "Varias consultoras ofrecen ya implantaciones a medida."
+
+
+async def test_only_supported_claims_are_published_when_others_are_rejected_or_unverified(
+    session,
+):
+    judge = FakeClaimJudge(rejected=frozenset({OTHER}), fail=THIRD)
+    explainer = FakeExplainer(texts=(WHY, OTHER, THIRD))
+
+    out, stats = await explain_verified(session, ClaimVerifier(judge=judge), explainer)
+
+    for r in out:
+        assert r.opportunity.why_it_matters == WHY
+        assert r.opportunity.limitations[-2:] == [
+            "Jev no encontró respaldo en la evidencia citada para 1 afirmación del LLM: "
+            "no se publica.",
+            "Jev no pudo verificar 1 afirmación del LLM: no se publica.",
+        ]
+    assert stats.verification is not None
+    assert (stats.verification.rejected, stats.verification.unverified_topics) == (2, 2)
+
+
+async def test_with_verification_on_and_no_key_topics_keep_the_measured_template(session):
+    fitted, _ = await fitted_topics(session)
+
+    out, stats = await explain_verified(session, ClaimVerifier(judge=None))
+
+    for r, before in zip(out, fitted, strict=True):
+        assert r.opportunity.why_it_matters == before.opportunity.why_it_matters
+        assert r.opportunity.limitations[-1:] == [VERIFICATION_INCOMPLETE_NOTE]
+    assert stats.verification is not None and stats.verification.unverified_topics == 2
+
+
+async def test_rejected_and_unverified_without_any_supported_claim_says_verification_failed(
+    session,
+):
+    fitted, _ = await fitted_topics(session)
+    judge = FakeClaimJudge(rejected=frozenset({WHY}), fail=OTHER)
+
+    out, _ = await explain_verified(session, ClaimVerifier(judge=judge))
+
+    for r, before in zip(out, fitted, strict=True):
+        assert r.opportunity.why_it_matters == before.opportunity.why_it_matters
+        assert r.opportunity.limitations[-1:] == [VERIFICATION_INCOMPLETE_NOTE]
+        assert NO_VALID_CLAIM_NOTE not in r.opportunity.limitations
+
+
+async def test_without_verifier_nothing_changes(session):
+    fitted, answers = await fitted_topics(session)
+
+    out, stats = await explain_topics(
+        session, fitted, answers=answers, explainer=FakeExplainer(), meter=UsageMeter()
+    )
+
+    assert all(r.opportunity.why_it_matters == WHY for r in out)
+    assert not any(VERIFICATION_INCOMPLETE_NOTE in r.opportunity.limitations for r in out)
+    assert stats.verification is None
+
+
+async def test_claim_state_carries_only_the_sent_citations(session):
+    judge = FakeClaimJudge()
+
+    await explain_verified(
+        session, ClaimVerifier(judge=judge), FakeExplainer(extra_url="https://otro.example/x")
+    )
+
+    assert judge.calls == 2
+    assert all(len(s["evidence"]) == 1 for s in judge.states)
+
+
+async def test_topic_without_python_valid_claims_sends_nothing_to_jev(session):
+    judge = FakeClaimJudge()
+    invented = FakeExplainer(texts=("Crece un 300 % este mes.",))
+
+    out, _ = await explain_verified(session, ClaimVerifier(judge=judge), invented)
+
+    assert judge.calls == 0
+    assert all(r.opportunity.limitations[-1:] == [NO_VALID_CLAIM_NOTE] for r in out)
+
+
+async def test_jev_budget_goes_to_the_top_ranked_topic_first(session):
+    fitted, answers = await fitted_topics(session)
+    low, high = (
+        replace(r, opportunity=r.opportunity.model_copy(update={"opportunity_score": score}))
+        for r, score in zip(fitted, (40.0, 80.0), strict=True)
+    )
+
+    # El de abajo va primero: sin ordenar por `rank()`, la única llamada sería para él.
+    out, _ = await explain_topics(
+        session,
+        [low, high],
+        answers=answers,
+        explainer=FakeExplainer(),
+        meter=UsageMeter(),
+        verifier=ClaimVerifier(judge=FakeClaimJudge(), budget=1),
+    )
+
+    assert [VERIFICATION_INCOMPLETE_NOTE in r.opportunity.limitations for r in out] == [
+        True,
+        False,
+    ]

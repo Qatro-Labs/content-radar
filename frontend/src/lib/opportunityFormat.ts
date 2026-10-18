@@ -126,7 +126,7 @@ export function audienceReading(signals: AudienceSignals): string {
     return 'Mucho tech y poco negocio: todavía no llegó a ejecutivos. Hay que traducirlo a negocio.'
   }
   if (signals.latam_gap === true) {
-    return 'Ya lo empujan fuentes de negocio y casi no hay evidencia de fuentes latinoamericanas.'
+    return 'Ya se habla de su uso en empresas y casi no hay evidencia de fuentes latinoamericanas.'
   }
   if (signals.latam_gap === false) {
     return 'Ya hay cobertura en fuentes latinoamericanas: conviene buscar otro ángulo.'

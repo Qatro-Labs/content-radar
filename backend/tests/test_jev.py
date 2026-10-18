@@ -12,11 +12,15 @@ from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul, Score
 
 from app.core.config import Settings
 from app.intelligence.jev import (
+    CitedEvidence,
     PieceJudgment,
     TypeSafeJudge,
     battery_cache_key,
     build_judge,
     cache_key,
+    claim_battery,
+    claim_state,
+    claim_supported,
     excluded_from_llm,
     keep_about_ai,
     pair_battery,
@@ -261,3 +265,81 @@ def test_about_ai_filter_keeps_pieces_judged_without_title_question():
     judgments = {1: to_piece_judgment(1, {"about_ai": noul(0.05)})}
 
     assert keep_about_ai(pieces, judgments) == pieces
+
+
+def test_claim_battery_has_support_and_its_reverse():
+    battery = claim_battery()
+
+    assert battery.name == "claim"
+    assert list(battery.questions) == ["support", "support_rev"]
+    assert labels(battery.questions["support"]) == ["supports", "contradicts", "says_nothing"]
+    assert labels(battery.questions["support_rev"]) == labels(battery.questions["support"])[::-1]
+
+
+@pytest.mark.parametrize(
+    ("answers", "expected"),
+    [
+        ({"support": choice("supports", 0.6), "support_rev": choice("supports", 0.8)}, True),
+        ({"support": choice("supports", 0.59), "support_rev": choice("supports", 0.9)}, False),
+        ({"support": choice("supports", 0.9), "support_rev": choice("says_nothing", 0.7)}, False),
+        (
+            {"support": choice("contradicts", 0.95), "support_rev": choice("contradicts", 0.9)},
+            False,
+        ),
+        (
+            {"support": choice("says_nothing", 0.9), "support_rev": choice("says_nothing", 0.9)},
+            False,
+        ),
+        ({}, None),
+        ({"support": choice("supports", 0.9)}, None),
+    ],
+    ids=[
+        "supported",
+        "low_confidence",
+        "rev_disagrees",
+        "contradicts",
+        "says_nothing",
+        "no_answers",
+        "missing_rev",
+    ],
+)
+def test_claim_supported(answers, expected):
+    assert claim_supported(answers) is expected
+
+
+FACTS = ["Etapa: saturado.", "Fuentes independientes: 4."]
+
+
+def test_claim_state_carries_only_claim_facts_and_cited_text():
+    evidence = [CitedEvidence("Canal Ejemplo", "Agentes en ventas", "Un caso en retail.")]
+
+    state = claim_state("Las empresas usan agentes.", facts=FACTS, evidence=evidence)
+
+    assert state == {
+        "claim": "Las empresas usan agentes.",
+        "measured_facts": FACTS,
+        "evidence": [
+            {
+                "source": "Canal Ejemplo",
+                "title": "Agentes en ventas",
+                "description": "Un caso en retail.",
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize("description", [None, ""], ids=["none", "empty"])
+def test_claim_state_omits_missing_description(description):
+    evidence = [CitedEvidence("Canal Ejemplo", "Agentes en ventas", description)]
+
+    state = claim_state("Algo.", facts=FACTS, evidence=evidence)
+
+    assert state["evidence"] == [{"source": "Canal Ejemplo", "title": "Agentes en ventas"}]
+
+
+def test_cache_key_depends_on_battery():
+    state = claim_state("Algo.", facts=FACTS, evidence=[CitedEvidence("A", "B", None)])
+
+    assert battery_cache_key(claim_battery(), state, "jev-1.13.0") != cache_key(state, "jev-1.13.0")
+    # La clave de pieza no cambia: las filas de `piece` ya guardadas siguen valiendo.
+    assert cache_key(state, "jev-1.13.0") == battery_cache_key(piece_battery(), state, "jev-1.13.0")

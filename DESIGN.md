@@ -168,7 +168,8 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 
 **Radar y agente (Rad)**
 
-El agente se llama **Rad** y vive en Radar, Explorar y el expediente (no en Crear). Sus pantallas y su movimiento se
+El agente se llama **Rad** y vive en Radar, Explorar y el expediente. En Crear no hay barra de pregunta: Rad solo
+aparece para firmar el brief y mientras lo redacta (§7, «Crear: Rad redactando»). Sus pantallas y su movimiento se
 decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 
 - **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando»,
@@ -198,8 +199,9 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   (§7): es su personaje, no un dato. Se para mientras trabaja, con la pestaña oculta y con movimiento reducido.
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
   un ojo que mira el cursor (de reojo si está cerca, hasta el borde si está lejos; al frente con movimiento
-  reducido); mientras trabaja mira hacia su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
-  sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles.
+  reducido); mientras trabaja se abre en un radar (dos anillos) con el iris quieto en el centro, y su haz da una
+  sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles, salvo en Crear:
+  mientras redacta un brief el haz gira sin parar (§7).
 - **Transcripción del agente** (dentro de la barra, encima del campo; alto máximo 46vh con scroll):
   - la pregunta en Bricolage 19px;
   - los pasos: hecho = check en Tinta suave; en curso = punto Tinta de 9px y peso 600. Cada paso lleva su etiqueta:
@@ -233,15 +235,25 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   la dispersión por fecha se descartó el 17/10 porque no respondía nada que la tabla no diga.
 - **Expediente (`/explore/:id`):** cabecera (tema, recomendación y motivo; a la derecha el anillo con "Cómo se
   compone") → evolución → por qué importa y encaje → evidencia → siguiente paso con "Qué no sabemos".
-- **Crear (`/create`):** sin tema, «¿De qué conviene escribir esta semana?» con los temas de «Publicar ya» y «Buscar
-  otro tema» (abre ⌘K). Con tema (`?opportunity=`): la cabecera del expediente con «‹ Expediente» → a la izquierda
-  (`flex: 999 1 640px`) «Con qué se escribirá» (las tres piezas que mejor rinden) o el brief (ángulo, gancho,
-  estructura, puntos clave con chips a sus fuentes, por qué encaja, «Qué no sabemos» y el modelo que lo redactó) →
-  a la derecha el panel sticky (`flex: 1 1 360px`) con Plataforma · Objetivo · Formato como segmented controls y un
-  primario: «Generar brief» y, con el brief listo, «Copiar brief» («Copiar enlace» de secundario). Por debajo de
-  768px el panel sube encima. Las opciones van en la URL; un enlace con las cuatro abre su brief (la API lo
-  devuelve cacheado). Mientras se redacta, skeleton con la forma del brief y una línea con cuánto tarda. Sin texto
-  libre: ningún texto de la persona llega al LLM. Rad no vive en Crear.
+- **Crear (`/create`)**, aprobado el 18/10 en el canvas
+  [30X Signal — Crear v2](https://claude.ai/artifact/2mZfTjdXVfrSSQPMkefZF2) (privado; artboards A, B1 y C1):
+  - **Sin tema:** «¿De qué conviene escribir esta semana?». Arriba, cada tema de «Publicar ya» en una tarjeta
+    (por qué importa, oportunidad, aceleración, fuentes y las piezas con las que escribirá Rad) con el primario
+    «Crear brief de este tema». Debajo, «O escribe de otro tema»: todos los temas, con buscador en la propia lista y
+    columnas con nombre (Etapa · Tema · Recomendación · Oportunidad). Cada fila lleva su acción «Crear brief →»,
+    que pasa a primario al pasar el ratón o con foco. Sin temas en «Publicar ya», solo la lista, y se dice. Desde
+    Crear, elegir un tema en ⌘K abre su brief, no el expediente.
+  - **Con tema (`?opportunity=`):** una sola columna (máx. 880px): cabecera compacta («‹ Otro tema», «Ver
+    expediente», etapa, recomendación, tema y su línea de estado) y una tarjeta que cambia de estado sin moverse:
+    1. **La frase:** «Un [post] en [LinkedIn] para [educar].» Cada hueco es un botón con lavado lima que abre sus
+       opciones debajo. La frase no fija un público: el brief no es solo para directivos de Latinoamérica. Debajo,
+       «Con qué lo escribirá» (las tres piezas que más pesan) y el primario «Generar brief».
+    2. **Rad redactando** (§7).
+    3. **El brief:** gancho, ángulo, estructura, puntos clave con chips a sus fuentes, por qué encaja, «Qué no
+       sabemos» y el modelo. Su cabecera queda fija al hacer scroll: «Brief listo», «Cambiar enfoque», «Copiar
+       enlace» y el primario «Copiar brief»; al copiar sale un aviso abajo.
+  - Las opciones van en la URL; un enlace con las cuatro abre su brief (la API lo devuelve cacheado). Sin texto
+    libre: ningún texto de la persona llega al LLM.
 - La cabecera y el ranking reflejan los filtros: con filtro, el H1 dice "3 de 9 temas", la frase dice qué filtro
   hay y el ranking muestra solo lo que entra, conservando el puesto global. Los contadores siguen mostrando los totales
   y marcan el filtro activo con su anillo.
@@ -304,6 +316,25 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - Barras de métrica y de audiencia crecen hasta su valor (420ms); textos del panel con fundido y 4px de subida (300ms).
 - Ranking: entrada escalonada de 40ms por fila y barras de score que crecen.
 
+**Crear: Rad redactando** (el efecto llamativo de Crear; artboard C1, 18/10)
+- La API devuelve el brief entero en unos 15 s y no informa de su progreso. Las etapas son las del backend, en orden,
+  con tiempos estimados: leer la evidencia → redactar → comprobar las citas. La última espera a la respuesta. Sin
+  porcentajes ni contadores inventados.
+- **Composición:** Rad grande (96px) y centrado arriba, con el título de la etapa y la frase debajo; las tres piezas
+  en fila (una columna en móvil). La tarjeta reserva desde el principio el alto del borrador y sube a la vista.
+- **Leer:** Rad mira cada pieza. La tarjeta sube 6px, un rotulador lima subraya su título línea a línea (650ms) y
+  una píldora con el nombre de la fuente vuela hasta Rad. Unos 1,1s por pieza.
+- **Redactar:** Rad absorbe las piezas (vuelan hasta él, escalonadas 60ms, 620ms) y se abre en radar. Su haz gira
+  sin parar (1,6s por vuelta) hasta que llega la respuesta: es la otra excepción a «sin bucles», porque codifica que
+  Rad sigue trabajando en una espera que no da progreso. En el sitio de las piezas nace el bloque Gancho · Ángulo ·
+  Puntos clave: sus huesos se entintan de izquierda a derecha y después laten como cualquier skeleton (§4). Nunca
+  se escribe texto antes de tenerlo: llega con la respuesta.
+- **Comprobar:** las citas, con el nombre real de cada fuente, pasan a lima una a una.
+- **Al llegar la respuesta:** un cierre corto (las citas que faltan en lima, «Brief listo», Rad parpadea) y entra el
+  brief escalonado 80ms. Una respuesta cacheada, que llega en menos de un segundo, no muestra la animación.
+- **Movimiento reducido:** sin subrayado, vuelos, latido de los huesos ni giro del haz; el título de la etapa cambia
+  y el brief aparece al llegar.
+
 **Agente**
 - **Primero llega, después actúa.** La presencia viaja hasta el objetivo (680ms, ease-out) y la acción se aplica al
   llegar: el filtro se activa, la burbuja se selecciona y hace ping, el radar se atenúa. Cada paso dura unos 1,6s.
@@ -330,7 +361,8 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   controles.
 - **`prefers-reduced-motion: reduce`:** sin barrido, ping, latido ni entradas; los datos aparecen al instante. Se
   mantiene el feedback de hover y active.
-- Nada de bucles infinitos fuera del latido y de la vida en reposo de Rad (§4). Nada de puntos "live" que parpadean.
+- Nada de bucles infinitos fuera del latido, de la vida en reposo de Rad (§4) y de su haz mientras redacta un brief
+  («Crear: Rad redactando»). Nada de puntos "live" que parpadean.
 
 ## 8. Gráficos (ECharts + `vue-echarts`)
 

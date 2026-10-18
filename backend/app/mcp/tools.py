@@ -163,7 +163,9 @@ class RadarTools:
         desglose del score, los 6 criterios de encaje con la audiencia de 30X con su
         justificación, mezcla de audiencias, LATAM Gap, evidencia (outliers primero, con el total)
         y timeline de piezas publicadas por día en la ventana actual y la anterior. Úsala para
-        explicar si una tendencia es fiable y por qué."""
+        explicar si una tendencia es fiable y por qué. `outlier_hooks` compara el gancho del
+        título de los outliers con el resto del tema («por qué funcionó»): es una hipótesis con
+        muestra pequeña, nunca causalidad; si `observed_pattern` es falso, dilo como anecdótico."""
         [served] = await self._served([opportunity_id])
         return _sanitized(
             OpportunityAnalysis(

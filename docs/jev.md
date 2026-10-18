@@ -121,18 +121,82 @@ filas van a `jev_judgments` con `battery = "pair"` y `content_item_id` nulo: la 
 
 ### 3. Verificación: después del LLM
 
-El LLM devuelve `why_it_matters` y los briefs como una lista de afirmaciones, cada una con el id de
-la evidencia que la respalda. Por cada afirmación:
+**Estado: implementada y encendida por defecto (`JEV_VERIFY_CLAIMS=true`) desde el 18/10, tras pasar
+su validación (ver más abajo).** Con `JEV_VERIFY_CLAIMS=false`, `why_it_matters` solo pasa las
+comprobaciones de Python y no se puede decir que Jev lo verifica.
 
-1. Python comprueba que la evidencia citada pertenece al tema.
-2. Jev responde un `choice` contra el texto de esa evidencia: `supports` · `contradicts` ·
-   `says_nothing` (cookbook *citation check*).
-3. Se publica solo si es `supports` con `confidence` ≥ 0,8. Un `supports` por debajo de 0,8, un
-   `says_nothing` o un `contradicts` no se publican y quedan registrados.
+El LLM devuelve `why_it_matters` como una lista de 3 afirmaciones (prompt
+`explain_opportunity.v2.md`: qué pasa, por qué le importa a un directivo de Latinoamérica y qué
+conviene hacer), cada una con las URLs de la evidencia que la respalda. El prompt v2 pide apoyar
+cada afirmación solo en los datos medidos y en las piezas que cita: el fit sirve para elegir de qué
+hablar, pero Jev no lo ve. En `analyze`, por cada afirmación:
 
-**Limitación:** la evidencia es solo título y descripción. El LLM tiene que ceñirse a lo que dicen;
-si no, casi todo saldrá `says_nothing`. Si no sobrevive ninguna afirmación, la UI dice "sin
-afirmaciones verificables" en vez de mostrar un texto vacío.
+1. Python comprueba que cita una pieza que el LLM recibió y que no trae cifras que no estén en los
+   datos ni en la evidencia (`intelligence/explanation.py`, `python_checked`).
+2. Jev responde la batería `claim.v2`
+   (`backend/app/editorial/prompts/jev/claim.v2.yaml`) en una llamada: un `choice` `support`
+   (`supports` · `contradicts` · `says_nothing`, patrón *citation check* del cookbook) y su
+   `support_rev`, con las opciones en orden inverso para detectar el sesgo hacia la primera.
+3. Se publica solo si `support` es `supports` con `confidence` ≥ 0,6 y `support_rev` también dice
+   `supports` (`claim_supported`, en `intelligence/jev.py`). Con 0,8 se perdían afirmaciones
+   respaldadas con `supports` en las dos preguntas; 0,6 se midió con una muestra nueva.
+
+**Qué va en el `state`:** la afirmación, los datos medidos que recibió el LLM (`measured_facts`,
+las mismas frases de `opportunity_facts`) y las piezas citadas que el LLM recibió, solo con fuente,
+título y descripción. Sin URL, plataforma, segmento ni región, y sin las justificaciones del fit.
+Los datos medidos entran porque las afirmaciones reales mezclan lo que dicen las piezas con lo que
+calculó Python («saturado», «4 piezas frente a 12», «conviene descartar»). Contra las piezas solas,
+Jev, que lee de forma literal, dejaría sin respaldo la frase de qué conviene hacer. Las
+justificaciones del fit no entran: son texto del LLM, y verificar al LLM con su propio texto sería
+circular.
+
+**Notas en `limitations`** (sin cambio de contrato; la UI las muestra en «Qué no sabemos»):
+
+- «Jev no encontró respaldo en la evidencia citada para N afirmaciones del LLM: no se publican.»
+  Las afirmaciones rechazadas se quitan siempre del texto, también en un tema no verificado.
+- Si Jev rechaza todas, el tema conserva la plantilla de datos medidos con la nota de «ninguna
+  afirmación superó la comprobación de evidencia», como cuando falla Python.
+- Una afirmación sin juicio de Jev (no hay `TYPESAFE_API_KEY` y no estaba en caché, Jev falló o se
+  agotó el presupuesto) tampoco se publica: solo se publica lo respaldado (CLAUDE.md §7 y §2,
+  regla 3). La nota dice cuántas: «Jev no pudo verificar N afirmaciones del LLM: no se publican.»
+- Si un tema se queda sin ninguna afirmación respaldada y alguna quedó sin juicio, conserva la
+  plantilla de datos medidos con la nota «No se pudo completar la verificación de "por qué importa"
+  con Jev: se muestran los datos medidos.» Si todas las comprobadas fueron rechazadas, la nota es
+  la de «ninguna afirmación superó la comprobación de evidencia». En los dos casos el brief no
+  recibe ese texto como explicación comprobada.
+
+**Caché y presupuesto:** `jev_judgments` con `battery = "claim"` y `content_item_id` nulo. La clave
+es el hash del `state`, la batería, su versión y el modelo, así que una segunda ejecución con las
+mismas explicaciones no llama a Jev. Como mucho 200 llamadas nuevas por ejecución
+(`MAX_CLAIM_VERIFICATIONS_PER_RUN`), repartidas en el orden del ranking, para gastar primero en lo
+que se ve arriba del Radar. Cada llamada real cuenta en `usage_events` como `claim_battery`.
+
+**Validación (18/10, adoptada):** la primera evaluación
+([`jev_claim_v1_eval.md`](../data/evaluations/jev_claim_v1_eval.md)) no pasó: `claim.v1` conservaba
+el 58 % de las respaldadas y `claim.v2` el 67 %, con el umbral de 0,8 y el prompt v1. La segunda
+([`jev_claim_adoption_eval.md`](../data/evaluations/jev_claim_adoption_eval.md)) se pre-registró
+antes de mirar nada y usó una muestra nueva de la ejecución 38 (40 afirmaciones v2 reales y 10
+negativas sintéticas, etiquetadas por un evaluador LLM a ciegas antes de ver a Jev). Con el prompt
+v2, `claim.v2` y 0,6: conserva 33/35 (94 %), filtra 9/15 (60 %, justo el mínimo) y los 14 temas de
+la muestra conservan texto; la posición 2 queda en 49 de 53 temas tras Jev (v1 la tenía en 53).
+
+**Limitaciones:**
+
+- **Jev atrapa hechos inventados, no sobregeneralizaciones.** En la validación filtró 5/5 de hecho
+  insertado, pero dejó pasar 4 de 5 negativas reales («la mayoría de las piezas…», atribuir a una
+  pieza lo que no dice, unir dos cifras). No se debe decir que Jev detecta esos fallos.
+- En las afirmaciones apoyadas solo en los datos medidos (por diseño, casi siempre las de posición
+  2 y 3), una cita equivocada no se detecta: los datos siguen en el `state`.
+- Sin veredicto (sin clave, fallo o fuera del tope de 200 llamadas por ejecución) no se publica.
+  Con unos 53 temas × 3 afirmaciones entra una ejecución en frío; con más de unos 66 temas, las
+  afirmaciones de los temas de abajo del ranking se quedarían sin publicar.
+- La evidencia es solo título y descripción. El LLM tiene que ceñirse a lo que dicen; si no, casi
+  todo saldrá `says_nothing`.
+- Una ausencia («ninguna pieza muestra…») se comprueba solo contra las piezas citadas, no contra
+  todas las del tema.
+- **Pendiente:** los briefs (`POST /editorial/brief`, `generate_editorial_brief`) no se verifican.
+  Se generan dentro del request, y verificar ahí añadiría la latencia de Jev y una ruta de fallo
+  nueva en el MCP. Además, el brief no tiene la forma «afirmación + URLs».
 
 ## Del juicio a la decisión (en Python)
 
@@ -154,8 +218,15 @@ lift = (% de outliers con el rasgo) / (% del resto con el rasgo)
 ```
 
 Un rasgo con lift ≥ 2 que tienen al menos 2 outliers es un "patrón observado". Si no llega, es
-"anecdótico". Con pocos outliers por tema, casi todo saldrá "anecdótico", y se dice así. El LLM
-redacta la hipótesis a partir de esa tabla y la batería 3 la verifica. Ejemplo: *"Los outliers usan
+"anecdótico". Con pocos outliers por tema, casi todo saldrá "anecdótico", y se dice así.
+
+**Implementado (18/10), solo para el gancho:** `intelligence/why_it_worked.py` → campo
+`outlier_hooks` de `Opportunity`, que el MCP devuelve en `analyze_opportunity`. Cuenta solo piezas
+originales (una republicación copia el título), deja fuera las piezas sin `outlier_ratio` y las de
+gancho incierto, y no compara si el resto tiene menos de 2 piezas. Si el resto no usa un gancho, el
+lift queda en `null`. El gancho se validó antes de usarlo: 94 % de acuerdo en las 31 de 36 piezas
+que Jev decide (`data/evaluations/jev_hook_v3_eval.md`). Pendiente: que el LLM redacte la hipótesis
+y Jev la verifique. Ejemplo: *"Los outliers usan
 ganchos de 'dato o cifra' 2,5 veces más que el resto (3 de 4, frente a 3 de 10). Hipótesis con
 muestra pequeña."*
 

@@ -16,7 +16,13 @@ from anthropic import AsyncAnthropic
 from pydantic import BaseModel
 
 from app.core.config import Settings
-from app.editorial.audience import EvidencePiece, TopicInput, escape, evidence_block
+from app.editorial.audience import (
+    EvidencePiece,
+    TopicInput,
+    escape,
+    evidence_block,
+    named_label,
+)
 from app.editorial.evaluator import LLM_CONCURRENCY, LlmResult, StructuredLlm
 from app.intelligence.opportunities import TopicResult
 from app.schemas.opportunity import (
@@ -27,7 +33,7 @@ from app.schemas.opportunity import (
 )
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 PROMPT_FILE = PROMPTS_DIR / f"explain_opportunity.v{PROMPT_VERSION}.md"
 
 # Bandas del audience fit para el texto, como las muestra la UI (CLAUDE.md §7).
@@ -54,7 +60,9 @@ RECOMMENDATION_TEXT = {
 LATAM_GAP_TEXT = {
     True: "baja: el tema todavía no se cubre en fuentes latinoamericanas (posible oportunidad)",
     False: "alta: el tema ya se cubre en fuentes latinoamericanas",
-    None: "sin datos suficientes para decidirlo",
+    # Hay datos: falta conversación sobre su uso en empresas, o la cobertura regional es parcial.
+    None: "sin decidir: casi no se habla de su uso en empresas, o la cobertura en fuentes "
+    "latinoamericanas es parcial",
 }
 
 
@@ -111,6 +119,9 @@ def opportunity_facts(o: Opportunity, timeline: OpportunityTimeline) -> list[str
         f"Piezas que rinden al menos 3 veces su referencia: {o.outlier_count}.",
         f"Audiencia de las fuentes: tecnología {mix['tech']:.0f} %, negocio "
         f"{mix['business']:.0f} %, en español {mix['latam_es']:.0f} %.",
+        # Lleva el conteo de Jev que decide el hueco: sin él, "negocio 0 %" junto a "hueco en
+        # LATAM" parecería una contradicción, y un `None` no diría cuál de sus dos causas aplica.
+        o.description,
         f"Cobertura en fuentes latinoamericanas: {LATAM_GAP_TEXT[o.latam_gap]}.",
         f"Recomendación: {RECOMMENDATION_TEXT[o.recommendation]}. {o.recommendation_reason or ''}",
     ]
@@ -126,8 +137,11 @@ def fit_notes(o: Opportunity) -> list[FitNote]:
 
 
 def build_explain_input(result: TopicResult, topic: TopicInput) -> ExplainInput:
+    sent = {p.url for p in topic.pieces}
+    safe = [p for p in result.pieces if p.url in sent]
+    titles = [p.title for p in result.pieces]
     return ExplainInput(
-        label=topic.label,
+        label=named_label(result.opportunity.topic, titles, safe),
         facts=opportunity_facts(result.opportunity, result.timeline),
         fit=fit_notes(result.opportunity),
         pieces=topic.pieces,

@@ -4,10 +4,12 @@
 
 clasificar cada pieza con Jev (cacheado) → quitar lo que no trata de IA → embed → cluster →
 republicaciones con Jev (cacheado) → scores deterministas → audience fit con el LLM (cacheado) →
-persistir.
+«por qué importa» con el LLM (cacheado) → verificación de sus afirmaciones con Jev (cacheado, con
+JEV_VERIFY_CLAIMS) → persistir.
 Sin TYPESAFE_API_KEY, o si Jev falla, las piezas quedan sin clasificar, los pares los decide la
-regla de respaldo y el job sigue. Sin LLM_API_KEY, o si el LLM falla en un tema, su audience fit
-queda en null (CLAUDE.md §2, regla 3).
+regla de respaldo, con JEV_VERIFY_CLAIMS activo las afirmaciones sin veredicto no se publican (un
+tema sin ninguna respaldada conserva los datos medidos con una nota), y el job sigue. Sin
+LLM_API_KEY, o si el LLM falla en un tema, su audience fit queda en null (CLAUDE.md §2, regla 3).
 """
 
 import asyncio
@@ -28,6 +30,7 @@ from app.editorial.evaluator import build_evaluator
 from app.editorial.explanation import build_explainer
 from app.intelligence.jev import build_judge, to_piece_judgment
 from app.intelligence.opportunities import TopicResult, rank
+from app.intelligence.why_it_worked import with_outlier_hooks
 from app.models import PipelineRun
 from app.services.audience_fit import FitStats, evaluate_topics
 from app.services.classification import ClassificationStats, classify_pieces, load_judgments
@@ -41,6 +44,7 @@ from app.services.opportunities import (
     save_opportunities,
 )
 from app.services.replicas import ReplicaStats
+from app.services.verification import VerifyStats, build_claim_verifier
 
 log = structlog.get_logger()
 
@@ -70,9 +74,14 @@ async def _evaluate(session: AsyncSession, run_id: int, as_of: datetime) -> _Eva
         session, as_of, pieces=loaded, judgments=judgments, judge=judge, meter=pair_meter
     )
     await record_meter(session, pair_meter, pipeline_run_id=run_id)
+    hooks = {item_id: j.hook for item_id, j in judgments.items()}
     llm_meter = UsageMeter()
     results, fit, explain = await _fit_and_explain(
-        session, computed.results, answers=answers, settings=settings, meter=llm_meter
+        session,
+        with_outlier_hooks(computed.results, hooks),
+        answers=answers,
+        settings=settings,
+        meter=llm_meter,
     )
     await record_meter(session, llm_meter, pipeline_run_id=run_id)
     # El orden se decide después del audience fit: antes no hay Opportunity Score.
@@ -92,7 +101,12 @@ async def _fit_and_explain(
     )
     # Después del fit y de la recomendación: el texto explica lo que ya calculó Python.
     explained, explain = await explain_topics(
-        session, fitted, answers=answers, explainer=build_explainer(settings), meter=meter
+        session,
+        fitted,
+        answers=answers,
+        explainer=build_explainer(settings),
+        meter=meter,
+        verifier=build_claim_verifier(settings),
     )
     return explained, fit, explain
 
@@ -108,7 +122,7 @@ def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
         "jev": asdict(e.jev),
         "replicas": asdict(e.computed.replicas),
         "llm": asdict(e.fit),
-        "explain": asdict(e.explain),
+        "explain": asdict(e.explain),  # incluye `verification`
     }
 
 
@@ -142,6 +156,7 @@ def _print_summary(run_id: int, stats: dict[str, Any], evaluated: _Evaluated) ->
         f"  por qué importa: {explain.explained} redactados · {explain.cached} de caché · "
         f"{explain.failed} fallidos · {explain.without_fit} sin audience fit"
     )
+    _print_verification(explain.verification)
     print(f"  recomendaciones: {stats['recommendation']}")
     for r in results[:10]:
         o = r.opportunity
@@ -150,6 +165,19 @@ def _print_summary(run_id: int, stats: dict[str, Any], evaluated: _Evaluated) ->
             f"{o.source_count} fuentes  fit {o.audience_fit_score}  {o.recommendation.value:13} "
             f"{o.topic[:60]}"
         )
+
+
+def _print_verification(v: VerifyStats | None) -> None:
+    if v is None:
+        print("  verificación jev: apagada (JEV_VERIFY_CLAIMS)")
+        return
+    print(
+        f"  verificación jev: {v.verified} verificadas · {v.cached} de caché · "
+        f"{v.failed} fallidas · {v.over_budget} fuera de presupuesto · {v.rejected} rechazadas · "
+        f"{v.unverified_topics} temas sin verificar"
+    )
+    if v.skipped_reason:
+        print(f"  verificación omitida: {v.skipped_reason}")
 
 
 def _print_replicas(r: ReplicaStats) -> None:

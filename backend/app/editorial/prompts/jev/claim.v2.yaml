@@ -1,0 +1,70 @@
+# Batería de afirmación de Jev, v2 (docs/jev.md, "3. Verificación"). Una llamada por afirmación de
+# «por qué importa» que pasó las comprobaciones de Python en `analyze`. El `state` lleva la
+# afirmación, los datos medidos que recibió el LLM y las piezas citadas (fuente, título y
+# descripción). Las ausencias y las hipótesis se nombran a propósito: son casi la mitad de las
+# afirmaciones reales. `support_rev` repite la pregunta con las opciones en orden inverso para
+# detectar el sesgo hacia la primera opción. Python publica la afirmación solo si las dos dicen
+# `supports` y `support` lo dice con confianza ≥ 0,6 (`claim_supported`).
+# v2: con v1 solo 1 de 11 afirmaciones reales en posición 2 («para un directivo de Latinoamérica,
+# esto importa porque…») salía respaldada (data/evaluations/jev_claim_v1_eval.md). La v2 dice que
+# esa lectura es interpretación editorial y que solo se comprueban los hechos en que se apoya.
+version: 2
+questions:
+  - id: support
+    type: choice
+    instructions: >-
+      ¿Los datos medidos (`measured_facts`) y las piezas citadas (`evidence`) respaldan la
+      afirmación (`claim`)?
+    criteria:
+      supports:
+        what: >-
+          todo lo que la afirmación da por hecho aparece en `measured_facts` o en el título o la
+          descripción de alguna pieza de `evidence`, aunque sea con otras palabras. Lo que presenta
+          como hipótesis ("puede", "sugiere") o como recomendación coherente con `measured_facts`
+          no necesita más respaldo. Una ausencia ("ninguna pieza muestra…", "no dice cuándo…")
+          está respaldada si ninguna pieza de `evidence` lo muestra. La lectura dirigida al
+          lector ("para un dueño o directivo de Latinoamérica, esto importa porque…", "puede
+          interesarte…", "no cambia sus decisiones…") es interpretación editorial: solo se
+          comprueban los hechos en los que se apoya, no la interpretación
+        not_for: >-
+          afirmaciones que añaden hechos, cifras, nombres, empresas o resultados que no están en
+          `measured_facts` ni en `evidence`
+      contradicts:
+        what: algún dato de la afirmación choca con `measured_facts` o con lo que dicen las piezas
+        not_for: afirmaciones que solo añaden algo que los datos y las piezas no mencionan
+      says_nothing:
+        what: >-
+          la afirmación da por hecho algo que ni `measured_facts` ni las piezas de `evidence`
+          mencionan
+        not_for: >-
+          afirmaciones cuyo contenido sí aparece, aunque sea con otras palabras, ni la
+          interpretación editorial de qué significa para el lector
+  - id: support_rev
+    type: choice
+    instructions: >-
+      ¿Los datos medidos (`measured_facts`) y las piezas citadas (`evidence`) respaldan la
+      afirmación (`claim`)?
+    criteria:
+      says_nothing:
+        what: >-
+          la afirmación da por hecho algo que ni `measured_facts` ni las piezas de `evidence`
+          mencionan
+        not_for: >-
+          afirmaciones cuyo contenido sí aparece, aunque sea con otras palabras, ni la
+          interpretación editorial de qué significa para el lector
+      contradicts:
+        what: algún dato de la afirmación choca con `measured_facts` o con lo que dicen las piezas
+        not_for: afirmaciones que solo añaden algo que los datos y las piezas no mencionan
+      supports:
+        what: >-
+          todo lo que la afirmación da por hecho aparece en `measured_facts` o en el título o la
+          descripción de alguna pieza de `evidence`, aunque sea con otras palabras. Lo que presenta
+          como hipótesis ("puede", "sugiere") o como recomendación coherente con `measured_facts`
+          no necesita más respaldo. Una ausencia ("ninguna pieza muestra…", "no dice cuándo…")
+          está respaldada si ninguna pieza de `evidence` lo muestra. La lectura dirigida al
+          lector ("para un dueño o directivo de Latinoamérica, esto importa porque…", "puede
+          interesarte…", "no cambia sus decisiones…") es interpretación editorial: solo se
+          comprueban los hechos en los que se apoya, no la interpretación
+        not_for: >-
+          afirmaciones que añaden hechos, cifras, nombres, empresas o resultados que no están en
+          `measured_facts` ni en `evidence`

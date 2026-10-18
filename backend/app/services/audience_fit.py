@@ -2,7 +2,7 @@
 
 Un tema ya evaluado no se vuelve a enviar mientras no cambie su entrada. Si el LLM falla en un
 tema, ese tema queda sin fit (null y una limitación) y el resto sigue (plan intel-phase1-llm-fit,
-D9).
+D9). El nombre del tema es siempre el `topic_name` del LLM o el título de una pieza segura.
 """
 
 import asyncio
@@ -23,7 +23,12 @@ from app.editorial.audience import (
     evaluation_cache_key,
 )
 from app.editorial.evaluator import EvaluationError, EvaluationResult, TopicEvaluator
-from app.intelligence.audience_fit import apply_fit, apply_topic_name, mark_fit_failed
+from app.intelligence.audience_fit import (
+    apply_fit,
+    apply_safe_topic,
+    apply_topic_name,
+    mark_fit_failed,
+)
 from app.intelligence.opportunities import TopicResult
 from app.schemas.cost import Provider
 from app.services.llm_cache import load_cached, save_results
@@ -114,10 +119,12 @@ async def evaluate_topics(
     evaluator: TopicEvaluator | None,
     meter: UsageMeter,
 ) -> tuple[list[TopicResult], FitStats]:
-    if evaluator is None:
-        return list(results), FitStats(0, 0, 0, 0, skipped_reason=SKIPPED_WITHOUT_KEY)
-    model = get_settings().llm_model
     inputs = [build_topic_input(r, answers) for r in results]
+    # Antes del LLM: sin él, o si falla o su nombre no vale, el tema conserva este rótulo.
+    results = [apply_safe_topic(r, t.label) for r, t in zip(results, inputs, strict=True)]
+    if evaluator is None:
+        return results, FitStats(0, 0, 0, 0, skipped_reason=SKIPPED_WITHOUT_KEY)
+    model = get_settings().llm_model
     keys = [evaluation_cache_key(t, model) for t in inputs]
     cached = await load_cached(session, keys, TopicEvaluation)
     pending = _pending_by_key(results, inputs=inputs, keys=keys, cached=cached)

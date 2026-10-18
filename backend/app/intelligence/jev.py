@@ -1,8 +1,9 @@
-"""Jev (TypeSafe): baterías de pieza y de par, y conversión de sus respuestas en decisiones
-(CLAUDE.md §7).
+"""Jev (TypeSafe): baterías de pieza, de par y de afirmación, y conversión de sus respuestas en
+decisiones (CLAUDE.md §7).
 
 Jev solo emite juicios atómicos; los umbrales y la decisión están aquí, en Python (regla 4).
-El texto de la pieza va solo en `state`; nuestras instrucciones, en las preguntas (regla 6).
+El texto de las piezas y las afirmaciones del LLM van solo en `state`; nuestras instrucciones, en
+las preguntas (regla 6).
 """
 
 import asyncio
@@ -33,6 +34,16 @@ PAIR_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev
 # Con dos piezas por llamada, 500 caracteres mantienen el par en ~800 tokens.
 MAX_PAIR_DESCRIPTION_CHARS = 500
 SAME_STORY_QUESTION = "same_story"
+
+CLAIM_BATTERY = "claim"
+CLAIM_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/claim.v2.yaml"
+SUPPORT_QUESTION = "support"
+SUPPORTS = "supports"
+# CLAUDE.md §7, Verificación. Es un umbral sobre `confidence`, no sobre la probabilidad máxima
+# como CHOICE_MIN_PROB: por eso no se reutiliza. 0,6 y no 0,8: con 0,8 se perdían afirmaciones
+# respaldadas con `supports` en las dos preguntas; 0,6 se validó con una muestra nueva
+# (data/evaluations/jev_claim_adoption_eval.md).
+CLAIM_SUPPORT_MIN_CONFIDENCE = 0.6
 
 # Umbrales de docs/jev.md, "Del juicio a la decisión". Iniciales: se ajustan con la validación.
 CHOICE_MIN_PROB = 0.6
@@ -83,6 +94,13 @@ class PieceJudgment:
     business_case: bool | None
     tech_jargon: bool | None
     latam_context: bool | None
+
+
+@dataclass(frozen=True)
+class CitedEvidence:
+    source: str
+    title: str
+    description: str | None
 
 
 @dataclass(frozen=True)
@@ -172,6 +190,32 @@ def pair_state(a: Piece, b: Piece) -> dict[str, Any]:
     return {"a": _pair_side(first), "b": _pair_side(second)}
 
 
+@lru_cache
+def claim_battery() -> Battery:
+    return load_battery(CLAIM_BATTERY, CLAIM_BATTERY_FILE)
+
+
+def _cited_side(evidence: CitedEvidence) -> dict[str, Any]:
+    # Sin URL, plataforma ni segmento: Jev contestaría por la fuente y no por lo que dice la pieza.
+    side: dict[str, Any] = {"source": evidence.source, "title": evidence.title}
+    if evidence.description:
+        side["description"] = evidence.description
+    return side
+
+
+def claim_state(
+    claim: str, *, facts: Sequence[str], evidence: Sequence[CitedEvidence]
+) -> dict[str, Any]:
+    # Con los datos medidos: las afirmaciones reales mezclan lo que dicen las piezas con lo que
+    # calculó Python ("saturado", "4 piezas frente a 12"), y contra las piezas solas Jev dejaría
+    # sin respaldo la frase de qué conviene hacer.
+    return {
+        "claim": claim,
+        "measured_facts": list(facts),
+        "evidence": [_cited_side(e) for e in evidence],
+    }
+
+
 def cache_key(state: dict[str, Any], model: str) -> str:
     return battery_cache_key(piece_battery(), state, model)
 
@@ -205,6 +249,18 @@ def _choice(answers: dict[str, Any], question: str) -> str | None:
     if max(answer["probabilities"].values()) < CHOICE_MIN_PROB:
         return None
     return answer["choice"] if answer["choice"] == reverse["choice"] else None
+
+
+def claim_supported(answers: Mapping[str, Any]) -> bool | None:
+    answer = answers.get(SUPPORT_QUESTION)
+    reverse = answers.get(SUPPORT_QUESTION + REV_SUFFIX)
+    if answer is None or reverse is None:
+        return None
+    return (
+        answer["choice"] == SUPPORTS
+        and answer["confidence"] >= CLAIM_SUPPORT_MIN_CONFIDENCE
+        and reverse["choice"] == SUPPORTS
+    )
 
 
 def to_piece_judgment(item_id: int, answers: dict[str, Any]) -> PieceJudgment:

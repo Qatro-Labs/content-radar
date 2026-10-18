@@ -4,9 +4,19 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
-from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
-from app.intelligence.lifecycle import classify
+from app.intelligence.audience_mix import (
+    audience_mix,
+    has_business_conversation,
+    latam_gap,
+    latam_share,
+)
+from app.intelligence.cross_source import (
+    cross_source_score,
+    outlet_key,
+    percentile_scores,
+    saturation_score,
+)
+from app.intelligence.lifecycle import ACCELERATION_MAX_P, classify
 from app.intelligence.outliers import (
     MEDIAN,
     age_adjusted,
@@ -23,7 +33,13 @@ from app.intelligence.ranking import (
     recommend,
     score_breakdown,
 )
-from app.intelligence.velocity import WindowCounts, piece_rate, topic_velocity, window_counts
+from app.intelligence.velocity import (
+    WindowCounts,
+    acceleration_p_value,
+    piece_rate,
+    topic_velocity,
+    window_counts,
+)
 from app.schemas.opportunity import (
     Confidence,
     GrowthStatus,
@@ -63,6 +79,45 @@ def test_acceleration_with_empty_previous_window():
     # (v − 0) / max(0, 1): no divide por cero.
     assert topic_velocity(WindowCounts(4, 0), corpus=WindowCounts(50, 0)).acceleration == 4.0
     assert topic_velocity(WindowCounts(0, 0), corpus=WindowCounts(0, 0)).acceleration == 0
+
+
+def test_log_ratio_separates_small_from_large_jumps():
+    # Con el cambio relativo, 2 frente a 1 y 70 frente a 5 eran "+100 % o más" por igual.
+    small = topic_velocity(WindowCounts(2, 1), corpus=WindowCounts(100, 100))
+    large = topic_velocity(WindowCounts(70, 5), corpus=WindowCounts(100, 100))
+    assert small.acceleration == 1.0 and large.acceleration == 13.0
+    assert small.log_ratio == pytest.approx(0.585, abs=0.001)  # log2(3 / 2)
+    assert large.log_ratio == pytest.approx(3.564, abs=0.001)  # log2(71 / 6)
+    assert topic_velocity(WindowCounts(0, 0), corpus=WindowCounts(0, 0)).log_ratio == 0
+
+
+def test_acceleration_p_value_is_exact_binomial_tail():
+    # Corpus estable (p0 = 0,5): 5 frente a 0 sale por azar con probabilidad 0,5^5.
+    assert acceleration_p_value(WindowCounts(5, 0), WindowCounts(100, 100)) == pytest.approx(
+        0.031, abs=0.001
+    )
+    # 2 frente a 1 no demuestra nada: P(X ≥ 2 | n = 3) = 0,5.
+    assert acceleration_p_value(WindowCounts(2, 1), WindowCounts(100, 100)) == 0.5
+    # Un tema que baja nunca es significativo.
+    assert acceleration_p_value(WindowCounts(1, 6), WindowCounts(100, 100)) > 0.9
+
+
+def test_acceleration_p_value_uses_the_corpus_share():
+    # Si el corpus se duplica en la ventana actual, 8 frente a 4 es lo esperado: no acelera.
+    assert acceleration_p_value(WindowCounts(8, 4), WindowCounts(200, 100)) > 0.5
+    assert acceleration_p_value(WindowCounts(8, 4), WindowCounts(100, 100)) < 0.2
+
+
+def test_acceleration_p_value_handles_large_topics():
+    # math.comb(2000, 1000) no cabe en un float: el cálculo va en logaritmos.
+    assert acceleration_p_value(WindowCounts(1000, 1000), WindowCounts(5000, 5000)) > 0.4
+    assert acceleration_p_value(WindowCounts(1500, 500), WindowCounts(5000, 5000)) < 0.001
+
+
+def test_acceleration_p_value_without_data_is_one():
+    assert acceleration_p_value(WindowCounts(0, 0), WindowCounts(100, 100)) == 1.0
+    # Sin corpus en la ventana anterior (monitoreo recién empezado) no se puede demostrar.
+    assert acceleration_p_value(WindowCounts(5, 0), WindowCounts(50, 0)) == 1.0
 
 
 def test_piece_rate_needs_two_snapshots():
@@ -114,8 +169,10 @@ def test_age_adjusted_has_one_day_floor():
 # --- lifecycle ---
 
 
-def stage(acc=0.0, sat=50.0, sources=4, items=20):
-    return classify(acceleration=acc, saturation=sat, source_count=sources, item_count=items)
+def stage(acc=0.0, sat=50.0, sources=4, items=20, p=0.01):
+    return classify(
+        acceleration=acc, p_value=p, saturation=sat, source_count=sources, item_count=items
+    )
 
 
 def test_unknown_goes_first():
@@ -142,6 +199,43 @@ def test_lifecycle_rules(acc, sat, sources, expected):
     assert result.reason
 
 
+def test_accelerating_needs_a_significant_acceleration():
+    # Cumple accelerating, pero la subida puede ser azar: no se afirma la etapa.
+    result = stage(acc=0.6, sat=50, sources=3, p=0.27)
+    assert result.lifecycle is Lifecycle.UNKNOWN
+    assert not result.insufficient
+    assert result.reason.startswith("Aceleración +0.60 sin demostrar: p = 0.27")
+    assert stage(acc=0.6, sat=50, sources=3, p=ACCELERATION_MAX_P).lifecycle is (
+        Lifecycle.ACCELERATING
+    )
+
+
+def test_p_value_text_never_reads_as_zero_or_ties_the_threshold():
+    assert "(p < 0.01)" in stage(acc=0.6, sat=50, sources=3, p=0.004).reason
+    assert "p = 0.27 > 0.10," in stage(acc=0.6, sat=50, sources=3, p=0.27).reason
+    assert "p = 0.103 > 0.10," in stage(acc=0.6, sat=50, sources=3, p=0.103).reason
+
+
+def test_emerging_warns_instead_of_gating():
+    # Temprano por definición: queda emerging, pero la razón avisa de que puede ser azar.
+    unproven = stage(acc=0.6, sat=30, sources=2, p=0.27)
+    assert unproven.lifecycle is Lifecycle.EMERGING
+    assert "(p = 0.27)" in unproven.reason and "puede ser azar" in unproven.reason
+    proven = stage(acc=0.6, sat=30, sources=2, p=0.05)
+    assert proven.lifecycle is Lifecycle.EMERGING
+    assert "azar" not in proven.reason
+
+
+def test_unproven_acceleration_falls_back_to_emerging():
+    # 3 fuentes y saturación baja: falla accelerating por el p-valor y cumple emerging.
+    assert stage(acc=0.6, sat=30, sources=3, p=0.27).lifecycle is Lifecycle.EMERGING
+
+
+def test_significance_does_not_gate_saturated_or_peaking():
+    assert stage(acc=-0.3, sat=80, sources=6, p=1.0).lifecycle is Lifecycle.SATURATED
+    assert stage(acc=0.1, sat=65, sources=6, p=1.0).lifecycle is Lifecycle.PEAKING
+
+
 # --- audience mix ---
 
 
@@ -154,7 +248,7 @@ def test_audience_mix_weighted_and_sums_to_one():
 def test_audience_mix_empty():
     assert audience_mix([]) is None
     assert latam_share([]) is None
-    assert latam_gap(None, None) is None
+    assert latam_gap(True, None) is None
 
 
 def test_latam_share_counts_only_latin_american_regions():
@@ -164,18 +258,37 @@ def test_latam_share_counts_only_latin_american_regions():
 
 
 def test_latam_gap():
-    gap = audience_mix([(Segment.BUSINESS, 1), (Segment.TECH, 3)])
-    tech_only = audience_mix([(Segment.TECH, 1)])
-    assert latam_gap(gap, 0.0) is True
-    assert latam_gap(gap, 0.5) is False  # ya cubierto en la región
-    assert latam_gap(tech_only, 0.0) is None
+    assert latam_gap(True, 0.0) is True
+    assert latam_gap(True, 0.5) is False  # ya cubierto en la región
+    assert latam_gap(False, 0.5) is False
+    assert latam_gap(False, 0.0) is None  # sin conversación de negocio no se decide
+
+
+def test_business_conversation_comes_from_jev_when_it_judged():
+    tech_sources = audience_mix([(Segment.TECH, 1)])
+    business_sources = audience_mix([(Segment.BUSINESS, 1)])
+    assert tech_sources is not None and business_sources is not None
+    # Fuentes tech, pero 3 de 5 piezas tratan del uso en organizaciones: hay negocio.
+    assert has_business_conversation(tech_sources, [True, True, True, False, False])
+    # Fuentes de negocio, pero Jev no ve uso en organizaciones en ninguna pieza: no lo hay.
+    assert not has_business_conversation(business_sources, [False, False, None])
+    # Una sola pieza no es conversación, aunque la proporción pase el umbral.
+    assert not has_business_conversation(tech_sources, [True, False, None])
+
+
+def test_business_conversation_falls_back_to_the_source_segment():
+    # Sin juicios de Jev (sin clave o todo incierto), decide el segmento de la fuente.
+    business_sources = audience_mix([(Segment.BUSINESS, 1), (Segment.TECH, 3)])
+    tech_sources = audience_mix([(Segment.TECH, 1)])
+    assert business_sources is not None and tech_sources is not None
+    assert has_business_conversation(business_sources, [None, None])
+    assert not has_business_conversation(tech_sources, [])
 
 
 def test_spanish_coverage_does_not_close_the_latam_gap():
     # Mucho latam_es, pero todo de España: el gap sigue abierto.
-    mix = audience_mix([(Segment.BUSINESS, 1), (Segment.LATAM_ES, 1)])
     share = latam_share([("global", 1), ("es", 1)])
-    assert latam_gap(mix, share) is True
+    assert latam_gap(True, share) is True
 
 
 # --- cross source / saturation ---
@@ -195,18 +308,27 @@ def test_cross_source_score():
     assert cross_source_score({f"rss:{i}" for i in range(10)}, {"rss"}) == 100
 
 
-def test_saturation_percentiles():
-    assert saturation_scores([]) == []
-    assert saturation_scores([7]) == [50.0]
-    assert saturation_scores([1, 5, 10]) == [0.0, 50.0, 100.0]
+def test_percentiles():
+    assert percentile_scores([]) == []
+    assert percentile_scores([7]) == [50.0]
+    assert percentile_scores([1, 5, 10]) == [0.0, 50.0, 100.0]
+
+
+def test_saturation_is_the_share_of_the_corpus():
+    # 100 = el 2 % de las notas; no depende de cuántos temas haya.
+    assert saturation_score(20, 1000) == 100.0
+    assert saturation_score(15, 1000) == 75.0
+    assert saturation_score(5, 1000) == 25.0
+    assert saturation_score(40, 1000) == 100.0
+    assert saturation_score(3, 0) == 0.0
 
 
 def test_declining_topic_reason():
-    stage = classify(acceleration=-0.52, saturation=22, source_count=5, item_count=10)
+    stage = classify(acceleration=-0.52, p_value=1.0, saturation=22, source_count=5, item_count=10)
     assert stage.lifecycle is Lifecycle.UNKNOWN
     assert stage.insufficient is False
     assert stage.reason.startswith("En descenso: aceleración -52%")
-    rising = classify(acceleration=0.43, saturation=82, source_count=5, item_count=10)
+    rising = classify(acceleration=0.43, p_value=0.2, saturation=82, source_count=5, item_count=10)
     assert rising.reason.startswith("Ninguna regla se cumple")
 
 
@@ -216,6 +338,14 @@ def test_declining_topic_reason():
 def test_momentum_bounds():
     assert momentum_score(0, -5, 0) == 0
     assert momentum_score(100, 5, 10) == 100
+
+
+def test_momentum_grows_with_the_log_ratio_beyond_doubling():
+    # Antes, todo lo que pasaba de +100 % puntuaba igual.
+    doubled = momentum_score(50, 1.0, 0)
+    eightfold = momentum_score(50, 3.0, 0)
+    assert doubled < eightfold
+    assert momentum_score(50, 0.0, 0) == 40.0  # sin cambio: aceleración neutra (50)
 
 
 def test_opportunity_score_is_none_without_fit():
@@ -275,12 +405,16 @@ def test_growth_and_confidence():
     assert confidence(GrowthStatus.OBSERVED, 1, 50) is Confidence.LOW
 
 
-def advise(st, conf=Confidence.HIGH, *, fit=None, org=None, gap=None) -> Recommendation:
-    return recommend(st, conf, audience_fit=fit, org_application=org, latam_gap=gap).recommendation
+def advise(st, conf=Confidence.HIGH, *, fit=None, org=None, gap=None, acc=0.6) -> Recommendation:
+    advice = recommend(
+        st, conf, audience_fit=fit, org_application=org, latam_gap=gap, acceleration=acc
+    )
+    return advice.recommendation
 
 
 SATURATED, ACCELERATING = stage(acc=-0.3, sat=80), stage(acc=0.6, sources=3)
 NO_RULE, NO_DATA = stage(acc=0.3, sat=50), stage(sources=1)
+EMERGING = stage(acc=0.3, sources=2, sat=10)
 
 
 @pytest.mark.parametrize(
@@ -291,8 +425,10 @@ NO_RULE, NO_DATA = stage(acc=0.3, sat=50), stage(sources=1)
         (NO_DATA, Confidence.MEDIUM, None, None, None, Recommendation.WAIT_FOR_CASE),
         (ACCELERATING, Confidence.HIGH, 90, 1, None, Recommendation.WAIT_FOR_CASE),
         (NO_RULE, Confidence.MEDIUM, 90, 0, None, Recommendation.WAIT_FOR_CASE),
-        (NO_RULE, Confidence.MEDIUM, 90, 3, None, Recommendation.FIND_ANGLE),
-        (ACCELERATING, Confidence.HIGH, 90, 3, False, Recommendation.FIND_ANGLE),
+        (NO_RULE, Confidence.MEDIUM, 90, 3, False, Recommendation.FIND_ANGLE),
+        (ACCELERATING, Confidence.HIGH, 90, 3, False, Recommendation.PUBLISH_NOW),
+        (ACCELERATING, Confidence.HIGH, 59, 3, False, Recommendation.FIND_ANGLE),
+        (EMERGING, Confidence.HIGH, 90, 3, False, Recommendation.FIND_ANGLE),
         (ACCELERATING, Confidence.HIGH, None, None, None, Recommendation.FIND_ANGLE),
         (ACCELERATING, Confidence.HIGH, 59, 3, None, Recommendation.FIND_ANGLE),
         (ACCELERATING, Confidence.HIGH, 60, 2, True, Recommendation.PUBLISH_NOW),
@@ -304,7 +440,9 @@ NO_RULE, NO_DATA = stage(acc=0.3, sat=50), stage(sources=1)
         "no-real-case-waits",
         "no-real-case-waits-before-angle",
         "unknown-with-data-finds-angle",
-        "latam-covered-finds-angle",
+        "proven-growth-covered-in-latam-publishes-with-own-angle",
+        "covered-in-latam-with-low-fit-finds-angle",
+        "emerging-covered-in-latam-finds-angle",
         "no-fit-never-publishes",
         "fit-below-60-finds-angle",
         "growing-with-fit-and-case-publishes",
@@ -316,6 +454,76 @@ def test_recommendation_takes_the_first_rule_that_holds(st, conf, fit, org, gap,
 
 def test_recommendation_says_which_rule_held():
     advice = recommend(
-        ACCELERATING, Confidence.HIGH, audience_fit=90, org_application=1, latam_gap=None
+        ACCELERATING,
+        Confidence.HIGH,
+        audience_fit=90,
+        org_application=1,
+        latam_gap=None,
+        acceleration=0.6,
     )
-    assert "organización real" in advice.reason
+    assert "ninguna organización aplicándolo" in advice.reason
+
+
+UNPROVEN, DECLINING = stage(acc=0.6, sources=3, p=0.4), stage(acc=-0.3, sat=50)
+
+
+@pytest.mark.parametrize(
+    ("st", "conf", "fit", "org", "gap", "acc", "expected"),
+    [
+        (UNPROVEN, Confidence.MEDIUM, 60, 2, True, 0.6, Recommendation.PUBLISH_NOW),
+        (NO_RULE, Confidence.MEDIUM, 73, 3, True, 0.3, Recommendation.PUBLISH_NOW),
+        (UNPROVEN, Confidence.MEDIUM, 60, 2, None, 0.6, Recommendation.PUBLISH_NOW),
+        (UNPROVEN, Confidence.MEDIUM, 90, 3, False, 0.6, Recommendation.FIND_ANGLE),
+        (UNPROVEN, Confidence.MEDIUM, 59, 2, True, 0.6, Recommendation.FIND_ANGLE),
+        (UNPROVEN, Confidence.MEDIUM, None, None, True, 0.6, Recommendation.FIND_ANGLE),
+        (UNPROVEN, Confidence.MEDIUM, 90, 1, True, 0.6, Recommendation.WAIT_FOR_CASE),
+        (UNPROVEN, Confidence.LOW, 90, 3, True, 0.6, Recommendation.WAIT_FOR_CASE),
+        (DECLINING, Confidence.HIGH, 90, 3, True, -0.3, Recommendation.FIND_ANGLE),
+    ],
+    ids=[
+        "unproven-rise-with-gap-publishes",
+        "no-stage-rising-with-gap-publishes",
+        "partial-latam-coverage-publishes",
+        "unproven-rise-covered-in-latam-finds-angle",
+        "fit-below-60-finds-angle",
+        "no-fit-finds-angle",
+        "no-real-case-waits",
+        "low-confidence-waits",
+        "declining-never-publishes",
+    ],
+)
+def test_latam_gap_publishes_without_proven_growth(st, conf, fit, org, gap, acc, expected):
+    assert advise(st, conf, fit=fit, org=org, gap=gap, acc=acc) is expected
+
+
+def test_latam_gap_reason_says_growth_is_unproven():
+    advice = recommend(
+        UNPROVEN,
+        Confidence.MEDIUM,
+        audience_fit=70,
+        org_application=2,
+        latam_gap=True,
+        acceleration=0.6,
+    )
+    assert "no está demostrado" in advice.reason
+
+
+def test_reasons_say_what_is_missing():
+    partial = recommend(
+        UNPROVEN,
+        Confidence.MEDIUM,
+        audience_fit=80,
+        org_application=4,
+        latam_gap=None,
+        acceleration=0.6,
+    )
+    assert "parcial o no está medida" in partial.reason
+    covered = recommend(
+        ACCELERATING,
+        Confidence.HIGH,
+        audience_fit=60,
+        org_application=3,
+        latam_gap=False,
+        acceleration=0.6,
+    )
+    assert "ángulo propio" in covered.reason

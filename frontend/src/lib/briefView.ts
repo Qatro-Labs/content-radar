@@ -3,7 +3,7 @@ import type { LocationQuery } from 'vue-router'
 import type { components } from '@/types/api'
 
 import { citationChipsFor, type CitationChip } from './dossierView'
-import { compareRatios, countLabel, formatRatio } from './evidenceFormat'
+import { compareRatios, countLabel, EVIDENCE_LIMIT } from './evidenceFormat'
 
 type Schemas = components['schemas']
 type BriefPlatform = Schemas['BriefPlatform']
@@ -41,8 +41,8 @@ export const BRIEF_PLATFORM_LABEL: Record<BriefPlatform, string> = {
 }
 export const BRIEF_GOAL_LABEL: Record<BriefGoal, string> = {
   educate: 'Educar',
-  spark_conversation: 'Conversación',
-  generate_leads: 'Captar leads',
+  spark_conversation: 'Abrir conversación',
+  generate_leads: 'Generar leads',
 }
 export const BRIEF_FORMAT_LABEL: Record<BriefFormat, string> = {
   post: 'Post',
@@ -50,6 +50,27 @@ export const BRIEF_FORMAT_LABEL: Record<BriefFormat, string> = {
   short_video: 'Vídeo corto',
   long_video: 'Vídeo largo',
   article: 'Artículo',
+}
+
+// Cómo se dice cada opción dentro de la frase del estudio, «Un post en LinkedIn para educar.»: en
+// minúscula salvo los nombres propios, y la newsletter con su artículo.
+export const BRIEF_FORMAT_WORD: Record<BriefFormat, string> = {
+  post: 'post',
+  carousel: 'carrusel',
+  short_video: 'vídeo corto',
+  long_video: 'vídeo largo',
+  article: 'artículo',
+}
+export const BRIEF_PLATFORM_WORD: Record<BriefPlatform, string> = {
+  linkedin: 'LinkedIn',
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  newsletter: 'la newsletter',
+}
+export const BRIEF_GOAL_WORD: Record<BriefGoal, string> = {
+  educate: 'educar',
+  spark_conversation: 'abrir conversación',
+  generate_leads: 'generar leads',
 }
 
 export const BRIEF_PARAM = {
@@ -139,16 +160,32 @@ export function featuredPieces(evidence: readonly Evidence[]): Evidence[] {
   return [...evidence].sort(compareRatios).slice(0, FEATURED_PIECES)
 }
 
+// Cuántas piezas hay detrás de las destacadas. Con el tope de la API puede haber más que no
+// llegan, y se dice así en lugar de dar el tope como total.
+export function featuredPiecesCaption(total: number): string {
+  if (total === 1) return 'la única pieza del tema'
+  if (total <= FEATURED_PIECES) return `las ${total} piezas del tema`
+  if (total >= EVIDENCE_LIMIT) {
+    return `las que más pesan de las ${EVIDENCE_LIMIT} primeras piezas del tema`
+  }
+  return `las piezas que más pesan de las ${total} del tema`
+}
+
 export const HOOK_MISSING = 'Gancho no disponible: no superó la comprobación de evidencia.'
 export const WHY_IT_FITS_MISSING = 'Encaje no disponible: no se pudo comprobar con la evidencia.'
 export const NO_LIMITATIONS = 'No hay limitaciones registradas para este brief.'
 
-export function briefOptionsLine(brief: Pick<EditorialBrief, 'platform' | 'goal' | 'format'>) {
-  return [
-    BRIEF_PLATFORM_LABEL[brief.platform],
-    BRIEF_GOAL_LABEL[brief.goal],
-    BRIEF_FORMAT_LABEL[brief.format],
-  ].join(' · ')
+// La frase del estudio sin el artículo ni el punto, para rotular un brief: «Post en LinkedIn para
+// educar».
+export function briefSentence(options: BriefOptions): string {
+  const format = BRIEF_FORMAT_WORD[options.format]
+  const capitalized = format.charAt(0).toUpperCase() + format.slice(1)
+  return `${capitalized} en ${BRIEF_PLATFORM_WORD[options.platform]} para ${BRIEF_GOAL_WORD[options.goal]}`
+}
+
+// Rótulo del brief listo: qué pieza es y en cuántas fuentes se apoya.
+export function briefSummary(brief: EditorialBrief): string {
+  return `${briefSentence(brief)} · cita ${countLabel(brief.evidence.length, 'pieza', 'piezas')}`
 }
 
 export function briefFootnote(brief: EditorialBrief): string {
@@ -168,11 +205,8 @@ export function briefPoints(brief: EditorialBrief): BriefPointView[] {
   }))
 }
 
-export function featuredRatioLabel(piece: Evidence): string | null {
-  return piece.outlier_ratio == null ? null : formatRatio(piece.outlier_ratio)
-}
-
-// Texto plano para pegar en un documento o un chat: lo copiado lleva las fuentes.
+// Texto plano para pegar en un documento o un chat, en el orden de la pantalla: lo copiado lleva
+// las fuentes.
 export function briefPlainText(brief: EditorialBrief): string {
   const section = (title: string, lines: string[]) => [title, ...lines].join('\n')
   const points = brief.key_points.map((point) =>
@@ -181,9 +215,9 @@ export function briefPlainText(brief: EditorialBrief): string {
   const limitations =
     brief.limitations.length > 0 ? brief.limitations.map((item) => `- ${item}`) : [NO_LIMITATIONS]
   return [
-    `${brief.topic}\n${briefOptionsLine(brief)}`,
-    section('Ángulo', [brief.angle]),
+    `${brief.topic}\n${briefSentence(brief)}`,
     section('Gancho', [brief.hook ?? HOOK_MISSING]),
+    section('Ángulo', [brief.angle]),
     section(
       'Estructura',
       brief.structure.map((step, index) => `${index + 1}. ${step}`),

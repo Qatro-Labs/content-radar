@@ -5,9 +5,15 @@ from dataclasses import replace
 from sqlalchemy import func, select
 
 from app.collectors.usage import UsageCount, UsageMeter
-from app.editorial.audience import TopicEvaluation, TopicInput, system_prompt, user_message
+from app.editorial.audience import (
+    TopicEvaluation,
+    TopicInput,
+    build_topic_input,
+    system_prompt,
+    user_message,
+)
 from app.editorial.evaluator import EvaluationError, EvaluationResult
-from app.intelligence.audience_fit import FIT_FAILED_NOTE
+from app.intelligence.audience_fit import FIT_FAILED_NOTE, NO_SAFE_PIECES_TOPIC
 from app.models import LlmEvaluation
 from app.schemas.cost import Provider
 from app.services.audience_fit import EVALUATE_TOPIC_OPERATION, evaluate_topics
@@ -139,3 +145,60 @@ async def test_label_from_an_excluded_piece_never_reaches_the_prompt(session):
     )
 
     assert (evaluator.calls, stats.evaluated) == (1, 1)
+
+
+# --- nombre del tema (regla 6) ------------------------------------------------------------
+
+
+def unsafe_representative():
+    result = topic()
+    rep = result.pieces[0]
+    # Sin `topic_name`, el tema se llama como su pieza representativa, que Jev marca por inyección.
+    result.opportunity = result.opportunity.model_copy(update={"topic": rep.title})
+    answers = {p.item_id: safe() for p in result.pieces[1:]}
+    answers[rep.item_id] = {"injection": {"type": "noul", "noul": 0.9}}
+    return result, answers
+
+
+async def test_without_llm_a_topic_never_keeps_the_title_of_an_unsafe_piece(session):
+    result, answers = unsafe_representative()
+
+    [out], _ = await evaluate_topics(
+        session, [result], answers=answers, evaluator=None, meter=UsageMeter()
+    )
+
+    assert out.opportunity.topic == result.pieces[1].title
+
+
+async def test_with_a_failed_fit_a_topic_never_keeps_the_title_of_an_unsafe_piece(session):
+    result, answers = unsafe_representative()
+    evaluator = FakeEvaluator(fail_labels=frozenset({result.pieces[1].title}))
+
+    [out], stats = await evaluate_topics(
+        session, [result], answers=answers, evaluator=evaluator, meter=UsageMeter()
+    )
+
+    assert stats.failed == 1
+    assert out.opportunity.topic == result.pieces[1].title
+
+
+async def test_a_topic_without_safe_pieces_gets_the_fixed_label(session):
+    result = topic()
+
+    [out], stats = await evaluate_topics(
+        session, [result], answers={}, evaluator=FakeEvaluator(), meter=UsageMeter()
+    )
+
+    assert stats.without_evidence == 1
+    assert out.opportunity.topic == NO_SAFE_PIECES_TOPIC
+
+
+async def test_the_safe_topic_name_does_not_change_the_fit_input(session):
+    # La entrada del LLM (y su clave de caché) es la misma antes y después de renombrar.
+    result, answers = unsafe_representative()
+
+    [out], _ = await evaluate_topics(
+        session, [result], answers=answers, evaluator=None, meter=UsageMeter()
+    )
+
+    assert build_topic_input(out, answers) == build_topic_input(result, answers)

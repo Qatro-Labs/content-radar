@@ -5,15 +5,17 @@ oportunidad de la ejecución servida (DEMO_RUN_ID o la última correcta) y solo 
 piezas que Jev marcó como seguras, igual que el audience fit (regla 6).
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
 import structlog
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collectors.usage import UsageMeter
 from app.core.config import get_settings
-from app.editorial.audience import MAX_PIECES, evidence_piece, safe_label
+from app.editorial.audience import MAX_PIECES, evidence_piece, named_label
 from app.editorial.briefs import (
     PROMPT_VERSION,
     BriefDraft,
@@ -30,11 +32,13 @@ from app.intelligence.briefs import BriefDraftParts, CheckedBrief, check_brief
 from app.intelligence.explanation import (
     EXPLANATION_FAILED_NOTE,
     NO_VALID_CLAIM_NOTE,
+    VERIFICATION_INCOMPLETE_NOTE,
     ClaimDraft,
     known_numbers,
 )
 from app.intelligence.jev import excluded_from_llm
 from app.intelligence.opportunities import Piece
+from app.models import ContentItem
 from app.schemas.cost import Provider
 from app.schemas.editorial import BriefPoint, BriefRequest, EditorialBrief
 from app.schemas.opportunity import Evidence
@@ -50,7 +54,12 @@ EDITORIAL_BRIEF_OPERATION = "editorial_brief"
 BRAND_NAME = "30X"
 # `explain_opportunity` solo corre con audience fit; con fit y alguna de estas notas,
 # `why_it_matters` sigue siendo la plantilla y no un texto comprobado.
-UNCHECKED_EXPLANATION_NOTES = {EDITORIAL_PENDING_NOTE, EXPLANATION_FAILED_NOTE, NO_VALID_CLAIM_NOTE}
+UNCHECKED_EXPLANATION_NOTES = {
+    EDITORIAL_PENDING_NOTE,
+    EXPLANATION_FAILED_NOTE,
+    NO_VALID_CLAIM_NOTE,
+    VERIFICATION_INCOMPLETE_NOTE,
+}
 
 
 class BriefError(Exception):
@@ -89,6 +98,24 @@ async def _safe_pieces(
     return safe[:MAX_PIECES]
 
 
+async def _is_piece_title(session: AsyncSession, title: str) -> bool:
+    found = await session.scalar(select(ContentItem.id).where(ContentItem.title == title).limit(1))
+    return found is not None
+
+
+async def topic_label(
+    session: AsyncSession, served: ServedOpportunity, safe: Sequence[Piece]
+) -> str:
+    # La evidencia servida está recortada (MAX_EVIDENCE): la pieza que da nombre al tema puede
+    # quedar fuera, así que también se busca en la DB. Falla en cerrado (regla 6): si el nombre es
+    # el título de alguna pieza, solo entra si esa pieza es segura.
+    topic = served.opportunity.topic
+    titles = {e.title for e in served.evidence}
+    if topic not in titles and await _is_piece_title(session, topic):
+        titles.add(topic)
+    return named_label(topic, titles, safe)
+
+
 async def _prepare(session: AsyncSession, request: BriefRequest, now: datetime) -> _Prepared:
     served = await get_served(session, request.opportunity_id)
     if served is None:
@@ -105,8 +132,7 @@ async def _prepare(session: AsyncSession, request: BriefRequest, now: datetime) 
         platform=platform,
         goal=goal,
         format=fmt,
-        # El nombre del tema puede ser el título de una pieza que Jev no marcó como segura.
-        label=safe_label(o.topic, [p for p, _ in safe]),
+        label=await topic_label(session, served, [p for p, _ in safe]),
         facts=opportunity_facts(o, served.timeline),
         why_it_matters=o.why_it_matters if checked_why else None,
         fit=fit_notes(o),

@@ -19,7 +19,10 @@ from app.schemas.opportunity import (
 W_VELOCITY = 0.4
 W_ACCELERATION = 0.4
 W_OUTLIERS = 0.2
-ACCELERATION_CAP = 1.0  # +100 % o más = máximo
+# La aceleración entra como log2 de la razón de tasas suavizada (`TopicVelocity.log_ratio`):
+# multiplicar la tasa por 8 o más es el máximo. Con el tope anterior (+100 %), 2 frente a 1 y
+# 70 frente a 5 puntuaban igual.
+LOG_RATIO_CAP = 3.0
 POINTS_PER_OUTLIER = 25
 
 # Opportunity Score.
@@ -37,9 +40,9 @@ EVIDENCE_POINTS_PER_ITEM = 4
 EVIDENCE_FULL_SOURCES = 3
 
 
-def momentum_score(velocity_percentile: float, acceleration: float, outlier_count: int) -> float:
-    accel = max(-ACCELERATION_CAP, min(acceleration, ACCELERATION_CAP))
-    accel_norm = 50 + 50 * accel / ACCELERATION_CAP
+def momentum_score(velocity_percentile: float, log_ratio: float, outlier_count: int) -> float:
+    ratio = max(-LOG_RATIO_CAP, min(log_ratio, LOG_RATIO_CAP))
+    accel_norm = 50 + 50 * ratio / LOG_RATIO_CAP
     outliers_norm = min(100, POINTS_PER_OUTLIER * outlier_count)
     score = (
         W_VELOCITY * velocity_percentile + W_ACCELERATION * accel_norm + W_OUTLIERS * outliers_norm
@@ -131,20 +134,38 @@ def confidence(growth: GrowthStatus, source_count: int, item_count: int) -> Conf
     return Confidence.MEDIUM
 
 
-# org_application ≤ 1 en la rúbrica: ninguna organización real lo aplica todavía.
+# org_application ≤ 1 en la rúbrica: ninguna organización real lo aplica todavía. El LLM solo lee
+# títulos y descripciones; leer los artículos completos de 5 temas no encontró ningún caso que se
+# le escapara (docs/scoring.md, Limitaciones).
 NO_CASE_MAX_LEVEL = 1
+LATAM_GAP_MIN_ORG_LEVEL = 2
 
 REASON_SATURATED = (
     "Tema saturado: mucho contenido similar y en descenso en las fuentes monitoreadas."
 )
 REASON_INSUFFICIENT = "Esperar: no hay datos suficientes para afirmar una tendencia."
 REASON_LOW_CONFIDENCE = "Esperar: la confianza en la evidencia es baja."
-REASON_NO_CASE = "Esperar caso: ninguna pieza muestra una organización real aplicándolo."
+REASON_NO_CASE = (
+    "Esperar caso: en los títulos y descripciones no aparece ninguna organización aplicándolo "
+    "con resultados."
+)
 REASON_PEAKING = "Buscar ángulo: el tema está en su pico y hace falta un enfoque propio."
 REASON_NO_STAGE = "Buscar ángulo: hay datos, pero no muestran una etapa clara."
 REASON_LATAM_COVERED = "Buscar ángulo: ya hay bastante cobertura en fuentes de Latinoamérica."
 REASON_PUBLISH = (
     f"Publicar: tema en crecimiento con encaje alto con la audiencia de 30X (≥ {PUBLISH_MIN_FIT})."
+)
+REASON_LATAM_GAP_UNPROVEN = (
+    "Publicar ya: encaje alto y aún no se cubre en LATAM; el crecimiento todavía no está "
+    "demostrado."
+)
+REASON_LATAM_PARTIAL_UNPROVEN = (
+    "Publicar ya: encaje alto y caso real; la cobertura en LATAM es parcial o no está medida, y "
+    "el crecimiento todavía no está demostrado."
+)
+REASON_PUBLISH_OWN_ANGLE = (
+    "Publicar ya con ángulo propio: crece de forma demostrada y encaja con la audiencia de 30X, "
+    "pero ya hay cobertura en fuentes de Latinoamérica."
 )
 REASON_NO_FIT = "Buscar ángulo: falta evaluar el encaje con la audiencia de 30X."
 REASON_LOW_FIT = (
@@ -166,6 +187,7 @@ def recommend(
     audience_fit: float | None,
     org_application: int | None,
     latam_gap: bool | None,
+    acceleration: float,
 ) -> Advice:
     """Primera regla que se cumple (CLAUDE.md §7)."""
     if stage.lifecycle is Lifecycle.SATURATED:
@@ -178,10 +200,31 @@ def recommend(
         return Advice(Recommendation.WAIT_FOR_CASE, REASON_NO_CASE)
     if stage.lifecycle is Lifecycle.PEAKING:
         return Advice(Recommendation.FIND_ANGLE, REASON_PEAKING)
+    # Decidido el 18/10 (data/evaluations/publish_policy_eval.md): con encaje alto y caso real,
+    # una subida sin demostrar basta para publicar si LATAM no lo cubre ya. La razón dice que el
+    # crecimiento no está demostrado (CLAUDE.md §2.3).
+    if (
+        stage.lifecycle is Lifecycle.UNKNOWN
+        and acceleration > 0
+        and latam_gap is not False
+        and org_application is not None
+        and org_application >= LATAM_GAP_MIN_ORG_LEVEL
+        and audience_fit is not None
+        and audience_fit >= PUBLISH_MIN_FIT
+    ):
+        reason = REASON_LATAM_GAP_UNPROVEN if latam_gap else REASON_LATAM_PARTIAL_UNPROVEN
+        return Advice(Recommendation.PUBLISH_NOW, reason)
     # unknown aquí es "ninguna regla se cumple": hay datos, falta ángulo.
     if stage.lifecycle is Lifecycle.UNKNOWN:
         return Advice(Recommendation.FIND_ANGLE, REASON_NO_STAGE)
     if latam_gap is False:
+        # Cobertura en LATAM no impide publicar una subida demostrada: pide un ángulo propio.
+        if (
+            stage.lifecycle is Lifecycle.ACCELERATING
+            and audience_fit is not None
+            and audience_fit >= PUBLISH_MIN_FIT
+        ):
+            return Advice(Recommendation.PUBLISH_NOW, REASON_PUBLISH_OWN_ANGLE)
         return Advice(Recommendation.FIND_ANGLE, REASON_LATAM_COVERED)
     if audience_fit is None:
         return Advice(Recommendation.FIND_ANGLE, REASON_NO_FIT)

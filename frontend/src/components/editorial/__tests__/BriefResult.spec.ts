@@ -1,7 +1,7 @@
-import { cleanup, render, screen } from '@testing-library/vue'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { HOOK_MISSING } from '@/lib/briefView'
+import { briefPlainText, HOOK_MISSING } from '@/lib/briefView'
 import type { components } from '@/types/api'
 
 import BriefResult from '../BriefResult.vue'
@@ -43,9 +43,57 @@ const BRIEF: Schemas['EditorialBrief'] = {
   model: 'claude-haiku-5-5',
 }
 
+// jsdom no tiene API de portapapeles ni `execCommand`: useClipboard cae a su copia de respaldo
+// (un textarea y `execCommand('copy')`), así que basta con leer el textarea en ese momento.
+function captureCopies(): string[] {
+  const copies: string[] = []
+  document.execCommand = vi.fn(() => {
+    copies.push(document.querySelector('textarea')?.value ?? '')
+    return true
+  })
+  return copies
+}
+
 describe('BriefResult', () => {
   // Sin `globals` de Vitest, Testing Library no desmonta solo entre tests.
   afterEach(cleanup)
+
+  it('keeps its actions at hand and hands the edit back to the studio', async () => {
+    const { emitted } = render(BriefResult, { props: { brief: BRIEF } })
+
+    expect(screen.getByText('Carrusel en LinkedIn para educar · cita 1 pieza')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Copiar enlace' })).toBeTruthy()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Cambiar enfoque' }))
+
+    expect(emitted('edit')).toHaveLength(1)
+  })
+
+  it('copies the brief as plain text and says so', async () => {
+    const copies = captureCopies()
+    render(BriefResult, { props: { brief: BRIEF } })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Copiar brief' }))
+
+    expect(copies).toEqual([briefPlainText(BRIEF)])
+    expect(await screen.findByRole('button', { name: 'Brief copiado' })).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain(
+      'Brief copiado, con las URLs de cada punto',
+    )
+  })
+
+  it('copies the link that reopens this brief', async () => {
+    const copies = captureCopies()
+    render(BriefResult, { props: { brief: BRIEF } })
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Copiar enlace' }))
+
+    expect(copies).toEqual([window.location.href])
+    expect(await screen.findByRole('button', { name: 'Enlace copiado' })).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain(
+      'Enlace copiado: abre este mismo brief',
+    )
+  })
 
   it('says what is missing instead of leaving gaps', () => {
     render(BriefResult, { props: { brief: BRIEF } })
