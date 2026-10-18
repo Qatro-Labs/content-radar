@@ -19,6 +19,8 @@ MAX_LEVEL = 5
 CRITERION_WEIGHTS: dict[FitCriterion, float] = dict.fromkeys(FitCriterion, 1.0)
 SCORE_DECIMALS = 1
 
+# Rótulo de un tema sin ninguna pieza segura y sin nombre del LLM: nunca la cadena vacía.
+NO_SAFE_PIECES_TOPIC = "Tema sin piezas comprobadas"
 FIT_FAILED_NOTE = "No se pudo evaluar el encaje con la audiencia."
 EDITORIAL_PENDING_NOTE = (
     "Análisis editorial pendiente: «por qué importa» es una plantilla con los datos medidos."
@@ -117,6 +119,15 @@ def apply_fit(
 
 # Un nombre más largo es un titular o una frase: se queda el título de la pieza representativa.
 MAX_TOPIC_NAME_CHARS = 80
+
+
+def apply_safe_topic(result: TopicResult, safe_title: str) -> TopicResult:
+    # La UI, el MCP y el agente muestran el nombre del tema: nunca el título de una pieza que Jev
+    # no marcó como segura (regla 6). `safe_title` ya es ese título o el de otra pieza segura.
+    name = safe_title or NO_SAFE_PIECES_TOPIC
+    if name == result.opportunity.topic:
+        return result
+    return replace(result, opportunity=result.opportunity.model_copy(update={"topic": name}))
 
 
 def apply_topic_name(result: TopicResult, name: str) -> TopicResult:
