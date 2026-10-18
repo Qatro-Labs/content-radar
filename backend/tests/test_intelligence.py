@@ -442,4 +442,4 @@ def test_recommendation_says_which_rule_held():
     advice = recommend(
         ACCELERATING, Confidence.HIGH, audience_fit=90, org_application=1, latam_gap=None
     )
-    assert "organización real" in advice.reason
+    assert "ninguna organización aplicándolo" in advice.reason

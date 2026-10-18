@@ -54,7 +54,9 @@ RECOMMENDATION_TEXT = {
 LATAM_GAP_TEXT = {
     True: "baja: el tema todavía no se cubre en fuentes latinoamericanas (posible oportunidad)",
     False: "alta: el tema ya se cubre en fuentes latinoamericanas",
-    None: "sin datos suficientes para decidirlo",
+    # Hay datos: falta conversación sobre su uso en empresas, o la cobertura regional es parcial.
+    None: "sin decidir: casi no se habla de su uso en empresas, o la cobertura en fuentes "
+    "latinoamericanas es parcial",
 }
 
 
