@@ -243,8 +243,9 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   la izquierda (`flex: 999 1 720px`) el radar **o** el ranking, según una pestaña (18/10: son la misma lista en dos
   formas), con su nota al pie; a la derecha el panel lateral (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: fixed; bottom: 16px`, fuera del flujo). "Para quién
   importa" y "Por qué importa" completos viven en el expediente, no en el Radar.
-  - **Sin scroll en escritorio (≥ 1024 px, 18/10):** la vista ocupa el alto de la ventana y acaba justo encima de la
-    barra de Rad; radar, ranking y panel llenan la fila y desplazan su contenido dentro. El Ranking pagina de 10 en
+  - **Sin scroll en escritorio (≥ 1024 px, 18/10):** la vista ocupa el alto entero de la ventana, con Rad abierto o
+    reducido: la barra flota encima y abrirla no encoge la vista. Radar, ranking y panel llenan la fila y desplazan su
+    contenido dentro. El Ranking pagina de 10 en
     10 y abre la página del tema elegido. Con una ventana muy baja, la fila guarda 440 px y la página vuelve a hacer
     scroll. En móvil la página hace scroll como siempre.
   - **Radar con los 25 primeros (18/10):** sin filtros, solo los 25 primeros por oportunidad; con todos, «Poca
