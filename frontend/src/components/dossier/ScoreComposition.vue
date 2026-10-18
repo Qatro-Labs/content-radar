@@ -39,7 +39,7 @@ const subline = computed(() => compositionSubline(rankText, breakdown.value))
       <div class="flex flex-col gap-3">
         <div v-for="(row, index) in rows" :key="row.name" class="flex items-center gap-3">
           <HoverHint :text="SCORE_COMPONENT_HELP[row.name]">
-            <span class="w-[148px] shrink-0 cursor-help text-sm text-label">{{ row.label }}</span>
+            <span class="w-[164px] shrink-0 cursor-help text-sm text-label">{{ row.label }}</span>
           </HoverHint>
           <span class="h-1.5 grow overflow-hidden rounded-full bg-track" aria-hidden="true">
             <span
@@ -50,7 +50,7 @@ const subline = computed(() => compositionSubline(rankText, breakdown.value))
               }"
             />
           </span>
-          <span class="w-14 shrink-0 text-right text-sm font-semibold whitespace-nowrap">
+          <span class="w-[76px] shrink-0 text-right text-sm font-semibold whitespace-nowrap">
             {{ row.display }}
           </span>
           <span

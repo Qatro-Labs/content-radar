@@ -53,11 +53,13 @@ function copyLink() {
           >
             Cómo se calcula
           </PopoverTrigger>
+          <!-- Sin autofoco: el primer enfocable es el InfoTip, y su tooltip taparía el desglose. -->
           <PopoverContent
             align="start"
             :side-offset="8"
             aria-label="Cómo se calcula la oportunidad"
-            class="w-[460px] p-5"
+            class="w-[500px] p-5"
+            @open-auto-focus.prevent
           >
             <ScoreComposition :opportunity :rank-text="rankText" />
           </PopoverContent>
