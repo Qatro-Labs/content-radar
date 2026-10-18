@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { useElementSize, usePreferredReducedMotion, useTimeoutFn } from '@vueuse/core'
+import {
+  useElementSize,
+  useMediaQuery,
+  usePreferredReducedMotion,
+  useTimeoutFn,
+} from '@vueuse/core'
 import type { ECElementEvent } from 'echarts/core'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
@@ -47,6 +52,9 @@ const SWEEP_END_MS = SWEEP.delayMs + SWEEP.durationMs
 
 const plot = useTemplateRef('plot')
 const { width, height } = useElementSize(plot)
+// En escritorio el Radar cabe en la ventana (App.vue): el área llena el alto que queda en vez de
+// guardar su proporción. En móvil la página hace scroll y la proporción se mantiene.
+const fillsHeight = useMediaQuery('(min-width: 1024px)')
 const plotSize = computed(() => ({ width: width.value, height: height.value }))
 // El gráfico se monta con el tamaño ya medido: las entradas se programan en su primer render, y
 // una actualización a mitad del barrido (las etiquetas al conocer el ancho) las adelantaría.
@@ -104,7 +112,7 @@ const leaveBubble = () => emit('hover', null)
        la página haría scroll horizontal (DESIGN.md §6). -->
   <section
     aria-label="Radar de oportunidades"
-    class="flex min-w-0 flex-col gap-3 overflow-x-clip rounded-card bg-card px-5 pt-5 pb-4"
+    class="flex min-w-0 flex-col gap-3 overflow-x-clip rounded-card bg-card px-5 pt-5 pb-4 lg:min-h-0 lg:flex-1"
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
       <slot name="title">
@@ -122,7 +130,7 @@ const leaveBubble = () => emit('hover', null)
         </li>
       </ul>
     </div>
-    <div class="relative pt-1 pb-[30px] pl-[30px]">
+    <div class="relative flex flex-col pt-1 pb-[30px] pl-[30px] lg:min-h-0 lg:flex-1">
       <HoverHint :text="HELP.axisGrowth">
         <span
           class="absolute top-1/2 left-0 -translate-y-1/2 rotate-180 cursor-help text-[13px] whitespace-nowrap text-muted-foreground [writing-mode:vertical-rl]"
@@ -143,8 +151,8 @@ const leaveBubble = () => emit('hover', null)
            un área estrecha el radar solo crece en alto. -->
       <div
         ref="plot"
-        class="relative isolate min-h-[240px] max-w-full rounded-tile bg-plot"
-        :style="{ aspectRatio: PLOT_ASPECT }"
+        class="relative isolate min-h-[240px] max-w-full rounded-tile bg-plot lg:flex-1"
+        :style="fillsHeight ? undefined : { aspectRatio: PLOT_ASPECT }"
       >
         <div
           class="absolute top-0 right-0 bottom-1/2 left-1/2 rounded-tr-tile bg-signal-wash"

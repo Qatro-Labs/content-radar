@@ -82,7 +82,9 @@ const isSetByRad = computed(
 
 <template>
   <section class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-    <ViewHeader :title="radarHeadline(view, query)">
+    <!-- La frase se parte antes que bajar los contadores a otra fila: cada línea cuenta para
+         que el Radar quepa en la ventana. -->
+    <ViewHeader class="min-w-0 flex-[1_1_420px]" :title="radarHeadline(view, query)">
       {{ radarSubline(view, query) }}
     </ViewHeader>
 

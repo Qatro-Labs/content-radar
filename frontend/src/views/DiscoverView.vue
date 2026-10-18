@@ -65,11 +65,16 @@ function hover(id: string | null) {
 <template>
   <RadarStates v-if="placeholder" :state="placeholder" @retry="refetch()" />
 
-  <div v-else-if="data" class="flex flex-col gap-4">
-    <RadarHero :view :query class="pt-5 pb-1" />
+  <div v-else-if="data" class="flex flex-col gap-4 lg:h-full">
+    <RadarHero :view :query class="shrink-0 pt-2" />
 
-    <div class="flex flex-wrap items-start gap-4">
-      <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-4">
+    <!-- En escritorio la página no hace scroll: radar, ranking y panel llenan el alto que queda y
+         lo que no cabe se desplaza dentro de su tarjeta. Con una ventana muy baja la fila guarda
+         440 px y la página vuelve a hacer scroll, antes que aplastar el radar. -->
+    <div
+      class="flex flex-wrap items-start gap-4 lg:min-h-[440px] lg:flex-1 lg:flex-nowrap lg:items-stretch"
+    >
+      <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-3 lg:min-h-0">
         <!-- Radar y ranking son la misma lista en dos formas: una pestaña elige cuál ocupa el
              área grande; filtros, selección y panel se mantienen. Es el bloque principal de Rad. -->
         <div
@@ -77,6 +82,7 @@ function hover(id: string | null) {
           :data-agent="AGENT_ANCHOR.radar"
           role="tabpanel"
           :aria-labelledby="tabId(query.tab)"
+          class="flex flex-col lg:min-h-0 lg:flex-1"
         >
           <OpportunityRadar
             v-if="query.tab === 'radar'"
@@ -100,7 +106,7 @@ function hover(id: string | null) {
             <template #title><RadarTabs /></template>
           </OpportunityRanking>
         </div>
-        <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
+        <RadarFootnote class="shrink-0" :monitoring-started-at="data.monitoring_started_at" />
       </div>
 
       <RadarSidePanel

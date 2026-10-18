@@ -23,10 +23,11 @@ const previewed = computed(() => peeked ?? view.selected)
 </script>
 
 <template>
-  <!-- DESIGN.md §4: sticky, visible mientras se baja por el radar o el ranking. -->
+  <!-- DESIGN.md §4: siempre a la vista. En escritorio toma el alto de la fila y desplaza su
+       contenido dentro; en móvil, sticky mientras se baja. -->
   <aside
     aria-label="Panel del tema"
-    class="sticky top-4 flex min-w-0 flex-[1_1_360px] flex-col self-start rounded-card bg-card p-[22px]"
+    class="sticky top-4 flex min-w-0 flex-[1_1_360px] flex-col self-start rounded-card bg-card p-[22px] lg:static lg:min-h-0 lg:self-stretch lg:overflow-y-auto"
   >
     <!-- DESIGN.md §7: cambia de estado con fundido y 6 px de subida (280 ms). La vista previa no
          se remonta al cambiar de tema: así el anillo cuenta hasta el nuevo valor. -->

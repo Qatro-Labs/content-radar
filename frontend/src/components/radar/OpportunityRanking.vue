@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ChevronLeft, ChevronRight } from '@lucide/vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import { useAllTimelines, type QueryState } from '@/api/opportunities'
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import InfoTip from '@/components/layout/InfoTip.vue'
 import { formatUtcDay } from '@/lib/format'
 import { HELP } from '@/lib/helpText'
+import { rowAnchor } from '@/lib/agentTargets'
 import { resetViewPatch } from '@/lib/radarQuery'
 import type { RankedOpportunity } from '@/lib/radarView'
 import type { components } from '@/types/api'
@@ -36,21 +38,49 @@ const COLUMNS = [
   { label: 'Recomendación', name: 'la recomendación', help: HELP.colRecommendation },
   { label: 'Oportunidad', name: 'la oportunidad', help: HELP.colScore },
 ] as const
-// DESIGN.md §4: el ranking enseña 10 filas y el resto se despliega.
-const COLLAPSED_ROWS = 10
+// 10 temas por página para no saturar; en escritorio las filas se desplazan dentro de la tarjeta.
+const PAGE_SIZE = 10
 
-const isExpanded = ref(false)
-// Vuelve a 10 filas cuando cambia lo que entra en el ranking, no al seleccionar ni al pasar por
-// encima (cambian la URL o el estado, pero no las filas).
+const page = ref(0)
+const pageCount = computed(() => Math.max(1, Math.ceil(rows.length / PAGE_SIZE)))
+const pageRows = computed(() => rows.slice(page.value * PAGE_SIZE, (page.value + 1) * PAGE_SIZE))
+const pageRange = computed(() => {
+  const first = page.value * PAGE_SIZE + 1
+  const last = Math.min(rows.length, first + PAGE_SIZE - 1)
+  return `${first}–${last} de ${rows.length}`
+})
+
+const scroller = useTemplateRef<HTMLElement>('scroller')
+
+function goTo(target: number) {
+  page.value = Math.min(Math.max(target, 0), pageCount.value - 1)
+  scroller.value?.scrollTo({ top: 0 })
+}
+
+// Vuelve a la primera página cuando cambia lo que entra en el ranking (filtros, orden), no al
+// seleccionar ni al pasar por encima.
 watch(
   () => rows.map((row) => row.id).join(),
-  () => {
-    isExpanded.value = false
-  },
+  () => goTo(0),
 )
 
-const isCollapsible = computed(() => rows.length > COLLAPSED_ROWS)
-const shownRows = computed(() => (isExpanded.value ? rows : rows.slice(0, COLLAPSED_ROWS)))
+// Un tema elegido en el radar, en el panel o por Rad abre su página y su fila se trae a la vista.
+watch(
+  () => [selectedId, rows] as const,
+  async ([id]) => {
+    const index = id ? rows.findIndex((row) => row.id === id) : -1
+    if (index < 0) return
+    page.value = Math.floor(index / PAGE_SIZE)
+    await nextTick()
+    const row = scroller.value?.querySelector(`[data-agent="${CSS.escape(rowAnchor(id!))}"]`)
+    row?.scrollIntoView({ block: 'nearest' })
+  },
+  { immediate: true, flush: 'post' },
+)
+
+const PAGE_BUTTON_CLASS =
+  'flex size-9 items-center justify-center rounded-[10px] text-sm font-semibold transition-colors duration-150 ease-out hover:bg-secondary disabled:pointer-events-none disabled:opacity-35'
+
 const isEmptyAfterFilter = computed(() => isFiltered && rows.length === 0)
 
 const {
@@ -85,9 +115,9 @@ const barsNote = computed(() => {
   <section
     data-agent="ranking"
     aria-label="Ranking"
-    class="flex min-w-0 flex-col rounded-card bg-card"
+    class="flex min-w-0 flex-col rounded-card bg-card lg:min-h-0 lg:flex-1"
   >
-    <div class="flex flex-col gap-1 px-4 pt-5 pb-3">
+    <div class="flex flex-col gap-1 px-4 pt-5 pb-3 lg:min-h-0 lg:flex-1">
       <div class="flex flex-wrap items-center justify-between gap-3 pb-2">
         <slot name="title">
           <h2
@@ -112,7 +142,7 @@ const barsNote = computed(() => {
       </div>
 
       <template v-else>
-        <div class="overflow-x-auto">
+        <div ref="scroller" class="overflow-x-auto lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           <div class="min-w-[720px]">
             <div
               class="sticky top-0 z-[1] bg-card py-2 text-[13px] text-muted-foreground"
@@ -124,7 +154,7 @@ const barsNote = computed(() => {
               </span>
             </div>
             <RankingRow
-              v-for="(row, index) in shownRows"
+              v-for="(row, index) in pageRows"
               :key="row.id"
               :row
               :index
@@ -134,17 +164,51 @@ const barsNote = computed(() => {
               @select="(id) => emit('select', id)"
               @hover="(id) => emit('hover', id)"
             />
-            <button
-              v-if="isCollapsible"
-              type="button"
-              :aria-expanded="isExpanded"
-              class="mx-auto mt-2 flex min-h-10 items-center rounded-[10px] bg-secondary px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
-              @click="isExpanded = !isExpanded"
-            >
-              {{ isExpanded ? 'Ver menos' : `Ver los ${rows.length} temas` }}
-            </button>
           </div>
         </div>
+        <nav
+          v-if="pageCount > 1"
+          aria-label="Páginas del ranking"
+          class="flex shrink-0 items-center justify-between gap-3 border-t border-table-line px-1 pt-3"
+        >
+          <span class="text-[13px] text-muted-foreground">Temas {{ pageRange }}</span>
+          <span class="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Página anterior"
+              :disabled="page === 0"
+              :class="PAGE_BUTTON_CLASS"
+              @click="goTo(page - 1)"
+            >
+              <ChevronLeft class="size-4" aria-hidden="true" />
+            </button>
+            <button
+              v-for="index in pageCount"
+              :key="index"
+              type="button"
+              :aria-label="`Página ${index}`"
+              :aria-current="page === index - 1 ? 'page' : undefined"
+              :class="[
+                PAGE_BUTTON_CLASS,
+                page === index - 1
+                  ? 'bg-foreground text-primary-foreground hover:bg-foreground'
+                  : '',
+              ]"
+              @click="goTo(index - 1)"
+            >
+              {{ index }}
+            </button>
+            <button
+              type="button"
+              aria-label="Página siguiente"
+              :disabled="page === pageCount - 1"
+              :class="PAGE_BUTTON_CLASS"
+              @click="goTo(page + 1)"
+            >
+              <ChevronRight class="size-4" aria-hidden="true" />
+            </button>
+          </span>
+        </nav>
       </template>
     </div>
   </section>

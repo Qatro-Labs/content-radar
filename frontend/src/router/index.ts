@@ -19,7 +19,8 @@ export const router = createRouter({
     return false
   },
   routes: [
-    { path: '/', name: RouteName.Discover, component: DiscoverView },
+    // El Radar cabe en la ventana en escritorio: lo largo se desplaza dentro de su tarjeta.
+    { path: '/', name: RouteName.Discover, component: DiscoverView, meta: { fitsViewport: true } },
     {
       path: '/explore',
       name: RouteName.Explore,

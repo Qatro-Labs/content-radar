@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useElementBounding, useMouse, usePreferredReducedMotion } from '@vueuse/core'
 import { computed, useTemplateRef } from 'vue'
+import { useRoute } from 'vue-router'
 
 import AgentDock from '@/components/agent/AgentDock.vue'
 import AgentLauncher from '@/components/agent/AgentLauncher.vue'
@@ -43,9 +44,16 @@ const lookAt = computed(() => {
 
 // La barra es fija y flota sobre la página: el final de la página deja sitio solo para el campo
 // (o para el ojo, con la barra reducida), nunca para la conversación entera.
+const route = useRoute()
+const fitsViewport = computed(() => route.meta.fitsViewport === true)
+
 const bottomSpace = computed(() => {
   if (!isAvailable.value) return ''
-  return isMinimized.value ? 'pb-20' : 'pb-44'
+  const scrolling = isMinimized.value ? 'pb-20' : 'pb-44'
+  // Sin scroll, debajo de la barra no puede quedar nada: la vista acaba justo encima de ella (el
+  // campo mide unos 72 px y flota a 24 px del borde, que ya es el padding de la raíz).
+  if (!fitsViewport.value) return scrolling
+  return isMinimized.value ? `${scrolling} lg:pb-0` : `${scrolling} lg:pb-[80px]`
 })
 
 // La marca de Rad refleja lo que hace: se abre en radar mientras trabaja, el haz pasa en cada
@@ -68,9 +76,10 @@ const mark = computed<RadMarkState>(() => {
     ref="root"
     data-agent-root
     class="relative mx-auto flex min-h-[100dvh] max-w-[1440px] flex-col gap-6 px-4 py-4 md:px-8 md:py-6"
+    :class="{ 'lg:h-[100dvh]': fitsViewport }"
   >
     <AppHeader />
-    <main class="flex-1" :class="bottomSpace">
+    <main class="flex-1" :class="[bottomSpace, { 'lg:min-h-0': fitsViewport }]">
       <RouterView />
     </main>
     <!-- Reducir la barra: el ojo de Rad sale volando de ella hasta la esquina; abrirla, vuelve
