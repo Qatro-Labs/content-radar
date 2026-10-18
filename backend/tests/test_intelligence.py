@@ -4,7 +4,12 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
+from app.intelligence.audience_mix import (
+    audience_mix,
+    has_business_conversation,
+    latam_gap,
+    latam_share,
+)
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
 from app.intelligence.lifecycle import ACCELERATION_MAX_P, classify
 from app.intelligence.outliers import (
@@ -213,7 +218,7 @@ def test_audience_mix_weighted_and_sums_to_one():
 def test_audience_mix_empty():
     assert audience_mix([]) is None
     assert latam_share([]) is None
-    assert latam_gap(None, None) is None
+    assert latam_gap(True, None) is None
 
 
 def test_latam_share_counts_only_latin_american_regions():
@@ -223,18 +228,37 @@ def test_latam_share_counts_only_latin_american_regions():
 
 
 def test_latam_gap():
-    gap = audience_mix([(Segment.BUSINESS, 1), (Segment.TECH, 3)])
-    tech_only = audience_mix([(Segment.TECH, 1)])
-    assert latam_gap(gap, 0.0) is True
-    assert latam_gap(gap, 0.5) is False  # ya cubierto en la región
-    assert latam_gap(tech_only, 0.0) is None
+    assert latam_gap(True, 0.0) is True
+    assert latam_gap(True, 0.5) is False  # ya cubierto en la región
+    assert latam_gap(False, 0.5) is False
+    assert latam_gap(False, 0.0) is None  # sin conversación de negocio no se decide
+
+
+def test_business_conversation_comes_from_jev_when_it_judged():
+    tech_sources = audience_mix([(Segment.TECH, 1)])
+    business_sources = audience_mix([(Segment.BUSINESS, 1)])
+    assert tech_sources is not None and business_sources is not None
+    # Fuentes tech, pero 3 de 5 piezas tratan del uso en organizaciones: hay negocio.
+    assert has_business_conversation(tech_sources, [True, True, True, False, False])
+    # Fuentes de negocio, pero Jev no ve uso en organizaciones en ninguna pieza: no lo hay.
+    assert not has_business_conversation(business_sources, [False, False, None])
+    # Una sola pieza no es conversación, aunque la proporción pase el umbral.
+    assert not has_business_conversation(tech_sources, [True, False, None])
+
+
+def test_business_conversation_falls_back_to_the_source_segment():
+    # Sin juicios de Jev (sin clave o todo incierto), decide el segmento de la fuente.
+    business_sources = audience_mix([(Segment.BUSINESS, 1), (Segment.TECH, 3)])
+    tech_sources = audience_mix([(Segment.TECH, 1)])
+    assert business_sources is not None and tech_sources is not None
+    assert has_business_conversation(business_sources, [None, None])
+    assert not has_business_conversation(tech_sources, [])
 
 
 def test_spanish_coverage_does_not_close_the_latam_gap():
     # Mucho latam_es, pero todo de España: el gap sigue abierto.
-    mix = audience_mix([(Segment.BUSINESS, 1), (Segment.LATAM_ES, 1)])
     share = latam_share([("global", 1), ("es", 1)])
-    assert latam_gap(mix, share) is True
+    assert latam_gap(True, share) is True
 
 
 # --- cross source / saturation ---

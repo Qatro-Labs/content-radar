@@ -512,3 +512,22 @@ def test_replicas_do_not_count_as_evidence_of_acceleration():
     )  # fmt: skip
     assert r.opportunity.lifecycle is Lifecycle.UNKNOWN
     assert "sin demostrar" in r.opportunity.lifecycle_reason
+
+
+def test_jev_business_use_opens_the_latam_gap_without_business_sources():
+    topic, background = _rising_topic()
+    cluster = [list(range(len(topic)))]
+    without_jev = build_opportunities(
+        topic + background, cluster, [0], as_of=AS_OF, monitoring_started_at=STARTED
+    )[0].opportunity
+    labels = {p.item_id: True for p in topic[:3]} | {p.item_id: None for p in topic[3:]}
+    with_jev = build_opportunities(
+        topic + background, cluster, [0], as_of=AS_OF, monitoring_started_at=STARTED,
+        business_use=labels,
+    )[0].opportunity  # fmt: skip
+    assert with_jev.audience_mix.business == 0  # ninguna fuente es de segmento business
+    assert without_jev.latam_gap is None
+    assert with_jev.latam_gap is True
+    assert with_jev.description.endswith(
+        "3 de 3 piezas clasificadas tratan del uso de la IA en organizaciones."
+    )
