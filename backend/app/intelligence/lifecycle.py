@@ -66,7 +66,7 @@ def classify(
     if accelerating and p_value <= ACCELERATION_MAX_P:
         return Stage(
             Lifecycle.ACCELERATING,
-            f"Aceleración {acceleration:+.2f} ≥ {ACCELERATING_MIN_ACCEL} (p = {p_value:.2f}) y "
+            f"Aceleración {acceleration:+.2f} ≥ {ACCELERATING_MIN_ACCEL} ({_p_text(p_value)}) y "
             f"{source_count} fuentes independientes (≥ {ACCELERATING_MIN_SOURCES}).",
         )
     if (
@@ -76,15 +76,15 @@ def classify(
     ):
         return Stage(
             Lifecycle.EMERGING,
-            f"Aceleración {acceleration:+.2f} > 0 (p = {p_value:.2f}), {source_count} fuentes "
+            f"Aceleración {acceleration:+.2f} > 0 ({_p_text(p_value)}), {source_count} fuentes "
             f"independientes (≤ {EMERGING_MAX_SOURCES}) y saturación {saturation:.0f} "
             f"< {EMERGING_MAX_SATURATION}.{_unproven_note(p_value)}",
         )
     if accelerating:
         return Stage(
             Lifecycle.UNKNOWN,
-            f"Aceleración {acceleration:+.2f} sin demostrar: p = {p_value:.2f} > "
-            f"{ACCELERATION_MAX_P}, con tan pocas piezas la subida puede ser azar.",
+            f"Aceleración {acceleration:+.2f} sin demostrar: {_p_text(p_value)} > "
+            f"{ACCELERATION_MAX_P:.2f}, con tan pocas piezas la subida puede ser azar.",
         )
     if acceleration < 0:
         # Sin etapa `declining` en el contrato: el texto explica que el tema se enfría.
@@ -104,3 +104,12 @@ def _unproven_note(p_value: float) -> str:
     if p_value <= ACCELERATION_MAX_P:
         return ""
     return " Señal temprana: con tan pocas piezas, la subida aún puede ser azar."
+
+
+def _p_text(p_value: float) -> str:
+    # Con dos decimales, p = 0.004 se leería "p = 0.00" y p = 0.103 "p = 0.10 > 0.10".
+    if round(p_value, 2) == 0:
+        return "p < 0.01"
+    if p_value > ACCELERATION_MAX_P and round(p_value, 2) <= ACCELERATION_MAX_P:
+        return f"p = {p_value:.3f}"
+    return f"p = {p_value:.2f}"

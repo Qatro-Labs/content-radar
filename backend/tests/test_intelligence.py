@@ -205,6 +205,12 @@ def test_accelerating_needs_a_significant_acceleration():
     )
 
 
+def test_p_value_text_never_reads_as_zero_or_ties_the_threshold():
+    assert "(p < 0.01)" in stage(acc=0.6, sat=50, sources=3, p=0.004).reason
+    assert "p = 0.27 > 0.10," in stage(acc=0.6, sat=50, sources=3, p=0.27).reason
+    assert "p = 0.103 > 0.10," in stage(acc=0.6, sat=50, sources=3, p=0.103).reason
+
+
 def test_emerging_warns_instead_of_gating():
     # Temprano por definición: queda emerging, pero la razón avisa de que puede ser azar.
     unproven = stage(acc=0.6, sat=30, sources=2, p=0.27)
