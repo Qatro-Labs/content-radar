@@ -166,20 +166,27 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **Error:** inline, en la tarjeta afectada, con qué falló y qué sigue funcionando.
 - **Foco:** anillo de 2px en Tinta con 2px de separación, siempre visible al navegar con teclado.
 
-**Radar y agente**
+**Radar y agente (Rad)**
+
+El agente se llama **Rad** y vive en Radar, Explorar y el expediente (no en Crear). Sus pantallas y su movimiento se
+decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 
 - **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando»,
   «Emergentes» y «Sin etapa» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`. La leyenda de etapas pasa
   a la cabecera de la tarjeta del radar (chips no interactivos). "Hueco en LATAM" sale de la vista mientras
   `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
-  filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista" (o la frase "Filtros
-  puestos por el agente").
+  filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista"; si la vista es justo
+  la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
 - **Barra de pregunta:** fija abajo y centrada (ancho máximo 840px), tarjeta blanca de radio 20px con la sombra
-  flotante (§5), porque flota sobre la página. De izquierda a derecha: la marca del agente (cuadrado Tinta de 40px y
-  radio 11px con un punto Lima de 12px), el campo (#F2F3F5, radio 12px, alto 48px, placeholder en Apagado) y el
-  primario "Preguntar", que pasa a secundario "Detener" mientras el agente trabaja. Debajo, en 13px Apagado: "El
-  agente lee las mismas oportunidades que ves y usa los mismos controles". En reposo, encima del campo, 2–4
-  preguntas sugeridas (botones #F2F3F5, radio 10px, alto 40px).
+  flotante (§5), porque flota sobre la página. De izquierda a derecha: la marca de Rad, el campo (#F2F3F5, radio
+  12px, alto 48px, placeholder "Pregúntale a Rad: …" en Apagado) y el primario "Preguntar", que pasa a secundario
+  "Detener" mientras Rad trabaja. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los
+  mismos controles". En reposo, encima del campo, 3 preguntas sugeridas según el contexto (botones #F2F3F5, radio
+  10px, alto 40px): generales en el Radar, del tema con un tema abierto, de búsqueda en Explorar. Con la conversación
+  en marcha solo quedan las del tema.
+- **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
+  un ojo que mira hacia donde está su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
+  sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles.
 - **Transcripción del agente** (dentro de la barra, encima del campo; alto máximo 46vh con scroll):
   - la pregunta en Bricolage 19px;
   - los pasos: hecho = check en Tinta suave; en curso = punto Tinta de 9px y peso 600. Cada paso lleva su etiqueta:
@@ -187,13 +194,16 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   - la respuesta en Geist 16px / 1.55, Tinta de lectura, ancho ≤ 720px;
   - al terminar: "Citadas" (chips #F2F3F5 con el punto de etapa y la cifra de oportunidad; seleccionan la
     oportunidad), el bloque "Qué no sabemos" y dos enlaces: "Copiar enlace a esta vista" y "Hacer esta pregunta desde
-    Claude o ChatGPT (MCP)". Los pasos se pliegan en una línea subrayada ("Hizo 6 pasos: 3 de datos y 3 en la
-    vista") que los vuelve a abrir.
+    un asistente (MCP)" (copia la pregunta y abre `docs/mcp.md`; nombrará un cliente cuando haya uno probado). Los
+    pasos se pliegan en una línea subrayada ("Hizo 6 pasos: 3 de datos y 3 en la vista") que los vuelve a abrir;
+  - una conversación: los turnos anteriores quedan plegados encima del actual y "Nueva conversación" los borra.
 - **Presencia del agente:** un punto Lima de 16px con anillo de Tinta de 2px y la sombra flotante, más un rótulo en
   píldora Tinta (radio 10px, texto blanco 13px/600) con el paso en curso ("Pulsando «Hueco en LATAM»"). Al actuar
   sobre una sección o un control, la rodea un **anillo de foco** de 2px en Tinta, separado 5–6px y con el radio del
   objetivo más 6px. Sobre una burbuja no hay anillo de foco: basta la selección. Al pulsar algo deja una onda de
-  Tinta.
+  Tinta. Para cambiar de pantalla, la presencia pulsa el control que lleva allí ("Ver expediente →" de la vista
+  previa o "Explorar" en la navegación) y, en la pantalla nueva, va a la sección que Rad nombra (composición del
+  score, evolución, encaje, evidencia o "Qué no sabemos") o a la tabla de piezas con la búsqueda puesta.
 
 ## 5. Layout, espaciado y elevación
 
@@ -278,7 +288,7 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - Si el objetivo no está a la vista, la página hace scroll suave hasta dejarlo centrado por encima de la barra de
   pregunta. Solo se desplaza la ventana de la app.
 - Filtros y resaltados **atenúan, no ocultan**: lo que no entra baja a opacidad 0.16 en 320ms, sin etiqueta ni
-  latido, para que el radar no pierda contexto.
+  latido, para que el radar no pierda contexto. Lo resaltado nunca se atenúa, aunque no entre en el filtro.
 - Los pasos entran con fundido y 4px de subida (300ms). La respuesta aparece palabra a palabra (unos 45ms por
   palabra) y los bloques del final, escalonados 80ms.
 - Sin spinners ni puntos de "escribiendo" que parpadean: el estado lo dicen el paso en curso y la presencia.
