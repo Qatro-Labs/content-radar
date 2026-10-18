@@ -25,7 +25,7 @@ onKeyStroke(['k', 'K'], (event) => {
 
 <template>
   <Dialog v-model:open="open">
-    <!-- Por debajo de 768px solo queda la lupa: el nombre accesible va siempre en aria-label. -->
+    <!-- Por debajo de 1024px solo queda la lupa: el nombre accesible va siempre en aria-label. -->
     <!-- El tooltip envuelve al disparador del diálogo: los dos se funden en el mismo botón. -->
     <HoverHint :text="HELP.search">
       <DialogTrigger as-child>
@@ -33,12 +33,12 @@ onKeyStroke(['k', 'K'], (event) => {
           type="button"
           :aria-label="LABEL"
           aria-keyshortcuts="Meta+K Control+K"
-          class="flex h-11 min-w-11 shrink-0 items-center justify-center gap-2.5 rounded-xl bg-card px-3 text-sm text-muted-foreground transition-colors duration-150 ease-out hover:bg-secondary-hover md:w-[280px] md:shrink"
+          class="flex h-11 min-w-11 shrink-0 items-center justify-center gap-2.5 rounded-xl bg-card px-3 text-sm text-muted-foreground transition-colors duration-150 ease-out hover:bg-secondary-hover lg:w-[280px] lg:shrink"
         >
           <Search class="size-4 shrink-0" :stroke-width="2" aria-hidden="true" />
-          <span class="hidden flex-1 truncate text-left md:inline">{{ LABEL }}</span>
+          <span class="hidden flex-1 truncate text-left lg:inline">{{ LABEL }}</span>
           <kbd
-            class="hidden rounded-md bg-secondary px-[7px] py-0.5 font-sans text-[12.5px] font-semibold text-label md:inline"
+            class="hidden rounded-md bg-secondary px-[7px] py-0.5 font-sans text-[12.5px] font-semibold text-label lg:inline"
           >
             ⌘K
           </kbd>
