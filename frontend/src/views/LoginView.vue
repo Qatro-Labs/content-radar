@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useId } from 'vue'
+import { ref, useId, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -19,7 +19,7 @@ const LABEL_CLASS = 'text-[13px] font-semibold text-label'
 
 const route = useRoute()
 const router = useRouter()
-const { isConfigured, isReady, isSignedIn, email: signedInEmail, signIn, signOut } = useAuth()
+const { isConfigured, isReady, isSignedIn, signIn } = useAuth()
 
 const emailId = useId()
 const passwordId = useId()
@@ -32,6 +32,9 @@ function goToApp() {
   const redirect = safeRedirect(route.query[REDIRECT_PARAM])
   return router.replace(redirect ?? { name: RouteName.Discover })
 }
+
+// Con sesión, el login no tiene nada que enseñar: al entrar y al abrir /login ya con sesión.
+watch(isSignedIn, (signedIn) => signedIn && goToApp(), { immediate: true })
 
 async function submit() {
   if (isSubmitting.value) return
@@ -48,7 +51,6 @@ async function submit() {
     return
   }
   password.value = ''
-  await goToApp()
 }
 </script>
 
@@ -69,24 +71,10 @@ async function submit() {
       </RouterLink>
     </section>
 
-    <!-- Hasta saber si ya hay sesión, ni el formulario ni «Sesión iniciada». -->
-    <div v-else-if="!isReady" aria-busy="true" aria-label="Comprobando la sesión">
+    <!-- Hasta saber si ya hay sesión (o mientras se sale hacia la app), sin formulario. -->
+    <div v-else-if="!isReady || isSignedIn" aria-busy="true" aria-label="Comprobando la sesión">
       <SkeletonBone class="h-[360px] rounded-card" />
     </div>
-
-    <section v-else-if="isSignedIn" :class="CARD_CLASS" class="flex-col gap-3">
-      <h1 :class="CARD_TITLE_CLASS">Sesión iniciada</h1>
-      <p class="text-[15px] text-ink-soft">
-        Entraste como <span class="font-semibold text-foreground">{{ signedInEmail }}</span
-        >.
-      </p>
-      <div class="mt-2 flex flex-wrap gap-2">
-        <button type="button" :class="PRIMARY_BUTTON_CLASS" @click="goToApp">Ir al Radar</button>
-        <button type="button" :class="SECONDARY_BUTTON_CLASS" @click="signOut">
-          Cerrar sesión
-        </button>
-      </div>
-    </section>
 
     <form
       v-else
