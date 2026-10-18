@@ -86,6 +86,15 @@ export function formatRatio(ratio: number): string {
   return `${formatDecimal(ratio)}×`
 }
 
+// Sin ratio no hay rendimiento que comparar: esas piezas van al final, nunca como si fueran 0.
+export function compareRatios(a: Evidence, b: Evidence): number {
+  const ratioA = a.outlier_ratio ?? null
+  const ratioB = b.outlier_ratio ?? null
+  if (ratioA !== null && ratioB !== null) return ratioB - ratioA
+  if (ratioA === ratioB) return 0
+  return ratioA === null ? 1 : -1
+}
+
 // CLAUDE.md §7: ≥ 3× es outlier (lo decide la API con `is_outlier`) y ≥ 2× es destacada.
 export const HIGHLIGHT_RATIO_MIN = 2
 

@@ -141,10 +141,42 @@ describe('buildExploreView', () => {
   })
 
   it('counts every piece regardless of the active filter', () => {
-    const expected = { total: 6, outliers: 2, youtube: 2, hackernews: 2, rss: 2 }
+    const expected = {
+      total: 6,
+      outliers: 2,
+      platforms: [
+        { platform: 'youtube', count: 2 },
+        { platform: 'hackernews', count: 2 },
+      ],
+      rss: 2,
+    }
 
     expect(view().counts).toEqual(expected)
     expect(view('youtube').counts).toEqual(expected)
+  })
+
+  it('counts only platforms with pieces, from most to fewest', () => {
+    const scrapeCreators = inTopic('opp_a', [
+      piece('https://tiktok.com/@a/video/1', { platform: 'tiktok' }),
+      piece('https://tiktok.com/@a/video/2', { platform: 'tiktok' }),
+      piece('https://tiktok.com/@a/video/3', { platform: 'tiktok' }),
+      piece('https://reddit.com/r/a/1', { platform: 'reddit' }),
+    ])
+    const counted = buildExploreView({
+      opportunities,
+      evidence: [...evidence, ...scrapeCreators],
+      filter: 'tiktok',
+      text: '',
+    })
+
+    expect(counted.counts.platforms).toEqual([
+      { platform: 'tiktok', count: 3 },
+      { platform: 'youtube', count: 2 },
+      { platform: 'hackernews', count: 2 },
+      { platform: 'reddit', count: 1 },
+    ])
+    expect(urls(counted.visible)).toHaveLength(3)
+    expect(counted.visible.every((item) => item.platform === 'tiktok')).toBe(true)
   })
 
   it.each([
@@ -262,6 +294,7 @@ describe('buildExploreView', () => {
 describe('parseExploreFilter', () => {
   it.each([
     ['a valid filter', { filter: 'youtube' }, 'youtube'],
+    ['a ScrapeCreators platform', { filter: 'tiktok' }, 'tiktok'],
     ['an unknown filter', { filter: 'rss' }, null],
     ['no filter', {}, null],
     ['a repeated param', { filter: ['outliers', 'youtube'] }, 'outliers'],
@@ -283,7 +316,7 @@ describe('parseExploreText', () => {
 describe('exploreSummary', () => {
   it('describes the served pieces with the real figures', () => {
     const summary = exploreSummary({
-      counts: { total: 356, outliers: 27, youtube: 96, hackernews: 145, rss: 115 },
+      counts: { total: 356, outliers: 27, platforms: [], rss: 115 },
       topicsWithPiecesCount: 38,
       publishedRange: { from: '04/10', to: '17/10' },
       isCapped: true,
@@ -297,7 +330,7 @@ describe('exploreSummary', () => {
 
   it('uses the singular for one piece, one topic and one day', () => {
     const summary = exploreSummary({
-      counts: { total: 1, outliers: 1, youtube: 1, hackernews: 0, rss: 0 },
+      counts: { total: 1, outliers: 1, platforms: [], rss: 0 },
       topicsWithPiecesCount: 1,
       publishedRange: { from: '07/10', to: '07/10' },
       isCapped: false,
@@ -308,7 +341,7 @@ describe('exploreSummary', () => {
 
   it('groups thousands', () => {
     const summary = exploreSummary({
-      counts: { total: 1363, outliers: 0, youtube: 0, hackernews: 1363, rss: 0 },
+      counts: { total: 1363, outliers: 0, platforms: [], rss: 0 },
       topicsWithPiecesCount: 60,
       publishedRange: { from: '01/10', to: '17/10' },
       isCapped: false,

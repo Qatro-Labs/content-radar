@@ -2,15 +2,27 @@ import type { LocationQuery } from 'vue-router'
 
 import type { components } from '@/types/api'
 
-import { countLabel, EVIDENCE_LIMIT, formatCount } from './evidenceFormat'
+import { compareRatios, countLabel, EVIDENCE_LIMIT, formatCount } from './evidenceFormat'
 import { formatUtcDay } from './format'
 
 type Schemas = components['schemas']
 type Evidence = Schemas['Evidence']
 type TopicEvidence = Schemas['TopicEvidence']
 type Opportunity = Schemas['Opportunity']
+type Platform = Schemas['Platform']
 
-export const EXPLORE_FILTERS = ['outliers', 'youtube', 'hackernews'] as const
+// Las plataformas con métricas públicas, que son las que tiene sentido filtrar por rendimiento.
+// RSS no publica métricas; Brave solo guarda agregados y LinkedIn no entra en el MVP.
+export const FILTERABLE_PLATFORMS = [
+  'youtube',
+  'hackernews',
+  'tiktok',
+  'reddit',
+  'instagram',
+] as const satisfies readonly Platform[]
+export type FilterablePlatform = (typeof FILTERABLE_PLATFORMS)[number]
+
+export const EXPLORE_FILTERS = ['outliers', ...FILTERABLE_PLATFORMS] as const
 export type ExploreFilter = (typeof EXPLORE_FILTERS)[number]
 export const EXPLORE_FILTER_PARAM = 'filter'
 // El texto va en la URL para que la paleta ⌘K pueda abrir Explorar con una fuente ya filtrada.
@@ -22,11 +34,16 @@ const TOP_LIMIT = 5
 // Una URL puede estar en la evidencia de varios temas: cada pieza se atribuye a uno solo.
 export type Piece = Evidence & { opportunity: Opportunity; rank: number }
 
+export interface PlatformCount {
+  platform: FilterablePlatform
+  count: number
+}
+
 export interface ExploreCounts {
   total: number
   outliers: number
-  youtube: number
-  hackernews: number
+  // Solo las plataformas con piezas, de más a menos: una sin piezas no tiene baldosa.
+  platforms: PlatformCount[]
   rss: number
 }
 
@@ -84,10 +101,8 @@ export function parseExploreText(query: LocationQuery): string {
 }
 
 // `is_outlier` lo decide la API (≥ 3×, CLAUDE.md §7): el front no recalcula el umbral.
-const FILTER_MATCHES: Record<ExploreFilter, (piece: Evidence) => boolean> = {
-  outliers: (piece) => piece.is_outlier === true,
-  youtube: (piece) => piece.platform === 'youtube',
-  hackernews: (piece) => piece.platform === 'hackernews',
+function matchesFilter(filter: ExploreFilter, piece: Evidence): boolean {
+  return filter === 'outliers' ? piece.is_outlier === true : piece.platform === filter
 }
 
 // NFD separa la tilde de su letra ("á" → "a" + U+0301); quitar las marcas deja "a".
@@ -133,15 +148,6 @@ export function collectPieces(loaded: LoadedEvidence): Piece[] {
   return uniquePieces(piecesByTopic(loaded))
 }
 
-// Sin ratio no hay rendimiento que comparar: esas piezas van al final, nunca como si fueran 0.
-function compareRatios(a: Piece, b: Piece): number {
-  const ratioA = a.outlier_ratio ?? null
-  const ratioB = b.outlier_ratio ?? null
-  if (ratioA !== null && ratioB !== null) return ratioB - ratioA
-  if (ratioA === ratioB) return 0
-  return ratioA === null ? 1 : -1
-}
-
 function byRatioThenRecency(a: Piece, b: Piece): number {
   return compareRatios(a, b) || Date.parse(b.published_at) - Date.parse(a.published_at)
 }
@@ -155,12 +161,21 @@ function countPieces(pieces: Piece[], matches: (piece: Piece) => boolean): numbe
   return pieces.filter(matches).length
 }
 
+// `sort` es estable: a igualdad de piezas, las plataformas conservan el orden de la lista.
+function countByPlatform(pieces: Piece[]): PlatformCount[] {
+  return FILTERABLE_PLATFORMS.map((platform) => ({
+    platform,
+    count: countPieces(pieces, (piece) => piece.platform === platform),
+  }))
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => b.count - a.count)
+}
+
 function countByKind(pieces: Piece[]): ExploreCounts {
   return {
     total: pieces.length,
-    outliers: countPieces(pieces, FILTER_MATCHES.outliers),
-    youtube: countPieces(pieces, FILTER_MATCHES.youtube),
-    hackernews: countPieces(pieces, FILTER_MATCHES.hackernews),
+    outliers: countPieces(pieces, (piece) => matchesFilter('outliers', piece)),
+    platforms: countByPlatform(pieces),
     rss: countPieces(pieces, (piece) => piece.platform === 'rss'),
   }
 }
@@ -184,7 +199,7 @@ function topicsWithMostOutliers(opportunities: readonly Opportunity[]): Opportun
 
 function sourcesWithMostOutliers(pieces: Piece[]): SourceOutliers[] {
   const counts = new Map<string, number>()
-  for (const piece of pieces.filter(FILTER_MATCHES.outliers)) {
+  for (const piece of pieces.filter((item) => matchesFilter('outliers', item))) {
     counts.set(piece.source, (counts.get(piece.source) ?? 0) + 1)
   }
   const top = [...counts]
@@ -197,9 +212,8 @@ function sourcesWithMostOutliers(pieces: Piece[]): SourceOutliers[] {
 
 function filterPieces(pieces: Piece[], { filter, text }: ExploreInput): Piece[] {
   const foldedText = foldForSearch(text.trim())
-  const filterMatches = filter === null ? null : FILTER_MATCHES[filter]
   return pieces.filter(
-    (piece) => (filterMatches === null || filterMatches(piece)) && matchesText(piece, foldedText),
+    (piece) => (filter === null || matchesFilter(filter, piece)) && matchesText(piece, foldedText),
   )
 }
 

@@ -226,12 +226,22 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   la izquierda (`flex: 999 1 720px`) el radar con su nota al pie y debajo el ranking; a la derecha el panel lateral
   (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: fixed; bottom: 16px`, fuera del flujo). "Para quién
   importa" y "Por qué importa" completos viven en el expediente, no en el Radar.
-- **Explorar sin tema:** cabecera (H1 «Lo que está funcionando» + contadores-filtro: Outliers · YouTube · Hacker News;
-  RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda la tabla de piezas, ordenada por rendimiento
+- **Explorar sin tema:** cabecera (H1 «Lo que está funcionando» + contadores-filtro: Outliers y una baldosa por
+  plataforma con métricas y piezas en el análisis servido —YouTube, Hacker News, TikTok, Reddit, Instagram—, de más a
+  menos piezas; RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda la tabla de piezas, ordenada por rendimiento
   frente a su canal → a la derecha el panel lateral («Dónde está funcionando» o el detalle de la pieza). Sin gráfico:
   la dispersión por fecha se descartó el 17/10 porque no respondía nada que la tabla no diga.
 - **Expediente (`/explore/:id`):** cabecera (tema, recomendación y motivo; a la derecha el anillo con "Cómo se
   compone") → evolución → por qué importa y encaje → evidencia → siguiente paso con "Qué no sabemos".
+- **Crear (`/create`):** sin tema, «¿De qué conviene escribir esta semana?» con los temas de «Publicar ya» y «Buscar
+  otro tema» (abre ⌘K). Con tema (`?opportunity=`): la cabecera del expediente con «‹ Expediente» → a la izquierda
+  (`flex: 999 1 640px`) «Con qué se escribirá» (las tres piezas que mejor rinden) o el brief (ángulo, gancho,
+  estructura, puntos clave con chips a sus fuentes, por qué encaja, «Qué no sabemos» y el modelo que lo redactó) →
+  a la derecha el panel sticky (`flex: 1 1 360px`) con Plataforma · Objetivo · Formato como segmented controls y un
+  primario: «Generar brief» y, con el brief listo, «Copiar brief» («Copiar enlace» de secundario). Por debajo de
+  768px el panel sube encima. Las opciones van en la URL; un enlace con las cuatro abre su brief (la API lo
+  devuelve cacheado). Mientras se redacta, skeleton con la forma del brief y una línea con cuánto tarda. Sin texto
+  libre: ningún texto de la persona llega al LLM. Rad no vive en Crear.
 - La cabecera y el ranking reflejan los filtros: con filtro, el H1 dice "3 de 9 temas", la frase dice qué filtro
   hay y el ranking muestra solo lo que entra, conservando el puesto global. Los contadores siguen mostrando los totales
   y marcan el filtro activo con su anillo.

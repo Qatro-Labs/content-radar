@@ -192,7 +192,15 @@ export function citationChips(
   criterion: AudienceFitCriterion,
   evidence: readonly Evidence[],
 ): CitationChip[] {
-  return criterion.evidence_urls.map((url) => {
+  return citationChipsFor(criterion.evidence_urls, evidence)
+}
+
+// Los puntos clave del brief citan igual que los criterios de encaje.
+export function citationChipsFor(
+  urls: readonly string[],
+  evidence: readonly Evidence[],
+): CitationChip[] {
+  return urls.map((url) => {
     const piece = evidence.find((item) => item.url === url)
     return {
       url,
