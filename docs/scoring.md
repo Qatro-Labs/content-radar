@@ -337,7 +337,7 @@ Sin audience fit o sin actionability, el score es `null`: no se rellena con un s
 
 ## 14. Recomendación
 
-Primera regla que se cumple (`backend/app/intelligence/ranking.py:175`); el texto va en
+Primera regla que se cumple (`backend/app/intelligence/ranking.py:183`); el texto va en
 `recommendation_reason`:
 
 | # | Recomendación | Regla |
@@ -347,21 +347,32 @@ Primera regla que se cumple (`backend/app/intelligence/ranking.py:175`); el text
 | 3 | `wait_for_case` | Confianza `low` |
 | 4 | `wait_for_case` | `org_application` ≤ 1: ninguna pieza muestra una organización real (`backend/app/intelligence/ranking.py:140`) |
 | 5 | `find_angle` | Etapa `peaking` |
-| 6 | `publish_now` | Etapa `unknown` con datos, aceleración > 0, `latam_gap = true`, `org_application` ≥ 2 (`backend/app/intelligence/ranking.py:141`) y audience fit ≥ 60: hueco LATAM con subida sin demostrar |
+| 6 | `publish_now` | Etapa `unknown` con datos, aceleración > 0, `latam_gap` `true` o `null`, `org_application` ≥ 2 (`backend/app/intelligence/ranking.py:141`) y audience fit ≥ 60: subida sin demostrar en un tema que LATAM no cubre ya |
 | 7 | `find_angle` | Etapa `unknown` con datos (ninguna regla de etapa se cumple, o en descenso) |
-| 8 | `find_angle` | `latam_gap = false`: ya hay cobertura en fuentes latinoamericanas |
-| 9 | `find_angle` | Sin audience fit |
-| 10 | `publish_now` | Llega aquí (`emerging` o `accelerating`) con audience fit ≥ 60 (`backend/app/intelligence/ranking.py:38`) |
-| 11 | `find_angle` | Audience fit < 60 |
+| 8 | `publish_now` | `accelerating` (p ≤ 0,10) con `latam_gap = false` y audience fit ≥ 60: publicar con ángulo propio |
+| 9 | `find_angle` | `latam_gap = false` en los demás casos: ya hay cobertura en fuentes latinoamericanas |
+| 10 | `find_angle` | Sin audience fit |
+| 11 | `publish_now` | Llega aquí (`emerging` o `accelerating`) con audience fit ≥ 60 (`backend/app/intelligence/ranking.py:38`) |
+| 12 | `find_angle` | Audience fit < 60 |
 
 Un fit bajo no descarta: da `find_angle` y la UI muestra la banda.
 
-La regla 6 (decidida el 18/10) publica un tema cuya subida no pasa la puerta de `accelerating`
-(p > 0,10) o que no encaja en ninguna etapa, si el encaje es alto, hay un caso real y la región aún
-no lo cubre. Las reglas 1–4 ya excluyen los temas saturados, con confianza baja o sin caso; la
-aceleración > 0 excluye los temas en descenso. Su `recommendation_reason` dice que el crecimiento
-no está demostrado, así que la UI y el MCP no lo presentan como tendencia comprobada. En el run 41
-cambia 1 de 54 temas ("Control del gasto en IA para empresas": 3 notas frente a 2, p = 0,48).
+Las reglas 6 y 8 se decidieron el 18/10 con una evaluación pre-registrada
+([`data/evaluations/publish_policy_eval.md`](../data/evaluations/publish_policy_eval.md)):
+
+- **Regla 6.** Publica un tema cuya subida no pasa la puerta de `accelerating` (p > 0,10) o que no
+  encaja en ninguna etapa, si el encaje es alto, hay un caso real y LATAM no lo cubre ya
+  (`latam_gap` `true`, o `null`: cobertura parcial o sin conversación de negocio medida). Las
+  reglas 1–4 excluyen los temas saturados, con confianza baja o sin caso; la aceleración > 0
+  excluye los temas en descenso. La razón dice que el crecimiento no está demostrado y, con
+  `null`, que la cobertura en LATAM es parcial o no está medida.
+- **Regla 8.** Una subida demostrada con encaje alto se publica aunque LATAM ya la cubra: la
+  cobertura regional indica demanda de la audiencia, y la razón pide un ángulo propio.
+- **Lo que no cambió y por qué.** `org_application` ≤ 1 sigue bloqueando, pero en la práctica no
+  decide: en los runs 38, 41 y 43 ningún tema sin caso llega a fit 60 (máximo 53,3), así que el
+  bloqueo lo pone el fit. Bajar el fit a 50 metía un tema que el etiquetado ciego rechazó.
+
+Run 43: de 1 a 3 temas `publish_now`, los 3 marcados "sí" por el etiquetado ciego.
 
 ## 15. Orden del ranking
 

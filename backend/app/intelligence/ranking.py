@@ -159,6 +159,14 @@ REASON_LATAM_GAP_UNPROVEN = (
     "Publicar ya: encaje alto y aún no se cubre en LATAM; el crecimiento todavía no está "
     "demostrado."
 )
+REASON_LATAM_PARTIAL_UNPROVEN = (
+    "Publicar ya: encaje alto y caso real; la cobertura en LATAM es parcial o no está medida, y "
+    "el crecimiento todavía no está demostrado."
+)
+REASON_PUBLISH_OWN_ANGLE = (
+    "Publicar ya con ángulo propio: crece de forma demostrada y encaja con la audiencia de 30X, "
+    "pero ya hay cobertura en fuentes de Latinoamérica."
+)
 REASON_NO_FIT = "Buscar ángulo: falta evaluar el encaje con la audiencia de 30X."
 REASON_LOW_FIT = (
     f"Buscar ángulo: tema en crecimiento, pero el encaje con la audiencia de 30X es menor de "
@@ -192,22 +200,31 @@ def recommend(
         return Advice(Recommendation.WAIT_FOR_CASE, REASON_NO_CASE)
     if stage.lifecycle is Lifecycle.PEAKING:
         return Advice(Recommendation.FIND_ANGLE, REASON_PEAKING)
-    # Decidido el 18/10: con encaje alto, caso real y hueco en LATAM, sube sin demostrar basta
-    # para publicar. La razón dice que el crecimiento no está demostrado (CLAUDE.md §2.3).
+    # Decidido el 18/10 (data/evaluations/publish_policy_eval.md): con encaje alto y caso real,
+    # una subida sin demostrar basta para publicar si LATAM no lo cubre ya. La razón dice que el
+    # crecimiento no está demostrado (CLAUDE.md §2.3).
     if (
         stage.lifecycle is Lifecycle.UNKNOWN
         and acceleration > 0
-        and latam_gap is True
+        and latam_gap is not False
         and org_application is not None
         and org_application >= LATAM_GAP_MIN_ORG_LEVEL
         and audience_fit is not None
         and audience_fit >= PUBLISH_MIN_FIT
     ):
-        return Advice(Recommendation.PUBLISH_NOW, REASON_LATAM_GAP_UNPROVEN)
+        reason = REASON_LATAM_GAP_UNPROVEN if latam_gap else REASON_LATAM_PARTIAL_UNPROVEN
+        return Advice(Recommendation.PUBLISH_NOW, reason)
     # unknown aquí es "ninguna regla se cumple": hay datos, falta ángulo.
     if stage.lifecycle is Lifecycle.UNKNOWN:
         return Advice(Recommendation.FIND_ANGLE, REASON_NO_STAGE)
     if latam_gap is False:
+        # Cobertura en LATAM no impide publicar una subida demostrada: pide un ángulo propio.
+        if (
+            stage.lifecycle is Lifecycle.ACCELERATING
+            and audience_fit is not None
+            and audience_fit >= PUBLISH_MIN_FIT
+        ):
+            return Advice(Recommendation.PUBLISH_NOW, REASON_PUBLISH_OWN_ANGLE)
         return Advice(Recommendation.FIND_ANGLE, REASON_LATAM_COVERED)
     if audience_fit is None:
         return Advice(Recommendation.FIND_ANGLE, REASON_NO_FIT)
