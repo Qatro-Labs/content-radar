@@ -134,7 +134,9 @@ def confidence(growth: GrowthStatus, source_count: int, item_count: int) -> Conf
     return Confidence.MEDIUM
 
 
-# org_application ≤ 1 en la rúbrica: ninguna organización real lo aplica todavía.
+# org_application ≤ 1 en la rúbrica: ninguna organización real lo aplica todavía. El LLM solo lee
+# títulos y descripciones; leer los artículos completos de 5 temas no encontró ningún caso que se
+# le escapara (docs/scoring.md, Limitaciones).
 NO_CASE_MAX_LEVEL = 1
 
 REASON_SATURATED = (
@@ -142,7 +144,10 @@ REASON_SATURATED = (
 )
 REASON_INSUFFICIENT = "Esperar: no hay datos suficientes para afirmar una tendencia."
 REASON_LOW_CONFIDENCE = "Esperar: la confianza en la evidencia es baja."
-REASON_NO_CASE = "Esperar caso: ninguna pieza muestra una organización real aplicándolo."
+REASON_NO_CASE = (
+    "Esperar caso: en los títulos y descripciones no aparece ninguna organización aplicándolo "
+    "con resultados."
+)
 REASON_PEAKING = "Buscar ángulo: el tema está en su pico y hace falta un enfoque propio."
 REASON_NO_STAGE = "Buscar ángulo: hay datos, pero no muestran una etapa clara."
 REASON_LATAM_COVERED = "Buscar ángulo: ya hay bastante cobertura en fuentes de Latinoamérica."

@@ -54,7 +54,9 @@ RECOMMENDATION_TEXT = {
 LATAM_GAP_TEXT = {
     True: "baja: el tema todavía no se cubre en fuentes latinoamericanas (posible oportunidad)",
     False: "alta: el tema ya se cubre en fuentes latinoamericanas",
-    None: "sin datos suficientes para decidirlo",
+    # Hay datos: falta conversación sobre su uso en empresas, o la cobertura regional es parcial.
+    None: "sin decidir: casi no se habla de su uso en empresas, o la cobertura en fuentes "
+    "latinoamericanas es parcial",
 }
 
 
@@ -111,6 +113,9 @@ def opportunity_facts(o: Opportunity, timeline: OpportunityTimeline) -> list[str
         f"Piezas que rinden al menos 3 veces su referencia: {o.outlier_count}.",
         f"Audiencia de las fuentes: tecnología {mix['tech']:.0f} %, negocio "
         f"{mix['business']:.0f} %, en español {mix['latam_es']:.0f} %.",
+        # Lleva el conteo de Jev que decide el hueco: sin él, "negocio 0 %" junto a "hueco en
+        # LATAM" parecería una contradicción, y un `None` no diría cuál de sus dos causas aplica.
+        o.description,
         f"Cobertura en fuentes latinoamericanas: {LATAM_GAP_TEXT[o.latam_gap]}.",
         f"Recomendación: {RECOMMENDATION_TEXT[o.recommendation]}. {o.recommendation_reason or ''}",
     ]
