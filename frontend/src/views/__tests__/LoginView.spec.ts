@@ -18,7 +18,7 @@ const { auth } = supabaseJs
 const SESSION = { access_token: 'token', user: { email: 'ana@example.com' } }
 const Blank = { render: () => null }
 
-async function renderLoginAt(url: string) {
+async function renderLoginAt(url: string, { guarded = false } = {}) {
   const { default: LoginView } = await import('../LoginView.vue')
   const router = createRouter({
     history: createMemoryHistory(),
@@ -28,6 +28,11 @@ async function renderLoginAt(url: string) {
       { path: '/login', name: 'login', component: LoginView },
     ],
   })
+  if (guarded) {
+    const { hasSession } = await import('@/composables/useAuth')
+    const { createAuthGuard } = await import('@/router/authGuard')
+    router.beforeEach(createAuthGuard(hasSession))
+  }
   await router.push(url)
   await router.isReady()
   render(LoginView, { global: { plugins: [router] } })
@@ -84,6 +89,32 @@ describe('LoginView', () => {
       email: 'ana@example.com',
       password: 'secreta',
     })
+  })
+
+  // Regresión: el guard recordaba la sesión de la primera carga (ninguna) y devolvía al login.
+  it('passes the auth guard right after signing in', async () => {
+    auth.signInWithPassword.mockResolvedValue({
+      data: { session: SESSION, user: SESSION.user },
+      error: null,
+    })
+    const router = await renderLoginAt('/login?redirect=/explore/opp_001', { guarded: true })
+
+    await submitCredentials()
+
+    await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/explore/opp_001'))
+  })
+
+  it('sends back to the login after signing out', async () => {
+    auth.getSession.mockResolvedValue({ data: { session: SESSION }, error: null })
+    auth.signOut.mockResolvedValue({ error: null })
+    const router = await renderLoginAt('/login', { guarded: true })
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('discover'))
+
+    const { useAuth } = await import('@/composables/useAuth')
+    await useAuth().signOut()
+    await router.push('/explore/opp_001')
+
+    expect(router.currentRoute.value.name).toBe('login')
   })
 
   it('goes to the Radar when the redirect points outside the app', async () => {

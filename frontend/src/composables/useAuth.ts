@@ -33,8 +33,11 @@ function loadSession(): Promise<Session | null> {
   return loadingSession
 }
 
+// `loadSession` resuelve siempre con la sesión de la primera carga: la actual es `session`, que
+// cambian el inicio y el cierre de sesión.
 export async function hasSession(): Promise<boolean> {
-  return (await loadSession()) !== null
+  await loadSession()
+  return session.value !== null
 }
 
 function signInErrorMessage(error: AuthError): string {
