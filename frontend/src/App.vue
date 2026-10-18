@@ -49,7 +49,9 @@ const fitsViewport = computed(() => route.meta.fitsViewport === true)
 
 const bottomSpace = computed(() => {
   if (!isAvailable.value) return ''
-  const scrolling = isMinimized.value ? 'pb-20' : 'pb-44'
+  // Lo que mide la barra: solo el campo (unos 72 px), o el campo con la respuesta plegada encima.
+  const docked = turns.value.length > 0 ? 'pb-48' : 'pb-[88px]'
+  const scrolling = isMinimized.value ? 'pb-20' : docked
   // Sin scroll, debajo de la barra no puede quedar nada: la vista acaba justo encima de ella (el
   // campo mide unos 72 px y flota a 24 px del borde, que ya es el padding de la raíz).
   if (!fitsViewport.value) return scrolling
