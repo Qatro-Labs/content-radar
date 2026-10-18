@@ -200,7 +200,8 @@ GET  /health
   - *Tema:* `velocity` = piezas nuevas por día en la ventana actual (por `published_at`, ponderadas por fuentes independientes).
   - *Aceleración:* `(v_actual − v_anterior) / max(v_anterior, 1)`. Ventanas por defecto de 3 días (actual) vs. 3 días (anterior), configurables. Es la señal principal de tendencia temprana.
     **Ajustada por volumen:** `v_anterior` se escala por `corpus_actual / corpus_anterior` antes de aplicar la fórmula. Los feeds RSS solo guardan sus últimas N piezas y los días recientes tienen más volumen en todas partes; sin el ajuste, casi todo parecería acelerar. Ventanas móviles de 72 h desde `as_of`, no días naturales.
-  - `momentum_score` = combinación normalizada de velocidad del tema, aceleración y outliers. Pesos en `intelligence/momentum.py`.
+    **Con p-valor:** con pocas piezas, pasar de 1 a 2 ya es +100 %. `acceleration_p_value` (test exacto de razón de tasas de Poisson sobre notas originales, sin réplicas) dice si la subida se explica por azar frente al ritmo del corpus. Lo usa la etapa (abajo).
+  - `momentum_score` = combinación normalizada de velocidad del tema, aceleración y outliers. La aceleración entra como `log2((actual + 1) / (esperado + 1))`, acotado a ±3, para que 2 frente a 1 no pese como 70 frente a 5. Pesos en `intelligence/ranking.py`.
 - **Outliers (por pieza, estilo 1of10).** `outlier_ratio = rendimiento ajustado por edad / mediana de su referencia`. La referencia usa todas las piezas de la cuenta, también las que Jev quita por fuera de tema; esas no son evidencia ni entran en el clustering.
   - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
   - TikTok: `views / días desde la publicación` vs. el **p90** de los vídeos de la misma búsqueda. Una búsqueda mezcla muchos autores, como HN: con la mediana un 33 % de los vídeos salía como outlier; con el p90, un 6 % (n = 72, 17/10).
@@ -214,14 +215,15 @@ GET  /health
   |---|---|
   | `saturated` | saturation ≥ 75 y aceleración < 0 |
   | `peaking` | saturation ≥ 60 y \|aceleración\| < 0.2 |
-  | `accelerating` | aceleración ≥ 0.5 y ≥ 3 fuentes independientes |
-  | `emerging` | aceleración > 0, ≤ 3 fuentes independientes y saturation < 40 |
+  | `accelerating` | aceleración ≥ 0.5, ≥ 3 fuentes independientes y p ≤ 0.10 |
+  | `emerging` | aceleración > 0, ≤ 3 fuentes independientes, saturation < 40 y p ≤ 0.10 |
   | `unknown` | datos insuficientes (menos de 5 piezas o una sola fuente) |
+  Decidido el 18/10: `accelerating` y `emerging` afirman que el tema crece, así que exigen que la subida no sea azar (p de la aceleración ≤ 0.10, por tema, sin corregir por comparaciones múltiples). Si solo falla el p-valor, el tema queda `unknown` "sin demostrar" y `lifecycle_reason` lo explica.
   `growth_status` depende de los datos, no de la etapa: `preliminary` = datos insuficientes, `estimated` = ventana anterior vacía, `observed` = dos ventanas con datos. Un `unknown` porque ninguna regla se cumple sí tiene datos (recomendación `find_angle`); un `unknown` por datos insuficientes espera caso.
   `unknown` se evalúa **antes** que las demás: con datos insuficientes no se asigna etapa aunque otra regla se cumpla. Guardar en `lifecycle_reason` qué regla se cumplió, para que la UI y el MCP puedan explicarlo.
 - **Para quién importa (estilo SparkToro).** `audience_mix` = proporción de la evidencia de cada `segment`, ponderada por el engagement normalizado. Lectura editorial:
   - Mucho `tech`, poco `business` y fit alto → "todavía no llegó a ejecutivos: traducirlo a negocio".
-  - `business` presente y poca evidencia de fuentes latinoamericanas (grupo B de §5, sin contar España) → candidato a **LATAM Opportunity Gap** (`latam_gap = true`).
+  - `business` presente y poca evidencia de fuentes latinoamericanas (grupo B de §5, sin contar España) → candidato a **LATAM Opportunity Gap** (`latam_gap = true`). "`business` presente" lo decide el contenido (Jev `business_use`: ≥ 2 piezas y ≥ 15 % de las decididas), no el segmento de la fuente: solo ~8 % del corpus viene de fuentes `business`. Sin juicios de Jev, decide el segmento.
   - Mucha evidencia de fuentes latinoamericanas → probablemente ya cubierto en la región: buscar otro ángulo.
   - `latam_gap` calcula la proporción LATAM solo con piezas de `region` latinoamericana. El `latam_es` del `audience_mix` mezcla España y Latinoamérica, así que en la UI se rotula "en español".
 - **Cross-source:** nº de fuentes **independientes**: un medio o canal cuenta una vez (todas las búsquedas de HN cuentan como una sola fuente). Normalizar métricas dentro de cada fuente. Las **republicaciones** de la misma nota (copia, traducción o reenvío en otro medio) no cuentan: dentro de cada tema, un enlace compartido las une sin preguntar; los pares dudosos (coseno ≥ 0,70 o mismo título) los decide Jev con la batería de par, y sin veredicto de Jev decide la regla de respaldo (mismo título o coseno ≥ 0,90, marcada como no verificada en `limitations`). Cada nota tiene como representante la pieza más antigua. `source_count`, `cross_source_score`, `evidence_strength`, confianza, etapa y saturación cuentan solo originales; velocidad, momentum, outliers y `audience_mix` siguen por pieza. Detalle en [`docs/jev.md`](docs/jev.md) §2 "Par".
