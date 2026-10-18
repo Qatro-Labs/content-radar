@@ -31,6 +31,7 @@ from app.collectors.scrapecreators import (
     ScrapeCreatorsClient,
     TikTokCollector,
 )
+from app.collectors.twitterapi import TwitterApiClient, XCollector
 from app.collectors.usage import UsageMeter
 from app.collectors.youtube import YouTubeClient, YouTubeCollector
 from app.core.config import get_settings
@@ -62,6 +63,9 @@ def build_collectors(http: httpx.AsyncClient, usage: UsageMeter) -> dict[str, Si
         collectors[Platform.TIKTOK.value] = TikTokCollector(scrapecreators)
         collectors[Platform.REDDIT.value] = RedditCollector(scrapecreators)
         collectors[Platform.INSTAGRAM.value] = InstagramCollector(scrapecreators)
+    if settings.twitterapi_api_key:
+        twitterapi = TwitterApiClient(settings.twitterapi_api_key, http, usage)
+        collectors[Platform.X.value] = XCollector(twitterapi)
     return collectors
 
 

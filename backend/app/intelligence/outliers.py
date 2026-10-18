@@ -34,6 +34,9 @@ MIN_REFERENCE_AGE = {
     Platform.YOUTUBE: timedelta(days=2),
     Platform.TIKTOK: timedelta(days=2),
     Platform.INSTAGRAM: timedelta(days=2),
+    # Un tweet hace casi todas sus views el primer día, y los perfiles más activos publican 20
+    # tweets en 3-4 días: con 2 días, la primera recolección se quedaba sin referencia.
+    Platform.X: timedelta(days=1),
     Platform.HACKERNEWS: timedelta(hours=6),
     Platform.REDDIT: timedelta(hours=6),
 }

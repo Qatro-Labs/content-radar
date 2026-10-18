@@ -157,3 +157,25 @@ instagram:
   # Probados y descartados el 17/10: @andresbilbao (reels de negocio: ninguno pasa el filtro de IA),
   # @crece30x (casi todo carruseles y colaboraciones),
   # @futurepedia.io (sin reels en la última semana), @mreflow (sin reels).
+
+x:
+  # Últimos tweets de cada perfil vía twitterapi.io (como un canal de YouTube): el outlier se mide
+  # contra la mediana del mismo perfil, sin retweets ni respuestas. Verificados el 18/10: publican
+  # cada semana y traen views. ai_filter: true en los que no son solo de IA.
+  - { handle: "emollick", segment: business, language: en, region: global }
+  - { handle: "alliekmiller", segment: business, language: en, region: global }
+  - { handle: "AravSrinivas", segment: tech, language: en, region: global, ai_filter: true }
+  - { handle: "bindureddy", segment: tech, language: en, region: global }
+  - { handle: "svpino", segment: tech, language: en, region: global }
+  - { handle: "minchoi", segment: tech, language: en, region: global }
+  - { handle: "mattshumer_", segment: tech, language: en, region: global }
+  - { handle: "swyx", segment: tech, language: en, region: global, ai_filter: true }
+  - { handle: "_akhaliq", segment: tech, language: en, region: global }
+  - { handle: "OfficialLoganK", segment: tech, language: en, region: global }
+  - { handle: "DotCSV", segment: latam_es, language: es, region: es }
+  - { handle: "midudev", segment: latam_es, language: es, region: es, ai_filter: true }
+  - { handle: "freddier", segment: latam_es, language: es, region: latam, ai_filter: true }
+  - { handle: "platzi", segment: latam_es, language: es, region: latam, ai_filter: true }
+  # Probados y descartados el 18/10: @AndrewYNg, @rowancheung y @DrJimFan (casi nada propio en las
+  # últimas 2 semanas), @ylecun (solo respuestas), @andresbilbao (no devuelve tweets) y @crece30x
+  # (sin publicar desde hace más de 3 meses).

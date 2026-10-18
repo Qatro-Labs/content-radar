@@ -18,6 +18,7 @@ class Platform(StrEnum):
     INSTAGRAM = "instagram"
     TIKTOK = "tiktok"  # vía ScrapeCreators
     REDDIT = "reddit"  # vía ScrapeCreators
+    X = "x"  # vía twitterapi.io
 
 
 class Segment(StrEnum):

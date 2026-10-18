@@ -65,7 +65,7 @@ from app.schemas.opportunity import (
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
 # Plataformas cuyas views se acumulan con los días: su rendimiento se ajusta por edad.
-CUMULATIVE_VIEWS = {Platform.YOUTUBE, Platform.TIKTOK, Platform.INSTAGRAM}
+CUMULATIVE_VIEWS = {Platform.YOUTUBE, Platform.TIKTOK, Platform.INSTAGRAM, Platform.X}
 MIN_RECENT_ITEMS = 3  # piezas en las dos últimas ventanas para considerar el tema activo
 MIX_WEIGHT_MIN, MIX_WEIGHT_MAX = 0.5, 3.0
 LLM_PENDING_NOTE = "Audience fit y análisis editorial pendientes (sin LLM todavía)."

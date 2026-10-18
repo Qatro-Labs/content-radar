@@ -16,7 +16,7 @@ import httpx
 from pydantic import HttpUrl
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from app.collectors.text import clean_html, is_ai_related
+from app.collectors.text import clean_html, headline, is_ai_related
 from app.collectors.usage import UsageMeter
 from app.models import Source
 from app.schemas.cost import Provider
@@ -30,7 +30,6 @@ INSTAGRAM_REEL_URL = "https://www.instagram.com/reel/{}/"
 REDDIT_HOSTS = ("reddit.com", "redd.it")
 MIN_TIKTOK_VIEWS = 100  # descarta spam y vídeos sin ninguna tracción
 MIN_REDDIT_SCORE = 10
-TITLE_CHARS = 140
 
 
 class ScrapeCreatorsClient:
@@ -54,11 +53,6 @@ class ScrapeCreatorsClient:
         r.raise_for_status()
         self.usage.add(Provider.SCRAPECREATORS, path)
         return r.json()
-
-
-def _title(text: str) -> str:
-    first_line = text.strip().split("\n", 1)[0]
-    return first_line[:TITLE_CHARS] or text[:TITLE_CHARS]
 
 
 class TikTokCollector:
@@ -109,7 +103,7 @@ def _video_signal(video: dict, source: Source, observed_at: datetime) -> Content
         platform=Platform.TIKTOK,
         external_id=video["aweme_id"],
         url=HttpUrl(TIKTOK_VIDEO_URL.format(handle, video["aweme_id"])),
-        title=_title(desc),
+        title=headline(desc),
         description=clean_html(desc),
         # Cuenta pública que publica (como un canal de YouTube), no un usuario.
         author_name=f"@{handle}",
@@ -230,7 +224,7 @@ def _reel_signal(reel: dict, source: Source, observed_at: datetime) -> ContentSi
         platform=Platform.INSTAGRAM,
         external_id=reel["code"],
         url=HttpUrl(INSTAGRAM_REEL_URL.format(reel["code"])),
-        title=_title(caption),
+        title=headline(caption),
         description=clean_html(caption),
         # Cuenta pública que publica (como un canal de YouTube), no un usuario.
         author_name=f"@{source.external_id}",
