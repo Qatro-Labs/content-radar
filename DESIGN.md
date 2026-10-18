@@ -189,10 +189,10 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
   presencia sigue actuando en la página. Si termina una respuesta con la barra reducida, un punto Lima de 14px en la
   esquina del ojo lo avisa («Rad respondió») hasta que se abre. Al abrirlo vuelve la barra con la conversación.
-  Sin conversación, la barra aparece abierta, lista para preguntar. Al reducir, el ojo sale de un salto de su sitio
-  en la barra hasta la esquina (640ms: un arco de 64px, un 12 % más grande en lo alto, que aterriza con un leve
-  rebote) mientras la barra se funde y se encoge hacia allí; al abrir, vuelve igual a la barra, que aparece con un
-  fundido. Al aterrizar parpadea. Solo `transform` y `opacity`.
+  Sin conversación, la barra aparece abierta, lista para preguntar. Al reducir, el ojo vuela en línea recta de su
+  sitio en la barra hasta la esquina (460ms, ease-out, sin pausas ni rebotes: se probó un salto en arco el 18/10 y se
+  descartó por la pausa en lo alto) mientras la barra se funde y se encoge hacia allí; al abrir, vuelve igual a la
+  barra, que aparece con un fundido. Al aterrizar parpadea. Solo `transform` y `opacity`.
 - **Rad vivo en reposo:** parpadea cada 3–7 s (a veces dos veces; uno de «hola» al cargar) y, si el cursor lleva
   2,5 s quieto, mira un momento (1,3 s) a otro punto de la página y vuelve. Es la única excepción a «nada de bucles»
   (§7): es su personaje, no un dato. Se para mientras trabaja, con la pestaña oculta y con movimiento reducido.
