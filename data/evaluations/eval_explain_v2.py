@@ -57,7 +57,7 @@ from sqlalchemy import select, text
 
 from app.core.config import get_settings
 from app.db.session import SessionLocal
-from app.editorial.audience import MAX_PIECES, evidence_piece, safe_label
+from app.editorial.audience import MAX_PIECES, evidence_piece, named_label
 from app.editorial.evaluator import LLM_CONCURRENCY, EvaluationError, StructuredLlm
 from app.editorial.explanation import (
     PROMPTS_DIR,
@@ -128,7 +128,7 @@ async def load_inputs(run_id: int) -> dict[str, dict[str, Any]]:
             if not safe:
                 continue
             explain = ExplainInput(
-                label=safe_label(o.topic, safe),
+                label=named_label(o.topic, [e.title for e in served.evidence], safe),
                 facts=opportunity_facts(o, served.timeline),
                 fit=fit_notes(o),
                 pieces=[evidence_piece(p) for p in safe],

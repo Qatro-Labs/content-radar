@@ -11,7 +11,7 @@ mirando aquella muestra, así que aquí se mide con una muestra nueva.
 
 | Pieza | Valor |
 | --- | --- |
-| Prompt del LLM | `backend/app/editorial/prompts/explain_opportunity.v2.md` (sha256 `b8694345f8efc45e3dca2f2cf345304bc24bc69b2068a457266d8e753d3152bb`) |
+| Prompt del LLM | `backend/app/editorial/prompts/explain_opportunity.v2.md` (sha256 `496fe511e59c73f0144cc715192833830a2cee50a2985026780fbe5f971c4e01` desde la enmienda 1; antes `b8694345…`) |
 | Batería de Jev | `backend/app/editorial/prompts/jev/claim.v2.yaml`, `version: 2` (sha256 `4d8b4505cc6f4778f4ca069bb615089af1113c7680f1c0e1b58796700f5b107a`; si se adopta, solo cambia su comentario de cabecera, que menciona el umbral) |
 | Regla de publicación | `support` = `supports` con `confidence` ≥ **0,6** y `support_rev` = `supports` (el resto de `claim_supported`, igual) |
 | Modelos | LLM `claude-haiku-5-5` · Jev `jev-1.13.0` |
@@ -29,7 +29,7 @@ pueda identificar.
   sentencia de cada sesión).
 - Entradas del prompt v2 construidas como los briefs (`services/editorial.py`, `_prepare`):
   `load_evidence_pieces` → `load_judgments` → sin `excluded_from_llm` → primeras `MAX_PIECES`,
-  `safe_label`, `opportunity_facts(o, served.timeline)` y `fit_notes(o)`. El orden de las piezas
+  `named_label` (enmienda 1), `opportunity_facts(o, served.timeline)` y `fit_notes(o)`. El orden de las piezas
   puede diferir del de `build_topic_input` en `analyze`.
 - Se llama al LLM una vez por tema con fit y al menos una pieza segura, sin pasar por
   `explain_topics` (no se escribe en la DB). Las afirmaciones pasan `python_checked` igual que en
@@ -102,3 +102,18 @@ El PR dice el impacto en la demo: cambian los textos servidos de «por qué impo
 explicaciones no sirve (otra versión del prompt), así que el siguiente `analyze` vuelve a pagar el
 LLM de todos los temas y, con el flag, la verificación de todas sus afirmaciones; hace falta ese
 `analyze` y una revisión antes de fijar `DEMO_RUN_ID`.
+
+## Enmienda 1 (12:45, antes de mirar ninguna salida)
+
+Melkin reportó un bug: `<topic_label>` llevaba el título de una pieza (`safe_label`) y no el nombre
+final del tema que pone el audience fit. En la ejecución 38, el tema «Adopción y control de la IA
+en empresas» explica la «automejora recursiva de la IA», el título de su pieza representativa.
+
+- El arreglo (`named_label`) va en el código de producción y se aplica igual a v1 y a v2. La línea
+  del prompt que describe `<topic_label>` pasa a «el nombre del tema, generado a partir de sus
+  piezas» en los dos prompts; es el único cambio del prompt v2 (nuevo sha256 arriba).
+- Las 53 salidas v2 ya generadas con el rótulo antiguo se descartan sin mirarlas (solo se leyeron
+  sus contadores de tokens) y se generan de nuevo. Sus 53 llamadas cuentan en el gasto.
+- La línea base v1 sigue siendo el texto servido en la ejecución 38, que se generó con el rótulo
+  antiguo. El guard compara la cobertura de la posición 2, no el contenido, así que se mantiene.
+- Nada más cambia: candidato, criterios, guard, tolerancia, muestra y semilla.
