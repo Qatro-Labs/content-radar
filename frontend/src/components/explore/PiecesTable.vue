@@ -2,7 +2,10 @@
 import { Search } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 
+import HoverHint from '@/components/layout/HoverHint.vue'
+import InfoTip from '@/components/layout/InfoTip.vue'
 import { formatCount } from '@/lib/evidenceFormat'
+import { HELP } from '@/lib/helpText'
 import type { ExploreFilter, Piece } from '@/lib/exploreView'
 
 import PieceRow, { PIECES_GRID_CLASS } from './PieceRow.vue'
@@ -18,7 +21,11 @@ const text = defineModel<string>('text', { required: true })
 
 const emit = defineEmits<{ select: [url: string] }>()
 
-const COLUMNS = ['Pieza', 'Tema', 'Plataforma', 'Publicada', 'Rendimiento'] as const
+const COLUMNS = [
+  { label: 'Pieza', name: 'la columna Pieza', help: HELP.colPiece },
+  { label: 'Tema', name: 'la columna Tema', help: HELP.colPieceTopic },
+  { label: 'Frente a lo normal', name: 'frente a lo normal', help: HELP.colRatio },
+] as const
 
 // Cientos de piezas no caben de una vez: se muestran de 25 en 25, y al cambiar el filtro o el
 // texto se vuelve a las 25 primeras.
@@ -50,22 +57,24 @@ function showMore() {
           mostrando {{ formatCount(shownRows.length) }} de {{ formatCount(rows.length) }}
         </span>
       </h2>
-      <label
-        class="flex min-h-11 items-center gap-2 rounded-[10px] bg-secondary px-3 text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring"
-      >
-        <Search
-          class="size-4 shrink-0 text-muted-foreground"
-          :stroke-width="2"
-          aria-hidden="true"
-        />
-        <span class="sr-only">Filtrar por título o fuente</span>
-        <input
-          v-model="text"
-          type="search"
-          placeholder="Filtrar por título o fuente"
-          class="w-[220px] min-w-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
-        />
-      </label>
+      <HoverHint :text="HELP.piecesSearch">
+        <label
+          class="flex min-h-11 items-center gap-2 rounded-[10px] bg-secondary px-3 text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring"
+        >
+          <Search
+            class="size-4 shrink-0 text-muted-foreground"
+            :stroke-width="2"
+            aria-hidden="true"
+          />
+          <span class="sr-only">Filtrar por título o fuente</span>
+          <input
+            v-model="text"
+            type="search"
+            placeholder="Filtrar por título o fuente"
+            class="w-[220px] min-w-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
+          />
+        </label>
+      </HoverHint>
     </div>
 
     <p v-if="rows.length === 0" class="px-1 py-6 text-[15px] text-ink-soft">
@@ -77,9 +86,17 @@ function showMore() {
     </p>
 
     <div v-else class="overflow-x-auto">
-      <div class="min-w-[900px]">
+      <div class="min-w-[620px]">
         <div class="py-1.5 text-[13px] text-muted-foreground" :class="PIECES_GRID_CLASS">
-          <span v-for="column in COLUMNS" :key="column">{{ column }}</span>
+          <span
+            v-for="column in COLUMNS"
+            :key="column.label"
+            class="flex items-center gap-0.5"
+            :class="{ 'justify-end': column === COLUMNS.at(-1) }"
+          >
+            {{ column.label }}
+            <InfoTip :label="column.name" :text="column.help" />
+          </span>
         </div>
         <PieceRow
           v-for="piece in shownRows"

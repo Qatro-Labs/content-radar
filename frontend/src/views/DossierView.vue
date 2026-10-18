@@ -9,13 +9,14 @@ import {
   useOpportunityEvidence,
   useOpportunityTimeline,
 } from '@/api/opportunities'
+import DossierActions from '@/components/dossier/DossierActions.vue'
 import DossierEvolution from '@/components/dossier/DossierEvolution.vue'
 import DossierHeader from '@/components/dossier/DossierHeader.vue'
 import DossierStates, { DossierPlaceholder } from '@/components/dossier/DossierStates.vue'
+import DossierSummary from '@/components/dossier/DossierSummary.vue'
 import EvidenceSection from '@/components/dossier/EvidenceSection.vue'
-import NextStep from '@/components/dossier/NextStep.vue'
+import FitSection from '@/components/dossier/FitSection.vue'
 import ScoreComposition from '@/components/dossier/ScoreComposition.vue'
-import WhyItMattersSection from '@/components/dossier/WhyItMattersSection.vue'
 import { rankLabel, rankOf } from '@/lib/dossierView'
 import { formatUtcTimestamp } from '@/lib/format'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
@@ -80,24 +81,22 @@ const monitoringStartedAt = computed(() => listQuery.data.value?.monitoring_star
   <DossierStates v-if="placeholder" :state="placeholder" @retry="opportunityQuery.refetch()" />
 
   <div v-else-if="opportunity" class="flex flex-col gap-4">
-    <div class="flex flex-wrap items-stretch gap-4 pt-3">
+    <!-- Primero qué hacer y por qué (cabecera, acción, resumen y «Qué no sabemos»); después el
+         detalle: evolución, encaje, evidencia y, plegado, cómo se calcula el score. -->
+    <div class="flex flex-wrap items-start gap-4 pt-3">
       <DossierHeader :opportunity />
-      <ScoreComposition :opportunity :rank-text="rankText" />
+      <DossierActions :opportunity :rank-text="rankText" />
     </div>
+    <DossierSummary :opportunity :timeline />
     <DossierEvolution :opportunity :timeline />
-    <WhyItMattersSection
-      :opportunity
-      :evidence="citablePieces"
-      :cited-url="citedUrl"
-      @cite="cite"
-    />
+    <FitSection :opportunity :evidence="citablePieces" :cited-url="citedUrl" @cite="cite" />
     <EvidenceSection
       :opportunity
       :evidence
       :cited-url="citedUrl"
       @retry="evidenceQuery.refetch()"
     />
-    <NextStep :opportunity />
+    <ScoreComposition :opportunity :rank-text="rankText" />
 
     <!-- DESIGN.md §9: desde cuándo se monitorea va siempre a la vista, y el encaje y la saturación
          se rotulan para que no se lean como mediciones absolutas (CLAUDE.md §2.3). -->

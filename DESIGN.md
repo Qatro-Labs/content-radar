@@ -180,14 +180,16 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
 - **Barra de pregunta:** fija abajo y centrada (`position: fixed`, ancho máximo 840px), tarjeta blanca de radio 20px
   con la sombra flotante (§5), porque flota sobre la página: la conversación no reserva espacio y el final de la
-  página solo deja sitio para el campo. A la derecha del primario, un botón ⌄ «Reducir a Rad». De izquierda a derecha: la marca de Rad, el campo (#F2F3F5, radio
-  12px, alto 48px, placeholder "Pregúntale a Rad: …" en Apagado) y el primario "Preguntar", que pasa a secundario
-  "Detener" mientras Rad trabaja. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los
-  mismos controles". En reposo, encima del campo, 3 preguntas sugeridas según el contexto (botones #F2F3F5, radio
-  10px, alto 40px): generales en el Radar, del tema con un tema abierto, de búsqueda en Explorar. Con la conversación
-  en marcha solo quedan las del tema.
-- **Rad reducido:** la barra se encoge hacia abajo a la derecha y queda el ojo de Rad flotando (56px, sombra
-  flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
+  página solo deja sitio para la barra. Arriba, una cabecera: el botón «−» «Minimizar Rad» (32px, Lucide `Minus`,
+  tooltip «Minimizar») · «Rad» (13px, 600, Tinta suave) y, con conversación, "Nueva conversación" a la derecha. Debajo,
+  la marca de Rad, el campo (#F2F3F5, radio 12px, alto 48px, placeholder "Pregúntale a Rad: …" en Apagado) y el
+  primario "Preguntar", que pasa a secundario "Detener" mientras Rad trabaja. El «−» nunca va dentro del campo:
+  pulsarlo contaría como entrar en la barra y asomarían las sugerencias. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los mismos controles". En
+  reposo, encima del campo, 3 preguntas sugeridas según el contexto (botones #F2F3F5, radio 10px, alto 40px):
+  generales en el Radar, del tema con un tema abierto, de búsqueda en Explorar. Con la conversación en marcha solo
+  quedan las del tema.
+- **Rad reducido** (botón «−»): la barra se encoge hacia abajo a la derecha y queda el ojo de Rad flotando (56px,
+  sombra flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
   presencia sigue actuando en la página. Si termina una respuesta con la barra reducida, un punto Lima de 14px en la
   esquina del ojo lo avisa («Rad respondió») hasta que se abre. Al abrirlo vuelve la barra con la conversación.
   Sin conversación, la barra aparece abierta, lista para preguntar. Al reducir, el ojo vuela en línea recta de su
@@ -212,6 +214,19 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
     un asistente (MCP)" (copia la pregunta y abre `docs/mcp.md`; nombrará un cliente cuando haya uno probado). Los
     pasos se pliegan en una línea subrayada ("Hizo 6 pasos: 3 de datos y 3 en la vista") que los vuelve a abrir;
   - una conversación: los turnos anteriores quedan plegados encima del actual y "Nueva conversación" los borra.
+- **Respuesta plegada** (A, 18/10): la barra abierta tapaba lo que Rad acababa de señalar. Al terminar bien una
+  respuesta, la transcripción se pliega en una fila encima del campo (#F6F7F8, radio 14px, 10px 12px): punto Lima de
+  9px con el trazo de Acelerando, «Rad respondió» (600), la pregunta en Apagado cortada a una línea y «· 3 temas
+  citados» si cita alguno. A la derecha, «Ver respuesta» ⌃ (blanco, radio 10px, alto 36px), que la abre y pasa a
+  «Ocultar respuesta» ⌄. Mientras Rad trabaja la transcripción va abierta; tras un error o «Detener» no se pliega.
+  Elegir un tema citado también la pliega. Al plegar, la barra se encoge sin animación y la fila entra con fundido y
+  4px de subida (300ms); al abrir, igual la transcripción.
+- **Vistazo** (D, 18/10): pasar el cursor o el foco por un chip de «Citadas» deja ver la página detrás. La barra
+  pierde fondo y sombra y queda un contorno interior de 1px rgb(18 20 24 / 0.16) (la única caja con contorno, y solo
+  mientras dura; sin cristal ni blur). Todo baja a opacidad 0.1 (el campo, a 0.35) salvo los chips: blancos con la
+  sombra flotante, el mirado con contorno de Tinta de 2px y los demás a 0.55. 150ms ease-out. En el Radar, su burbuja
+  y su fila se resaltan como con el hover, sin tocar la URL ni la selección. Termina al salir del chip, con Escape o al
+  pulsarlo.
 - **Presencia del agente:** un punto Lima de 16px con anillo de Tinta de 2px y la sombra flotante, más un rótulo en
   píldora Tinta (radio 10px, texto blanco 13px/600) con el paso en curso ("Pulsando «Hueco en LATAM»"). Al actuar
   sobre una sección o un control, la rodea un **anillo de foco** de 2px en Tinta, separado 5–6px y con el radio del
@@ -225,9 +240,21 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 - Contenedor máximo **1440px**, gutter 32px (16px en móvil). Base de 4px; huecos de 16px entre tarjetas, 8px entre
   baldosas, 20px dentro del panel de detalle.
 - **Radar (Discover):** cabecera (H1 + frase a la izquierda, contadores-filtro a la derecha) → fila principal: a
-  la izquierda (`flex: 999 1 720px`) el radar con su nota al pie y debajo el ranking; a la derecha el panel lateral
-  (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: fixed; bottom: 16px`, fuera del flujo). "Para quién
+  la izquierda (`flex: 999 1 720px`) el radar **o** el ranking, según una pestaña (18/10: son la misma lista en dos
+  formas), con su nota al pie; a la derecha el panel lateral (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: fixed; bottom: 16px`, fuera del flujo). "Para quién
   importa" y "Por qué importa" completos viven en el expediente, no en el Radar.
+  - **Sin scroll en escritorio (≥ 1024 px, 18/10):** la vista ocupa el alto de la ventana y acaba justo encima de la
+    barra de Rad; radar, ranking y panel llenan la fila y desplazan su contenido dentro. El Ranking pagina de 10 en
+    10 y abre la página del tema elegido. Con una ventana muy baja, la fila guarda 440 px y la página vuelve a hacer
+    scroll. En móvil la página hace scroll como siempre.
+  - **Radar con los 25 primeros (18/10):** sin filtros, solo los 25 primeros por oportunidad; con todos, «Poca
+    señal» se llena de ruido. Un filtro añade todo lo que lo cumple, y la selección y los resaltados de Rad siempre
+    salen. Al pie, «Los 25 primeros por oportunidad. Ver los N» (y vuelta).
+  - **Pestañas Radar · Ranking:** control segmentado en la cabecera de la tarjeta, las dos del mismo tamaño, cada una
+    con icono, nombre y lo que enseña («Crecimiento frente a encaje» · «Ordenados por oportunidad»). Radar por
+    defecto; `?tab=ranking` en la URL. Filtros, selección y panel se mantienen al cambiar; un orden de Rad abre el
+    Ranking. El Ranking ocupa todo el ancho: Puesto · Tema (punto de etapa) · 6 días · Aceleración (con las piezas de
+    cada ventana debajo) · Recomendación (chip con el motivo en el tooltip) · Oportunidad.
 - **Explorar sin tema:** cabecera (H1 «Lo que está funcionando» + contadores-filtro: Outliers y una baldosa por
   plataforma con métricas y piezas en el análisis servido —YouTube, Hacker News, TikTok, Reddit, Instagram—, de más a
   menos piezas; RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda la tabla de piezas, ordenada por rendimiento

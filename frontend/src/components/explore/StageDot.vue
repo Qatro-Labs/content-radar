@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import HoverHint from '@/components/layout/HoverHint.vue'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
 import type { Lifecycle } from '@/lib/radarQuery'
 
@@ -17,12 +18,14 @@ const dotStyle = computed(() => ({
 </script>
 
 <template>
-  <!-- El color nunca va solo (DESIGN.md §4): la etapa también se lee como texto. -->
-  <span
-    role="img"
-    :aria-label="style.label"
-    :title="style.label"
-    class="size-[9px] shrink-0 rounded-full"
-    :style="dotStyle"
-  />
+  <!-- El color nunca va solo (DESIGN.md §4): la etapa se lee en el nombre accesible y, al pasar
+       el cursor, con lo que significa. -->
+  <HoverHint :text="`${style.label}: ${style.meaning}`">
+    <span
+      role="img"
+      :aria-label="style.label"
+      class="size-[9px] shrink-0 cursor-help rounded-full"
+      :style="dotStyle"
+    />
+  </HoverHint>
 </template>

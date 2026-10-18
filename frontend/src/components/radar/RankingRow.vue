@@ -1,22 +1,25 @@
 <script lang="ts">
-// D6 del plan fe-dashboard-v2 (artboard D2): por debajo de 780 px la tabla hace scroll dentro de
-// su tarjeta. La cabecera de OpportunityRanking comparte la rejilla.
+// Por debajo de 720 px la tabla hace scroll dentro de su tarjeta. La cabecera de
+// OpportunityRanking comparte la rejilla.
 export const RANKING_GRID_CLASS =
-  'grid grid-cols-[52px_minmax(240px,2fr)_128px_84px_104px_150px] items-center gap-x-3.5 px-3.5'
+  'grid grid-cols-[32px_minmax(220px,1fr)_70px_104px_132px_140px] items-center gap-x-3 px-3'
 </script>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
-import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
+import StageDot from '@/components/explore/StageDot.vue'
+import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { rowAnchor } from '@/lib/agentTargets'
 import {
   formatAcceleration,
   formatScore,
-  GROWTH_LABEL,
+  growthCaveat,
   isDeclining,
+  recommendationReasonText,
   SCORE_MAX,
+  windowTotals,
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
 import type { components } from '@/types/api'
@@ -44,6 +47,10 @@ const ROW_ENTER_CLASS =
 
 const enterDelay = computed(() => `${index * ROW_STAGGER_MS}ms`)
 
+const totals = computed(() => windowTotals(timeline.data?.points ?? []))
+const caveat = computed(() => growthCaveat(row.growth_status))
+const reason = computed(() => recommendationReasonText(row))
+
 // DESIGN.md §2 y §4: la seleccionada en lavado de señal (0.18) y el hover en Superficie hundida,
 // también cuando llega desde el radar.
 const toneClass = computed(() => {
@@ -58,7 +65,7 @@ const toneClass = computed(() => {
     type="button"
     :data-agent="rowAnchor(row.id)"
     :aria-pressed="selected"
-    class="min-h-14 w-full border-t border-table-line text-left text-[15px] transition-colors duration-150 ease-out"
+    class="min-h-12 w-full border-t border-table-line text-left text-[14.5px] transition-colors duration-150 ease-out"
     :class="[RANKING_GRID_CLASS, ROW_ENTER_CLASS, toneClass]"
     :style="{ animationDelay: enterDelay }"
     @click="emit('select', row.id)"
@@ -68,29 +75,39 @@ const toneClass = computed(() => {
     <span :class="selected ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'">
       {{ row.rank }}
     </span>
-    <span class="flex min-w-0 flex-col py-2">
-      <span class="font-medium">{{ row.topic }}</span>
-      <span v-if="row.audience_fit_score == null" class="text-[13px] text-muted-foreground">
+    <!-- La etapa es el punto de color, con su nombre en el tooltip. -->
+    <span class="flex min-w-0 flex-col gap-1 py-2">
+      <span class="flex items-baseline gap-2">
+        <StageDot :lifecycle="row.lifecycle" class="translate-y-[-1px]" />
+        <span class="font-medium">{{ row.topic }}</span>
+      </span>
+      <span
+        v-if="row.audience_fit_score == null"
+        class="pl-[17px] text-[13px] text-muted-foreground"
+      >
         Encaje no disponible
       </span>
     </span>
-    <LifecycleChip
-      :lifecycle="row.lifecycle"
-      :title="row.lifecycle_reason"
-      class="justify-self-start"
-    />
     <RankingSparkline :timeline />
-    <!-- CLAUDE.md §2.5 y DESIGN.md §4: el tipo de evidencia va siempre junto a la aceleración. -->
-    <span class="flex flex-col py-2">
+    <span class="flex flex-col py-2 whitespace-nowrap">
       <span
-        class="font-medium whitespace-nowrap"
-        :class="{ 'text-destructive': isDeclining(row.acceleration) }"
+        class="font-medium"
+        :class="isDeclining(row.acceleration) ? 'text-muted-foreground' : 'text-foreground'"
       >
         {{ formatAcceleration(row.acceleration) }}
       </span>
-      <span class="text-[13px] whitespace-nowrap text-muted-foreground">
-        {{ GROWTH_LABEL[row.growth_status] }}
+      <!-- CLAUDE.md §2.5: junto a la aceleración se marca lo que no es observado. -->
+      <span v-if="caveat" class="text-[13px] text-muted-foreground">{{ caveat }}</span>
+      <span
+        v-if="timeline.isPending"
+        class="mt-0.5 h-3.5 w-12 animate-pulse rounded bg-track motion-reduce:animate-none"
+      />
+      <span v-else-if="totals" class="text-[13px] text-muted-foreground">
+        {{ totals.current }} · antes {{ totals.previous }}
       </span>
+    </span>
+    <span class="justify-self-start">
+      <RecommendationChip :recommendation="row.recommendation" :reason size="sm" />
     </span>
     <span class="flex items-center gap-2.5">
       <span class="h-1.5 grow overflow-hidden rounded-full bg-track" aria-hidden="true">

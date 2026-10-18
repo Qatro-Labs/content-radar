@@ -323,8 +323,8 @@ describe('exploreSummary', () => {
     })
 
     expect(summary).toBe(
-      '356 piezas de los 38 temas, publicadas entre el 04/10 y el 17/10. ' +
-        '27 rinden 3× o más que su canal. Hasta 25 piezas por tema.',
+      '27 rinden 3× o más que lo normal en su canal. ' +
+        '356 piezas de los 38 temas (hasta 25 por tema), publicadas entre el 04/10 y el 17/10.',
     )
   })
 
@@ -336,7 +336,9 @@ describe('exploreSummary', () => {
       isCapped: false,
     })
 
-    expect(summary).toBe('1 pieza de 1 tema, publicada el 07/10. 1 rinde 3× o más que su canal.')
+    expect(summary).toBe(
+      '1 rinde 3× o más que lo normal en su canal. 1 pieza de 1 tema, publicada el 07/10.',
+    )
   })
 
   it('groups thousands', () => {
@@ -347,6 +349,6 @@ describe('exploreSummary', () => {
       isCapped: false,
     })
 
-    expect(summary).toMatch(/^1\.363 piezas de los 60 temas/)
+    expect(summary).toContain('1.363 piezas de los 60 temas')
   })
 })

@@ -7,7 +7,7 @@ import ExploreHeader from '@/components/explore/ExploreHeader.vue'
 import ExploreSidePanel from '@/components/explore/ExploreSidePanel.vue'
 import ExploreSkeleton from '@/components/explore/ExploreSkeleton.vue'
 import PiecesTable from '@/components/explore/PiecesTable.vue'
-import { PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
+import { countLabel, PERFORMANCE_LEGEND } from '@/lib/evidenceFormat'
 import {
   buildExploreView,
   EXPLORE_FILTER_PARAM,
@@ -130,6 +130,10 @@ const RETRY_BUTTON =
         <p class="px-1 text-[13.5px] text-muted-foreground">
           Datos desde el {{ formatUtcTimestamp(list.monitoring_started_at) }}.
           {{ PERFORMANCE_LEGEND }}
+          <template v-if="view.counts.rss > 0">
+            RSS ({{ countLabel(view.counts.rss, 'pieza', 'piezas') }}) no publica métricas: sus
+            piezas se cuentan, pero no se comparan.
+          </template>
         </p>
       </div>
 

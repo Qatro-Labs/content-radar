@@ -30,8 +30,13 @@ export const RECOMMENDATIONS = [
 export const RANKING_SORTS = ['opportunity', 'acceleration'] as const
 export type RankingSort = (typeof RANKING_SORTS)[number]
 
+// Radar y ranking son la misma lista en dos formas: se elige con una pestaña, sin perder filtros.
+export const RADAR_TABS = ['radar', 'ranking'] as const
+export type RadarTab = (typeof RADAR_TABS)[number]
+
 export const DEFAULT_PERIOD: Period = '7d'
 export const DEFAULT_RANKING_SORT: RankingSort = 'opportunity'
+export const DEFAULT_RADAR_TAB: RadarTab = 'radar'
 const LIST_SEPARATOR = ','
 const GAP_PARAM_ON = '1'
 
@@ -47,6 +52,7 @@ export interface RadarQuery {
   gap: boolean
   sort: RankingSort
   recommendation: Recommendation | null
+  tab: RadarTab
 }
 
 export const RADAR_QUERY_KEYS = [
@@ -59,6 +65,7 @@ export const RADAR_QUERY_KEYS = [
   'gap',
   'sort',
   'recommendation',
+  'tab',
 ] as const satisfies readonly (keyof RadarQuery)[]
 
 function firstValue(value: LocationQueryValue | LocationQueryValue[] | undefined): string | null {
@@ -104,6 +111,7 @@ export function parseRadarQuery(query: LocationQuery): RadarQuery {
     gap: firstValue(query.gap) === GAP_PARAM_ON,
     sort: oneOf(RANKING_SORTS, firstValue(query.sort)) ?? DEFAULT_RANKING_SORT,
     recommendation: oneOf(RECOMMENDATIONS, firstValue(query.recommendation)),
+    tab: oneOf(RADAR_TABS, firstValue(query.tab)) ?? DEFAULT_RADAR_TAB,
   }
 }
 
@@ -118,5 +126,6 @@ export function serializeRadarQuery(state: RadarQuery): Record<string, string> {
   if (state.gap) params.gap = GAP_PARAM_ON
   if (state.sort !== DEFAULT_RANKING_SORT) params.sort = state.sort
   if (state.recommendation) params.recommendation = state.recommendation
+  if (state.tab !== DEFAULT_RADAR_TAB) params.tab = state.tab
   return params
 }

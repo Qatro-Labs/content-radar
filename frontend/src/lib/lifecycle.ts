@@ -9,8 +9,11 @@ interface LifecycleCssVars {
 
 export interface LifecycleStyle {
   label: string
+  // La regla de CLAUDE.md §7 en palabras de quien decide qué publicar; `lifecycle_reason` (la
+  // regla con sus cifras) queda en el tooltip.
+  meaning: string
   cssVar: LifecycleCssVars
-  // "Sin etapa" se dibuja hueca, con trazo discontinuo (DESIGN.md §2).
+  // "Sin tendencia clara" se dibuja hueca, con trazo discontinuo (DESIGN.md §2).
   dashed: boolean
 }
 
@@ -37,15 +40,36 @@ function cssVars(name: Lifecycle, stroke: StrokeVar): LifecycleCssVars {
 // Un solo mapa para el radar, los chips y la leyenda (DESIGN.md §11). El `Record` obliga a
 // cubrir todas las etapas del contrato.
 export const LIFECYCLE_STYLE: Record<Lifecycle, LifecycleStyle> = {
-  emerging: { label: 'Emergente', cssVar: cssVars('emerging', '--lc-emerging'), dashed: false },
+  emerging: {
+    label: 'Emergente',
+    meaning: 'empieza a crecer, en pocas fuentes y con poco contenido parecido.',
+    cssVar: cssVars('emerging', '--lc-emerging'),
+    dashed: false,
+  },
   accelerating: {
     label: 'Acelerando',
+    meaning: 'crece más de un 50 % y aparece en 3 fuentes o más.',
     cssVar: cssVars('accelerating', '--lc-accelerating-stroke'),
     dashed: false,
   },
-  peaking: { label: 'En pico', cssVar: cssVars('peaking', '--lc-peaking-stroke'), dashed: false },
-  saturated: { label: 'Saturado', cssVar: cssVars('saturated', '--lc-saturated'), dashed: false },
-  unknown: { label: 'Sin etapa', cssVar: cssVars('unknown', '--lc-unknown'), dashed: true },
+  peaking: {
+    label: 'En pico',
+    meaning: 'ya hay mucho contenido parecido y casi no crece.',
+    cssVar: cssVars('peaking', '--lc-peaking-stroke'),
+    dashed: false,
+  },
+  saturated: {
+    label: 'Saturado',
+    meaning: 'hay mucho contenido parecido y empieza a bajar.',
+    cssVar: cssVars('saturated', '--lc-saturated'),
+    dashed: false,
+  },
+  unknown: {
+    label: 'Sin tendencia clara',
+    meaning: 'faltan datos o ninguna regla de etapa se cumple.',
+    cssVar: cssVars('unknown', '--lc-unknown'),
+    dashed: true,
+  },
 }
 
 // ECharts pinta en canvas y necesita colores resueltos, no `var(--…)`.

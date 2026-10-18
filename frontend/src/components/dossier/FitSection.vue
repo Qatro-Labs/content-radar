@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { computed } from 'vue'
 
 import { citationChips } from '@/lib/dossierView'
@@ -29,26 +31,22 @@ const criteria = computed(() =>
 <template>
   <section
     data-agent="dossier-fit"
-    aria-label="Por qué importa"
-    :class="[CARD_CLASS, 'flex-col gap-7']"
+    aria-label="Encaje con 30X"
+    :class="[CARD_CLASS, 'flex-col gap-5']"
   >
-    <div class="flex flex-col gap-2.5">
-      <h2 :class="CARD_TITLE_CLASS">Por qué importa</h2>
-      <p class="max-w-[720px] text-lg leading-[1.55] text-ink-read">
-        {{ opportunity.why_it_matters }}
-      </p>
-    </div>
-
     <div class="flex flex-wrap gap-x-10 gap-y-6">
       <div class="flex flex-[1_1_260px] flex-col gap-2">
-        <h3 class="text-[15px] font-semibold">Encaje con 30X</h3>
+        <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+          Encaje con 30X
+          <InfoTip label="el encaje con 30X" :text="HELP.fit" />
+        </h2>
         <span class="font-display text-5xl leading-none font-semibold tracking-[-0.04em]">
           {{ formatFit(opportunity.audience_fit_score) }}
         </span>
         <!-- DESIGN.md §9: el encaje se rotula como evaluación editorial, no como medición. -->
         <p class="text-sm text-muted-foreground">
-          Evaluación editorial, no una medición. Seis criterios de 0 a 5. Pulse una pieza para ver
-          dónde está en la evidencia.
+          Evaluación editorial, no una medición. Seis criterios de 0 a 5: abra uno para ver por qué
+          y en qué piezas se apoya.
         </p>
         <button
           v-if="citedUrl"
@@ -60,7 +58,7 @@ const criteria = computed(() =>
         </button>
       </div>
 
-      <div class="flex min-w-0 flex-[999_1_640px] flex-col gap-[22px]">
+      <div class="flex min-w-0 flex-[999_1_640px] flex-col">
         <FitCriterion
           v-for="{ criterion, chips } in criteria"
           :key="criterion.criterion"

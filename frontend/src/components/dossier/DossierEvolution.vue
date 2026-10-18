@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import HoverHint from '@/components/layout/HoverHint.vue'
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { GROWTH_HELP, HELP } from '@/lib/helpText'
 import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
@@ -83,12 +86,17 @@ const tiles = computed<WindowTile[]>(() => {
   >
     <div class="flex min-w-0 flex-[999_1_640px] flex-col gap-3">
       <div class="flex items-center gap-3">
-        <h2 :class="CARD_TITLE_CLASS">Evolución</h2>
-        <span
-          class="rounded-full bg-neutral-action px-2.5 py-1 text-[13px] font-semibold text-ink-read"
-        >
-          {{ GROWTH_LABEL[opportunity.growth_status] }}
-        </span>
+        <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+          Evolución
+          <InfoTip label="la evolución" :text="HELP.evolution" />
+        </h2>
+        <HoverHint :text="GROWTH_HELP[opportunity.growth_status]">
+          <span
+            class="cursor-help rounded-full bg-neutral-action px-2.5 py-1 text-[13px] font-semibold text-ink-read"
+          >
+            {{ GROWTH_LABEL[opportunity.growth_status] }}
+          </span>
+        </HoverHint>
       </div>
 
       <div v-if="timeline.isPending" class="flex h-[180px] items-end gap-2.5" aria-busy="true">
@@ -151,21 +159,23 @@ const tiles = computed<WindowTile[]>(() => {
 
     <div class="flex min-w-0 flex-[1_1_300px] flex-col justify-center gap-2.5">
       <!-- DESIGN.md §2: la aceleración negativa va en Negativo. -->
-      <span
-        class="font-display text-[44px] leading-none font-semibold tracking-[-0.04em] whitespace-nowrap"
-        :class="{ 'text-destructive': isDeclining(opportunity.acceleration) }"
-      >
-        {{ formatAcceleration(opportunity.acceleration) }}
-      </span>
+      <HoverHint :text="HELP.acceleration">
+        <span
+          class="cursor-help self-start font-display text-[44px] leading-none font-semibold tracking-[-0.04em] whitespace-nowrap"
+          :class="{ 'text-destructive': isDeclining(opportunity.acceleration) }"
+        >
+          {{ formatAcceleration(opportunity.acceleration) }}
+        </span>
+      </HoverHint>
       <span class="text-base text-ink-soft">
         frente a la ventana anterior, ajustado por el volumen de las fuentes.
       </span>
       <span class="text-[15px] text-ink-soft">
         {{ formatDecimal(opportunity.velocity) }} piezas nuevas al día en la ventana actual.
       </span>
-      <span class="text-sm text-muted-foreground">
-        Etapa «{{ LIFECYCLE_STYLE[opportunity.lifecycle].label }}»:
-        {{ opportunity.lifecycle_reason }}
+      <span class="text-sm text-muted-foreground" :title="opportunity.lifecycle_reason">
+        {{ LIFECYCLE_STYLE[opportunity.lifecycle].label }}:
+        {{ LIFECYCLE_STYLE[opportunity.lifecycle].meaning }}
       </span>
     </div>
   </section>

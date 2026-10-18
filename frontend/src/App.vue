@@ -8,6 +8,7 @@ import AgentLauncher from '@/components/agent/AgentLauncher.vue'
 import AgentPresence from '@/components/agent/AgentPresence.vue'
 import type { RadMarkState } from '@/components/agent/RadMark.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import { useAgentPeek } from '@/composables/useAgentPeek'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadIdleLife } from '@/composables/useRadIdleLife'
 import { useRadMorph } from '@/composables/useRadMorph'
@@ -19,6 +20,7 @@ const agent = useRadarAgent()
 const route = useRoute()
 const isLoginPage = computed(() => route.name === RouteName.Login)
 const { turns, status, presence, suggestions, isAvailable, isMinimized, hasUnread } = agent
+const { peek } = useAgentPeek()
 
 // En reposo, Rad mira el cursor (y de vez en cuando, otro sitio de la página); mientras trabaja,
 // mira hacia su presencia. Las coordenadas van relativas a `[data-agent-root]`, como la
@@ -47,9 +49,17 @@ const lookAt = computed(() => {
 
 // La barra es fija y flota sobre la página: el final de la página deja sitio solo para el campo
 // (o para el ojo, con la barra reducida), nunca para la conversación entera.
+const fitsViewport = computed(() => route.meta.fitsViewport === true)
+
 const bottomSpace = computed(() => {
   if (!isAvailable.value) return ''
-  return isMinimized.value ? 'pb-20' : 'pb-44'
+  // Lo que mide la barra: su cabecera con «−» y el campo (116 px), o además la respuesta plegada.
+  const docked = turns.value.length > 0 ? 'pb-48' : 'pb-[132px]'
+  const scrolling = isMinimized.value ? 'pb-20' : docked
+  // Sin scroll, debajo de la barra no puede quedar nada: la vista acaba justo encima de ella (la
+  // barra mide 116 px y flota a 24 px del borde, que ya es el padding de la raíz).
+  if (!fitsViewport.value) return scrolling
+  return isMinimized.value ? `${scrolling} lg:pb-0` : `${scrolling} lg:pb-[124px]`
 })
 
 // La marca de Rad refleja lo que hace: se abre en radar mientras trabaja, el haz pasa en cada
@@ -72,9 +82,10 @@ const mark = computed<RadMarkState>(() => {
     ref="root"
     data-agent-root
     class="relative mx-auto flex min-h-[100dvh] max-w-[1440px] flex-col gap-6 px-4 py-4 md:px-8 md:py-6"
+    :class="{ 'lg:h-[100dvh]': fitsViewport }"
   >
     <AppHeader v-if="!isLoginPage" />
-    <main class="flex-1" :class="bottomSpace">
+    <main class="flex-1" :class="[bottomSpace, { 'lg:min-h-0': fitsViewport }]">
       <RouterView />
     </main>
     <!-- Reducir la barra: el ojo de Rad sale volando de ella hasta la esquina; abrirla, vuelve
@@ -93,6 +104,7 @@ const mark = computed<RadMarkState>(() => {
         @copy-link="agent.copyViewLink"
         @ask-from-assistant="agent.askFromAssistant"
         @minimize="agent.minimize"
+        @peek-cited="peek"
       />
     </Transition>
     <Transition :css="false" @enter="morph.onEyeEnter" @leave="morph.onEyeLeave">

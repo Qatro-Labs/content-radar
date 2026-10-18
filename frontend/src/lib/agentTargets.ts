@@ -67,6 +67,8 @@ export function patchToQuery(patch: RadarPatch): Partial<RadarQuery> {
   if (patch.topic !== undefined) query.topic = patch.topic
   if (patch.gap !== undefined) query.gap = patch.gap ?? false
   if (patch.sort !== undefined) query.sort = patch.sort ?? DEFAULT_RANKING_SORT
+  // Un orden solo se ve en el ranking: Rad lo enseña en su pestaña.
+  if (patch.sort) query.tab = 'ranking'
   if (patch.selected !== undefined) query.selected = patch.selected
   if (patch.highlight !== undefined) query.highlight = patch.highlight ?? []
   return query
@@ -80,15 +82,18 @@ interface PatchContext {
 
 function selectionTarget(id: string, hasAnchor: PatchContext['hasAnchor']): AgentTarget {
   if (hasAnchor(bubbleAnchor(id))) return point(bubbleAnchor(id))
-  // Un tema sin encaje no tiene burbuja, y las filas 11+ no existen con el ranking plegado.
+  // Un tema sin encaje no tiene burbuja, y sin la pestaña Ranking (o con el ranking plegado) no
+  // hay fila: su vista previa sale en el panel de al lado.
   if (hasAnchor(rowAnchor(id))) return control(rowAnchor(id))
-  return block(AGENT_ANCHOR.ranking)
+  return block(AGENT_ANCHOR.detail)
 }
 
-function counterTarget(patch: RadarPatch, query: RadarQuery): AgentTarget | null {
+function counterTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget | null {
   if (patch.lifecycle === undefined && patch.recommendation === undefined) return null
   const counter = activeCounterOf({ ...query, ...patchToQuery(patch) })
-  return counter === null ? null : control(COUNTER_ANCHOR[counter])
+  // «Sin tendencia clara» filtra por URL pero no tiene contador en la cabecera.
+  if (counter === null || !hasAnchor(COUNTER_ANCHOR[counter])) return null
+  return control(COUNTER_ANCHOR[counter])
 }
 
 // Lo mismo que quitan `resetViewPatch()` y el `reset_view` del agente.
@@ -103,7 +108,7 @@ function isSortOnly(patch: RadarPatch): boolean {
 
 export function patchTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget {
   if (patch.selected) return selectionTarget(patch.selected, hasAnchor)
-  const counter = counterTarget(patch, query)
+  const counter = counterTarget(patch, { query, hasAnchor })
   if (counter !== null) return counter
   if (isReset(patch)) {
     return hasAnchor(AGENT_ANCHOR.reset) ? control(AGENT_ANCHOR.reset) : block(AGENT_ANCHOR.radar)

@@ -8,7 +8,6 @@ import {
   buildRadarView,
   counterPatch,
   describeStageUnknowns,
-  describeWeekPicks,
   radarHeadline,
   radarSubline,
 } from '../radarView'
@@ -31,6 +30,7 @@ function query(patch: Partial<RadarQuery> = {}): RadarQuery {
     gap: false,
     sort: 'opportunity',
     recommendation: null,
+    tab: 'radar',
     ...patch,
   }
 }
@@ -55,6 +55,38 @@ describe('buildRadarView', () => {
     expect(view.dimmedIds).toEqual(new Set())
     expect(view.counts).toEqual(FIXTURE_COUNTS)
     expect(view.activeCounter).toBeNull()
+  })
+
+  describe('radar limit', () => {
+    it('plots only the first topics by opportunity when nothing is filtered', () => {
+      const view = buildRadarView(list, query(), { radarTop: 2 })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_002'])
+      expect(view.plottableCount).toBe(4)
+    })
+
+    it('always plots the selected and the highlighted topics', () => {
+      const view = buildRadarView(list, query({ selected: 'opp_004', highlight: ['opp_003'] }), {
+        radarTop: 1,
+      })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_003', 'opp_004'])
+    })
+
+    it('plots every topic a filter keeps, beyond the limit', () => {
+      const view = buildRadarView(list, query({ lifecycle: ['peaking', 'saturated'] }), {
+        radarTop: 1,
+      })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_003', 'opp_004'])
+      expect(view.dimmedIds).toEqual(new Set(['opp_001']))
+    })
+
+    it('plots every topic with fit when the limit is off', () => {
+      const view = buildRadarView(list, query(), { radarTop: null })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_002', 'opp_003', 'opp_004'])
+    })
   })
 
   it('keeps the selected stages with their global rank and dims the rest of the radar', () => {
@@ -198,6 +230,7 @@ describe('buildRadarView', () => {
       visible: [],
       isFiltered: false,
       plotted: [],
+      plottableCount: 0,
       unevaluatedCount: 0,
       dimmedIds: new Set(),
       selected: null,
@@ -294,49 +327,25 @@ describe('describeStageUnknowns', () => {
     {
       case: 'for lack of data and because no rule matches',
       counts: { preliminary: 8, unmatched: 11 },
-      text: '19 de 38 temas no tienen etapa: 8 por falta de datos y 11 porque ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      text: '19 de 38 temas no tienen una tendencia clara: 8 por falta de datos y 11 porque ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
     },
     {
       case: 'only because no rule matches',
       counts: { preliminary: 0, unmatched: 19 },
-      text: '19 de 38 temas no tienen etapa: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      text: '19 de 38 temas no tienen una tendencia clara: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
     },
     {
       case: 'one topic, in the singular',
       counts: { preliminary: 0, unmatched: 1 },
-      text: '1 de 38 temas no tiene etapa: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      text: '1 de 38 temas no tiene una tendencia clara: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
     },
     {
       case: 'every topic has a stage',
       counts: { preliminary: 0, unmatched: 0 },
-      text: 'Todos los temas tienen etapa. Datos desde el 16/10, 00:00 UTC.',
+      text: 'Todos los temas tienen una tendencia clara. Datos desde el 16/10, 00:00 UTC.',
     },
   ])('$case', ({ counts, text }) => {
     expect(describeStageUnknowns(topics(counts), MONITORING_STARTED_AT)).toBe(text)
-  })
-})
-
-describe('describeWeekPicks', () => {
-  const [first, second, third] = buildRadarView(list, query()).ranked
-
-  it.each([
-    {
-      case: 'several topics to publish now',
-      picks: { topics: [first!, second!], hasPublishNow: true },
-      text: '2 temas para publicar ya: crecen y encajan con la audiencia de 30X.',
-    },
-    {
-      case: 'one topic to publish now, in the singular',
-      picks: { topics: [first!], hasPublishNow: true },
-      text: '1 tema para publicar ya: crece y encaja con la audiencia de 30X.',
-    },
-    {
-      case: 'no topic to publish now',
-      picks: { topics: [first!, second!, third!], hasPublishNow: false },
-      text: 'Ningún tema cumple hoy las condiciones de «Publicar ya». Los primeros del ranking:',
-    },
-  ])('$case', ({ picks, text }) => {
-    expect(describeWeekPicks(picks)).toBe(text)
   })
 })
 
@@ -346,7 +355,8 @@ describe('radar texts', () => {
   const subline = (q: RadarQuery, source: OpportunityList = list) =>
     radarSubline(buildRadarView(source, q), q)
 
-  const HOW_TO_READ = 'Ordenados por oportunidad. Elija una burbuja o una fila para ver el tema.'
+  const HOW_TO_READ =
+    'Ordenados por oportunidad. Elige un tema en el radar o en el ranking para verlo al lado.'
 
   it('counts the topics when there is no filter', () => {
     expect(headline(query())).toBe('5 temas esta semana')
@@ -378,7 +388,7 @@ describe('radar texts', () => {
 
   it('names the order the agent chose when it sorts by acceleration', () => {
     expect(subline(query({ sort: 'acceleration' }))).toBe(
-      'Hay 5 temas analizados esta semana. Ordenados por aceleración. Elija una burbuja o una fila para ver el tema.',
+      'Hay 5 temas analizados esta semana. Ordenados por aceleración. Elige un tema en el radar o en el ranking para verlo al lado.',
     )
   })
 
