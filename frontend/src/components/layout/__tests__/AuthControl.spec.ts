@@ -42,6 +42,15 @@ async function renderControl() {
   await router.push('/')
   await router.isReady()
   render(AuthControl, { global: { plugins: [router] } })
+  return router
+}
+
+async function renderSignedIn() {
+  const resolveSession = deferSession()
+  auth.signOut.mockResolvedValue({ error: null })
+  const router = await renderControl()
+  resolveSession({ data: { session: SESSION }, error: null })
+  return router
 }
 
 // Reka abre el menú con pointerdown o teclado, y lo pinta en un portal sobre `document.body`;
@@ -76,19 +85,35 @@ describe('AuthControl', () => {
     expect(screen.queryByText('Iniciar sesión')).toBeNull()
   })
 
+  it('shows the initial of the email on the account trigger', async () => {
+    await renderSignedIn()
+
+    const trigger = await screen.findByRole('button', { name: 'Cuenta' })
+
+    expect(trigger.textContent?.trim()).toBe('A')
+  })
+
   it('shows the email and signs out from the account menu', async () => {
-    const resolveSession = deferSession()
-    auth.signOut.mockResolvedValue({ error: null })
-    await renderControl()
-    resolveSession({ data: { session: SESSION }, error: null })
+    await renderSignedIn()
 
     expect(screen.queryByText('ana@example.com')).toBeNull()
     await openAccountMenu()
 
     expect(await screen.findByText('ana@example.com')).toBeTruthy()
+    expect(screen.getByText('Sesión iniciada')).toBeTruthy()
     await fireEvent.click(await screen.findByRole('menuitem', { name: 'Cerrar sesión' }))
 
     expect(auth.signOut).toHaveBeenCalledOnce()
+  })
+
+  it('goes to the login page after signing out when login is required', async () => {
+    vi.stubEnv('VITE_AUTH_REQUIRED', 'true')
+    const router = await renderSignedIn()
+
+    await openAccountMenu()
+    await fireEvent.click(await screen.findByRole('menuitem', { name: 'Cerrar sesión' }))
+
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('login'))
   })
 
   it('offers to sign in once the session resolves empty', async () => {
