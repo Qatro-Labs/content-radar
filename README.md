@@ -23,11 +23,11 @@ Convierte señales públicas de Internet (YouTube, Hacker News, medios y blogs p
 
 ## Cómo funciona
 
-![Arquitectura de 30X Signal: fuentes públicas, jobs collect y analyze en GitHub Actions, Supabase, la app de Railway con REST, MCP y Rad, y los clientes](docs/diagrams/arquitectura.svg)
+![Componentes de 30X Signal: fuentes públicas, colectores, motor de análisis con modelos de IA, base de datos, servicios, API REST, agente Rad y servidor MCP, y los clientes](docs/diagrams/arquitectura.svg)
 
-- `collect` corre cada 2 h en GitHub Actions y `analyze` corre después de cada recolección correcta. La API y el MCP sirven la última ejecución correcta, o la fijada con `DEMO_RUN_ID`.
-- Los scores se calculan en Python, de forma determinista. El LLM evalúa y redacta; no calcula. Jev (TypeSafe) responde preguntas tipadas sobre cada pieza.
-- Detalle: [docs/architecture.md](docs/architecture.md) (arquitectura) y [docs/scoring.md](docs/scoring.md) (motor).
+- Los colectores recogen señales públicas de forma periódica y el motor de análisis las convierte en un ranking de temas.
+- Los scores se calculan en Python, de forma determinista. Los modelos de IA clasifican, evalúan y redactan; no calculan.
+- Qué hace cada componente: [docs/architecture.md](docs/architecture.md). El algoritmo: [docs/scoring.md](docs/scoring.md).
 
 Cada paso del producto responde una pregunta y se ve en el dashboard y en el MCP:
 

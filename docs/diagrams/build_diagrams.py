@@ -249,252 +249,90 @@ def architecture() -> None:
     svg = Svg()
     y = header(
         svg,
-        "30X Signal · Arquitectura",
-        "Monolito modular. Los jobs recolectan y calculan; una sola capa de servicios sirve el mismo "
-        "ranking al dashboard, al MCP y a Rad. Ni el frontend ni el MCP calculan nada.",
+        "30X Signal · Componentes",
+        "Los jobs recolectan y analizan; una sola capa de servicios sirve el mismo ranking al dashboard, al agente y a los asistentes de IA.",
     )
-    y = legend(
-        svg,
-        y,
-        [
-            ("data", "Datos"),
-            ("python", "Python"),
-            ("jev", "Jev (TypeSafe)"),
-            ("llm", "LLM"),
-            ("client", "Clientes"),
-        ],
-    )
-    y += 26
+    y += 10
+    full = WIDTH - 2 * MARGIN
+    gap = 40
 
-    # Fuentes
-    top = y
-    y += 46
-    h, src_x = row(
+    h = card(
         svg,
+        MARGIN,
         y,
-        [
-            (
-                "YouTube",
-                ["Data API v3 oficial", ("muted", "Canales elegidos: vídeos y Shorts")],
-                "neutral",
-            ),
-            ("Hacker News", ["API de Algolia", ("muted", "Conversaciones tempranas")], "neutral"),
-            ("Medios y blogs", ["RSS", ("muted", "Tech, negocio y LATAM")], "neutral"),
-            (
-                "ScrapeCreators",
-                ["TikTok y Reddit: búsquedas", "Instagram: perfiles elegidos"],
-                "neutral",
-            ),
-        ],
+        full,
+        "Fuentes públicas",
+        ["YouTube · Hacker News · medios y blogs (RSS) · TikTok · Reddit · Instagram"],
+        "neutral",
     )
-    band_h = h + 46 + 20
-    _insert_band(
-        svg, top, band_h, "Fuentes públicas · sin login propio", "LinkedIn y X: fuera del MVP"
-    )
-    y = top + band_h
+    y += h + 44
+    third = (full - 2 * gap) / 3
+    xs = [MARGIN + i * (third + gap) for i in range(3)]
+    svg.arrow(xs[0] + third / 2, y - 44, xs[0] + third / 2, y - 2)
+    specs = [
+        ("Colectores", ["Leen cada fuente y guardan piezas y métricas públicas."], "python"),
+        ("Motor de análisis", ["Agrupa las piezas en temas y calcula los scores."], "python"),
+        ("Modelos de IA", ["Jev clasifica y verifica; el LLM evalúa y redacta."], "llm"),
+    ]
+    h = max(card_height(t, ls, third) for t, ls, _ in specs)
+    for x, (t, ls, tone) in zip(xs, specs, strict=True):
+        card(svg, x, y, third, t, ls, tone, h)
+    svg.arrow(xs[2] - 2, y + h / 2, xs[1] + third + 2, y + h / 2)
+    y += h + 44
+    svg.arrow(xs[0] + third / 2, y - 44, xs[0] + third / 2, y - 2)
+    svg.arrow(xs[1] + third / 2, y - 44, xs[1] + third / 2, y - 2)
 
-    # Jobs
-    y += 44
-    svg.arrow(WIDTH / 2, y - 44, WIDTH / 2, y - 2, "piezas y métricas públicas")
-    top = y
-    y += 46
-    col_w = (WIDTH - 2 * MARGIN - 60) / 2
-    collect_lines: list[Line] = [
-        "Normaliza y deduplica cada pieza y guarda un snapshot de sus métricas en cada observación.",
-        ("muted", "Cada observación suma historial: así se mide la velocidad de una pieza."),
-    ]
-    analyze_lines: list[Line] = [
-        "Jev clasifica cada pieza → embeddings y clustering → scores en Python → el LLM evalúa y "
-        "redacta → Jev verifica cada afirmación.",
-        ("muted", "Cada ejecución guarda su propio ranking. Detalle en docs/scoring.md."),
-    ]
-    h = max(
-        card_height("collect · cada 2 h", collect_lines, col_w, "Python"),
-        card_height("analyze · tras cada collect correcto", analyze_lines, col_w, "Python"),
-    )
-    card(svg, MARGIN, y, col_w, "collect · cada 2 h", collect_lines, "python", h, "Python")
-    card(
+    h = card(
         svg,
-        MARGIN + col_w + 60,
+        MARGIN,
         y,
-        col_w,
-        "analyze · tras cada collect correcto",
-        analyze_lines,
+        full,
+        "Base de datos",
+        ["Piezas, métricas y cada ejecución del análisis con su ranking."],
+        "data",
+    )
+    y += h + 44
+    svg.arrow(WIDTH / 2, y - 44, WIDTH / 2, y - 2)
+    h = card(
+        svg,
+        MARGIN,
+        y,
+        full,
+        "Servicios",
+        ["La única lógica de negocio: todos los canales leen los mismos datos."],
         "python",
-        h,
-        "Python",
     )
-    svg.arrow(MARGIN + col_w + 4, y + h / 2, MARGIN + col_w + 56, y + h / 2)
-    y += h + 16
-    mh, _ = row_at(
-        svg,
-        MARGIN + col_w + 60,
-        y,
-        col_w,
-        [
-            ("Jev (TypeSafe)", ["Juicios tipados: piezas, pares de notas y afirmaciones"], "jev"),
-            ("LLM", ["Audience fit, nombre del tema y por qué importa"], "llm"),
-        ],
-    )
-    y += mh + 20
-    _insert_band(svg, top, y - top, "GitHub Actions · cron")
-    analyze_x = MARGIN + col_w + 60 + col_w / 2
-    collect_x = MARGIN + col_w / 2
-
-    # Base de datos
-    y += 44
-    svg.arrow(collect_x, y - 44, collect_x, y - 2, "escribe piezas y snapshots")
-    svg.arrow(analyze_x, y - 44, analyze_x, y - 2, "escribe una ejecución")
-    top = y
-    y += 46
-    db_w = (WIDTH - 2 * MARGIN) * 0.64
-    db_lines: list[Line] = [
-        "Piezas públicas y sus snapshots de métricas",
-        "Juicios de Jev y evaluaciones del LLM, en caché",
-        "Ejecuciones de analyze: una fila por tema y ejecución",
-        "Consumo y coste de cada API externa",
-        "Briefs guardados por usuario",
+    y += h + 44
+    for x in xs:
+        svg.arrow(x + third / 2, y - 44, x + third / 2, y - 2)
+    specs = [
+        ("API REST", ["Sirve oportunidades, evidencia y briefs al dashboard."], "python"),
+        ("Agente Rad", ["Responde preguntas sobre el Radar y mueve la vista."], "llm"),
+        ("Servidor MCP", ["Las mismas consultas desde un asistente de IA."], "python"),
     ]
-    cfg_lines: list[Line] = [
-        ("mono", "data/sources.yaml"),
-        ("muted", "fuentes y su segment"),
-        ("mono", "data/audiences/30x.yaml"),
-        ("muted", "perfil editorial de 30X"),
-        ("mono", "data/pricing.yaml"),
-        ("muted", "precios con fuente y fecha"),
+    h = max(card_height(t, ls, third) for t, ls, _ in specs)
+    for x, (t, ls, tone) in zip(xs, specs, strict=True):
+        card(svg, x, y, third, t, ls, tone, h)
+    y += h + 44
+    half = (full - gap) / 2
+    svg.arrow(xs[0] + third / 2, y - 44, xs[0] + third / 2, y - 2)
+    svg.arrow(xs[1] + third / 2, y - 44, MARGIN + half - 60, y - 2)
+    svg.arrow(xs[2] + third / 2, y - 44, xs[2] + third / 2, y - 2)
+    specs = [
+        ("Dashboard", ["Radar, exploración de evidencia y creación de briefs."], "client"),
+        ("Asistentes de IA", ["Claude, ChatGPT o Grok, conectados por MCP."], "client"),
     ]
-    cfg_w = WIDTH - 2 * MARGIN - db_w - 20
-    h = max(
-        card_height("Supabase · PostgreSQL + pgvector", db_lines, db_w),
-        card_height("Configuración versionada", cfg_lines, cfg_w),
-    )
-    card(svg, MARGIN, y, db_w, "Supabase · PostgreSQL + pgvector", db_lines, "data", h)
-    card(svg, MARGIN + db_w + 20, y, cfg_w, "Configuración versionada", cfg_lines, "neutral", h)
-    y += h + 20
-    _insert_band(svg, top, y - top, "Datos")
-
-    # Railway
-    y += 44
-    svg.arrow(
-        WIDTH / 2, y - 44, WIDTH / 2, y - 2, "ejecución servida: DEMO_RUN_ID o la última correcta"
-    )
-    top = y
-    y += 46
-    svc_lines: list[Line] = [
-        "Oportunidades, señales, briefs y coste",
-        (
-            "muted",
-            "La única lógica de negocio. La REST, el MCP y Rad la comparten: mismos ids y scores.",
-        ),
-    ]
-    h = card(svg, MARGIN, y, WIDTH - 2 * MARGIN, "services/", svc_lines, "python")
-    y += h + 36
-    for x in (MARGIN + (WIDTH - 2 * MARGIN) * f for f in (1 / 6, 3 / 6, 5 / 6)):
-        svg.arrow(x, y - 36, x, y - 2)
-    h, api_x = row(
-        svg,
-        y,
-        [
-            (
-                "REST /api/v1",
-                [
-                    "Oportunidades, evidencia, timeline, briefs, fuentes y coste",
-                    ("muted", "Supabase Auth opcional: guarda los briefs de cada usuario"),
-                ],
-                "python",
-            ),
-            (
-                "Rad · POST /api/v1/agent",
-                [
-                    "Agente del Radar, por SSE",
-                    ("muted", "Responde sobre la ejecución servida y mueve la vista del Radar"),
-                ],
-                "llm",
-            ),
-            (
-                "MCP /mcp",
-                [
-                    "Streamable HTTP, 6 tools",
-                    ("muted", "Las mismas consultas desde un asistente de IA"),
-                ],
-                "python",
-            ),
-        ],
-    )
-    y += h + 20
-    _insert_band(svg, top, y - top, "Railway · una app FastAPI")
-
-    # Clientes
-    y += 44
-    svg.arrow(api_x[0], y - 44, api_x[0], y - 2)
-    svg.arrow(api_x[1], y - 44, api_x[1] - 150, y - 2)
-    svg.arrow(api_x[2], y - 44, api_x[2], y - 2)
-    top = y
-    y += 46
-    h, _ = row(
-        svg,
-        y,
-        [
-            (
-                "Dashboard · Vue 3",
-                [
-                    "Radar · Explorar · expediente del tema · Crear (Mis briefs)",
-                    (
-                        "muted",
-                        "Build estático en Vercel. Habla solo con la API REST, nunca con el MCP.",
-                    ),
-                ],
-                "client",
-            ),
-            (
-                "Asistentes de IA",
-                [
-                    "Claude · ChatGPT · Grok",
-                    (
-                        "muted",
-                        "La persona pregunta y decide qué publicar, con la evidencia enlazada.",
-                    ),
-                ],
-                "client",
-            ),
-        ],
-        gap=60,
-    )
-    y += h + 20
-    _insert_band(svg, top, y - top, "Clientes")
-    svg.height = y + 40
+    h = max(card_height(t, ls, half) for t, ls, _ in specs)
+    for i, (t, ls, tone) in enumerate(specs):
+        card(svg, MARGIN + i * (half + gap), y, half, t, ls, tone, h)
+    svg.height = y + h + 40
     (OUT / "arquitectura.svg").write_text(
         svg.render(
-            "30X Signal · Arquitectura",
-            "Fuentes públicas, jobs de GitHub Actions (collect y analyze), Supabase, la app de Railway "
-            "con REST, MCP y el agente Rad, y los clientes: dashboard Vue y asistentes de IA.",
+            "30X Signal · Componentes",
+            "Fuentes públicas, colectores, motor de análisis con modelos de IA, base de datos, "
+            "servicios, API REST, agente Rad y servidor MCP, y los clientes: dashboard y asistentes de IA.",
         )
     )
-
-
-def _insert_band(svg: Svg, y: float, h: float, label: str, note: str | None = None) -> None:
-    """Dibuja la banda detrás de lo que ya contiene (se inserta al principio del dibujo)."""
-    tmp = Svg()
-    band(tmp, y, h, label, note)
-    svg.parts[0:0] = tmp.parts
-
-
-def row_at(
-    svg: Svg,
-    x0: float,
-    y: float,
-    total_w: float,
-    specs: list[tuple[str, list[Line], str]],
-    gap: float = 16,
-) -> tuple[float, list[float]]:
-    w = (total_w - gap * (len(specs) - 1)) / len(specs)
-    h = max(card_height(t, ls, w) for t, ls, _ in specs)
-    centers = []
-    for i, (t, ls, tone) in enumerate(specs):
-        x = x0 + i * (w + gap)
-        card(svg, x, y, w, t, ls, tone, h)
-        centers.append(x + w / 2)
-    return h, centers
 
 
 # ---------------------------------------------------------------------------------------------
