@@ -39,6 +39,7 @@ function showMore() {
 
 <template>
   <section
+    data-agent="pieces"
     aria-label="Piezas"
     class="flex min-w-0 flex-col gap-1 rounded-card bg-card px-5 pt-5 pb-3"
   >

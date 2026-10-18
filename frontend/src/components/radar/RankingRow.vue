@@ -10,6 +10,7 @@ import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
+import { rowAnchor } from '@/lib/agentTargets'
 import {
   formatAcceleration,
   formatScore,
@@ -55,6 +56,7 @@ const toneClass = computed(() => {
 <template>
   <button
     type="button"
+    :data-agent="rowAnchor(row.id)"
     :aria-pressed="selected"
     class="min-h-14 w-full border-t border-table-line text-left text-[15px] transition-colors duration-150 ease-out"
     :class="[RANKING_GRID_CLASS, ROW_ENTER_CLASS, toneClass]"

@@ -1,34 +1,51 @@
 """Tools del agente del Radar (plan data-radar-agent, "Tools que ve el modelo").
 
 La lista es cerrada (D16): las de datos solo leen la ejecución servida a través de
-`app.services.opportunities`; las de vista devuelven un parche de la URL del Radar; `final_answer`
-y `decline` las resuelve el bucle. Ninguna escribe ni accede a red, archivos o SQL arbitrario, y
-añadir una exige revisar el plan.
+`app.services.opportunities`; las de vista devuelven un parche de la URL del Radar o una navegación
+al expediente o a Explorar (plan fe-radar-agent, D3); `final_answer` y `decline` las resuelve el
+bucle. Ninguna escribe ni accede a red, archivos o SQL arbitrario, y añadir una exige revisar el
+plan. Las de búsqueda de piezas están en `search.py`; lo que comparten todas, en `tool_base.py`.
 """
 
-from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated
 
 from anthropic.types import ToolParam
-from pydantic import (
-    AfterValidator,
-    AwareDatetime,
-    BaseModel,
-    ConfigDict,
-    Field,
-    HttpUrl,
-    ValidationError,
-)
+from pydantic import AfterValidator, BaseModel, Field, ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent import labels
 from app.agent.limits import MAX_ANSWER_WORDS
-from app.agent.sanitize import clean_external, wrap_data
-from app.schemas.agent import CitedOpportunity, RadarPatch, RadarSort, StepKind
+from app.agent.sanitize import clean_external
+from app.agent.search import (
+    MAX_SEARCH_ROWS,
+    SearchInput,
+    ShowPiecesInput,
+    search_pieces,
+    show_pieces,
+)
+from app.agent.tool_base import (
+    NO_DATA_MESSAGE,
+    OK_CONTENT,
+    EvidenceRow,
+    Seen,
+    ToolInput,
+    ToolOutcome,
+    as_data,
+    tool_error,
+)
+from app.schemas.agent import (
+    AgentScreen,
+    DossierSection,
+    Navigation,
+    OpportunityId,
+    RadarPatch,
+    RadarSort,
+    StepKind,
+)
 from app.schemas.opportunity import (
-    OPPORTUNITY_ID_PATTERN,
     AudienceMix,
     Confidence,
     GrowthStatus,
@@ -36,7 +53,6 @@ from app.schemas.opportunity import (
     Opportunity,
     Recommendation,
 )
-from app.schemas.signal import Platform
 from app.services import opportunities
 
 MAX_LISTED = 10
@@ -45,40 +61,11 @@ MAX_HIGHLIGHTED = 5
 MAX_TOPIC_ARG_CHARS = 60
 FINAL_ANSWER = "final_answer"
 DECLINE = "decline"
-OK_CONTENT = "ok"
-NO_DATA_MESSAGE = "Todavía no hay oportunidades calculadas."
 # Genéricos a propósito (D15): ni el nombre de la tool ni lo que mandó el modelo vuelven a él.
 INVALID_INPUT_MESSAGE = "Argumentos no válidos para esta tool."
 UNKNOWN_TOOL_MESSAGE = "Esa tool no existe."
 
-OpportunityId = Annotated[str, Field(pattern=OPPORTUNITY_ID_PATTERN)]
 TopicArg = Annotated[str, Field(max_length=MAX_TOPIC_ARG_CHARS), AfterValidator(clean_external)]
-
-
-@dataclass
-class Seen:
-    """Lo que devolvieron las tools de datos en esta pregunta: lo único que se puede citar."""
-
-    opportunities: dict[str, CitedOpportunity] = field(default_factory=dict)
-    evidence_urls: set[str] = field(default_factory=set)
-
-    def add(self, o: Opportunity) -> None:
-        self.opportunities[o.id] = CitedOpportunity(
-            id=o.id, topic=o.topic, lifecycle=o.lifecycle, opportunity_score=o.opportunity_score
-        )
-
-
-@dataclass(frozen=True)
-class ToolOutcome:
-    kind: StepKind
-    label: str
-    content: str
-    is_error: bool = False
-    patch: RadarPatch | None = None
-
-
-class ToolInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
 
 
 class ListInput(ToolInput):
@@ -99,8 +86,13 @@ class EvidenceInput(IdInput):
     limit: int = Field(default=MAX_EVIDENCE, ge=1, le=MAX_EVIDENCE)
 
 
+class DossierInput(IdInput):
+    section: DossierSection = DossierSection.SCORE
+
+
 class FiltersInput(ToolInput):
     lifecycle: list[Lifecycle] | None = None
+    recommendation: Recommendation | None = None
     confidence: Confidence | None = None
     topic: TopicArg | None = None
     gap: bool | None = Field(default=None, description="true = solo «Hueco en LATAM»")
@@ -163,26 +155,6 @@ class OpportunityDetail(BaseModel):
     confidence: Confidence
 
 
-class EvidenceRow(BaseModel):
-    url: HttpUrl
-    title: str
-    source: str
-    platform: Platform
-    published_at: AwareDatetime
-    is_outlier: bool | None
-    outlier_ratio: float | None
-
-
-def _as_data(payload: BaseModel | Sequence[BaseModel]) -> str:
-    if isinstance(payload, BaseModel):
-        return wrap_data(payload.model_dump(mode="json"))
-    return wrap_data([p.model_dump(mode="json") for p in payload])
-
-
-def _error(kind: StepKind, label: str, message: str) -> ToolOutcome:
-    return ToolOutcome(kind, label, message, is_error=True)
-
-
 def _unknown_id(opportunity_id: str) -> str:
     return f"No existe la oportunidad {opportunity_id} en la ejecución servida."
 
@@ -202,7 +174,7 @@ async def _list(args: ListInput, session: AsyncSession, seen: Seen) -> ToolOutco
         session, confidence=args.confidence, topic=args.topic
     )
     if listed is None:
-        return _error(StepKind.DATA, label, NO_DATA_MESSAGE)
+        return tool_error(StepKind.DATA, label, NO_DATA_MESSAGE)
     items = [o for o in listed.items if not args.lifecycle or o.lifecycle in args.lifecycle]
     if args.recommendation:
         items = [o for o in items if o.recommendation in args.recommendation]
@@ -212,61 +184,89 @@ async def _list(args: ListInput, session: AsyncSession, seen: Seen) -> ToolOutco
     for o in items:
         seen.add(o)
     rows = [OpportunityRow.model_validate(o, from_attributes=True) for o in items]
-    return ToolOutcome(StepKind.DATA, label, _as_data(rows))
+    return ToolOutcome(StepKind.DATA, label, as_data(rows))
 
 
 async def _get_opportunity(args: IdInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
     o = await opportunities.get_opportunity(session, args.id)
     if o is None:
-        return _error(StepKind.DATA, labels.OPPORTUNITY_PENDING_LABEL, _unknown_id(args.id))
+        return tool_error(StepKind.DATA, labels.OPPORTUNITY_PENDING_LABEL, _unknown_id(args.id))
     seen.add(o)
     detail = OpportunityDetail.model_validate(o, from_attributes=True)
-    return ToolOutcome(StepKind.DATA, labels.opportunity_label(o.topic), _as_data(detail))
+    return ToolOutcome(StepKind.DATA, labels.opportunity_label(o.topic), as_data(detail))
 
 
 async def _get_evidence(args: EvidenceInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
     o = await opportunities.get_opportunity(session, args.id)
     evidence = await opportunities.get_evidence(session, args.id)
     if o is None or evidence is None:
-        return _error(StepKind.DATA, labels.EVIDENCE_PENDING_LABEL, _unknown_id(args.id))
+        return tool_error(StepKind.DATA, labels.EVIDENCE_PENDING_LABEL, _unknown_id(args.id))
     seen.add(o)
     # Primero los outliers: son los que explican "por qué funcionó".
     ranked = sorted(evidence, key=lambda e: e.is_outlier is not True)[: args.limit]
     seen.evidence_urls.update(str(e.url) for e in ranked)
     rows = [EvidenceRow.model_validate(e, from_attributes=True) for e in ranked]
-    return ToolOutcome(StepKind.DATA, labels.evidence_label(o.topic), _as_data(rows))
+    return ToolOutcome(StepKind.DATA, labels.evidence_label(o.topic), as_data(rows))
 
 
 async def _get_timeline(args: IdInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
     o = await opportunities.get_opportunity(session, args.id)
     timeline = await opportunities.get_timeline(session, args.id)
     if o is None or timeline is None:
-        return _error(StepKind.DATA, labels.TIMELINE_PENDING_LABEL, _unknown_id(args.id))
+        return tool_error(StepKind.DATA, labels.TIMELINE_PENDING_LABEL, _unknown_id(args.id))
     seen.add(o)
-    return ToolOutcome(StepKind.DATA, labels.timeline_label(o.topic), _as_data(timeline))
+    return ToolOutcome(StepKind.DATA, labels.timeline_label(o.topic), as_data(timeline))
+
+
+def _reset_patch() -> RadarPatch:
+    # El mismo parche que `resetViewPatch()` del front (D17; plan fe-radar-agent, D5): el agente
+    # usa los mismos controles que una persona, así que la selección, el periodo y el orden se
+    # conservan. Los None van explícitos para que `exclude_unset` los envíe y quiten el filtro.
+    return RadarPatch(
+        lifecycle=[], gap=False, highlight=[], recommendation=None, confidence=None, topic=None
+    )
+
+
+def _counter_patch(counter: labels.Counter, sort: RadarSort | None) -> RadarPatch:
+    # Como `counterPatch` del front: pulsar un contador sustituye los filtros que hubiera. Si solo
+    # viajaran los campos del modelo, el front los mezclaría con los de antes (p. ej. «Publicar
+    # ya» y «Acelerando» a la vez) y ningún contador quedaría pulsado.
+    patch = _reset_patch()
+    if isinstance(counter, Recommendation):
+        patch.recommendation = counter
+    else:
+        patch.lifecycle = [counter]
+    if sort is not None:
+        patch.sort = sort
+    return patch
 
 
 async def _set_filters(args: FiltersInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
-    label = labels.filters_label(
+    change = labels.FilterChange(
         lifecycle=args.lifecycle,
+        recommendation=args.recommendation,
         confidence=args.confidence,
         filters_topic=bool(args.topic),
         gap=args.gap,
         sort=args.sort,
     )
-    patch = RadarPatch.model_validate(args.model_dump(exclude_unset=True))
-    return ToolOutcome(StepKind.VIEW, label, OK_CONTENT, patch=patch)
+    counter = labels.pressed_counter(change)
+    if counter is None:
+        patch = RadarPatch.model_validate(args.model_dump(exclude_unset=True))
+    else:
+        patch = _counter_patch(counter, args.sort)
+    return ToolOutcome(StepKind.VIEW, labels.filters_label(change), OK_CONTENT, patch=patch)
 
 
 async def _highlight(args: HighlightInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
     failed_label = labels.HIGHLIGHT_PENDING_LABEL
     listed = await opportunities.list_opportunities(session)
     if listed is None:
-        return _error(StepKind.VIEW, failed_label, NO_DATA_MESSAGE)
+        return tool_error(StepKind.VIEW, failed_label, NO_DATA_MESSAGE)
     served = {o.id for o in listed.items}
     missing = [i for i in args.ids if i not in served]
     if missing:
-        return _error(StepKind.VIEW, failed_label, _unknown_id(", ".join(missing)))
+        return tool_error(StepKind.VIEW, failed_label, _unknown_id(", ".join(missing)))
     label = labels.highlight_label(len(args.ids))
     return ToolOutcome(StepKind.VIEW, label, OK_CONTENT, patch=RadarPatch(highlight=args.ids))
 
@@ -274,16 +274,22 @@ async def _highlight(args: HighlightInput, session: AsyncSession, seen: Seen) ->
 async def _select(args: IdInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
     o = await opportunities.get_opportunity(session, args.id)
     if o is None:
-        return _error(StepKind.VIEW, labels.SELECT_PENDING_LABEL, _unknown_id(args.id))
+        return tool_error(StepKind.VIEW, labels.SELECT_PENDING_LABEL, _unknown_id(args.id))
     patch = RadarPatch(selected=o.id)
     return ToolOutcome(StepKind.VIEW, labels.select_label(o.topic), OK_CONTENT, patch=patch)
 
 
 async def _reset(args: NoInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
-    # El mismo parche que `resetViewPatch()` del front (D17): el agente usa los mismos controles
-    # que una persona, así que la selección, el periodo y el orden se conservan.
-    patch = RadarPatch(lifecycle=[], gap=False, highlight=[])
-    return ToolOutcome(StepKind.VIEW, labels.RESET_LABEL, OK_CONTENT, patch=patch)
+    return ToolOutcome(StepKind.VIEW, labels.RESET_LABEL, OK_CONTENT, patch=_reset_patch())
+
+
+async def _show_in_dossier(args: DossierInput, session: AsyncSession, seen: Seen) -> ToolOutcome:
+    o = await opportunities.get_opportunity(session, args.id)
+    if o is None:
+        return tool_error(StepKind.VIEW, labels.SECTION_PENDING_LABEL, _unknown_id(args.id))
+    navigate = Navigation(screen=AgentScreen.DOSSIER, opportunity_id=o.id, section=args.section)
+    label = labels.section_label(args.section, o.topic)
+    return ToolOutcome(StepKind.VIEW, label, OK_CONTENT, navigate=navigate)
 
 
 @dataclass(frozen=True)
@@ -300,7 +306,7 @@ class Tool[T: ToolInput]:
         try:
             args = self.input_model.model_validate(raw_input)
         except ValidationError:
-            return _error(self.kind, self.pending_label, INVALID_INPUT_MESSAGE)
+            return tool_error(self.kind, self.pending_label, INVALID_INPUT_MESSAGE)
         return await self.run(args, session, seen)
 
 
@@ -340,7 +346,9 @@ TOOLS: dict[str, Tool] = {
     "set_filters": Tool(
         StepKind.VIEW,
         "Cambia los filtros del Radar que ve el usuario. Solo cambian los campos que envíes; "
-        "null quita ese filtro. gap=true activa «Hueco en LATAM».",
+        "null quita ese filtro. gap=true activa «Hueco en LATAM». recommendation=publish_now, o "
+        "una sola etapa (accelerating, emerging o unknown), pulsa ese contador como una persona: "
+        "sustituye los demás filtros y quita los resaltados.",
         FiltersInput,
         labels.FILTERS_FALLBACK_LABEL,
         _set_filters,
@@ -361,10 +369,37 @@ TOOLS: dict[str, Tool] = {
     ),
     "reset_view": Tool(
         StepKind.VIEW,
-        "Quita los filtros de etapa, el hueco en LATAM y los resaltados. Conserva la selección.",
+        "Quita filtros (etapa, recomendación, confianza, tema y hueco en LATAM) y resaltados. "
+        "Conserva la selección y el orden.",
         NoInput,
         labels.RESET_LABEL,
         _reset,
+    ),
+    "show_in_dossier": Tool(
+        StepKind.VIEW,
+        "Abre el expediente de una oportunidad y lleva la vista a una sección: score (cómo se "
+        "compone), evolution, fit (encaje con la audiencia), evidence (piezas) o limits (qué no "
+        "sabemos).",
+        DossierInput,
+        labels.SECTION_PENDING_LABEL,
+        _show_in_dossier,
+    ),
+    "search_pieces": Tool(
+        StepKind.DATA,
+        "Busca piezas por título o fuente en la evidencia de todas las oportunidades, como el "
+        "buscador de Explorar (sin distinguir tildes ni mayúsculas). Outliers primero; como "
+        f"mucho {MAX_SEARCH_ROWS}.",
+        SearchInput,
+        labels.SEARCH_PENDING_LABEL,
+        search_pieces,
+    ),
+    "show_pieces": Tool(
+        StepKind.VIEW,
+        "Abre Explorar con una búsqueda para que el usuario vea las piezas. Usa la misma "
+        "búsqueda que en search_pieces.",
+        ShowPiecesInput,
+        labels.EXPLORE_LABEL,
+        show_pieces,
     ),
 }
 
@@ -417,5 +452,5 @@ async def execute_tool(
 ) -> ToolOutcome:
     tool = TOOLS.get(name)
     if tool is None:
-        return _error(StepKind.DATA, labels.UNKNOWN_TOOL_LABEL, UNKNOWN_TOOL_MESSAGE)
+        return tool_error(StepKind.DATA, labels.UNKNOWN_TOOL_LABEL, UNKNOWN_TOOL_MESSAGE)
     return await tool.execute(raw_input, session, seen)

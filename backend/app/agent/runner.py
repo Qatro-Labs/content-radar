@@ -1,4 +1,6 @@
-"""Bucle del agente del Radar (plan data-radar-agent, "Bucle" y D2, D4, D5, D10, D13, D14)."""
+"""Bucle del agente del Radar (plan data-radar-agent, "Bucle" y D2, D4, D5, D10, D13, D14; plan
+fe-radar-agent, D2 y D4).
+"""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -10,6 +12,7 @@ from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agent.context import build_context, fallback_view
 from app.agent.limits import MAX_STEPS
 from app.agent.model import AgentModel, ModelTurn, ToolCall
 from app.agent.sanitize import (
@@ -19,17 +22,16 @@ from app.agent.sanitize import (
     clean_output,
     leaks_canary,
     strip_invisible,
+    wrap_context,
     wrap_question,
 )
+from app.agent.tool_base import NO_DATA_MESSAGE, Seen, ToolOutcome
 from app.agent.tools import (
     DECLINE,
     FINAL_ANSWER,
-    NO_DATA_MESSAGE,
     DeclineInput,
     DeclineReason,
     FinalAnswerInput,
-    Seen,
-    ToolOutcome,
     execute_tool,
     pending_step,
 )
@@ -37,6 +39,8 @@ from app.collectors.usage import UsageMeter
 from app.schemas.agent import (
     ActionEvent,
     AgentEvent,
+    AgentQuestion,
+    AgentViewContext,
     AnswerEvent,
     DoneEvent,
     ErrorCode,
@@ -75,9 +79,12 @@ class AgentFailedError(Exception):
 @dataclass
 class RunState:
     deadline: float  # en el reloj del event loop
+    view: AgentViewContext | None = None
     seen: Seen = field(default_factory=Seen)
     data_steps: int = 0
     view_steps: int = 0
+    # Solo los pasos de vista que movieron la página: uno fallido cuenta en `view_steps`, no aquí.
+    view_actions: int = 0
 
     @property
     def steps(self) -> int:
@@ -148,9 +155,27 @@ def _step_events(step_id: int, outcome: ToolOutcome) -> list[AgentEvent]:
     events: list[AgentEvent] = [
         StepEvent(id=step_id, kind=outcome.kind, label=outcome.label, status=status)
     ]
-    if outcome.patch is not None and not outcome.is_error:
+    if outcome.is_error:
+        return events
+    # Sin pasar el otro campo como None: `exclude_unset` lo enviaría.
+    if outcome.patch is not None:
         events.append(ActionEvent(step_id=step_id, patch=outcome.patch))
+    elif outcome.navigate is not None:
+        events.append(ActionEvent(step_id=step_id, navigate=outcome.navigate))
     return events
+
+
+def _fallback_events(answer: AnswerEvent, state: RunState) -> list[AgentEvent]:
+    # D4: una respuesta con citas siempre enseña algo en la página. Si el modelo no movió la
+    # vista, lo hace Python con las citas ya validadas, sin consultar MAX_STEPS.
+    if not answer.cited or state.view_actions > 0:
+        return []
+    outcome = fallback_view(answer.cited, state.view)
+    step_id = state.count(outcome.kind)
+    running = StepEvent(
+        id=step_id, kind=outcome.kind, label=outcome.label, status=StepStatus.RUNNING
+    )
+    return [running, *_step_events(step_id, outcome)]
 
 
 def _nudge_once(*, already_nudged: bool) -> bool:
@@ -176,6 +201,8 @@ async def _run_tools(
             outcome = await execute_tool(call.name, call.input, session, state.seen)
         results.append(_tool_result(call, outcome.content, is_error=outcome.is_error))
         for event in _step_events(step_id, outcome):
+            if isinstance(event, ActionEvent):
+                state.view_actions += 1
             yield event
 
 
@@ -198,6 +225,8 @@ async def _loop(
         )
         answer = _closing_answer(turn, state)
         if answer is not None:
+            for event in _fallback_events(answer, state):
+                yield event
             yield answer
             return
         if not turn.tool_calls:
@@ -210,15 +239,25 @@ async def _loop(
         messages.append({"role": "user", "content": results})
 
 
+async def _first_message(body: AgentQuestion, session: AsyncSession) -> str:
+    question = wrap_question(body.question)
+    context = await build_context(body, session)
+    return question if context is None else f"{wrap_context(context)}\n{question}"
+
+
 async def run_agent(
-    question: str, *, model: AgentModel, session: AsyncSession, meter: UsageMeter
+    body: AgentQuestion, *, model: AgentModel, session: AsyncSession, meter: UsageMeter
 ) -> AsyncIterator[AgentEvent]:
-    state = RunState(deadline=asyncio.get_running_loop().time() + QUESTION_TIMEOUT_SECONDS)
+    state = RunState(
+        deadline=asyncio.get_running_loop().time() + QUESTION_TIMEOUT_SECONDS, view=body.view
+    )
     if await opportunities.list_opportunities(session) is None:
         yield ErrorEvent(code=ErrorCode.NO_DATA, message=NO_DATA_MESSAGE)
         yield state.done()
         return
-    messages: list[MessageParam] = [{"role": "user", "content": wrap_question(question)}]
+    messages: list[MessageParam] = [
+        {"role": "user", "content": await _first_message(body, session)}
+    ]
     try:
         async for event in _loop(messages, model=model, state=state, session=session, meter=meter):
             yield event

@@ -2,10 +2,12 @@
 import { computed } from 'vue'
 
 import ViewHeader from '@/components/layout/ViewHeader.vue'
+import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
+import { AGENT_ANCHOR, COUNTER_ANCHOR } from '@/lib/agentTargets'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
 import { RECOMMENDATION_LABEL } from '@/lib/opportunityFormat'
-import { resetViewPatch, type RadarQuery } from '@/lib/radarQuery'
+import { resetViewPatch, serializeRadarQuery, type RadarQuery } from '@/lib/radarQuery'
 import {
   counterPatch,
   radarHeadline,
@@ -19,6 +21,7 @@ import CounterFilter, { type CounterSwatch } from './CounterFilter.vue'
 const { view, query } = defineProps<{ view: RadarView; query: RadarQuery }>()
 
 const { update } = useRadarQuery()
+const { agentRadarParams } = useRadarAgent()
 
 interface Counter {
   filter: CounterFilterName
@@ -35,14 +38,14 @@ const counters = computed<Counter[]>(() => [
     label: RECOMMENDATION_LABEL.publish_now,
     count: view.counts.publishNow,
     swatch: 'signal',
-    agentTarget: 'filter-rec-publish_now',
+    agentTarget: COUNTER_ANCHOR.publish_now,
   },
   {
     filter: 'accelerating',
     label: LIFECYCLE_STYLE.accelerating.label,
     count: view.counts.accelerating,
     swatch: 'accelerating',
-    agentTarget: 'filter-lc-accelerating',
+    agentTarget: COUNTER_ANCHOR.accelerating,
   },
   {
     filter: 'emerging',
@@ -50,20 +53,27 @@ const counters = computed<Counter[]>(() => [
     label: 'Emergentes',
     count: view.counts.emerging,
     swatch: 'emerging',
-    agentTarget: 'filter-lc-emerging',
+    agentTarget: COUNTER_ANCHOR.emerging,
   },
   {
     filter: 'unknown',
     label: LIFECYCLE_STYLE.unknown.label,
     count: view.counts.unknown,
     swatch: 'unknown',
-    agentTarget: 'filter-lc-unknown',
+    agentTarget: COUNTER_ANCHOR.unknown,
   },
 ])
 
 // Los resaltados también atenúan el radar, así que cuentan como vista cambiada y se
 // restablecen con los filtros (artboard E).
 const isViewChanged = computed(() => view.isFiltered || query.highlight.length > 0)
+// DESIGN.md §4: si la vista es justo la que dejó Rad, se dice; en cuanto la persona toca un filtro,
+// la URL cambia y la frase desaparece.
+const isSetByRad = computed(
+  () =>
+    isViewChanged.value &&
+    agentRadarParams.value === new URLSearchParams(serializeRadarQuery(query)).toString(),
+)
 </script>
 
 <template>
@@ -86,6 +96,9 @@ const isViewChanged = computed(() => view.isFiltered || query.highlight.length >
         />
       </div>
 
+      <span v-if="isSetByRad" class="text-[13.5px] text-muted-foreground">
+        Filtros puestos por Rad
+      </span>
       <Transition
         enter-from-class="translate-y-1 opacity-0"
         enter-active-class="transition duration-300 ease-out motion-reduce:transition-none"
@@ -93,6 +106,7 @@ const isViewChanged = computed(() => view.isFiltered || query.highlight.length >
         <button
           v-if="isViewChanged"
           type="button"
+          :data-agent="AGENT_ANCHOR.reset"
           class="min-h-11 rounded-xl bg-card px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
           @click="update(resetViewPatch())"
         >

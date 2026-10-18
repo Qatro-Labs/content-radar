@@ -218,12 +218,14 @@ export interface components {
   schemas: {
     /**
      * ActionEvent
-     * @description Se serializa con `exclude_unset=True` para que solo viajen los campos del parche.
+     * @description Trae `patch` (estado del Radar) o `navigate`, nunca los dos. Se serializa con
+     *     `exclude_unset=True` para que solo viajen los campos puestos.
      */
     ActionEvent: {
       /** Step Id */
       step_id: number
-      patch: components['schemas']['RadarPatch']
+      patch?: components['schemas']['RadarPatch'] | null
+      navigate?: components['schemas']['Navigation'] | null
     }
     AgentEvent:
       | components['schemas']['StepEvent']
@@ -235,6 +237,38 @@ export interface components {
     AgentQuestion: {
       /** Question */
       question: string
+      /**
+       * History
+       * @description Preguntas anteriores, de la más antigua a la más reciente. Nunca respuestas del modelo
+       */
+      history?: string[]
+      /**
+       * Focus Ids
+       * @description Oportunidades citadas en la respuesta anterior
+       */
+      focus_ids?: string[]
+      view?: components['schemas']['AgentViewContext'] | null
+    }
+    /**
+     * AgentScreen
+     * @enum {string}
+     */
+    AgentScreen: 'radar' | 'dossier' | 'explore'
+    /** AgentViewContext */
+    AgentViewContext: {
+      screen: components['schemas']['AgentScreen']
+      /**
+       * Opportunity Id
+       * @description Tema seleccionado en el Radar o abierto en el expediente
+       */
+      opportunity_id?: string | null
+      /**
+       * Search
+       * @description Búsqueda de Explorar (?q=)
+       */
+      search?: string | null
+      /** @description Filtros del Radar que tiene puestos la persona */
+      filters?: components['schemas']['RadarPatch'] | null
     }
     /** AnswerEvent */
     AnswerEvent: {
@@ -353,6 +387,11 @@ export interface components {
       /** View Steps */
       view_steps: number
     }
+    /**
+     * DossierSection
+     * @enum {string}
+     */
+    DossierSection: 'score' | 'evolution' | 'fit' | 'evidence' | 'limits'
     /** EditorialBrief */
     EditorialBrief: {
       /** Opportunity Id */
@@ -558,6 +597,22 @@ export interface components {
        */
       based_on_days: number | null
     }
+    /** Navigation */
+    Navigation: {
+      screen: components['schemas']['AgentScreen']
+      /**
+       * Opportunity Id
+       * @description Expediente que se abre
+       */
+      opportunity_id?: string | null
+      /** @description Sección del expediente */
+      section?: components['schemas']['DossierSection'] | null
+      /**
+       * Search
+       * @description Búsqueda con la que se abre Explorar
+       */
+      search?: string | null
+    }
     /** OperatingCost */
     OperatingCost: {
       period: components['schemas']['CostPeriod']
@@ -756,6 +811,7 @@ export interface components {
     RadarPatch: {
       /** Lifecycle */
       lifecycle?: components['schemas']['Lifecycle'][] | null
+      recommendation?: components['schemas']['Recommendation'] | null
       confidence?: components['schemas']['Confidence'] | null
       /** Topic */
       topic?: string | null
