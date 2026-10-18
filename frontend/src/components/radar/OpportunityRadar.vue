@@ -23,21 +23,24 @@ import {
   translateTo,
 } from '@/lib/radarChart'
 import { LIFECYCLES } from '@/lib/radarQuery'
-import type { RadarView } from '@/lib/radarView'
+import { RADAR_TOP, type RadarView } from '@/lib/radarView'
 
 import RadarSelectionLayer from './RadarSelectionLayer.vue'
 import RadarSweep from './RadarSweep.vue'
 
-const { view, hoveredId, sweepKey } = defineProps<{
+const { view, hoveredId, sweepKey, showsAll } = defineProps<{
   view: RadarView
   hoveredId: string | null
   // Cambia con el periodo: remonta el gráfico y repite el barrido (DESIGN.md §7).
   sweepKey: string
+  // Sin filtros, el radar enseña los primeros por oportunidad; `true`, todos.
+  showsAll: boolean
 }>()
 
 const emit = defineEmits<{
   select: [id: string]
   hover: [id: string | null]
+  toggleAll: []
 }>()
 
 // DESIGN.md §6: en un área estrecha las etiquetas se pisan y queda la tarjeta flotante.
@@ -99,6 +102,17 @@ const unevaluatedNote = computed(() => {
   if (count === 0) return null
   if (count === 1) return '1 tema sin evaluar no aparece en el radar'
   return `${count} temas sin evaluar no aparecen en el radar`
+})
+
+// Con un filtro el radar ya enseña todo lo que lo cumple: el límite solo se nombra sin filtros.
+const limitNote = computed(() => {
+  if (view.isFiltered || view.plottableCount <= RADAR_TOP) return null
+  return showsAll
+    ? { text: `Los ${view.plottableCount} temas.`, action: `Ver solo los ${RADAR_TOP} primeros` }
+    : {
+        text: `Los ${RADAR_TOP} primeros por oportunidad.`,
+        action: `Ver los ${view.plottableCount}`,
+      }
 })
 
 // Cada burbuja lleva el id de su oportunidad como `name` (radarChart.ts).
@@ -204,9 +218,21 @@ const leaveBubble = () => emit('hover', null)
       </div>
     </div>
     <!-- DESIGN.md §7: el latido codifica la aceleración, y la nota lo dice. -->
-    <p class="text-[13px] text-muted-foreground">
-      Laten las que crecen: más rápido, más aceleran. El tamaño es la fuerza de la evidencia.
-    </p>
+    <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[13px]">
+      <p class="text-muted-foreground">
+        Laten las que crecen: más rápido, más aceleran. El tamaño es la fuerza de la evidencia.
+      </p>
+      <p v-if="limitNote" class="flex items-baseline gap-1.5 text-muted-foreground">
+        {{ limitNote.text }}
+        <button
+          type="button"
+          class="font-semibold text-foreground underline underline-offset-4 transition-colors duration-150 ease-out hover:decoration-signal"
+          @click="emit('toggleAll')"
+        >
+          {{ limitNote.action }}
+        </button>
+      </p>
+    </div>
     <p v-if="unevaluatedNote" class="text-[13.5px] text-muted-foreground">{{ unevaluatedNote }}</p>
   </section>
 </template>

@@ -247,6 +247,9 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
     barra de Rad; radar, ranking y panel llenan la fila y desplazan su contenido dentro. El Ranking pagina de 10 en
     10 y abre la página del tema elegido. Con una ventana muy baja, la fila guarda 440 px y la página vuelve a hacer
     scroll. En móvil la página hace scroll como siempre.
+  - **Radar con los 25 primeros (18/10):** sin filtros, solo los 25 primeros por oportunidad; con todos, «Poca
+    señal» se llena de ruido. Un filtro añade todo lo que lo cumple, y la selección y los resaltados de Rad siempre
+    salen. Al pie, «Los 25 primeros por oportunidad. Ver los N» (y vuelta).
   - **Pestañas Radar · Ranking:** control segmentado en la cabecera de la tarjeta, las dos del mismo tamaño, cada una
     con icono, nombre y lo que enseña («Crecimiento frente a encaje» · «Ordenados por oportunidad»). Radar por
     defecto; `?tab=ranking` en la URL. Filtros, selección y panel se mantienen al cambiar; un orden de Rad abre el

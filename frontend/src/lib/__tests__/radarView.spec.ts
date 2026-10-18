@@ -57,6 +57,38 @@ describe('buildRadarView', () => {
     expect(view.activeCounter).toBeNull()
   })
 
+  describe('radar limit', () => {
+    it('plots only the first topics by opportunity when nothing is filtered', () => {
+      const view = buildRadarView(list, query(), { radarTop: 2 })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_002'])
+      expect(view.plottableCount).toBe(4)
+    })
+
+    it('always plots the selected and the highlighted topics', () => {
+      const view = buildRadarView(list, query({ selected: 'opp_004', highlight: ['opp_003'] }), {
+        radarTop: 1,
+      })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_003', 'opp_004'])
+    })
+
+    it('plots every topic a filter keeps, beyond the limit', () => {
+      const view = buildRadarView(list, query({ lifecycle: ['peaking', 'saturated'] }), {
+        radarTop: 1,
+      })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_003', 'opp_004'])
+      expect(view.dimmedIds).toEqual(new Set(['opp_001']))
+    })
+
+    it('plots every topic with fit when the limit is off', () => {
+      const view = buildRadarView(list, query(), { radarTop: null })
+
+      expect(ids(view.plotted)).toEqual(['opp_001', 'opp_002', 'opp_003', 'opp_004'])
+    })
+  })
+
   it('keeps the selected stages with their global rank and dims the rest of the radar', () => {
     const view = buildRadarView(
       list,
@@ -198,6 +230,7 @@ describe('buildRadarView', () => {
       visible: [],
       isFiltered: false,
       plotted: [],
+      plottableCount: 0,
       unevaluatedCount: 0,
       dimmedIds: new Set(),
       selected: null,

@@ -39,6 +39,8 @@ export interface RadarView {
   visible: RankedOpportunity[]
   isFiltered: boolean
   plotted: PlottedOpportunity[]
+  // Temas con encaje: los que podrían ir en el radar si no hubiera límite.
+  plottableCount: number
   unevaluatedCount: number
   dimmedIds: Set<string>
   selected: RankedOpportunity | null
@@ -103,6 +105,32 @@ function matchesFilters(opportunity: Opportunity, query: RadarQuery): boolean {
 // Sin encaje no hay posición en X: dibujarla en 0 se leería "encaje 0".
 export function hasAudienceFit(opportunity: RankedOpportunity): opportunity is PlottedOpportunity {
   return opportunity.audience_fit_score != null
+}
+
+// Sin filtros el radar enseña los primeros por oportunidad (18/10): con todos, «Poca señal» se
+// llena de temas que no aportan. Un filtro, la selección o un resaltado de Rad añaden los suyos.
+export const RADAR_TOP = 25
+
+interface RadarOptions {
+  // `null`: sin límite («Ver todos»).
+  radarTop?: number | null
+}
+
+function pickPlotted(
+  ranked: RankedOpportunity[],
+  visible: RankedOpportunity[],
+  query: RadarQuery,
+  radarTop: number | null,
+): PlottedOpportunity[] {
+  const plottable = ranked.filter(hasAudienceFit)
+  if (radarTop === null) return plottable
+  const kept = new Set([
+    ...plottable.slice(0, radarTop).map((opportunity) => opportunity.id),
+    ...(hasFilters(query) ? visible.map((opportunity) => opportunity.id) : []),
+    ...query.highlight,
+    ...(query.selected ? [query.selected] : []),
+  ])
+  return plottable.filter((opportunity) => kept.has(opportunity.id))
 }
 
 // D6 del plan fe-radar-agent: con resaltados se ilumina lo resaltado aunque un filtro lo deje
@@ -181,12 +209,17 @@ function sumOutliers(ranked: RankedOpportunity[]): number {
   return ranked.reduce((sum, opportunity) => sum + opportunity.outlier_count, 0)
 }
 
-export function buildRadarView(list: OpportunityList | null, query: RadarQuery): RadarView {
+export function buildRadarView(
+  list: OpportunityList | null,
+  query: RadarQuery,
+  { radarTop = RADAR_TOP }: RadarOptions = {},
+): RadarView {
   const ranked = rankInApiOrder(list)
   const visible = ranked
     .filter((opportunity) => matchesFilters(opportunity, query))
     .sort(RANKING_ORDER[query.sort])
-  const plotted = ranked.filter(hasAudienceFit)
+  const plotted = pickPlotted(ranked, visible, query, radarTop)
+  const plottableCount = ranked.filter(hasAudienceFit).length
   // D7: sin `?selected=` válido no hay tema seleccionado.
   const selected = ranked.find((opportunity) => opportunity.id === query.selected) ?? null
   return {
@@ -195,7 +228,8 @@ export function buildRadarView(list: OpportunityList | null, query: RadarQuery):
     visible,
     isFiltered: hasFilters(query),
     plotted,
-    unevaluatedCount: ranked.length - plotted.length,
+    plottableCount,
+    unevaluatedCount: ranked.length - plottableCount,
     dimmedIds: collectDimmedIds(plotted, visible, {
       highlight: query.highlight,
       selectedId: selected?.id,

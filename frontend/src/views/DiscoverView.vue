@@ -13,14 +13,20 @@ import { useAgentPeek } from '@/composables/useAgentPeek'
 import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
-import { buildRadarView } from '@/lib/radarView'
+import { buildRadarView, RADAR_TOP } from '@/lib/radarView'
 
 const { query, update } = useRadarQuery()
 // Rad repite el barrido cuando empieza a leer datos (DESIGN.md §7).
 const { sweepCount } = useRadarAgent()
 const { data, isPending, isError, refetch } = useOpportunities(() => query.value.period)
 
-const view = computed(() => buildRadarView(data.value ?? null, query.value))
+// «Ver todos» en el radar: una preferencia de la sesión, no un estado que se comparta por URL.
+const showsAllBubbles = ref(false)
+const view = computed(() =>
+  buildRadarView(data.value ?? null, query.value, {
+    radarTop: showsAllBubbles.value ? null : RADAR_TOP,
+  }),
+)
 // El hover enlaza radar, ranking y panel, pero no va en la URL: no es un estado que se comparta.
 const hovered = ref<string | null>(null)
 // El vistazo de Rad a un tema citado lo resalta como el hover y enseña su vista previa en el
@@ -89,8 +95,10 @@ function hover(id: string | null) {
             :view
             :hovered-id="hovered"
             :sweep-key="`${query.period}:${sweepCount}`"
+            :shows-all="showsAllBubbles"
             @select="select"
             @hover="hover"
+            @toggle-all="showsAllBubbles = !showsAllBubbles"
           >
             <template #title><RadarTabs /></template>
           </OpportunityRadar>
