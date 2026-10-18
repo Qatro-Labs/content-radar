@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from html import escape
 from pathlib import Path
 
+from icons import ICONS
+
 OUT = Path(__file__).parent
 WIDTH = 1200
 MARGIN = 40
@@ -165,15 +167,43 @@ def draw_lines(
     return y
 
 
-def card_height(title: str, lines: list[Line], w: float, badge: str | None = None) -> float:
+ICON_TILE = 38
+ICON_GAP = 12
+
+
+def title_width(w: float, badge: str | None, icon: str | None) -> float:
     inner = w - 36
-    h = (
-        18
-        + len(wrap(title, inner - (len(badge) * char_w(13) + 30 if badge else 0), HEAD))
-        * HEAD
-        * 1.3
+    if badge:
+        inner -= len(badge) * char_w(13) + 30
+    if icon:
+        inner -= ICON_TILE + ICON_GAP
+    return inner
+
+
+def title_bottom(y: float, title: str, w: float, badge: str | None, icon: str | None) -> float:
+    lines = len(wrap(title, title_width(w, badge, icon), HEAD))
+    bottom = y + 18 + lines * HEAD * 1.3
+    if icon:
+        bottom = max(bottom, y + 16 + ICON_TILE + 4)
+    return bottom
+
+
+def card_height(
+    title: str, lines: list[Line], w: float, badge: str | None = None, icon: str | None = None
+) -> float:
+    top = title_bottom(0, title, w, badge, icon)
+    return top + 4 + lines_height(lines, w - 36, BODY) + 20
+
+
+def draw_icon(svg: Svg, x: float, y: float, name: str, stroke: str, accent: str) -> None:
+    svg.rect(x, y, ICON_TILE, ICON_TILE, BG, stroke, r=10)
+    scale = 22 / 24
+    off = (ICON_TILE - 22) / 2
+    svg.add(
+        f'<g transform="translate({x + off:.1f} {y + off:.1f}) scale({scale:.4f})" fill="none" '
+        f'stroke="{accent}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        f"{ICONS[name]}</g>"
     )
-    return h + lines_height(lines, inner, BODY) + 22
 
 
 def card(
@@ -186,20 +216,27 @@ def card(
     tone: str = "neutral",
     h: float | None = None,
     badge: str | None = None,
+    icon: str | None = None,
 ) -> float:
     fill, stroke, accent = TONES[tone]
-    h = h or card_height(title, lines, w, badge)
+    h = h or card_height(title, lines, w, badge, icon)
     svg.rect(x, y, w, h, fill, stroke)
-    inner = w - 36
+    tx = x + 18
+    title_lines = wrap(title, title_width(w, badge, icon), HEAD)
     ty = y + 14
-    badge_w = len(badge) * char_w(13) + 22 if badge else 0
-    for part in wrap(title, inner - (badge_w + 8 if badge else 0), HEAD):
+    if icon:
+        draw_icon(svg, x + 18, y + 16, icon, stroke, accent)
+        tx += ICON_TILE + ICON_GAP
+        if len(title_lines) == 1:
+            ty = y + 16 + ICON_TILE / 2 - HEAD * 1.3 / 2 - 1
+    for part in title_lines:
         ty += HEAD * 1.3
-        svg.text(x + 18, ty - 4, part, HEAD, accent, 650)
+        svg.text(tx, ty - 4, part, HEAD, accent, 650)
     if badge:
-        svg.rect(x + w - 18 - badge_w, y + 16, badge_w, 26, BG, stroke, r=13)
-        svg.text(x + w - 18 - badge_w / 2, y + 34, badge, 13, accent, 600, anchor="middle")
-    draw_lines(svg, x + 18, ty + 4, lines, inner, BODY, INK)
+        badge_w = len(badge) * char_w(13) + 22
+        svg.rect(x + w - 18 - badge_w, y + 22, badge_w, 26, BG, stroke, r=13)
+        svg.text(x + w - 18 - badge_w / 2, y + 40, badge, 13, accent, 600, anchor="middle")
+    draw_lines(svg, x + 18, title_bottom(y, title, w, badge, icon) + 4, lines, w - 36, BODY, INK)
     return h
 
 
@@ -232,19 +269,35 @@ def architecture() -> None:
         "Fuentes públicas",
         ["YouTube · Hacker News · medios y blogs (RSS) · TikTok · Reddit · Instagram"],
         "neutral",
+        icon="globe",
     )
     y += h + 44
     third = (full - 2 * gap) / 3
     xs = [MARGIN + i * (third + gap) for i in range(3)]
     svg.arrow(xs[0] + third / 2, y - 44, xs[0] + third / 2, y - 2)
     specs = [
-        ("Colectores", ["Leen cada fuente y guardan piezas y métricas públicas."], "python"),
-        ("Motor de análisis", ["Agrupa las piezas en temas y calcula los scores."], "python"),
-        ("Modelos de IA", ["Jev clasifica y verifica; el LLM evalúa y redacta."], "llm"),
+        (
+            "Colectores",
+            ["Leen cada fuente y guardan piezas y métricas públicas."],
+            "python",
+            "download",
+        ),
+        (
+            "Motor de análisis",
+            ["Agrupa las piezas en temas y calcula los scores."],
+            "python",
+            "cpu",
+        ),
+        (
+            "Modelos de IA",
+            ["Jev clasifica y verifica; el LLM evalúa y redacta."],
+            "llm",
+            "sparkles",
+        ),
     ]
-    h = max(card_height(t, ls, third) for t, ls, _ in specs)
-    for x, (t, ls, tone) in zip(xs, specs, strict=True):
-        card(svg, x, y, third, t, ls, tone, h)
+    h = max(card_height(t, ls, third, icon=ic) for t, ls, _, ic in specs)
+    for x, (t, ls, tone, ic) in zip(xs, specs, strict=True):
+        card(svg, x, y, third, t, ls, tone, h, icon=ic)
     svg.arrow(xs[2] - 2, y + h / 2, xs[1] + third + 2, y + h / 2)
     y += h + 44
     svg.arrow(xs[0] + third / 2, y - 44, xs[0] + third / 2, y - 2)
@@ -258,6 +311,7 @@ def architecture() -> None:
         "Base de datos",
         ["Piezas, métricas y cada ejecución del análisis con su ranking."],
         "data",
+        icon="database",
     )
     y += h + 44
     svg.arrow(WIDTH / 2, y - 44, WIDTH / 2, y - 2)
@@ -269,30 +323,41 @@ def architecture() -> None:
         "Servicios",
         ["La única lógica de negocio: todos los canales leen los mismos datos."],
         "python",
+        icon="layers",
     )
     y += h + 44
     for x in xs:
         svg.arrow(x + third / 2, y - 44, x + third / 2, y - 2)
     specs = [
-        ("API REST", ["Sirve oportunidades, evidencia y briefs al dashboard."], "python"),
-        ("Agente Rad", ["Responde preguntas sobre el Radar y mueve la vista."], "llm"),
-        ("Servidor MCP", ["Las mismas consultas desde un asistente de IA."], "python"),
+        ("API REST", ["Sirve oportunidades, evidencia y briefs al dashboard."], "python", "server"),
+        ("Agente Rad", ["Responde preguntas sobre el Radar y mueve la vista."], "llm", "bot"),
+        ("Servidor MCP", ["Las mismas consultas desde un asistente de IA."], "python", "plug"),
     ]
-    h = max(card_height(t, ls, third) for t, ls, _ in specs)
-    for x, (t, ls, tone) in zip(xs, specs, strict=True):
-        card(svg, x, y, third, t, ls, tone, h)
+    h = max(card_height(t, ls, third, icon=ic) for t, ls, _, ic in specs)
+    for x, (t, ls, tone, ic) in zip(xs, specs, strict=True):
+        card(svg, x, y, third, t, ls, tone, h, icon=ic)
     y += h + 44
     half = (full - gap) / 2
     svg.arrow(xs[0] + third / 2, y - 44, xs[0] + third / 2, y - 2)
     svg.arrow(xs[1] + third / 2, y - 44, MARGIN + half - 60, y - 2)
     svg.arrow(xs[2] + third / 2, y - 44, xs[2] + third / 2, y - 2)
     specs = [
-        ("Dashboard", ["Radar, exploración de evidencia y creación de briefs."], "client"),
-        ("Asistentes de IA", ["Claude, ChatGPT o Grok, conectados por MCP."], "client"),
+        (
+            "Dashboard",
+            ["Radar, exploración de evidencia y creación de briefs."],
+            "client",
+            "layout-dashboard",
+        ),
+        (
+            "Asistentes de IA",
+            ["Claude, ChatGPT o Grok, conectados por MCP."],
+            "client",
+            "message-square",
+        ),
     ]
-    h = max(card_height(t, ls, half) for t, ls, _ in specs)
-    for i, (t, ls, tone) in enumerate(specs):
-        card(svg, MARGIN + i * (half + gap), y, half, t, ls, tone, h)
+    h = max(card_height(t, ls, half, icon=ic) for t, ls, _, ic in specs)
+    for i, (t, ls, tone, ic) in enumerate(specs):
+        card(svg, MARGIN + i * (half + gap), y, half, t, ls, tone, h, icon=ic)
     svg.height = y + h + 40
     (OUT / "arquitectura.svg").write_text(
         svg.render(
@@ -307,16 +372,27 @@ def architecture() -> None:
 # 2. De la señal a la oportunidad
 
 
-FLOW: list[tuple[str, str, str]] = [
-    ("Señal", "Una pieza pública con sus métricas.", "¿Qué se publica?"),
-    ("Tendencia", "Piezas parecidas agrupadas en un tema que crece.", "¿Qué está creciendo?"),
+FLOW: list[tuple[str, str, str, str]] = [
+    ("Señal", "radio", "Una pieza pública con sus métricas.", "¿Qué se publica?"),
+    (
+        "Tendencia",
+        "trending-up",
+        "Piezas parecidas agrupadas en un tema que crece.",
+        "¿Qué está creciendo?",
+    ),
     (
         "Oportunidad",
+        "target",
         "El tema puntuado para la audiencia de 30X, con una recomendación.",
         "¿Vale la pena?",
     ),
-    ("Evidencia", "Las piezas que lo respaldan, enlazadas a su fuente.", "¿Por qué lo creemos?"),
-    ("Contenido", "Un brief con ángulo, gancho y estructura.", "¿Qué publicamos?"),
+    (
+        "Evidencia",
+        "file-search",
+        "Las piezas que lo respaldan, enlazadas a su fuente.",
+        "¿Por qué lo creemos?",
+    ),
+    ("Contenido", "pen-line", "Un brief con ángulo, gancho y estructura.", "¿Qué publicamos?"),
 ]
 
 
@@ -331,14 +407,11 @@ def flow() -> None:
     gap = 28
     n = len(FLOW)
     w = (WIDTH - 2 * MARGIN - gap * (n - 1)) / n
-    specs = [
-        (f"{i} · {name}", [what, ("bold", question)])
-        for i, (name, what, question) in enumerate(FLOW, 1)
-    ]
-    h = max(card_height(t, ls, w) for t, ls in specs)
-    for i, (title, lines) in enumerate(specs):
+    specs = [(name, icon, [what, ("bold", question)]) for name, icon, what, question in FLOW]
+    h = max(card_height(t, ls, w, icon=ic) for t, ic, ls in specs)
+    for i, (title, icon, lines) in enumerate(specs):
         x = MARGIN + i * (w + gap)
-        card(svg, x, y, w, title, lines, "data" if i == n - 1 else "python", h)
+        card(svg, x, y, w, title, lines, "data" if i == n - 1 else "python", h, icon=icon)
         if i < n - 1:
             svg.arrow(x + w + 2, y + h / 2, x + w + gap - 2, y + h / 2)
     y += h + 28
@@ -365,29 +438,45 @@ def flow() -> None:
 # 3. Pipeline de análisis
 
 
-STEPS: list[tuple[str, str, str, str]] = [
+STEPS: list[tuple[str, str, str, str, str]] = [
     (
         "Clasificar",
+        "tags",
         "jev",
         "Jev",
         "Decide si cada pieza trata de IA y etiqueta su formato y su gancho.",
     ),
     (
         "Agrupar",
+        "group",
         "neutral",
         "Embeddings",
         "Une las piezas parecidas en temas, en español y en inglés.",
     ),
     (
         "Medir",
+        "gauge",
         "python",
         "Python",
         "Velocidad, aceleración, outliers, saturación y fuentes independientes de cada tema.",
     ),
-    ("Evaluar", "llm", "LLM", "Encaje del tema con la audiencia de 30X, en seis criterios."),
-    ("Decidir", "python", "Python", "Opportunity Score, confianza y recomendación."),
+    (
+        "Evaluar",
+        "scale",
+        "llm",
+        "LLM",
+        "Encaje del tema con la audiencia de 30X, en seis criterios.",
+    ),
+    (
+        "Decidir",
+        "list-ordered",
+        "python",
+        "Python",
+        "Opportunity Score, confianza y recomendación.",
+    ),
     (
         "Explicar",
+        "shield-check",
         "llm",
         "LLM + Jev",
         "El LLM redacta por qué importa; Jev verifica cada afirmación.",
@@ -412,12 +501,13 @@ def pipeline() -> None:
         "Entrada",
         ["Piezas públicas de los últimos 14 días, con sus métricas."],
         "neutral",
+        icon="inbox",
     )
     y += h
-    for i, (name, tone, who, what) in enumerate(STEPS, 1):
+    for i, (name, icon, tone, who, what) in enumerate(STEPS, 1):
         svg.arrow(WIDTH / 2, y + 2, WIDTH / 2, y + 30)
         y += 32
-        y += card(svg, MARGIN, y, full, f"{i} · {name}", [what], tone, badge=who)
+        y += card(svg, MARGIN, y, full, f"{i} · {name}", [what], tone, badge=who, icon=icon)
     svg.arrow(WIDTH / 2, y + 2, WIDTH / 2, y + 30)
     y += 32
     h = card(
@@ -430,6 +520,7 @@ def pipeline() -> None:
             "Cada tema con su evidencia y una recomendación: publicar ya · buscar ángulo · esperar caso · descartar."
         ],
         "data",
+        icon="trophy",
     )
     svg.height = y + h + 40
     (OUT / "pipeline-scoring.svg").write_text(
