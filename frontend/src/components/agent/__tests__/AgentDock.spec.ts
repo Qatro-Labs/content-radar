@@ -159,13 +159,26 @@ describe('AgentDock', () => {
   })
 
   it.each([
-    { case: 'next to the field, before any question', turns: [] },
-    { case: 'in the header, with a conversation', turns: [turn()] },
-  ])('minimizes to the eye from «Minimizar Rad»: $case', async ({ turns }) => {
+    { case: 'before any question', turns: [] },
+    { case: 'with a conversation', turns: [turn()] },
+  ])('minimizes to the eye from the header: $case', async ({ turns }) => {
     const { emitted } = renderDock({ turns, status: 'idle' })
 
     await fireEvent.click(screen.getByRole('button', { name: 'Minimizar Rad' }))
 
     expect(emitted('minimize')).toHaveLength(1)
+  })
+
+  // Dentro del campo, pulsar «−» contaba como entrar en la barra y las sugerencias asomaban.
+  it('does not open the suggestions when minimizing', async () => {
+    render(AgentDock, {
+      props: { turns: [], status: 'idle', suggestions: [QUESTION], mark: MARK },
+    })
+
+    const minimize = screen.getByRole('button', { name: 'Minimizar Rad' })
+    await fireEvent.focusIn(minimize)
+    await fireEvent.click(minimize)
+
+    expect(screen.queryByRole('list', { name: 'Preguntas sugeridas' })).toBeNull()
   })
 })

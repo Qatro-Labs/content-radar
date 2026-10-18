@@ -79,10 +79,13 @@ async function selectCited(id: string) {
         : 'bg-transparent ring-1 ring-[rgb(18_20_24/0.16)] ring-inset'
     "
   >
-    <div v-if="turns.length > 0" class="flex items-center gap-2" :class="PEEK_DIM_CLASS">
+    <!-- «Minimizar» siempre arriba a la izquierda, fuera del campo: dentro, pulsarlo contaba como
+         entrar en la barra y las sugerencias asomaban justo antes de reducirla. -->
+    <div class="flex min-h-8 items-center gap-2" :class="PEEK_DIM_CLASS">
       <AgentMinimizeButton @minimize="emit('minimize')" />
       <span class="text-[13px] font-semibold text-ink-soft">Rad</span>
       <button
+        v-if="turns.length > 0"
         type="button"
         class="ml-auto flex min-h-10 items-center text-sm text-muted-foreground underline underline-offset-4 transition-colors duration-150 ease-out hover:text-foreground"
         @click="emit('newConversation')"
@@ -124,10 +127,6 @@ async function selectCited(id: string) {
       :class="PEEK_DIM_COMPOSER_CLASS"
       @ask="(question) => emit('ask', question)"
       @stop="emit('stop')"
-    >
-      <template v-if="turns.length === 0" #leading>
-        <AgentMinimizeButton @minimize="emit('minimize')" />
-      </template>
-    </AgentComposer>
+    />
   </section>
 </template>

@@ -68,8 +68,6 @@ function submit() {
     </ul>
 
     <form data-agent="composer" class="flex items-center gap-2" @submit.prevent="submit">
-      <!-- Sin conversación, la barra no tiene cabecera y «Minimizar» va aquí (AgentDock). -->
-      <slot name="leading" />
       <!-- `data-rad-mark`: de aquí sale y aquí vuelve el ojo al reducir y abrir la barra. -->
       <HoverHint :text="HELP.rad">
         <RadMark data-rad-mark :state="mark" />

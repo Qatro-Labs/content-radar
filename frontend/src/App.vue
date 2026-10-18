@@ -53,13 +53,13 @@ const fitsViewport = computed(() => route.meta.fitsViewport === true)
 
 const bottomSpace = computed(() => {
   if (!isAvailable.value) return ''
-  // Lo que mide la barra: solo el campo (unos 72 px), o el campo con la respuesta plegada encima.
-  const docked = turns.value.length > 0 ? 'pb-48' : 'pb-[88px]'
+  // Lo que mide la barra: su cabecera con «−» y el campo (116 px), o además la respuesta plegada.
+  const docked = turns.value.length > 0 ? 'pb-48' : 'pb-[132px]'
   const scrolling = isMinimized.value ? 'pb-20' : docked
-  // Sin scroll, debajo de la barra no puede quedar nada: la vista acaba justo encima de ella (el
-  // campo mide unos 72 px y flota a 24 px del borde, que ya es el padding de la raíz).
+  // Sin scroll, debajo de la barra no puede quedar nada: la vista acaba justo encima de ella (la
+  // barra mide 116 px y flota a 24 px del borde, que ya es el padding de la raíz).
   if (!fitsViewport.value) return scrolling
-  return isMinimized.value ? `${scrolling} lg:pb-0` : `${scrolling} lg:pb-[80px]`
+  return isMinimized.value ? `${scrolling} lg:pb-0` : `${scrolling} lg:pb-[124px]`
 })
 
 // La marca de Rad refleja lo que hace: se abre en radar mientras trabaja, el haz pasa en cada

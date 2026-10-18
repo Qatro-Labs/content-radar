@@ -180,11 +180,11 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
 - **Barra de pregunta:** fija abajo y centrada (`position: fixed`, ancho máximo 840px), tarjeta blanca de radio 20px
   con la sombra flotante (§5), porque flota sobre la página: la conversación no reserva espacio y el final de la
-  página solo deja sitio para el campo. De izquierda a derecha: el botón «−» «Minimizar Rad» (32px, Lucide `Minus`,
-  tooltip «Minimizar»), la marca de Rad, el campo (#F2F3F5, radio 12px, alto 48px, placeholder "Pregúntale a Rad: …"
-  en Apagado) y el primario "Preguntar", que pasa a secundario "Detener" mientras Rad trabaja. Con conversación, el
-  «−» sube a una cabecera arriba a la izquierda: «−» · «Rad» (13px, 600, Tinta suave) · "Nueva conversación" a la
-  derecha. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los mismos controles". En
+  página solo deja sitio para la barra. Arriba, una cabecera: el botón «−» «Minimizar Rad» (32px, Lucide `Minus`,
+  tooltip «Minimizar») · «Rad» (13px, 600, Tinta suave) y, con conversación, "Nueva conversación" a la derecha. Debajo,
+  la marca de Rad, el campo (#F2F3F5, radio 12px, alto 48px, placeholder "Pregúntale a Rad: …" en Apagado) y el
+  primario "Preguntar", que pasa a secundario "Detener" mientras Rad trabaja. El «−» nunca va dentro del campo:
+  pulsarlo contaría como entrar en la barra y asomarían las sugerencias. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los mismos controles". En
   reposo, encima del campo, 3 preguntas sugeridas según el contexto (botones #F2F3F5, radio 10px, alto 40px):
   generales en el Radar, del tema con un tema abierto, de búsqueda en Explorar. Con la conversación en marcha solo
   quedan las del tema.
