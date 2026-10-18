@@ -33,7 +33,7 @@ from app.schemas.opportunity import (
 )
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 PROMPT_FILE = PROMPTS_DIR / f"explain_opportunity.v{PROMPT_VERSION}.md"
 
 # Bandas del audience fit para el texto, como las muestra la UI (CLAUDE.md §7).
