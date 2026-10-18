@@ -10,6 +10,10 @@ import { activeCounterOf, type CounterFilter } from './radarView'
 // D8 del plan fe-radar-agent: a dónde va la presencia de Rad antes de actuar. Cada objetivo es el
 // valor de `data-agent` de un elemento de la página.
 
+// La presencia de Rad es una capa absoluta sobre esta raíz (DESIGN.md §7): sus coordenadas, y
+// las de la mirada de su marca, son relativas a ella.
+export const AGENT_ROOT_SELECTOR = '[data-agent-root]'
+
 export const AGENT_ANCHOR = {
   radar: 'radar',
   ranking: 'ranking',

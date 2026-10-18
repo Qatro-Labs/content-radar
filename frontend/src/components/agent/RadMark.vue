@@ -15,6 +15,8 @@ const DEFAULT_SIZE_PX = 40
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import { AGENT_ROOT_SELECTOR } from '@/lib/agentTargets'
+
 interface Point {
   x: number
   y: number
@@ -39,7 +41,7 @@ const gaze = ref<Point>(LOOK_AHEAD)
 
 function gazeToward(lookAt: RadMarkState['lookAt']): Point {
   const element = mark.value
-  const agentRoot = element?.closest('[data-agent-root]')
+  const agentRoot = element?.closest(AGENT_ROOT_SELECTOR)
   if (lookAt === null || !element || !agentRoot) return LOOK_AHEAD
   const own = element.getBoundingClientRect()
   const origin = agentRoot.getBoundingClientRect()
