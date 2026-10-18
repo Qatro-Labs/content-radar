@@ -3,7 +3,8 @@
 Solo se explican los temas con audience fit: la explicación se apoya en sus justificaciones. Si
 el LLM falla en un tema, ese tema conserva la plantilla con los datos medidos y una limitación.
 Con `JEV_VERIFY_CLAIMS`, Jev verifica cada afirmación que pasó las comprobaciones de Python y solo
-se publica lo que respalda (`services.verification`).
+se publica lo que respalda (`services.verification`): una afirmación sin veredicto tampoco se
+publica.
 """
 
 import asyncio
@@ -30,13 +31,14 @@ from app.editorial.explanation import (
     facts_text,
 )
 from app.intelligence.explanation import (
-    UNVERIFIED_NOTE,
     ClaimDraft,
     apply_explanation,
     compose_explanation,
     jev_drop_note,
+    jev_unverified_note,
     known_numbers,
     mark_explanation_failed,
+    mark_verification_incomplete,
     python_checked,
     python_drop_note,
 )
@@ -150,18 +152,20 @@ def _apply_verified(
     valid = [c.claim for c in checks]
     python_note = python_drop_note(len(ready.drafts) - len(valid))
     topic_verdicts = [verdicts[claim_cache_key(c.state)] for c in checks]
-    # Lo que Jev rechaza nunca se publica (CLAUDE.md §2, regla 3). Si alguna afirmación quedó sin
-    # veredicto, el tema entero lleva la nota: mezclar frases verificadas y no verificadas en el
-    # mismo texto presentaría como verificado lo que no lo está.
-    published = [c for c, v in zip(valid, topic_verdicts, strict=True) if v is not False]
-    unverified_note = UNVERIFIED_NOTE if None in topic_verdicts else None
-    jev_note = jev_drop_note(len(valid) - len(published))
+    # Solo se publica lo que Jev respalda (CLAUDE.md §7 y §2, regla 3): una afirmación sin
+    # veredicto (sin clave, fallo de Jev o fuera del tope) cuenta como no respaldada.
+    published = [c for c, v in zip(valid, topic_verdicts, strict=True) if v is True]
+    unverified = topic_verdicts.count(None)
+    if not published and unverified:
+        # "Ninguna superó la comprobación" sería falso: parte no se llegó a comprobar.
+        return mark_verification_incomplete(result)
+    rejected = topic_verdicts.count(False)
     return compose_explanation(
         result,
         published,
         ready.output.limitations,
         numbers=ready.numbers,
-        notes=[python_note, jev_note, unverified_note],
+        notes=[python_note, jev_drop_note(rejected), jev_unverified_note(unverified)],
     )
 
 

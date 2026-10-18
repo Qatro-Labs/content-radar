@@ -18,9 +18,9 @@ class Settings(BaseSettings):
 
     typesafe_api_key: str = ""
     jev_model: str = "jev-1.13.0"
-    # Jev verifica cada afirmación de «por qué importa». Apagado: la validación con afirmaciones
-    # reales no cumplió su criterio de adopción (data/evaluations/jev_claim_v1_eval.md).
-    jev_verify_claims: bool = False
+    # Jev verifica cada afirmación de «por qué importa». Encendido desde que `claim.v2` con umbral
+    # 0,6 pasó su criterio de adopción (data/evaluations/jev_claim_adoption_eval.md).
+    jev_verify_claims: bool = True
 
     llm_api_key: str = ""
     llm_model: str = ""

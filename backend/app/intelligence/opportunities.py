@@ -364,7 +364,12 @@ def _score_fields(
 ) -> _ScoreFields:
     mix, gap = _audience(topic.group, facts.ratios, facts.business_use)
     advice = recommend(
-        scores.stage, scores.confidence, audience_fit=None, org_application=None, latam_gap=gap
+        scores.stage,
+        scores.confidence,
+        audience_fit=None,
+        org_application=None,
+        latam_gap=gap,
+        acceleration=topic.velocity.acceleration,
     )
     return {
         "audience_mix": mix,

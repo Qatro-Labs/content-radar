@@ -22,11 +22,12 @@ from app.intelligence.audience_fit import EDITORIAL_PENDING_NOTE
 from app.intelligence.explanation import (
     EXPLANATION_FAILED_NOTE,
     NO_VALID_CLAIM_NOTE,
-    UNVERIFIED_NOTE,
+    VERIFICATION_INCOMPLETE_NOTE,
     ClaimDraft,
     apply_explanation,
     compose_explanation,
     jev_drop_note,
+    jev_unverified_note,
     known_numbers,
     python_checked,
     python_drop_note,
@@ -36,6 +37,7 @@ from app.services.audience_fit import evaluate_topics
 from app.services.explanation import explain_topics
 from app.services.verification import ClaimVerifier
 from tests.test_audience_fit_service import FakeEvaluator, two_topics
+from tests.test_topic_evaluation import TOPIC_NAME, safe, topic
 from tests.test_verification import FakeClaimJudge
 
 URL = "https://example.com/0"
@@ -163,14 +165,19 @@ async def test_composed_explanation_keeps_the_notes_in_order_and_skips_none(sess
         checked,
         [],
         numbers=set(),
-        notes=[python_drop_note(1), None, UNVERIFIED_NOTE],
+        notes=[python_drop_note(1), None, jev_unverified_note(1)],
     ).opportunity
 
     assert o.why_it_matters == WHY
     assert o.limitations[-2:] == [
         "Se descartaron 1 afirmación del LLM sin evidencia o con cifras no observadas.",
-        UNVERIFIED_NOTE,
+        "Jev no pudo verificar 1 afirmación del LLM: no se publica.",
     ]
+
+
+def test_jev_unverified_note_plural_and_none():
+    assert jev_unverified_note(0) is None
+    assert jev_unverified_note(2) == "Jev no pudo verificar 2 afirmaciones del LLM: no se publican."
 
 
 def test_jev_drop_note_plural_and_none():
@@ -182,6 +189,27 @@ def test_jev_drop_note_plural_and_none():
 
 
 # --- prompt -------------------------------------------------------------------------------
+
+
+async def test_explanation_gets_the_final_topic_name_not_a_piece_title(session):
+    [result, _], answers = await fitted_topics(session)
+
+    explain = build_explain_input(result, build_topic_input(result, answers))
+
+    assert result.opportunity.topic == TOPIC_NAME
+    assert explain.label == TOPIC_NAME
+
+
+def test_a_topic_named_after_an_excluded_piece_is_labelled_with_a_safe_one():
+    result = topic()
+    rep = result.pieces[0]
+    result.opportunity = result.opportunity.model_copy(update={"topic": rep.title})
+    answers = {p.item_id: safe() for p in result.pieces[1:]}
+    answers[rep.item_id] = {"injection": {"type": "noul", "noul": 0.9}}
+
+    explain = build_explain_input(result, build_topic_input(result, answers))
+
+    assert explain.label == result.pieces[1].title
 
 
 async def test_external_text_goes_escaped_in_the_user_message_only(session):
@@ -291,36 +319,55 @@ async def test_verified_explanation_publishes_only_supported_claims(session):
         in r.opportunity.limitations
         for r in out
     )
-    assert not any(UNVERIFIED_NOTE in r.opportunity.limitations for r in out)
+    assert not any(VERIFICATION_INCOMPLETE_NOTE in r.opportunity.limitations for r in out)
     assert stats.verification is not None and stats.verification.rejected == 2
 
 
 THIRD = "Varias consultoras ofrecen ya implantaciones a medida."
 
 
-async def test_rejected_claim_is_never_published_even_if_another_has_no_verdict(session):
+async def test_only_supported_claims_are_published_when_others_are_rejected_or_unverified(
+    session,
+):
     judge = FakeClaimJudge(rejected=frozenset({OTHER}), fail=THIRD)
     explainer = FakeExplainer(texts=(WHY, OTHER, THIRD))
 
     out, stats = await explain_verified(session, ClaimVerifier(judge=judge), explainer)
 
     for r in out:
-        assert r.opportunity.why_it_matters == f"{WHY} {THIRD}"
+        assert r.opportunity.why_it_matters == WHY
         assert r.opportunity.limitations[-2:] == [
             "Jev no encontró respaldo en la evidencia citada para 1 afirmación del LLM: "
             "no se publica.",
-            UNVERIFIED_NOTE,
+            "Jev no pudo verificar 1 afirmación del LLM: no se publica.",
         ]
     assert stats.verification is not None
     assert (stats.verification.rejected, stats.verification.unverified_topics) == (2, 2)
 
 
-async def test_with_verification_on_and_no_key_topics_are_marked_unverified(session):
+async def test_with_verification_on_and_no_key_topics_keep_the_measured_template(session):
+    fitted, _ = await fitted_topics(session)
+
     out, stats = await explain_verified(session, ClaimVerifier(judge=None))
 
-    assert all(r.opportunity.why_it_matters == f"{WHY} {OTHER}" for r in out)
-    assert all(UNVERIFIED_NOTE in r.opportunity.limitations for r in out)
+    for r, before in zip(out, fitted, strict=True):
+        assert r.opportunity.why_it_matters == before.opportunity.why_it_matters
+        assert r.opportunity.limitations[-1:] == [VERIFICATION_INCOMPLETE_NOTE]
     assert stats.verification is not None and stats.verification.unverified_topics == 2
+
+
+async def test_rejected_and_unverified_without_any_supported_claim_says_verification_failed(
+    session,
+):
+    fitted, _ = await fitted_topics(session)
+    judge = FakeClaimJudge(rejected=frozenset({WHY}), fail=OTHER)
+
+    out, _ = await explain_verified(session, ClaimVerifier(judge=judge))
+
+    for r, before in zip(out, fitted, strict=True):
+        assert r.opportunity.why_it_matters == before.opportunity.why_it_matters
+        assert r.opportunity.limitations[-1:] == [VERIFICATION_INCOMPLETE_NOTE]
+        assert NO_VALID_CLAIM_NOTE not in r.opportunity.limitations
 
 
 async def test_without_verifier_nothing_changes(session):
@@ -330,7 +377,8 @@ async def test_without_verifier_nothing_changes(session):
         session, fitted, answers=answers, explainer=FakeExplainer(), meter=UsageMeter()
     )
 
-    assert not any(UNVERIFIED_NOTE in r.opportunity.limitations for r in out)
+    assert all(r.opportunity.why_it_matters == WHY for r in out)
+    assert not any(VERIFICATION_INCOMPLETE_NOTE in r.opportunity.limitations for r in out)
     assert stats.verification is None
 
 
@@ -372,4 +420,7 @@ async def test_jev_budget_goes_to_the_top_ranked_topic_first(session):
         verifier=ClaimVerifier(judge=FakeClaimJudge(), budget=1),
     )
 
-    assert [UNVERIFIED_NOTE in r.opportunity.limitations for r in out] == [True, False]
+    assert [VERIFICATION_INCOMPLETE_NOTE in r.opportunity.limitations for r in out] == [
+        True,
+        False,
+    ]

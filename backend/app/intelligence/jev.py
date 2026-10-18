@@ -36,12 +36,14 @@ MAX_PAIR_DESCRIPTION_CHARS = 500
 SAME_STORY_QUESTION = "same_story"
 
 CLAIM_BATTERY = "claim"
-CLAIM_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/claim.v1.yaml"
+CLAIM_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/claim.v2.yaml"
 SUPPORT_QUESTION = "support"
 SUPPORTS = "supports"
 # CLAUDE.md §7, Verificación. Es un umbral sobre `confidence`, no sobre la probabilidad máxima
-# como CHOICE_MIN_PROB: por eso no se reutiliza.
-CLAIM_SUPPORT_MIN_CONFIDENCE = 0.8
+# como CHOICE_MIN_PROB: por eso no se reutiliza. 0,6 y no 0,8: con 0,8 se perdían afirmaciones
+# respaldadas con `supports` en las dos preguntas; 0,6 se validó con una muestra nueva
+# (data/evaluations/jev_claim_adoption_eval.md).
+CLAIM_SUPPORT_MIN_CONFIDENCE = 0.6
 
 # Umbrales de docs/jev.md, "Del juicio a la decisión". Iniciales: se ajustan con la validación.
 CHOICE_MIN_PROB = 0.6

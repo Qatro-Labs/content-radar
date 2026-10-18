@@ -4,7 +4,7 @@
 # descripción). Las ausencias y las hipótesis se nombran a propósito: son casi la mitad de las
 # afirmaciones reales. `support_rev` repite la pregunta con las opciones en orden inverso para
 # detectar el sesgo hacia la primera opción. Python publica la afirmación solo si las dos dicen
-# `supports` y `support` lo dice con confianza ≥ 0,8 (`claim_supported`).
+# `supports` y `support` lo dice con confianza ≥ 0,6 (`claim_supported`).
 # v2: con v1 solo 1 de 11 afirmaciones reales en posición 2 («para un directivo de Latinoamérica,
 # esto importa porque…») salía respaldada (data/evaluations/jev_claim_v1_eval.md). La v2 dice que
 # esa lectura es interpretación editorial y que solo se comprueban los hechos en que se apoya.
