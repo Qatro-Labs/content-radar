@@ -1,6 +1,7 @@
 """Republicaciones de la misma nota dentro de un tema: lógica pura, sin DB ni Jev."""
 
 import math
+import zlib
 from datetime import UTC, datetime, timedelta
 
 import numpy as np
@@ -44,7 +45,8 @@ def piece(
         title=title or f"Pieza {i}",
         description=None,
         platform=platform,
-        source_id=hash(source) % 1000,
+        # `hash()` cambia con PYTHONHASHSEED: dos fuentes podían caer en el mismo id.
+        source_id=zlib.crc32(source.encode()),
         source_name=source,
         segment=Segment.TECH,
         language="en",

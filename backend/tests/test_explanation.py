@@ -14,6 +14,7 @@ from app.editorial.explanation import (
     ExplanationResult,
     OpportunityExplanation,
     build_explain_input,
+    opportunity_facts,
     system_prompt,
     user_message,
 )
@@ -56,6 +57,14 @@ def explained(result, claims, limitations=(), *, numbers: Set[str] = frozenset()
 
 
 # --- comprobaciones en Python -------------------------------------------------------------
+
+
+def test_facts_carry_the_business_count_that_decides_the_latam_gap():
+    [result, _], _ = two_topics()
+    note = "3 de 7 piezas clasificadas tratan del uso de la IA en organizaciones."
+    o = result.opportunity.model_copy(update={"description": f"Tema agrupado. {note}"})
+
+    assert any(note in fact for fact in opportunity_facts(o, result.timeline))
 
 
 async def test_valid_claims_replace_the_template_and_the_pending_note(session):
