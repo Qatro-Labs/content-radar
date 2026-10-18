@@ -84,106 +84,97 @@ const BUTTON_CLASS =
 </script>
 
 <template>
-  <div
-    data-agent="detail"
-    class="grid gap-x-8 gap-y-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.5fr)_minmax(260px,0.9fr)]"
-  >
-    <!-- A lo ancho, en tres columnas: el tema, por qué y qué hacer. En móvil se apila. -->
-    <div class="flex flex-col gap-3">
-      <HoverHint :text="HELP.backToWeek">
+  <div data-agent="detail" class="flex flex-col gap-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <HoverHint :text="HELP.backToRanking">
         <button
           type="button"
-          class="flex min-h-10 items-center gap-1.5 self-start rounded-[10px] bg-secondary pr-3 pl-2 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
+          class="flex min-h-10 items-center gap-1.5 rounded-[10px] bg-secondary pr-3 pl-2 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
           @click="emit('clear')"
         >
           <ChevronLeft class="size-4 text-ink-soft" aria-hidden="true" />
-          Esta semana
+          Ranking
         </button>
       </HoverHint>
-      <div :key="opportunity.id" class="flex flex-col gap-2" :class="TEXT_ENTER_CLASS">
-        <LifecycleChip :lifecycle="opportunity.lifecycle" class="self-start" />
-        <h2 class="font-display text-[28px] leading-[1.08] font-semibold tracking-[-0.03em]">
+      <div class="flex flex-wrap items-center gap-2">
+        <LifecycleChip :lifecycle="opportunity.lifecycle" />
+        <RecommendationChip :recommendation="opportunity.recommendation" />
+      </div>
+    </div>
+
+    <div class="flex items-center gap-[18px]">
+      <ScoreRing :score="opportunity.opportunity_score ?? null" :size-px="PREVIEW_RING_SIZE_PX" />
+      <div :key="opportunity.id" class="flex min-w-0 flex-col gap-1.5" :class="TEXT_ENTER_CLASS">
+        <h2 class="font-display text-[26px] leading-[1.08] font-semibold tracking-[-0.03em]">
           {{ opportunity.topic }}
         </h2>
-        <p class="text-sm text-muted-foreground">{{ evidenceSummary }}</p>
+        <span class="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground">
+          Oportunidad · puesto {{ opportunity.rank }} de {{ total }} · {{ evidenceSummary }}
+          <InfoTip label="la oportunidad" :text="HELP.colScore" />
+        </span>
       </div>
     </div>
 
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center gap-[18px]">
-        <ScoreRing :score="opportunity.opportunity_score ?? null" :size-px="PREVIEW_RING_SIZE_PX" />
-        <div class="flex min-w-0 flex-col items-start gap-2">
-          <span class="flex items-center gap-1 text-sm text-muted-foreground">
-            Oportunidad · puesto {{ opportunity.rank }} de {{ total }}
-            <InfoTip label="la oportunidad" :text="HELP.colScore" />
-          </span>
-          <RecommendationChip :recommendation="opportunity.recommendation" />
-        </div>
-      </div>
+    <!-- Ejecuciones anteriores a #23 no traen la regla: sin texto, no "no disponible". -->
+    <p
+      v-if="reason"
+      :key="`reason-${opportunity.id}`"
+      class="text-[15px] text-ink-soft"
+      :class="TEXT_ENTER_CLASS"
+    >
+      {{ reason }}
+    </p>
 
-      <!-- Ejecuciones anteriores a #23 no traen la regla: sin texto, no "no disponible". -->
-      <p
-        v-if="reason"
-        :key="`reason-${opportunity.id}`"
-        class="text-sm text-ink-soft"
-        :class="TEXT_ENTER_CLASS"
+    <!-- D8: solo el inicio; el texto entero vive en el expediente. -->
+    <p
+      v-if="opportunity.why_it_matters"
+      :key="`why-${opportunity.id}`"
+      class="line-clamp-3 text-[15px] leading-[1.55] text-ink-read"
+      :class="TEXT_ENTER_CLASS"
+    >
+      {{ opportunity.why_it_matters }}
+    </p>
+
+    <div class="grid grid-cols-3 gap-2">
+      <div
+        v-for="tile in tiles"
+        :key="tile.label"
+        class="flex min-w-0 flex-col gap-0.5 rounded-tile bg-sunken px-3 py-2.5"
       >
-        {{ reason }}
-      </p>
-
-      <!-- D8: solo el inicio; el texto entero vive en el expediente. -->
-      <p
-        v-if="opportunity.why_it_matters"
-        :key="`why-${opportunity.id}`"
-        class="line-clamp-3 text-[15px] leading-[1.55] text-ink-read"
-        :class="TEXT_ENTER_CLASS"
-      >
-        {{ opportunity.why_it_matters }}
-      </p>
-    </div>
-
-    <div class="flex flex-col gap-3">
-      <div class="grid grid-cols-3 gap-2">
-        <div
-          v-for="tile in tiles"
-          :key="tile.label"
-          class="flex min-w-0 flex-col gap-0.5 rounded-tile bg-sunken px-3 py-2.5"
+        <span class="flex items-center gap-0.5 text-[13px] text-muted-foreground">
+          {{ tile.label }}
+          <InfoTip :label="tile.label" :text="tile.help" />
+        </span>
+        <span
+          class="font-display text-xl leading-[1.1] font-semibold tracking-[-0.02em]"
+          :class="tile.valueClass"
         >
-          <span class="flex items-center gap-0.5 text-[13px] text-muted-foreground">
-            {{ tile.label }}
-            <InfoTip :label="tile.label" :text="tile.help" />
-          </span>
-          <span
-            class="font-display text-xl leading-[1.1] font-semibold tracking-[-0.02em]"
-            :class="tile.valueClass"
-          >
-            {{ tile.value }}
-          </span>
-        </div>
+          {{ tile.value }}
+        </span>
       </div>
+    </div>
 
-      <div class="flex flex-wrap gap-2">
-        <HoverHint :text="HELP.openDossier">
-          <RouterLink
-            :data-agent="AGENT_ANCHOR.openDossier"
-            :to="{ name: RouteName.Dossier, params: { id: opportunity.id } }"
-            class="flex-[1_1_150px] bg-primary text-primary-foreground hover:bg-primary-hover"
-            :class="BUTTON_CLASS"
-          >
-            Ver expediente
-            <ArrowRight class="size-4" aria-hidden="true" />
-          </RouterLink>
-        </HoverHint>
-        <HoverHint :text="HELP.generateBrief">
-          <RouterLink
-            :to="{ name: RouteName.Create, query: { opportunity: opportunity.id } }"
-            class="flex-[1_1_130px] bg-secondary text-secondary-foreground hover:bg-secondary-hover"
-            :class="BUTTON_CLASS"
-          >
-            Generar brief
-          </RouterLink>
-        </HoverHint>
-      </div>
+    <div class="mt-auto flex flex-wrap gap-2">
+      <HoverHint :text="HELP.openDossier">
+        <RouterLink
+          :data-agent="AGENT_ANCHOR.openDossier"
+          :to="{ name: RouteName.Dossier, params: { id: opportunity.id } }"
+          class="flex-[1_1_180px] bg-primary text-primary-foreground hover:bg-primary-hover"
+          :class="BUTTON_CLASS"
+        >
+          Ver expediente
+          <ArrowRight class="size-4" aria-hidden="true" />
+        </RouterLink>
+      </HoverHint>
+      <HoverHint :text="HELP.generateBrief">
+        <RouterLink
+          :to="{ name: RouteName.Create, query: { opportunity: opportunity.id } }"
+          class="flex-[1_1_160px] bg-secondary text-secondary-foreground hover:bg-secondary-hover"
+          :class="BUTTON_CLASS"
+        >
+          Generar brief
+        </RouterLink>
+      </HoverHint>
     </div>
   </div>
 </template>

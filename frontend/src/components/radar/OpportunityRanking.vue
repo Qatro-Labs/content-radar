@@ -97,13 +97,13 @@ const barsNote = computed(() => {
 </script>
 
 <template>
-  <!-- En escritorio la tarjeta toma el alto del radar (su contenido va en absoluto y no empuja la
-       fila) y las filas se desplazan dentro. -->
   <section
     data-agent="ranking"
     aria-label="Ranking"
     class="relative flex min-h-[420px] min-w-0 flex-col rounded-card bg-card xl:min-h-0"
   >
+    <!-- En escritorio la tarjeta toma el alto del radar (su contenido va en absoluto y no empuja la
+         fila) y las filas se desplazan dentro. -->
     <div class="flex min-h-0 flex-1 flex-col gap-1 px-4 pt-5 pb-3 xl:absolute xl:inset-0">
       <h2
         class="flex items-center gap-1.5 px-1 pb-2 font-display text-[22px] font-semibold tracking-[-0.02em]"

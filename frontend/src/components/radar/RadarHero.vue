@@ -19,8 +19,18 @@ import {
 } from '@/lib/radarView'
 
 import CounterFilter, { type CounterSwatch } from './CounterFilter.vue'
+import RadarWeekLine from './RadarWeekLine.vue'
 
-const { view, query } = defineProps<{ view: RadarView; query: RadarQuery }>()
+const { view, query, monitoringStartedAt } = defineProps<{
+  view: RadarView
+  query: RadarQuery
+  monitoringStartedAt: string
+}>()
+
+const emit = defineEmits<{
+  select: [id: string]
+  hover: [id: string | null]
+}>()
 
 const { update } = useRadarQuery()
 const { agentRadarParams } = useRadarAgent()
@@ -79,9 +89,17 @@ const isSetByRad = computed(
 
 <template>
   <section class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-    <ViewHeader :title="radarHeadline(view, query)">
-      {{ radarSubline(view, query) }}
-    </ViewHeader>
+    <div class="flex max-w-[820px] flex-col gap-4">
+      <ViewHeader :title="radarHeadline(view, query)">
+        {{ radarSubline(view, query) }}
+      </ViewHeader>
+      <RadarWeekLine
+        :view
+        :monitoring-started-at="monitoringStartedAt"
+        @select="(id) => emit('select', id)"
+        @hover="(id) => emit('hover', id)"
+      />
+    </div>
 
     <div class="flex flex-wrap items-center gap-2">
       <div role="group" aria-label="Filtrar por" class="flex flex-wrap gap-2">

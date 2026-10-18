@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { usePreferredReducedMotion } from '@vueuse/core'
-import { type ComponentPublicInstance, computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useOpportunities } from '@/api/opportunities'
 import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
 import OpportunityRanking from '@/components/radar/OpportunityRanking.vue'
 import RadarFootnote from '@/components/radar/RadarFootnote.vue'
 import RadarHero from '@/components/radar/RadarHero.vue'
-import RadarSidePanel from '@/components/radar/RadarSidePanel.vue'
+import RadarPreviewCard from '@/components/radar/RadarPreviewCard.vue'
 import RadarStates, { RadarPlaceholder } from '@/components/radar/RadarStates.vue'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
@@ -39,24 +38,6 @@ function changeSelection(id: string | null) {
   update({ selected: id })
 }
 
-// El tema elegido se abre debajo del radar: si el panel queda fuera de la pantalla, la página baja
-// lo justo para enseñarlo.
-const panel = useTemplateRef<ComponentPublicInstance>('panel')
-const reducedMotion = usePreferredReducedMotion()
-watch(
-  () => view.value.selected?.id,
-  async (id) => {
-    if (!id) return
-    await nextTick()
-    const element = panel.value?.$el
-    if (!(element instanceof HTMLElement)) return
-    element.scrollIntoView({
-      block: 'nearest',
-      behavior: reducedMotion.value === 'reduce' ? 'auto' : 'smooth',
-    })
-  },
-)
-
 // D7: elegir el tema ya seleccionado lo deselecciona.
 function select(id: string) {
   changeSelection(view.value.selected?.id === id ? null : id)
@@ -75,10 +56,18 @@ function hover(id: string | null) {
   <RadarStates v-if="placeholder" :state="placeholder" @retry="refetch()" />
 
   <div v-else-if="data" class="flex flex-col gap-4">
-    <RadarHero :view :query class="pt-5 pb-1" />
+    <RadarHero
+      :view
+      :query
+      :monitoring-started-at="data.monitoring_started_at"
+      class="pt-5 pb-1"
+      @select="select"
+      @hover="hover"
+    />
 
     <!-- Radar y ranking lado a lado para no hacer scroll: el ranking toma el alto del radar y
-         desplaza sus filas dentro de su tarjeta. Por debajo de 1280 px se apilan. -->
+         desplaza sus filas dentro de su tarjeta. Al elegir un tema, su vista previa ocupa el sitio
+         del ranking («‹ Ranking» vuelve). Por debajo de 1280 px se apilan. -->
     <div class="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
       <OpportunityRadar
         :view
@@ -87,24 +76,31 @@ function hover(id: string | null) {
         @select="select"
         @hover="hover"
       />
-      <OpportunityRanking
-        :rows="view.visible"
-        :is-filtered="view.isFiltered"
-        :selected-id="view.selected?.id ?? null"
-        :hovered-id="hovered"
-        @select="select"
-        @hover="hover"
-      />
+      <!-- DESIGN.md §7: cambia con fundido y 6 px de subida (280 ms). La vista previa no se
+           remonta al cambiar de tema: así el anillo cuenta hasta el nuevo valor. -->
+      <Transition
+        mode="out-in"
+        enter-from-class="translate-y-1.5 opacity-0"
+        enter-active-class="transition duration-[280ms] ease-out motion-reduce:transition-none"
+      >
+        <RadarPreviewCard
+          v-if="view.selected"
+          :opportunity="view.selected"
+          :total="view.total"
+          @clear="clearSelection"
+        />
+        <OpportunityRanking
+          v-else
+          :rows="view.visible"
+          :is-filtered="view.isFiltered"
+          :selected-id="null"
+          :hovered-id="hovered"
+          @select="select"
+          @hover="hover"
+        />
+      </Transition>
     </div>
 
-    <RadarSidePanel
-      ref="panel"
-      :view
-      :monitoring-started-at="data.monitoring_started_at"
-      @select="select"
-      @hover="hover"
-      @clear="clearSelection"
-    />
     <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
   </div>
 </template>

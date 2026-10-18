@@ -39,7 +39,7 @@ export const HELP = {
   counterEmerging:
     'Temas que empiezan a crecer, en pocas fuentes y con poco contenido parecido: la ocasión de llegar antes. Pulsa para ver solo esos.',
   radar:
-    'Cada burbuja es un tema. Más arriba, más crece; más a la derecha, más encaja con 30X. El tamaño es la fuerza de la evidencia y el color, su etapa. Pulsa una burbuja para ver el tema debajo.',
+    'Cada burbuja es un tema. Más arriba, más crece; más a la derecha, más encaja con 30X. El tamaño es la fuerza de la evidencia y el color, su etapa. Pulsa una burbuja para ver el tema al lado.',
   axisGrowth:
     'Crecimiento (0–100): cuántas piezas nuevas aparecen, si se aceleran y si alguna rinde muy por encima de lo normal.',
   axisFit:
@@ -50,7 +50,8 @@ export const HELP = {
   quadrantFitOnly: 'Encaja con 30X, pero no está creciendo ahora.',
   quadrantWeak: 'Ni crece ni encaja: poca señal por ahora.',
   pulse: 'Las burbujas que laten están creciendo: cuanto más rápido laten, más aceleran.',
-  ranking: 'Todos los temas ordenados por oportunidad. Pulsa una fila para ver el tema debajo.',
+  ranking:
+    'Todos los temas ordenados por oportunidad. Pulsa una fila para ver el tema en su lugar.',
   colRank: 'Posición del tema en el ranking de oportunidad.',
   colTopic:
     'Nombre del tema. El punto de color es su etapa (pasa el cursor para ver cuál) y, si toca, aparece «Publicar ya».',
@@ -60,12 +61,10 @@ export const HELP = {
     'Piezas nuevas en los últimos 3 días y, al lado, las de los 3 días anteriores. Si dice «Estimado» o «Preliminar», hay pocos datos.',
   colScore:
     'Oportunidad (0–100): combina crecimiento, encaje con 30X, número de fuentes, lo poco cubierto que está y lo fácil que es llevarlo a contenido.',
-  weekSummary:
-    'Resumen de la semana: lo que conviene publicar, lo que está funcionando y lo que no sabemos.',
   outliers:
     'Un outlier es una pieza que rinde 3× o más que lo normal en su canal. Señala qué está funcionando, no por qué.',
   limits: 'Lo que los datos no permiten afirmar. Conviene leerlo antes de publicar.',
-  backToWeek: 'Vuelve al resumen de la semana sin quitar los filtros.',
+  backToRanking: 'Vuelve al ranking sin quitar los filtros.',
   openDossier: 'Abre el expediente completo: evolución, encaje con 30X y toda la evidencia.',
   generateBrief: 'Prepara un brief de contenido a partir de este tema y su evidencia.',
   rad: 'Rad, el agente del Radar: pregúntale en lenguaje natural y responde moviendo la página, con los mismos filtros que usas tú y citando la evidencia.',

@@ -8,7 +8,6 @@ import {
   buildRadarView,
   counterPatch,
   describeStageUnknowns,
-  describeWeekPicks,
   radarHeadline,
   radarSubline,
 } from '../radarView'
@@ -313,30 +312,6 @@ describe('describeStageUnknowns', () => {
     },
   ])('$case', ({ counts, text }) => {
     expect(describeStageUnknowns(topics(counts), MONITORING_STARTED_AT)).toBe(text)
-  })
-})
-
-describe('describeWeekPicks', () => {
-  const [first, second, third] = buildRadarView(list, query()).ranked
-
-  it.each([
-    {
-      case: 'several topics to publish now',
-      picks: { topics: [first!, second!], hasPublishNow: true },
-      text: '2 temas para publicar ya: crecen y encajan con la audiencia de 30X.',
-    },
-    {
-      case: 'one topic to publish now, in the singular',
-      picks: { topics: [first!], hasPublishNow: true },
-      text: '1 tema para publicar ya: crece y encaja con la audiencia de 30X.',
-    },
-    {
-      case: 'no topic to publish now',
-      picks: { topics: [first!, second!, third!], hasPublishNow: false },
-      text: 'Ningún tema cumple hoy las condiciones de «Publicar ya». Los primeros del ranking:',
-    },
-  ])('$case', ({ picks, text }) => {
-    expect(describeWeekPicks(picks)).toBe(text)
   })
 })
 
