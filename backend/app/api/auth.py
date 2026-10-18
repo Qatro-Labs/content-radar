@@ -25,6 +25,11 @@ JWKS_TIMEOUT_SECONDS = 5
 # Un token con un `kid` inventado obliga a pedir el JWKS de nuevo: como mucho una vez por
 # intervalo y proceso, para que nadie sin sesión convierta la API en un amplificador de peticiones.
 JWKS_REFRESH_INTERVAL_SECONDS = 60
+# Pasado este tiempo se vuelve a pedir el JWKS aunque el `kid` sea conocido: una clave que Supabase
+# revocó o rotó deja de aceptarse sin reiniciar el proceso.
+JWKS_MAX_AGE_SECONDS = 600
+# Si Supabase no responde, las claves en memoria siguen valiendo hasta este límite; después, 401.
+JWKS_STALE_LIMIT_SECONDS = 2 * JWKS_MAX_AGE_SECONDS
 # Supabase usa UUIDs como `kid`; esto deja margen sin aceptar texto arbitrario.
 KID_PATTERN = re.compile(r"[A-Za-z0-9_.-]{1,128}")
 REQUIRED_CLAIMS = ["exp", "sub", "aud", "iss"]
@@ -50,19 +55,34 @@ class SupabaseJwks:
         *,
         clock: Callable[[], float] = time.monotonic,
         refresh_interval: float = JWKS_REFRESH_INTERVAL_SECONDS,
+        max_age: float = JWKS_MAX_AGE_SECONDS,
+        stale_limit: float = JWKS_STALE_LIMIT_SECONDS,
     ) -> None:
         self._fetcher = fetcher
         self._clock = clock
         self._refresh_interval = refresh_interval
+        self._max_age = max_age
+        self._stale_limit = stale_limit
         self._keys: dict[str, jwt.PyJWK] = {}
         self._last_fetch: float | None = None
+        self._last_success: float | None = None
         self._lock = threading.Lock()
 
     def signing_key(self, kid: str) -> jwt.PyJWK | None:
         with self._lock:
-            if kid not in self._keys and self._may_refresh():
+            if self._needs_refresh(kid) and self._may_refresh():
                 self._refresh()
+            if self._age() >= self._stale_limit:
+                return None
             return self._keys.get(kid)
+
+    def _age(self) -> float:
+        if self._last_success is None:
+            return float("inf")
+        return self._clock() - self._last_success
+
+    def _needs_refresh(self, kid: str) -> bool:
+        return kid not in self._keys or self._age() >= self._max_age
 
     def _may_refresh(self) -> bool:
         return self._last_fetch is None or (
@@ -79,7 +99,9 @@ class SupabaseJwks:
         except (jwt.PyJWTError, ValueError) as e:
             log.warning("auth_jwks_unavailable", error=type(e).__name__)
             return
+        # Se sustituye el conjunto entero: una clave que ya no publica Supabase deja de valer.
         self._keys = {key.key_id: key for key in jwk_set.keys if key.key_id}
+        self._last_success = self._last_fetch
 
 
 class SigningKeySource(Protocol):

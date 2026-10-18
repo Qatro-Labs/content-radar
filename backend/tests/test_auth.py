@@ -10,7 +10,13 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from httpx import ASGITransport, AsyncClient
 from jwt.algorithms import ECAlgorithm
 
-from app.api.auth import JWKS_REFRESH_INTERVAL_SECONDS, SupabaseJwks, get_signing_keys
+from app.api.auth import (
+    JWKS_MAX_AGE_SECONDS,
+    JWKS_REFRESH_INTERVAL_SECONDS,
+    JWKS_STALE_LIMIT_SECONDS,
+    SupabaseJwks,
+    get_signing_keys,
+)
 from app.api.routes.agent import get_agent_model
 from app.core.config import Settings, get_settings
 from app.main import app
@@ -30,9 +36,17 @@ class FakeFetcher:
         jwk = json.loads(ECAlgorithm.to_jwk(_private_key.public_key()))
         self._jwk_set = jwt.PyJWKSet([{**jwk, "kid": KID, "alg": "ES256"}])
         self.calls = 0
+        self.failing = False
+
+    def rotate_out_the_key(self) -> None:
+        other = ec.generate_private_key(ec.SECP256R1()).public_key()
+        jwk = json.loads(ECAlgorithm.to_jwk(other))
+        self._jwk_set = jwt.PyJWKSet([{**jwk, "kid": "new-key", "alg": "ES256"}])
 
     def get_jwk_set(self, refresh: bool = False) -> jwt.PyJWKSet:
         self.calls += 1
+        if self.failing:
+            raise jwt.PyJWKClientConnectionError("Supabase no responde")
         return self._jwk_set
 
 
@@ -248,3 +262,53 @@ def test_jwks_that_is_not_json_counts_as_unavailable():
     keys = SupabaseJwks(HtmlFetcher(), clock=FakeClock())
 
     assert keys.signing_key(KID) is None
+
+
+def test_known_kid_inside_max_age_makes_no_fetch(fetcher):
+    clock = FakeClock()
+    keys = SupabaseJwks(fetcher, clock=clock)
+    keys.signing_key(KID)
+
+    clock.now = JWKS_MAX_AGE_SECONDS - 1
+    key = keys.signing_key(KID)
+
+    assert key is not None
+    assert fetcher.calls == 1
+
+
+def test_key_removed_from_the_jwks_is_rejected_after_max_age(fetcher):
+    clock = FakeClock()
+    keys = SupabaseJwks(fetcher, clock=clock)
+    keys.signing_key(KID)
+    fetcher.rotate_out_the_key()
+
+    clock.now = JWKS_MAX_AGE_SECONDS - 1
+    before = keys.signing_key(KID)
+    clock.now = JWKS_MAX_AGE_SECONDS
+    after = keys.signing_key(KID)
+
+    assert before is not None
+    assert after is None
+    assert fetcher.calls == 2
+
+
+def test_failing_refresh_keeps_the_keys_until_the_stale_limit(fetcher):
+    clock = FakeClock()
+    keys = SupabaseJwks(fetcher, clock=clock)
+    keys.signing_key(KID)
+    fetcher.failing = True
+
+    clock.now = JWKS_MAX_AGE_SECONDS
+    at_max_age = keys.signing_key(KID)
+    clock.now += 1
+    retry_inside_interval = keys.signing_key(KID)
+    calls_inside_interval = fetcher.calls
+    clock.now = JWKS_STALE_LIMIT_SECONDS - 1
+    inside_grace = keys.signing_key(KID)
+    clock.now = JWKS_STALE_LIMIT_SECONDS
+    after_grace = keys.signing_key(KID)
+
+    assert at_max_age is not None and retry_inside_interval is not None
+    assert calls_inside_interval == 2
+    assert inside_grace is not None
+    assert after_grace is None
