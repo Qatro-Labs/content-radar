@@ -103,13 +103,16 @@ describe('askAgent', () => {
     expect(error).toMatchObject({ status: 429, message: detail })
   })
 
-  it('explains an invalid question in Spanish', async () => {
+  // El campo ya corta la pregunta a 300 caracteres: un 422 suele venir del contexto, no de ella.
+  it('explains a rejected question in Spanish without blaming its length', async () => {
     stubFetch(
       jsonResponse(422, {
-        detail: [{ type: 'string_too_long', loc: ['body', 'question'], msg: 'String too long' }],
+        detail: [{ type: 'too_long', loc: ['body', 'history'], msg: 'List should have at most 4' }],
       }),
     )
 
-    await expect(ask()).rejects.toThrow('La pregunta no es válida: como mucho 300 caracteres.')
+    await expect(ask()).rejects.toThrow(
+      'Rad no pudo leer esta pregunta. Prueba a escribirla de nuevo.',
+    )
   })
 })
