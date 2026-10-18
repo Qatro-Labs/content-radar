@@ -942,7 +942,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd backend && uv run pytest -q && uv run ruff check . && uv run ruff format --check .`
 - **Commit:** `Tune the radar agent prompt to always show what it says`
 
-#### Paso A.4 — Prueba real (manual)
+#### Paso A.4 — Prueba real (manual) [HECHO]
 
 - **Archivos:** ninguno nuevo (el prompt, si se ajusta).
 - **Cambio:** backend local contra Supabase, como en el paso 5 de `data-radar-agent.plan.md`:
@@ -1120,7 +1120,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 
 ### Integración (coordinador, en `fe/radar-agent`, tras mergear A → B → C)
 
-#### Paso I.1 — Marcas `data-agent`
+#### Paso I.1 — Marcas `data-agent` [HECHO]
 
 - **Archivos:** `OpportunityRadar.vue`, `RankingRow.vue`, `RadarHero.vue`, `OpportunityPreview.vue`,
   `AppHeader.vue`, `PiecesTable.vue`
@@ -1142,7 +1142,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check && pnpm test`
 - **Commit:** `Mark agent targets across radar, explore and header`
 
-#### Paso I.2 — Montaje en la app
+#### Paso I.2 — Montaje en la app [HECHO]
 
 - **Archivos:** `frontend/src/App.vue`, `frontend/src/views/DiscoverView.vue`
 - **Cambio:**
@@ -1156,7 +1156,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** `cd frontend && pnpm lint && pnpm type-check && pnpm test && pnpm build`
 - **Commit:** `Mount the radar agent across the app`
 
-#### Paso I.3 — Documentación
+#### Paso I.3 — Documentación [HECHO]
 
 - **Archivos:** `DESIGN.md`, `.claude/rules/frontend.md`, `CLAUDE.md`
 - **Cambio:**
@@ -1176,7 +1176,7 @@ Todo en `src/components/agent/`. Son presentacionales: reciben props tipadas con
 - **Verificación:** lectura.
 - **Commit:** `Document the conversational radar agent`
 
-#### Paso I.4 — Verificación manual en Chrome
+#### Paso I.4 — Verificación manual en Chrome [HECHO]
 
 - **Archivos:** ninguno.
 - **Cambio:** backend local contra Supabase (como en A.4) y `cd frontend && pnpm dev`. En Chrome (con
@@ -1252,6 +1252,7 @@ Y el paso I.4 completo.
 
 | Fecha | Qué bloqueó | Qué se decidió | Commits que quedaron |
 | --- | --- | --- | --- |
+| 2026-10-18 | A.4 sin claves en el checkout (`backend/.env`, `.env.supabase`); un ciclo de imports `agentTargets` → `router` → vistas al montar | David creó los `.env`; prueba real con 5 preguntas en verde (incluido el respaldo y el seguimiento). `RouteName` pasa a `router/routeNames.ts`. Arreglos de la integración: filtros del contexto acotados, cuenta de palabras compartida (`answerWords.ts`), ids y búsquedas que la API rechazaría fuera de la petición, pasos cortados a `failed` al detener, scroll y remedida de la presencia, rótulo acotado, sugeridas de seguimiento, total de la búsqueda para el modelo, etiqueta del contador con el orden por defecto, prompt sin ids | `6319ab3`, `2074fc3`, `c4e4526`, `8506bd6`, `2628511`, `27deede` |
 
 ## Preguntas abiertas
 
