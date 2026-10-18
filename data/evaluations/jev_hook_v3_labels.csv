@@ -1,0 +1,41 @@
+n,url,titulo,hook
+1,https://techcrunch.com/2026/10/15/ai-agents-are-coming-to-rivians-cars/,AI agents are coming to Rivian’s cars,news
+2,https://www.latent.space/p/ainews-modals-1b-arr-16b-series-d,"[AINews] Modal’s $1B ARR, $16B Series D makes it NYC’s newest AI Infra Decacorn, 3x usage and 3x valuation in 5 months, 15x in 1 yr",data
+3,https://www.technologyreview.com/2026/10/08/1144020/building-a-safer-path-to-autonomous-industrial-ai/,Building a safer path to autonomous industrial AI,unclear
+4,https://hipertextual.com/inteligencia-artificial/como-detectar-fotos-videos-y-audios-creados-con-ia-usando-synthid-detector/,"Cómo detectar fotos, vídeos y audios creados con IA usando SynthID Detector",how_to
+5,https://news.ycombinator.com/item?id=49967408,Show HN: Self-bench – benchmark coding agents on real-world software,news
+6,https://news.ycombinator.com/item?id=50049388,"Show HN: Plimsoll, a self-hosted sandbox for code your AI agent writes",news
+7,https://techcrunch.com/2026/10/16/india-becomes-the-latest-country-to-report-rogue-ai-agent-activity/,India becomes the latest country to report rogue AI agent activity,news
+8,https://news.ycombinator.com/item?id=50047422,The gap in shared understanding of LLM capability is widening,unclear
+9,https://news.ycombinator.com/item?id=50018070,Tell HN: YouTube is punishing logged-out users,news
+10,https://simonwillison.net/2026/Oct/7/openai-rogue-agents-wikimedia/,OpenAI “rogue” agent activities found on Wikimedia projects,news
+11,https://es.wired.com/articulos/internet-enseno-a-la-ia-a-hablar-los-videojuegos-podrian-ensenarle-a-actuar,Internet enseñó a la IA a hablar. Los videojuegos podrían enseñarle a actuar,counterintuitive
+12,https://www.xataka.com/robotica-e-ia/openai-pidio-a-ia-que-terminara-tarea-programacion-acabo-entrando-cartera-ajena-para-conseguirlo,OpenAI pidió a una IA que terminara una tarea de programación. Acabó entrando en una cartera ajena para conseguirlo,story
+13,https://news.ycombinator.com/item?id=49969813,"François Chollet: ""OpenAI basically set back progress to AGI by 5 to 10 years""",counterintuitive
+14,https://news.ycombinator.com/item?id=50093435,Show HN: Run AI-generated logic safely inside your app,news
+15,https://www.expansion.com/economia/financial-times/2026/10/14/dura-batalla-china-depender-chips-nvidia.html,La dura batalla de China para no depender de los chips de Nvidia,news
+16,https://simonwillison.net/2026/Oct/7/claude-haiku-5-5/,Claude Haiku 5.5,news
+17,https://news.ycombinator.com/item?id=50064868,Turn a frontier AI into a multi-agent systems architect,how_to
+18,https://simonwillison.net/2026/Oct/7/anti-patterns-in-software-blogging/,Anti-Patterns in Software Blogging,list
+19,https://news.ycombinator.com/item?id=50076605,AI 3D Prints: Are Claude's Defaults Enough?,question
+20,https://news.ycombinator.com/item?id=50122749,Rogue AI agents broke into Indian firms' live systems,news
+21,https://www.exponentialview.co/p/what-is-left-to-do,🔮 What is left to do,unclear
+22,https://news.ycombinator.com/item?id=49968377,Show HN: Rashomon – An independent execution record for AI coding agents,news
+23,https://expansion.mx/tecnologia/2026/10/13/mercado-ads-ia-publicidad-netflix,La IA analiza tu comportamiento en Netflix y genera publicidad 8 veces más efectiva que la TV tradicional,data
+24,https://news.ycombinator.com/item?id=50023433,Formalization of the OpenAI Proof Withdrawal,unclear
+25,https://dplnews.com/eretail-day-ecommerce-institute-nueva-era-comercio/,eCommerce Institute llama a construir la nueva era del comercio en América Latina,news
+26,https://es.wired.com/articulos/logre-que-muse-sexteara-conmigo-y-meta-dice-que-eso-esta-bien,Logré que Muse sexteara conmigo (y Meta dice que eso está bien),story
+27,https://news.ycombinator.com/item?id=50058903,Show HN: IHMT – Infinite Hierarchical Memory Tree for AI Agents,news
+28,https://www.larepublica.co/analisis/santiago-jimenez-londono-4353436/la-ia-se-compra-la-gerencia-para-usarla-no-4505001,"La IA se compra. La gerencia para usarla, no",counterintuitive
+29,https://news.ycombinator.com/item?id=50045311,What broke when an LLM read 9k pages of German election programs,story
+30,https://news.ycombinator.com/item?id=49949988,OpenAI's latest features take direct aim at the app store model,news
+31,https://openai.com/index/stack-overflow-chatgpt-plugin,Stack Overflow for Agents triples signups with ChatGPT plugin,data
+32,https://www.theverge.com/tech/1011996/microsoft-windows-rtx-spark-platform-changes-notepad,How Windows is being optimized for Nvidia’s RTX Spark laptops,news
+33,https://elpais.com/tecnologia/2026-10-15/los-trabajadores-europeos-que-entrenan-las-ia-ya-sabia-que-me-metia-en-unas-condiciones-que-no-eran-las-mejores.html,Los trabajadores europeos que entrenan las IA: “Ya sabía que me metía en unas condiciones que no eran las mejores”,story
+34,https://news.ycombinator.com/item?id=49969988,"Show HN: Halo – A Personal AI with On-Device Harness, Memory and Browser Agent",news
+35,https://elpais.com/tecnologia/2026-10-13/alvise-perez-y-novelas-romanticas-autoeditadas-cuanta-ia-hay-en-los-libros-mas-vendidos-de-espana.html,¿Cuánta IA hay en los libros más vendidos? Mucha en novelas románticas de Amazon y en el superventas de Alvise Pérez,question
+36,https://expansion.mx/tecnologia/2026/10/12/ia-empleo-programadores-experiencia,Estudiar programación ya no garantiza trabajo: La IA cierra la puerta a los graduados sin experiencia,counterintuitive
+37,https://arstechnica.com/ai/2026/10/gemini-4-argon-begins-rolling-out-in-gemini-app-and-antigravity-but-only-if-you-pay/,"Gemini 4 Argon begins rolling out in Gemini app and Antigravity, but only if you pay",news
+38,https://www.wired.com/story/uncanny-valley-podcast-we-got-hot-and-heavy-with-metas-muse-and-underwhelmed-by-apples-homeview/,We Got Hot and Heavy With Meta’s Muse—and Baffled by Apple’s HomeView,story
+39,https://www.lanacion.com.ar/tecnologia/en-la-guardia-la-ia-ya-diagnostica-mejor-que-los-medicos-nid09102026/,"En un triage de guardia, la IA ya diagnostica mejor que los médicos",counterintuitive
+40,https://news.ycombinator.com/item?id=50016572,Anthropic pulls Startup program revoking pending offers,news
