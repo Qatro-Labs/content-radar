@@ -117,6 +117,28 @@ región probablemente ya cubrían: 30X se diferencia por el enfoque ejecutivo y 
 Coincide con el etiquetador: ni la falta de caso ni la cobertura en LATAM frenan a 30X. Muestra
 pequeña y de un solo canal.
 
+### Artículos completos de los temas que cambian (run 43)
+
+Un agente leyó las piezas completas de los 4 temas que alguna variante lleva a `publish_now`
+(Reddit y McKinsey no se pudieron leer; varios TikTok y YouTube solo en parte):
+
+| Tema | Caso real | Cobertura LATAM | Riesgo |
+|---|---|---|---|
+| Control del gasto en IA | Sí: Uber agotó su límite anual de gasto en IA en 4 meses; Meta, Cisco y Walmart con topes (Expansión, sindicado del FT) | Ninguna (0 de 9; Expansión es España) | Lo de Amazon sale de fuentes anónimas |
+| Rezago de América Latina | Sí, sin resultados medidos: Credicorp (más del 90 % de la plantilla usa IA, más de 100 casos en producción), Banco Galicia | Fuerte: 11 de 14 piezas | **Cluster mezclado**: adopción bancaria, startups argentinas, centros de datos, edtech; solo la pieza de Infobae trata del "rezago" |
+| Agentes para ventas y atención | **Débil**: AssemblyAI, un proveedor de IA, aplicándolo a su propio soporte (80 % de tickets, dato propio); un TikTok con empresa sin nombre | Ninguna sobre el tema | 1 pieza de HN es un incidente, no un caso de ventas |
+| Ingresos personales con IA (solo c) | No: autodeclaraciones de influencers | Ninguna | Confirma el "no" del etiquetado |
+
+Consecuencias:
+- La regla no cambia: los 3 temas de a+b tienen sustancia para un ejecutivo, y el etiquetador los
+  marcó "sí". Pero dos riesgos son del clustering y de la rúbrica, no de la recomendación:
+  - "Rezago de América Latina" mezcla subtemas. Su nombre promete más de lo que cubre; en la demo
+    se presenta como "adopción de IA en banca y empresas de LATAM".
+  - "Agentes para ventas" tiene `org_application` 4 con un caso que es el propio proveedor. La
+    rúbrica del LLM sobrevalora ese criterio cuando el caso es del vendedor (regla 3: no presentarlo
+    como caso de cliente).
+- Revisar el texto de ambos en el siguiente run antes de fijar `DEMO_RUN_ID`.
+
 ### Lo que no se adoptó y queda abierto
 
 Los 6 "sí" que siguen sin `publish_now` en el run 43:
