@@ -135,7 +135,19 @@ function updateGaze() {
   lookAt.value = gazeTarget()
 }
 
-onMounted(updateGaze)
+// La tarjeta crece hacia abajo (piezas y luego el borrador): bajo la cabecera del tema, en una pantalla
+// de portátil el borrador quedaría fuera de la vista. Se sube la tarjeta arriba al empezar.
+const SCROLL_MARGIN_PX = 16
+
+function bringIntoView() {
+  const top = (card.value?.getBoundingClientRect().top ?? 0) + window.scrollY - SCROLL_MARGIN_PX
+  window.scrollTo({ top, behavior: isReduced.value ? 'auto' : 'smooth' })
+}
+
+onMounted(() => {
+  bringIntoView()
+  updateGaze()
+})
 watch([() => timeline.value.stage, () => timeline.value.readingIndex, isReduced], updateGaze, {
   flush: 'post',
 })
