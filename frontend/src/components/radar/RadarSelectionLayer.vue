@@ -62,7 +62,7 @@ function spotOf(opportunity: RankedOpportunity | null): Spot | null {
   }
 }
 
-// El radar se remonta con cada barrido (al cargar y al cambiar de periodo). Una selección que
+// El radar se remonta con cada barrido (al cargar y cuando Rad empieza a leer datos). Una selección que
 // llega mientras el haz barre (`?selected=` al cargar) espera a que detecte su burbuja
 // (DESIGN.md §7): la mira, las lecturas, el anillo y el ping. Fuera del barrido responde al
 // instante; sin esto, la primera selección tras el barrido también esperaba.

@@ -6,14 +6,13 @@ import { CARD_CLASS, SECONDARY_BUTTON_CLASS } from '@/components/dossier/dossier
 import ViewHeader from '@/components/layout/ViewHeader.vue'
 import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import { featuredNote, splitByPublishNow } from '@/lib/createPicker'
-import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 
 import CreateFeaturedTopic from './CreateFeaturedTopic.vue'
 import CreateTopicList from './CreateTopicList.vue'
 
 const SKELETON_ROWS = 5
 
-const listQuery = useOpportunities(DEFAULT_PERIOD)
+const listQuery = useOpportunities()
 
 const items = computed(() => listQuery.data.value?.items ?? [])
 // Sin temas en «Publicar ya» no hay destacado: la lista lo dice y nunca asciende a otro

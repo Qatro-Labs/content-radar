@@ -4,14 +4,12 @@ import type { components } from '@/types/api'
 
 type Schemas = components['schemas']
 
-export type Period = Schemas['Period']
 export type Lifecycle = Schemas['Lifecycle']
 export type Confidence = Schemas['Confidence']
 export type Recommendation = Schemas['Recommendation']
 
 // Los enums del contrato hacen falta en tiempo de ejecución para validar la URL; `satisfies`
 // hace que el compilador avise si el contrato (src/types/api.ts) cambia y estos no.
-export const PERIODS = ['24h', '7d', '30d'] as const satisfies readonly Period[]
 export const LIFECYCLES = [
   'emerging',
   'accelerating',
@@ -34,7 +32,6 @@ export type RankingSort = (typeof RANKING_SORTS)[number]
 export const RADAR_TABS = ['radar', 'ranking'] as const
 export type RadarTab = (typeof RADAR_TABS)[number]
 
-export const DEFAULT_PERIOD: Period = '7d'
 export const DEFAULT_RANKING_SORT: RankingSort = 'opportunity'
 export const DEFAULT_RADAR_TAB: RadarTab = 'radar'
 const LIST_SEPARATOR = ','
@@ -43,7 +40,6 @@ const GAP_PARAM_ON = '1'
 // La URL es la única fuente de verdad del estado del Radar: los filtros, el usuario y el
 // agente de la app lo cambian igual, y cualquier estado se puede compartir y repetir.
 export interface RadarQuery {
-  period: Period
   lifecycle: Lifecycle[]
   confidence: Confidence | null
   topic: string | null
@@ -56,7 +52,6 @@ export interface RadarQuery {
 }
 
 export const RADAR_QUERY_KEYS = [
-  'period',
   'lifecycle',
   'confidence',
   'topic',
@@ -87,7 +82,7 @@ function uniqueOf<T extends string>(allowed: readonly T[], values: string[]): T[
   return [...new Set(valid)]
 }
 
-// Quita filtros y resaltados; la selección, el periodo y el orden se conservan. El `reset_view`
+// Quita filtros y resaltados; la selección y el orden se conservan. El `reset_view`
 // del agente (backend/app/agent/tools.py) quita lo mismo.
 export function resetViewPatch(): Partial<RadarQuery> {
   return {
@@ -102,7 +97,6 @@ export function resetViewPatch(): Partial<RadarQuery> {
 
 export function parseRadarQuery(query: LocationQuery): RadarQuery {
   return {
-    period: oneOf(PERIODS, firstValue(query.period)) ?? DEFAULT_PERIOD,
     lifecycle: uniqueOf(LIFECYCLES, listValue(query.lifecycle)),
     confidence: oneOf(CONFIDENCES, firstValue(query.confidence)),
     topic: firstValue(query.topic),
@@ -117,7 +111,6 @@ export function parseRadarQuery(query: LocationQuery): RadarQuery {
 
 export function serializeRadarQuery(state: RadarQuery): Record<string, string> {
   const params: Record<string, string> = {}
-  if (state.period !== DEFAULT_PERIOD) params.period = state.period
   if (state.lifecycle.length > 0) params.lifecycle = state.lifecycle.join(LIST_SEPARATOR)
   if (state.confidence) params.confidence = state.confidence
   if (state.topic) params.topic = state.topic

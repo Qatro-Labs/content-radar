@@ -17,12 +17,11 @@ import {
   type ExploreFilter,
 } from '@/lib/exploreView'
 import { formatUtcTimestamp } from '@/lib/format'
-import { DEFAULT_PERIOD } from '@/lib/radarQuery'
 
 const route = useRoute()
 const router = useRouter()
 
-const { data: list, isPending, isError, refetch } = useOpportunities(DEFAULT_PERIOD)
+const { data: list, isPending, isError, refetch } = useOpportunities()
 const opportunities = computed(() => list.value?.items ?? [])
 const {
   data: evidence,

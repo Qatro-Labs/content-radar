@@ -29,7 +29,7 @@ export const HELP = {
   navCreate:
     'Prepara un brief para LinkedIn, Instagram, YouTube o una newsletter a partir de un tema.',
   search: 'Busca un tema, una pieza o una fuente por su nombre (atajo ⌘K).',
-  period: 'Ventana de tiempo que se analiza. Los temas y sus cifras cambian según el periodo.',
+  period: 'Ventana de tiempo que se analiza. Por ahora el Radar solo calcula los últimos 7 días.',
   lastCollection: 'Última vez que se recogieron piezas de las fuentes monitoreadas.',
 
   // Radar

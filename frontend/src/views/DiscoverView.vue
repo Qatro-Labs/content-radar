@@ -18,7 +18,7 @@ import { buildRadarView, RADAR_TOP } from '@/lib/radarView'
 const { query, update } = useRadarQuery()
 // Rad repite el barrido cuando empieza a leer datos (DESIGN.md §7).
 const { sweepCount } = useRadarAgent()
-const { data, isPending, isError, refetch } = useOpportunities(() => query.value.period)
+const { data, isPending, isError, refetch } = useOpportunities()
 
 // «Ver todos» en el radar: una preferencia de la sesión, no un estado que se comparta por URL.
 const showsAllBubbles = ref(false)
@@ -94,7 +94,7 @@ function hover(id: string | null) {
             v-if="query.tab === 'radar'"
             :view
             :hovered-id="hovered"
-            :sweep-key="`${query.period}:${sweepCount}`"
+            :sweep-key="String(sweepCount)"
             :shows-all="showsAllBubbles"
             :shows-hover-card="peekedId === null"
             @select="select"
