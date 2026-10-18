@@ -678,8 +678,7 @@ def test_system_prompt_takes_limits_from_code():
     assert "{{" not in prompt
     assert f"{MAX_STEPS} pasos" in prompt
     assert f"{MAX_ANSWER_WORDS} palabras" in prompt
-    # Plan fe-radar-agent: el v2 enseña el expediente, lee el contexto y sube a 10 pasos (D11).
-    assert "10 pasos" in prompt
+    # Plan fe-radar-agent: el v2 enseña el expediente y lee el contexto.
     assert "show_in_dossier" in prompt
     assert "<contexto>" in prompt
 
