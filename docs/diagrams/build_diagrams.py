@@ -301,12 +301,12 @@ def architecture() -> None:
     col_w = (WIDTH - 2 * MARGIN - 60) / 2
     collect_lines: list[Line] = [
         "Normaliza y deduplica cada pieza y guarda un snapshot de sus métricas en cada observación.",
-        ("muted", "ScrapeCreators solo a las 00 y a las 12 UTC (se paga por llamada)."),
+        ("muted", "Cada observación suma historial: así se mide la velocidad de una pieza."),
     ]
     analyze_lines: list[Line] = [
         "Jev clasifica cada pieza → embeddings y clustering → scores en Python → el LLM evalúa y "
         "redacta → Jev verifica cada afirmación.",
-        ("muted", "Un lock impide dos ejecuciones a la vez. Detalle en el diagrama del pipeline."),
+        ("muted", "Cada ejecución guarda su propio ranking. Detalle en docs/scoring.md."),
     ]
     h = max(
         card_height("collect · cada 2 h", collect_lines, col_w, "Python"),
@@ -332,8 +332,8 @@ def architecture() -> None:
         y,
         col_w,
         [
-            ("Jev · jev-1.13.0", ["Juicios tipados: piezas, pares de notas y afirmaciones"], "jev"),
-            ("LLM · claude-haiku-5-5", ["Audience fit, nombres, por qué importa"], "llm"),
+            ("Jev (TypeSafe)", ["Juicios tipados: piezas, pares de notas y afirmaciones"], "jev"),
+            ("LLM", ["Audience fit, nombre del tema y por qué importa"], "llm"),
         ],
     )
     y += mh + 20
@@ -349,11 +349,11 @@ def architecture() -> None:
     y += 46
     db_w = (WIDTH - 2 * MARGIN) * 0.64
     db_lines: list[Line] = [
-        ("mono", "sources · content_items · metric_snapshots"),
-        ("mono", "jev_judgments · llm_evaluations (cachés)"),
-        ("mono", "pipeline_runs · usage_events (coste)"),
-        ("mono", "opportunities: una fila por tema y ejecución"),
-        ("mono", "editorial_briefs: briefs por usuario, con versiones"),
+        "Piezas públicas y sus snapshots de métricas",
+        "Juicios de Jev y evaluaciones del LLM, en caché",
+        "Ejecuciones de analyze: una fila por tema y ejecución",
+        "Consumo y coste de cada API externa",
+        "Briefs guardados por usuario",
     ]
     cfg_lines: list[Line] = [
         ("mono", "data/sources.yaml"),
@@ -381,7 +381,7 @@ def architecture() -> None:
     top = y
     y += 46
     svc_lines: list[Line] = [
-        ("mono", "opportunities · signals · editorial · user_briefs · costs"),
+        "Oportunidades, señales, briefs y coste",
         (
             "muted",
             "La única lógica de negocio. La REST, el MCP y Rad la comparten: mismos ids y scores.",
@@ -407,7 +407,7 @@ def architecture() -> None:
                 "Rad · POST /api/v1/agent",
                 [
                     "Agente del Radar, por SSE",
-                    ("muted", "Solo lee la ejecución servida y mueve la vista; máx. 10 pasos"),
+                    ("muted", "Responde sobre la ejecución servida y mueve la vista del Radar"),
                 ],
                 "llm",
             ),
@@ -415,14 +415,14 @@ def architecture() -> None:
                 "MCP /mcp",
                 [
                     "Streamable HTTP, 6 tools",
-                    ("muted", "Solo lectura, salvo el brief; sin SQL ni archivos"),
+                    ("muted", "Las mismas consultas desde un asistente de IA"),
                 ],
                 "python",
             ),
         ],
     )
     y += h + 20
-    _insert_band(svg, top, y - top, "Railway · una app ASGI (FastAPI, sin torch)")
+    _insert_band(svg, top, y - top, "Railway · una app FastAPI")
 
     # Clientes
     y += 44

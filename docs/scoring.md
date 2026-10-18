@@ -6,6 +6,8 @@
 > anota al final. La arquitectura está en [`architecture.md`](architecture.md) y la batería de Jev,
 > en [`jev.md`](jev.md).
 
+![Pipeline de analyze: once pasos, quién hace cada uno (Python, Jev, embeddings o LLM) y las reglas de la recomendación](diagrams/pipeline-scoring.svg)
+
 ## Principios
 
 - **Velocidad, no popularidad.** Ningún total de views, likes o puntos entra en un score. Solo

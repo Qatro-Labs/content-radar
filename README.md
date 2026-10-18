@@ -15,7 +15,7 @@ Convierte señales públicas de Internet (YouTube, Hacker News, medios y blogs p
 
 | Qué | URL |
 |---|---|
-| Dashboard (Vercel) | <!-- TODO Melkin: URL de Vercel --> _pendiente_ |
+| Dashboard (Vercel) | https://signal-pi-black.vercel.app/ |
 | API REST | https://content-radar-production-9453.up.railway.app/api/v1/opportunities |
 | Documentación de la API (OpenAPI) | https://content-radar-production-9453.up.railway.app/docs |
 | Servidor MCP | https://content-radar-production-9453.up.railway.app/mcp |
@@ -47,8 +47,6 @@ Cada paso del producto responde una pregunta y se ve en el dashboard y en el MCP
 Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales. Límites, costes y vías oficiales del roadmap: [docs/sources.md](docs/sources.md). Fuentes dadas de alta: [`data/sources.yaml`](data/sources.yaml).
 
 ## Cómo se prioriza
-
-![Pipeline de analyze: once pasos, quién hace cada uno (Python, Jev, embeddings o LLM) y las reglas de la recomendación](docs/diagrams/pipeline-scoring.svg)
 
 - **Velocidad y aceleración, no popularidad.** Cuenta cuántas piezas nuevas salen al día en los últimos 3 días frente a los 3 anteriores, con un ajuste por volumen. El total de views nunca entra en un score.
 - **Outliers.** Una pieza es outlier si rinde 3× o más sobre la referencia de su canal o fuente. El "por qué funcionó" que se deriva de los outliers es una hipótesis, no una causa.
