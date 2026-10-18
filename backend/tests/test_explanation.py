@@ -344,3 +344,23 @@ async def test_topic_without_python_valid_claims_sends_nothing_to_jev(session):
 
     assert judge.calls == 0
     assert all(r.opportunity.limitations[-1:] == [NO_VALID_CLAIM_NOTE] for r in out)
+
+
+async def test_jev_budget_goes_to_the_top_ranked_topic_first(session):
+    fitted, answers = await fitted_topics(session)
+    low, high = (
+        replace(r, opportunity=r.opportunity.model_copy(update={"opportunity_score": score}))
+        for r, score in zip(fitted, (40.0, 80.0), strict=True)
+    )
+
+    # El de abajo va primero: sin ordenar por `rank()`, la única llamada sería para él.
+    out, _ = await explain_topics(
+        session,
+        [low, high],
+        answers=answers,
+        explainer=FakeExplainer(),
+        meter=UsageMeter(),
+        verifier=ClaimVerifier(judge=FakeClaimJudge(), budget=1),
+    )
+
+    assert [UNVERIFIED_NOTE in r.opportunity.limitations for r in out] == [True, False]

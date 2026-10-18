@@ -138,3 +138,10 @@ def test_build_claim_verifier():
 
     assert build_claim_verifier(off) is None
     assert build_claim_verifier(on) == ClaimVerifier(judge=None)
+
+
+def test_empty_verify_flag_means_off(monkeypatch, tmp_path):
+    # `JEV_VERIFY_CLAIMS=` vacío en Railway no debe impedir que arranquen la API y los jobs.
+    monkeypatch.chdir(tmp_path)  # sin el .env local
+    monkeypatch.setenv("JEV_VERIFY_CLAIMS", "")
+    assert Settings().jev_verify_claims is False

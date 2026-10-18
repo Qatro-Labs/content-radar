@@ -167,7 +167,8 @@ def _print_verification(v: VerifyStats | None) -> None:
         return
     print(
         f"  verificación jev: {v.verified} verificadas · {v.cached} de caché · "
-        f"{v.rejected} rechazadas · {v.unverified_topics} temas sin verificar"
+        f"{v.failed} fallidas · {v.over_budget} fuera de presupuesto · {v.rejected} rechazadas · "
+        f"{v.unverified_topics} temas sin verificar"
     )
     if v.skipped_reason:
         print(f"  verificación omitida: {v.skipped_reason}")

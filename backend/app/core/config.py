@@ -5,7 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Una variable vacía (`JEV_VERIFY_CLAIMS=` en Railway) toma el valor por defecto: sin esto,
+    # un bool vacío no se puede leer y no arrancan ni la API ni los jobs.
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_ignore_empty=True)
 
     app_env: str = "local"
     database_url: str = "postgresql+asyncpg://radar:radar@localhost:5433/radar"
