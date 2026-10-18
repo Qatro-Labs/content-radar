@@ -14,6 +14,8 @@ export const AGENT_TIMING = {
   // Lo que se espera a que aparezca un objetivo tras navegar (el expediente carga sus datos).
   anchorWaitMs: 3000,
   tapMs: 420,
+  // Lo que tarda la barra en reducirse al ojo o en volver (transiciones de App.vue).
+  dockToggleMs: 280,
 } as const
 
 // DESIGN.md §4: el anillo va separado 5 px de un control y 6 px de una sección, con el radio del

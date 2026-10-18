@@ -177,5 +177,5 @@ export function useAgentPresence() {
   // mueve sin scroll ni resize de la ventana.
   useResizeObserver(root, remeasure)
 
-  return { presence, isReducedMotion, hasAnchor, moveTo, waitForAnchor, tap, hide }
+  return { presence, isReducedMotion, hasAnchor, moveTo, waitForAnchor, tap, hide, remeasure }
 }

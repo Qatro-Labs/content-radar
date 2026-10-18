@@ -167,6 +167,27 @@ describe('useRadarAgent', () => {
     expect(turn().showEnding).toBe(true)
   })
 
+  // Con la barra reducida al ojo, una respuesta que llega se avisa hasta que se abre la barra.
+  it('flags an answer that finished while minimized until the bar opens', async () => {
+    const { agent } = await setUp()
+    streams([step(1, 'running'), step(1, 'done'), answer(), DONE])
+
+    agent.minimize()
+    void agent.ask('¿Qué acelera?')
+    await settle()
+    await vi.advanceTimersByTimeAsync(
+      AGENT_TIMING.stepMs + (ANSWER_WORDS + 1) * AGENT_TIMING.wordMs,
+    )
+
+    expect(agent.isMinimized.value).toBe(true)
+    expect(agent.hasUnread.value).toBe(true)
+
+    agent.expand()
+
+    expect(agent.isMinimized.value).toBe(false)
+    expect(agent.hasUnread.value).toBe(false)
+  })
+
   it('drops the pending action on stop and hides the presence', async () => {
     const { agent, router } = await setUp()
     streams([

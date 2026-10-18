@@ -19,16 +19,18 @@ const emit = defineEmits<{
   selectCited: [id: string]
   copyLink: []
   askFromAssistant: [question: string]
+  minimize: []
 }>()
 </script>
 
 <template>
-  <!-- DESIGN.md §4 y §5: la barra flota sobre la página y por eso lleva la sombra flotante, como el
-       tooltip del radar. `data-agent-dock` marca dónde acaba el hueco visible para la presencia. -->
+  <!-- DESIGN.md §4 y §5: la barra flota sobre la página (fija, fuera del flujo: la conversación no
+       deja un hueco vacío al final de la página) y por eso lleva la sombra flotante.
+       `data-agent-dock` marca dónde acaba el hueco visible para la presencia. -->
   <section
     data-agent-dock
     aria-label="Rad, el agente del Radar"
-    class="sticky bottom-4 z-40 mx-auto flex w-full max-w-[840px] flex-col gap-3 rounded-card bg-card p-4 shadow-float"
+    class="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-[840px] flex-col gap-3 rounded-card bg-card p-4 shadow-float md:bottom-6"
   >
     <AgentTranscript
       v-if="turns.length > 0"
@@ -44,6 +46,7 @@ const emit = defineEmits<{
       :mark
       @ask="(question) => emit('ask', question)"
       @stop="emit('stop')"
+      @minimize="emit('minimize')"
     />
   </section>
 </template>

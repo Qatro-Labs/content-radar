@@ -1,4 +1,4 @@
-import { createSharedComposable, useClipboard } from '@vueuse/core'
+import { createSharedComposable, promiseTimeout, useClipboard } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
@@ -87,6 +87,10 @@ export const useRadarAgent = createSharedComposable(() => {
   const sweepCount = ref(0)
   // La última vista del Radar que dejó el agente: «Filtros puestos por Rad» si la URL sigue igual.
   const agentRadarParams = ref<string | null>(null)
+  // La barra se puede reducir al ojo de Rad para que no tape la página; vive con la pestaña.
+  const isMinimized = ref(false)
+  // Una respuesta que terminó con la barra reducida: el ojo lo avisa hasta que se abre.
+  const hasUnread = ref(false)
   let nextTurnId = 1
   let controller: AbortController | null = null
   // Las navegaciones del agente no lo detienen; las de la persona, sí.
@@ -185,6 +189,24 @@ export const useRadarAgent = createSharedComposable(() => {
   function finishRun() {
     presence.hide()
     status.value = 'idle'
+    if (isMinimized.value && turns.value.at(-1)?.status !== 'stopped') hasUnread.value = true
+  }
+
+  // Al reducir o abrir la barra, su campo («composer») pasa a ser el ojo o vuelve a la barra: la
+  // presencia se vuelve a medir cuando termina la transición, porque mientras sale sigue en el DOM.
+  function relocatePresence() {
+    void promiseTimeout(AGENT_TIMING.dockToggleMs).then(presence.remeasure)
+  }
+
+  function minimize() {
+    isMinimized.value = true
+    relocatePresence()
+  }
+
+  function expand() {
+    isMinimized.value = false
+    hasUnread.value = false
+    relocatePresence()
   }
 
   function playbackFor(turn: AgentTurnView, run: AgentRun) {
@@ -272,6 +294,10 @@ export const useRadarAgent = createSharedComposable(() => {
     sweepCount,
     agentRadarParams,
     isAvailable,
+    isMinimized,
+    hasUnread,
+    minimize,
+    expand,
     ask,
     stop,
     newConversation,

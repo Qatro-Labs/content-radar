@@ -177,13 +177,19 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
   filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista"; si la vista es justo
   la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
-- **Barra de pregunta:** fija abajo y centrada (ancho máximo 840px), tarjeta blanca de radio 20px con la sombra
-  flotante (§5), porque flota sobre la página. De izquierda a derecha: la marca de Rad, el campo (#F2F3F5, radio
+- **Barra de pregunta:** fija abajo y centrada (`position: fixed`, ancho máximo 840px), tarjeta blanca de radio 20px
+  con la sombra flotante (§5), porque flota sobre la página: la conversación no reserva espacio y el final de la
+  página solo deja sitio para el campo. A la derecha del primario, un botón ⌄ «Reducir a Rad». De izquierda a derecha: la marca de Rad, el campo (#F2F3F5, radio
   12px, alto 48px, placeholder "Pregúntale a Rad: …" en Apagado) y el primario "Preguntar", que pasa a secundario
   "Detener" mientras Rad trabaja. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los
   mismos controles". En reposo, encima del campo, 3 preguntas sugeridas según el contexto (botones #F2F3F5, radio
   10px, alto 40px): generales en el Radar, del tema con un tema abierto, de búsqueda en Explorar. Con la conversación
   en marcha solo quedan las del tema.
+- **Rad reducido:** la barra se encoge hacia abajo a la derecha y queda el ojo de Rad flotando (56px, sombra
+  flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
+  presencia sigue actuando en la página. Si termina una respuesta con la barra reducida, un punto Lima de 14px en la
+  esquina del ojo lo avisa («Rad respondió») hasta que se abre. Al abrirlo vuelve la barra con la conversación.
+  Sin conversación, la barra aparece abierta, lista para preguntar.
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
   un ojo que mira hacia donde está su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
   sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles.
@@ -211,7 +217,7 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   baldosas, 20px dentro del panel de detalle.
 - **Radar (Discover):** cabecera (H1 + frase a la izquierda, contadores-filtro a la derecha) → fila principal: a
   la izquierda (`flex: 999 1 720px`) el radar con su nota al pie y debajo el ranking; a la derecha el panel lateral
-  (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: sticky; bottom: 16px`). "Para quién
+  (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: fixed; bottom: 16px`, fuera del flujo). "Para quién
   importa" y "Por qué importa" completos viven en el expediente, no en el Radar.
 - **Explorar sin tema:** cabecera (H1 «Lo que está funcionando» + contadores-filtro: Outliers · YouTube · Hacker News;
   RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda la tabla de piezas, ordenada por rendimiento
