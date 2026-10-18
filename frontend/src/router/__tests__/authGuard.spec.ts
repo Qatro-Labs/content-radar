@@ -52,6 +52,22 @@ describe('auth guard', () => {
     expect(router.currentRoute.value.name).toBe('discover')
   })
 
+  it('waits for a slow session before deciding, so a signed-in reload never hits the login', async () => {
+    vi.stubEnv('VITE_AUTH_REQUIRED', 'true')
+    let resolveSession: (value: unknown) => void = () => {}
+    auth.getSession.mockReturnValue(new Promise((done) => (resolveSession = done)))
+    const router = await loadRouter()
+
+    const navigation = router.push('/')
+    resolveSession({
+      data: { session: { access_token: 'token', user: { email: 'ana@example.com' } } },
+      error: null,
+    })
+    await navigation
+
+    expect(router.currentRoute.value.name).toBe('discover')
+  })
+
   it('does not redirect when the login is optional', async () => {
     vi.stubEnv('VITE_AUTH_REQUIRED', '')
     const router = await loadRouter()

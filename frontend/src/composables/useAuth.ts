@@ -9,18 +9,26 @@ const SIGN_IN_FAILED_MESSAGE = 'No se pudo iniciar sesión. Inténtalo de nuevo 
 
 // Una sola sesión para toda la app: el guard, la cabecera y el cliente de la API leen la misma.
 const session = shallowRef<Session | null>(null)
+// Hasta que responde el primer `getSession` no se sabe si hay sesión: mientras tanto la UI no
+// pinta ni «Iniciar sesión» ni lo que depende de la sesión, para que una recarga con sesión no
+// enseñe la invitación a entrar. Sin Supabase no hay nada que esperar.
+const isReady = shallowRef(supabase === null)
 let loadingSession: Promise<Session | null> | null = null
 
 function loadSession(): Promise<Session | null> {
   if (supabase === null) return Promise.resolve(null)
   const client = supabase
   loadingSession ??= (async () => {
-    const { data } = await client.auth.getSession()
-    session.value = data.session
-    client.auth.onAuthStateChange((_event, next) => {
-      session.value = next
-    })
-    return data.session
+    try {
+      const { data } = await client.auth.getSession()
+      session.value = data.session
+      client.auth.onAuthStateChange((_event, next) => {
+        session.value = next
+      })
+      return data.session
+    } finally {
+      isReady.value = true
+    }
   })()
   return loadingSession
 }
@@ -55,6 +63,7 @@ export function useAuth() {
   void loadSession()
   return {
     isConfigured: supabase !== null,
+    isReady: computed(() => isReady.value),
     email: computed(() => session.value?.user.email ?? null),
     isSignedIn: computed(() => session.value !== null),
     signIn,
