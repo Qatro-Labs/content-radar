@@ -67,6 +67,8 @@ export function patchToQuery(patch: RadarPatch): Partial<RadarQuery> {
   if (patch.topic !== undefined) query.topic = patch.topic
   if (patch.gap !== undefined) query.gap = patch.gap ?? false
   if (patch.sort !== undefined) query.sort = patch.sort ?? DEFAULT_RANKING_SORT
+  // Un orden solo se ve en el ranking: Rad lo enseña en su pestaña.
+  if (patch.sort) query.tab = 'ranking'
   if (patch.selected !== undefined) query.selected = patch.selected
   if (patch.highlight !== undefined) query.highlight = patch.highlight ?? []
   return query
@@ -80,9 +82,10 @@ interface PatchContext {
 
 function selectionTarget(id: string, hasAnchor: PatchContext['hasAnchor']): AgentTarget {
   if (hasAnchor(bubbleAnchor(id))) return point(bubbleAnchor(id))
-  // Un tema sin encaje no tiene burbuja, y las filas 11+ no existen con el ranking plegado.
+  // Un tema sin encaje no tiene burbuja, y sin la pestaña Ranking (o con el ranking plegado) no
+  // hay fila: su vista previa sale en el panel de al lado.
   if (hasAnchor(rowAnchor(id))) return control(rowAnchor(id))
-  return block(AGENT_ANCHOR.ranking)
+  return block(AGENT_ANCHOR.detail)
 }
 
 function counterTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget | null {

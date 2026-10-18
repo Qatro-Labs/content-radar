@@ -1,8 +1,8 @@
 <script lang="ts">
-// Al lado del radar la tabla es estrecha: por debajo de 560 px hace scroll dentro de su tarjeta.
-// La cabecera de OpportunityRanking comparte la rejilla. La etapa va bajo el tema.
+// Por debajo de 720 px la tabla hace scroll dentro de su tarjeta. La cabecera de
+// OpportunityRanking comparte la rejilla.
 export const RANKING_GRID_CLASS =
-  'grid grid-cols-[32px_minmax(190px,1fr)_70px_96px_118px] items-center gap-x-3 px-3'
+  'grid grid-cols-[32px_minmax(220px,1fr)_70px_104px_132px_140px] items-center gap-x-3 px-3'
 </script>
 
 <script setup lang="ts">
@@ -75,26 +75,17 @@ const toneClass = computed(() => {
     <span :class="selected ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'">
       {{ row.rank }}
     </span>
-    <!-- Al lado del radar cada fila cuenta: la etapa es el punto de color (con su nombre en el
-         tooltip) y solo se marca «Publicar ya», lo que la persona viene a buscar. -->
+    <!-- La etapa es el punto de color, con su nombre en el tooltip. -->
     <span class="flex min-w-0 flex-col gap-1 py-2">
       <span class="flex items-baseline gap-2">
         <StageDot :lifecycle="row.lifecycle" class="translate-y-[-1px]" />
         <span class="font-medium">{{ row.topic }}</span>
       </span>
       <span
-        v-if="row.recommendation === 'publish_now' || row.audience_fit_score == null"
-        class="flex flex-wrap items-center gap-1.5 pl-[17px]"
+        v-if="row.audience_fit_score == null"
+        class="pl-[17px] text-[13px] text-muted-foreground"
       >
-        <RecommendationChip
-          v-if="row.recommendation === 'publish_now'"
-          :recommendation="row.recommendation"
-          :reason
-          size="sm"
-        />
-        <span v-if="row.audience_fit_score == null" class="text-[13px] text-muted-foreground">
-          Encaje no disponible
-        </span>
+        Encaje no disponible
       </span>
     </span>
     <RankingSparkline :timeline />
@@ -114,6 +105,9 @@ const toneClass = computed(() => {
       <span v-else-if="totals" class="text-[13px] text-muted-foreground">
         {{ totals.current }} · antes {{ totals.previous }}
       </span>
+    </span>
+    <span class="justify-self-start">
+      <RecommendationChip :recommendation="row.recommendation" :reason size="sm" />
     </span>
     <span class="flex items-center gap-2.5">
       <span class="h-1.5 grow overflow-hidden rounded-full bg-track" aria-hidden="true">

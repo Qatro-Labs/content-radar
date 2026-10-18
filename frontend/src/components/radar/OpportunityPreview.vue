@@ -32,8 +32,8 @@ interface StatTile {
   help: string
 }
 
-// D8 del plan fe-dashboard-v2: en el panel lateral el anillo baja a 104 px.
-const PREVIEW_RING_SIZE_PX = 104
+// D8 del plan fe-dashboard-v2: en el panel lateral el anillo es más pequeño (88 px).
+const PREVIEW_RING_SIZE_PX = 88
 const SUMMARY_SEPARATOR = ' · '
 
 const evidenceSummary = computed(() =>
@@ -75,14 +75,14 @@ const BUTTON_CLASS =
 <template>
   <div data-agent="detail" class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <HoverHint :text="HELP.backToRanking">
+      <HoverHint :text="HELP.backToWeek">
         <button
           type="button"
           class="flex min-h-10 items-center gap-1.5 rounded-[10px] bg-secondary pr-3 pl-2 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
           @click="emit('clear')"
         >
           <ChevronLeft class="size-4 text-ink-soft" aria-hidden="true" />
-          Ranking
+          Esta semana
         </button>
       </HoverHint>
       <div class="flex flex-wrap items-center gap-2">
@@ -91,17 +91,20 @@ const BUTTON_CLASS =
       </div>
     </div>
 
-    <div class="flex items-center gap-[18px]">
+    <!-- En el panel de 360 px el tema va a todo el ancho y el anillo, debajo, junto a sus datos. -->
+    <h2
+      :key="opportunity.id"
+      class="font-display text-[26px] leading-[1.08] font-semibold tracking-[-0.03em]"
+      :class="TEXT_ENTER_CLASS"
+    >
+      {{ opportunity.topic }}
+    </h2>
+    <div class="flex items-center gap-4">
       <ScoreRing :score="opportunity.opportunity_score ?? null" :size-px="PREVIEW_RING_SIZE_PX" />
-      <div :key="opportunity.id" class="flex min-w-0 flex-col gap-1.5" :class="TEXT_ENTER_CLASS">
-        <h2 class="font-display text-[26px] leading-[1.08] font-semibold tracking-[-0.03em]">
-          {{ opportunity.topic }}
-        </h2>
-        <span class="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground">
-          Oportunidad · puesto {{ opportunity.rank }} de {{ total }} · {{ evidenceSummary }}
-          <InfoTip label="la oportunidad" :text="HELP.colScore" />
-        </span>
-      </div>
+      <span class="flex min-w-0 flex-wrap items-center gap-x-1 text-sm text-muted-foreground">
+        Oportunidad · puesto {{ opportunity.rank }} de {{ total }} · {{ evidenceSummary }}
+        <InfoTip label="la oportunidad" :text="HELP.colScore" />
+      </span>
     </div>
 
     <!-- Ejecuciones anteriores a #23 no traen la regla: sin texto, no "no disponible". -->
@@ -128,14 +131,14 @@ const BUTTON_CLASS =
       <div
         v-for="tile in tiles"
         :key="tile.label"
-        class="flex min-w-0 flex-col gap-0.5 rounded-tile bg-sunken px-3 py-2.5"
+        class="flex min-w-0 flex-col gap-0.5 rounded-tile bg-sunken px-2.5 py-2.5"
       >
         <span class="flex items-center gap-0.5 text-[13px] text-muted-foreground">
           {{ tile.label }}
           <InfoTip :label="tile.label" :text="tile.help" />
         </span>
         <span
-          class="font-display text-xl leading-[1.1] font-semibold tracking-[-0.02em]"
+          class="font-display text-base leading-[1.1] font-semibold tracking-[-0.01em] whitespace-nowrap"
           :class="tile.valueClass"
         >
           {{ tile.value }}

@@ -54,10 +54,11 @@ export const HELP = {
   quadrantWeak: 'Ni crece ni encaja: poca señal por ahora.',
   pulse: 'Las burbujas que laten están creciendo: cuanto más rápido laten, más aceleran.',
   ranking:
-    'Todos los temas ordenados por oportunidad. Pulsa una fila para ver el tema en su lugar.',
+    'Todos los temas ordenados por oportunidad. Pulsa una fila para ver el tema en el panel de al lado.',
   colRank: 'Posición del tema en el ranking de oportunidad.',
-  colTopic:
-    'Nombre del tema. El punto de color es su etapa (pasa el cursor para ver cuál) y, si toca, aparece «Publicar ya».',
+  colTopic: 'Nombre del tema. El punto de color es su etapa: pasa el cursor para ver cuál.',
+  colRecommendation:
+    'Qué conviene hacer con el tema: publicar ya, buscar un ángulo propio, esperar un caso o descartarlo. Pasa el cursor por el chip para ver el motivo.',
   colBars:
     'Piezas nuevas cada 24 h durante 6 días: en gris los 3 días anteriores, en negro los últimos 3.',
   colAcceleration:
@@ -67,7 +68,7 @@ export const HELP = {
   outliers:
     'Un outlier es una pieza que rinde 3× o más que lo normal en su canal. Señala qué está funcionando, no por qué.',
   limits: 'Lo que los datos no permiten afirmar. Conviene leerlo antes de publicar.',
-  backToRanking: 'Vuelve al ranking sin quitar los filtros.',
+  backToWeek: 'Vuelve a «Esta semana» sin quitar los filtros.',
   openDossier: 'Abre el expediente completo: evolución, encaje con 30X y toda la evidencia.',
   generateBrief: 'Prepara un brief de contenido a partir de este tema y su evidencia.',
   rad: 'Rad, el agente del Radar: pregúntale en lenguaje natural y responde moviendo la página, con los mismos filtros que usas tú y citando la evidencia.',

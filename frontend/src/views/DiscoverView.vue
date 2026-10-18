@@ -6,8 +6,10 @@ import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
 import OpportunityRanking from '@/components/radar/OpportunityRanking.vue'
 import RadarFootnote from '@/components/radar/RadarFootnote.vue'
 import RadarHero from '@/components/radar/RadarHero.vue'
-import RadarPreviewCard from '@/components/radar/RadarPreviewCard.vue'
+import RadarSidePanel from '@/components/radar/RadarSidePanel.vue'
 import RadarStates, { RadarPlaceholder } from '@/components/radar/RadarStates.vue'
+import RadarTabs, { TAB_PANEL_ID, tabId } from '@/components/radar/RadarTabs.vue'
+import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import { buildRadarView } from '@/lib/radarView'
@@ -56,51 +58,50 @@ function hover(id: string | null) {
   <RadarStates v-if="placeholder" :state="placeholder" @retry="refetch()" />
 
   <div v-else-if="data" class="flex flex-col gap-4">
-    <RadarHero
-      :view
-      :query
-      :monitoring-started-at="data.monitoring_started_at"
-      class="pt-5 pb-1"
-      @select="select"
-      @hover="hover"
-    />
+    <RadarHero :view :query class="pt-5 pb-1" />
 
-    <!-- Radar y ranking lado a lado para no hacer scroll: el ranking toma el alto del radar y
-         desplaza sus filas dentro de su tarjeta. Al elegir un tema, su vista previa ocupa el sitio
-         del ranking («‹ Ranking» vuelve). Por debajo de 1280 px se apilan. -->
-    <div class="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-      <OpportunityRadar
+    <div class="flex flex-wrap items-start gap-4">
+      <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-4">
+        <!-- Radar y ranking son la misma lista en dos formas: una pestaña elige cuál ocupa el
+             área grande; filtros, selección y panel se mantienen. Es el bloque principal de Rad. -->
+        <div
+          :id="TAB_PANEL_ID"
+          :data-agent="AGENT_ANCHOR.radar"
+          role="tabpanel"
+          :aria-labelledby="tabId(query.tab)"
+        >
+          <OpportunityRadar
+            v-if="query.tab === 'radar'"
+            :view
+            :hovered-id="hovered"
+            :sweep-key="`${query.period}:${sweepCount}`"
+            @select="select"
+            @hover="hover"
+          >
+            <template #title><RadarTabs /></template>
+          </OpportunityRadar>
+          <OpportunityRanking
+            v-else
+            :rows="view.visible"
+            :is-filtered="view.isFiltered"
+            :selected-id="view.selected?.id ?? null"
+            :hovered-id="hovered"
+            @select="select"
+            @hover="hover"
+          >
+            <template #title><RadarTabs /></template>
+          </OpportunityRanking>
+        </div>
+        <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
+      </div>
+
+      <RadarSidePanel
         :view
-        :hovered-id="hovered"
-        :sweep-key="`${query.period}:${sweepCount}`"
+        :monitoring-started-at="data.monitoring_started_at"
         @select="select"
         @hover="hover"
+        @clear="clearSelection"
       />
-      <!-- DESIGN.md §7: cambia con fundido y 6 px de subida (280 ms). La vista previa no se
-           remonta al cambiar de tema: así el anillo cuenta hasta el nuevo valor. -->
-      <Transition
-        mode="out-in"
-        enter-from-class="translate-y-1.5 opacity-0"
-        enter-active-class="transition duration-[280ms] ease-out motion-reduce:transition-none"
-      >
-        <RadarPreviewCard
-          v-if="view.selected"
-          :opportunity="view.selected"
-          :total="view.total"
-          @clear="clearSelection"
-        />
-        <OpportunityRanking
-          v-else
-          :rows="view.visible"
-          :is-filtered="view.isFiltered"
-          :selected-id="null"
-          :hovered-id="hovered"
-          @select="select"
-          @hover="hover"
-        />
-      </Transition>
     </div>
-
-    <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
   </div>
 </template>

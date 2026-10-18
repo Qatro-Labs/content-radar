@@ -103,17 +103,18 @@ const leaveBubble = () => emit('hover', null)
   <!-- `overflow-x-clip`: en un área estrecha la tarjeta flotante se sale del radar, y sin recorte
        la página haría scroll horizontal (DESIGN.md §6). -->
   <section
-    data-agent="radar"
     aria-label="Radar de oportunidades"
     class="flex min-w-0 flex-col gap-3 overflow-x-clip rounded-card bg-card px-5 pt-5 pb-4"
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h2
-        class="flex items-center gap-1.5 font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]"
-      >
-        Radar
-        <InfoTip label="el radar" :text="HELP.radar" />
-      </h2>
+      <slot name="title">
+        <h2
+          class="flex items-center gap-1.5 font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]"
+        >
+          Radar
+          <InfoTip label="el radar" :text="HELP.radar" />
+        </h2>
+      </slot>
       <!-- La leyenda es HTML para que sea accesible (DESIGN.md §8); no filtra. -->
       <ul aria-label="Etapas" class="flex flex-wrap gap-1.5">
         <li v-for="lifecycle in LIFECYCLES" :key="lifecycle">

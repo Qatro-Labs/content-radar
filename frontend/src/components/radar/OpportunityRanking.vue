@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useAllTimelines, type QueryState } from '@/api/opportunities'
 import { useRadarQuery } from '@/composables/useRadarQuery'
@@ -7,7 +7,6 @@ import InfoTip from '@/components/layout/InfoTip.vue'
 import { formatUtcDay } from '@/lib/format'
 import { HELP } from '@/lib/helpText'
 import { resetViewPatch } from '@/lib/radarQuery'
-import { rowAnchor } from '@/lib/agentTargets'
 import type { RankedOpportunity } from '@/lib/radarView'
 import type { components } from '@/types/api'
 
@@ -34,6 +33,7 @@ const COLUMNS = [
   { label: 'Tema', name: 'la columna Tema', help: HELP.colTopic },
   { label: '6 días', name: 'las barras de 6 días', help: HELP.colBars },
   { label: 'Aceleración', name: 'la aceleración', help: HELP.colAcceleration },
+  { label: 'Recomendación', name: 'la recomendación', help: HELP.colRecommendation },
   { label: 'Oportunidad', name: 'la oportunidad', help: HELP.colScore },
 ] as const
 // DESIGN.md §4: el ranking enseña 10 filas y el resto se despliega.
@@ -46,21 +46,6 @@ watch(
   () => rows.map((row) => row.id).join(),
   () => {
     isExpanded.value = false
-  },
-)
-
-// La tabla desplaza sus filas dentro de la tarjeta: la fila del tema elegido (en el radar, en el
-// panel o por Rad) se trae a la vista.
-const scroller = useTemplateRef<HTMLElement>('scroller')
-watch(
-  () => selectedId,
-  async (id) => {
-    if (!id) return
-    await nextTick()
-    const row = scroller.value?.querySelector<HTMLElement>(`[data-agent="${rowAnchor(id)}"]`)
-    if (!row || !scroller.value) return
-    const top = row.offsetTop - scroller.value.clientHeight / 2
-    scroller.value.scrollTo({ top, behavior: 'smooth' })
   },
 )
 
@@ -100,17 +85,20 @@ const barsNote = computed(() => {
   <section
     data-agent="ranking"
     aria-label="Ranking"
-    class="relative flex min-h-[420px] min-w-0 flex-col rounded-card bg-card xl:min-h-0"
+    class="flex min-w-0 flex-col rounded-card bg-card"
   >
-    <!-- En escritorio la tarjeta toma el alto del radar (su contenido va en absoluto y no empuja la
-         fila) y las filas se desplazan dentro. -->
-    <div class="flex min-h-0 flex-1 flex-col gap-1 px-4 pt-5 pb-3 xl:absolute xl:inset-0">
-      <h2
-        class="flex items-center gap-1.5 px-1 pb-2 font-display text-[22px] font-semibold tracking-[-0.02em]"
-      >
-        Ranking
-        <InfoTip label="el ranking" :text="HELP.ranking" />
-      </h2>
+    <div class="flex flex-col gap-1 px-4 pt-5 pb-3">
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-2">
+        <slot name="title">
+          <h2
+            class="flex items-center gap-1.5 px-1 font-display text-[22px] font-semibold tracking-[-0.02em]"
+          >
+            Ranking
+            <InfoTip label="el ranking" :text="HELP.ranking" />
+          </h2>
+        </slot>
+        <p v-if="barsNote" class="px-1 text-[13px] text-muted-foreground">{{ barsNote }}</p>
+      </div>
 
       <div v-if="isEmptyAfterFilter" class="flex flex-wrap items-center gap-x-4 gap-y-3 px-1 py-6">
         <p class="text-[15px] text-ink-soft">Ningún tema cumple estos filtros.</p>
@@ -124,8 +112,8 @@ const barsNote = computed(() => {
       </div>
 
       <template v-else>
-        <div ref="scroller" class="relative min-h-0 flex-1 overflow-auto">
-          <div class="min-w-[560px]">
+        <div class="overflow-x-auto">
+          <div class="min-w-[720px]">
             <div
               class="sticky top-0 z-[1] bg-card py-2 text-[13px] text-muted-foreground"
               :class="RANKING_GRID_CLASS"
@@ -157,7 +145,6 @@ const barsNote = computed(() => {
             </button>
           </div>
         </div>
-        <p v-if="barsNote" class="px-1 pt-2 text-[13px] text-muted-foreground">{{ barsNote }}</p>
       </template>
     </div>
   </section>

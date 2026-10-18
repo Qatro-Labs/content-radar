@@ -248,7 +248,7 @@ const SORT_PHRASE: Record<RadarQuery['sort'], string> = {
   opportunity: 'Ordenados por oportunidad.',
   acceleration: 'Ordenados por aceleración.',
 }
-const HOW_TO_SELECT = 'Elija una burbuja o una fila para ver el tema.'
+const HOW_TO_SELECT = 'Elige un tema en el radar o en el ranking para verlo al lado.'
 
 function howToRead(query: RadarQuery): string {
   return `${SORT_PHRASE[query.sort]} ${HOW_TO_SELECT}`

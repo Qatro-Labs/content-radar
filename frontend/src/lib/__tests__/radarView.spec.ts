@@ -30,6 +30,7 @@ function query(patch: Partial<RadarQuery> = {}): RadarQuery {
     gap: false,
     sort: 'opportunity',
     recommendation: null,
+    tab: 'radar',
     ...patch,
   }
 }
@@ -321,7 +322,8 @@ describe('radar texts', () => {
   const subline = (q: RadarQuery, source: OpportunityList = list) =>
     radarSubline(buildRadarView(source, q), q)
 
-  const HOW_TO_READ = 'Ordenados por oportunidad. Elija una burbuja o una fila para ver el tema.'
+  const HOW_TO_READ =
+    'Ordenados por oportunidad. Elige un tema en el radar o en el ranking para verlo al lado.'
 
   it('counts the topics when there is no filter', () => {
     expect(headline(query())).toBe('5 temas esta semana')
@@ -353,7 +355,7 @@ describe('radar texts', () => {
 
   it('names the order the agent chose when it sorts by acceleration', () => {
     expect(subline(query({ sort: 'acceleration' }))).toBe(
-      'Hay 5 temas analizados esta semana. Ordenados por aceleración. Elija una burbuja o una fila para ver el tema.',
+      'Hay 5 temas analizados esta semana. Ordenados por aceleración. Elige un tema en el radar o en el ranking para verlo al lado.',
     )
   })
 

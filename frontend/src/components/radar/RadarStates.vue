@@ -30,7 +30,7 @@ const CARD_TITLE = 'font-display text-[22px] leading-tight font-semibold trackin
 const SKELETON_ROWS = 5
 // Los cuatro contadores-filtro de la cabecera y los tres temas que «Esta semana» enseña como
 // mínimo (D9 del plan fe-dashboard-v2).
-const SKELETON_COUNTERS = 4
+const SKELETON_COUNTERS = 3
 const SKELETON_PICKS = 3
 const RETRY_BUTTON =
   'min-h-11 rounded-xl px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]'

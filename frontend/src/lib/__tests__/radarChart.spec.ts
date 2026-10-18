@@ -27,6 +27,7 @@ const { plotted } = buildRadarView(list, {
   gap: false,
   sort: 'opportunity',
   recommendation: null,
+  tab: 'radar',
 })
 
 // Paleta fija con los colores de DESIGN.md §2; en la app se lee de las variables de main.css.
@@ -102,7 +103,7 @@ describe('buildRadarOption', () => {
     expect(rings?.data).toContainEqual(
       expect.objectContaining({
         name: 'opp_001',
-        symbolSize: 36,
+        symbolSize: 49,
         itemStyle: expect.objectContaining({ color: 'transparent' }),
       }),
     )
