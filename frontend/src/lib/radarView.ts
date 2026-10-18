@@ -47,6 +47,7 @@ export interface RadarView {
   // los demás contadores a 0.
   counts: { publishNow: number; accelerating: number; emerging: number; unknown: number }
   activeCounter: CounterFilter | null
+  activeStage: Lifecycle | null
   weekPicks: WeekPicks
   outlierPieces: number
 }
@@ -178,10 +179,15 @@ function sameStages(a: Lifecycle[], b: Lifecycle[]): boolean {
   return a.length === b.length && a.every((stage) => b.includes(stage))
 }
 
+// Filtros que ningún contador ni etapa de la leyenda pone: con alguno activo, nada está pulsado.
+function hasUnpressableFilters(query: RadarQuery): boolean {
+  return query.gap || query.confidence !== null || query.topic !== null
+}
+
 // D2: un contador está pulsado solo si los filtros son exactamente los suyos; si el agente o la
 // URL ponen otra combinación (varias etapas, `gap`, confianza o tema), no hay ninguno pulsado.
 export function activeCounterOf(query: RadarQuery): CounterFilter | null {
-  if (query.gap || query.confidence !== null || query.topic !== null) return null
+  if (hasUnpressableFilters(query)) return null
   const isActive = (counter: CounterFilter) => {
     const { lifecycle, recommendation } = COUNTER_FILTER[counter]
     return query.recommendation === recommendation && sameStages(query.lifecycle, lifecycle)
@@ -194,6 +200,18 @@ export function activeCounterOf(query: RadarQuery): CounterFilter | null {
 export function counterPatch(counter: CounterFilter, query: RadarQuery): Partial<RadarQuery> {
   if (activeCounterOf(query) === counter) return resetViewPatch()
   return { ...resetViewPatch(), ...COUNTER_FILTER[counter] }
+}
+
+// La leyenda del radar filtra por etapa con la misma selección única que los contadores: también
+// cubre las etapas sin contador (En pico, Saturado, Sin tendencia clara).
+export function activeStageOf(query: RadarQuery): Lifecycle | null {
+  if (hasUnpressableFilters(query) || query.recommendation !== null) return null
+  return query.lifecycle.length === 1 ? (query.lifecycle[0] ?? null) : null
+}
+
+export function stagePatch(stage: Lifecycle, query: RadarQuery): Partial<RadarQuery> {
+  if (activeStageOf(query) === stage) return resetViewPatch()
+  return { ...resetViewPatch(), lifecycle: [stage], recommendation: null }
 }
 
 const FALLBACK_PICKS = 3
@@ -236,6 +254,7 @@ export function buildRadarView(
     selected,
     counts: countAll(ranked),
     activeCounter: activeCounterOf(query),
+    activeStage: activeStageOf(query),
     weekPicks: pickWeek(ranked),
     outlierPieces: sumOutliers(ranked),
   }

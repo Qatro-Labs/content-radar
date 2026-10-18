@@ -4,7 +4,13 @@ import fixture from '@fixtures/opportunities.json'
 import type { components } from '@/types/api'
 
 import { resetViewPatch, type RadarQuery } from '../radarQuery'
-import { buildRadarView, counterPatch, radarHeadline, radarSubline } from '../radarView'
+import {
+  buildRadarView,
+  counterPatch,
+  radarHeadline,
+  radarSubline,
+  stagePatch,
+} from '../radarView'
 
 type Schemas = components['schemas']
 type OpportunityList = Schemas['OpportunityList']
@@ -229,6 +235,7 @@ describe('buildRadarView', () => {
       selected: null,
       counts: { publishNow: 0, accelerating: 0, emerging: 0, unknown: 0 },
       activeCounter: null,
+      activeStage: null,
       weekPicks: { topics: [], hasPublishNow: false },
       outlierPieces: 0,
     })
@@ -297,6 +304,47 @@ describe('counter filters', () => {
       confidence: null,
       topic: null,
     })
+  })
+})
+
+describe('legend stage filters', () => {
+  it.each([
+    { case: 'one stage without a counter', filter: { lifecycle: ['peaking'] }, active: 'peaking' },
+    { case: 'one stage with a counter', filter: { lifecycle: ['emerging'] }, active: 'emerging' },
+    { case: 'no filter', filter: {}, active: null },
+    { case: 'two stages', filter: { lifecycle: ['peaking', 'saturated'] }, active: null },
+    {
+      case: 'a stage and publish now',
+      filter: { lifecycle: ['accelerating'], recommendation: 'publish_now' },
+      active: null,
+    },
+    {
+      case: 'a stage and a topic',
+      filter: { lifecycle: ['saturated'], topic: 'agentes' },
+      active: null,
+    },
+  ] satisfies { case: string; filter: Partial<RadarQuery>; active: string | null }[])(
+    'active stage with $case',
+    ({ filter, active }) => {
+      expect(buildRadarView(list, query(filter)).activeStage).toBe(active)
+    },
+  )
+
+  it('replaces any other filter with the pressed stage', () => {
+    const current = query({ recommendation: 'publish_now', gap: true, highlight: ['opp_001'] })
+
+    expect(stagePatch('saturated', current)).toEqual({
+      lifecycle: ['saturated'],
+      gap: false,
+      highlight: [],
+      recommendation: null,
+      confidence: null,
+      topic: null,
+    })
+  })
+
+  it('resets the view when the active stage is pressed again', () => {
+    expect(stagePatch('peaking', query({ lifecycle: ['peaking'] }))).toEqual(resetViewPatch())
   })
 })
 

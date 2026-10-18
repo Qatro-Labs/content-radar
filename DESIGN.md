@@ -174,7 +174,9 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 
 - **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando»,
   «Emergentes» y «Sin etapa» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`. La leyenda de etapas pasa
-  a la cabecera de la tarjeta del radar (chips no interactivos). "Hueco en LATAM" sale de la vista mientras
+  a la cabecera de la tarjeta del radar y también filtra (18/10): cada chip es un botón (`aria-pressed`) que escribe
+  `lifecycle` con la misma selección única que los contadores, activo con el anillo de Tinta de 2px. Es la vía para
+  las etapas sin contador (En pico, Saturado, Sin tendencia clara). "Hueco en LATAM" sale de la vista mientras
   `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
   filtro activo, el H1 dice "3 de 38 temas" y aparece el botón secundario "Restablecer vista"; si la vista es justo
   la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
