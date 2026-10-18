@@ -27,7 +27,8 @@ const view = computed(() =>
 
 // Cabecera y filas comparten anchos para que las columnas se lean como tabla. Por debajo de
 // 640 px solo quedan el tema y la acción: la página nunca hace scroll horizontal (DESIGN.md §6).
-const STAGE_COLUMN_CLASS = 'hidden w-[120px] shrink-0 sm:flex'
+// La etapa cabe entera: el chip más largo, «Sin tendencia clara», mide ~154 px.
+const STAGE_COLUMN_CLASS = 'hidden w-[160px] shrink-0 sm:flex'
 const RECOMMENDATION_COLUMN_CLASS = 'hidden w-[122px] shrink-0 sm:flex'
 const SCORE_COLUMN_CLASS = 'hidden w-[112px] shrink-0 items-center gap-2.5 sm:flex'
 const ACTION_COLUMN_CLASS = 'flex shrink-0 justify-end sm:w-32'
