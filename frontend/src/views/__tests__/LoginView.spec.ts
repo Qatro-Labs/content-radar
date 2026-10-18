@@ -98,6 +98,20 @@ describe('LoginView', () => {
     await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('discover'))
   })
 
+  it('shows neither the form nor the sign-in heading while a signed-in session loads', async () => {
+    let resolveSession: (value: unknown) => void = () => {}
+    auth.getSession.mockReturnValue(new Promise((done) => (resolveSession = done)))
+    await renderLoginAt('/login')
+
+    expect(screen.queryByRole('heading', { name: 'Iniciar sesión' })).toBeNull()
+    expect(screen.queryByLabelText('Correo')).toBeNull()
+
+    resolveSession({ data: { session: SESSION }, error: null })
+
+    expect(await screen.findByRole('heading', { name: 'Sesión iniciada' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'Iniciar sesión' })).toBeNull()
+  })
+
   it('says the login is not configured and creates no Supabase client without its env vars', async () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
 

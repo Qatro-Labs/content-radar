@@ -8,6 +8,7 @@ import {
   PRIMARY_BUTTON_CLASS,
   SECONDARY_BUTTON_CLASS,
 } from '@/components/dossier/dossierClasses'
+import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import { useAuth } from '@/composables/useAuth'
 import { RouteName } from '@/router/routeNames'
 import { REDIRECT_PARAM, safeRedirect } from '@/router/authGuard'
@@ -18,7 +19,7 @@ const LABEL_CLASS = 'text-[13px] font-semibold text-label'
 
 const route = useRoute()
 const router = useRouter()
-const { isConfigured, isSignedIn, email: signedInEmail, signIn, signOut } = useAuth()
+const { isConfigured, isReady, isSignedIn, email: signedInEmail, signIn, signOut } = useAuth()
 
 const emailId = useId()
 const passwordId = useId()
@@ -67,6 +68,11 @@ async function submit() {
         Ir al Radar
       </RouterLink>
     </section>
+
+    <!-- Hasta saber si ya hay sesión, ni el formulario ni «Sesión iniciada». -->
+    <div v-else-if="!isReady" aria-busy="true" aria-label="Comprobando la sesión">
+      <SkeletonBone class="h-[360px] rounded-card" />
+    </div>
 
     <section v-else-if="isSignedIn" :class="CARD_CLASS" class="flex-col gap-3">
       <h1 :class="CARD_TITLE_CLASS">Sesión iniciada</h1>
