@@ -167,6 +167,12 @@ describe('useRadarAgent', () => {
     expect(turn().showEnding).toBe(true)
   })
 
+  it('starts minimized so the page keeps its full size until Rad is opened', async () => {
+    const { agent } = await setUp()
+
+    expect(agent.isMinimized.value).toBe(true)
+  })
+
   // Con la barra reducida al ojo, una respuesta que llega se avisa hasta que se abre la barra.
   it('flags an answer that finished while minimized until the bar opens', async () => {
     const { agent } = await setUp()

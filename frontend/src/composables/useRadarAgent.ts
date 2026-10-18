@@ -88,7 +88,9 @@ export const useRadarAgent = createSharedComposable(() => {
   // La última vista del Radar que dejó el agente: «Filtros puestos por Rad» si la URL sigue igual.
   const agentRadarParams = ref<string | null>(null)
   // La barra se puede reducir al ojo de Rad para que no tape la página; vive con la pestaña.
-  const isMinimized = ref(false)
+  // Arranca reducida: abierta, la vista ajustada a la ventana (el Radar) se encoge para dejarle
+  // sitio, y la página se ve entera hasta que alguien llama a Rad.
+  const isMinimized = ref(true)
   // Una respuesta que terminó con la barra reducida: el ojo lo avisa hasta que se abre.
   const hasUnread = ref(false)
   let nextTurnId = 1
