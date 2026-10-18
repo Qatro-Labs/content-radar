@@ -32,3 +32,6 @@ backend/logs/
 
 # Claude Code: ajustes personales
 .claude/settings.local.json
+
+# Worktrees locales de Claude Code: copias completas del repo, con su backend/.env
+.claude/worktrees/
