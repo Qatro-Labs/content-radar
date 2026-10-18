@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Check } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -138,11 +139,17 @@ watch(
       :done="brief.isSuccess.value"
       @finished="showsGenerating = false"
     />
-    <BriefResult
-      v-else-if="showsResult && brief.data.value"
-      :brief="brief.data.value"
-      @edit="editBrief"
-    />
+    <template v-else-if="showsResult && brief.data.value">
+      <!-- Solo con sesión la API lo guarda y devuelve su id. -->
+      <p
+        v-if="brief.data.value.id != null"
+        class="-mb-3 flex items-center gap-1.5 px-1 text-[13.5px] text-muted-foreground"
+      >
+        <Check class="size-3.5" :stroke-width="2.5" aria-hidden="true" />
+        Guardado en Mis briefs
+      </p>
+      <BriefResult :brief="brief.data.value" @edit="editBrief" />
+    </template>
     <template v-else>
       <!-- DESIGN.md §4: el error va inline y la frase sigue debajo, para cambiar de opciones. -->
       <BriefErrorCard

@@ -195,6 +195,39 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  // TODO: regenerate from data/user-briefs
+  '/api/v1/editorial/briefs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_briefs_api_v1_editorial_briefs_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/editorial/briefs/{brief_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['get_brief_api_v1_editorial_briefs__brief_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -394,6 +427,8 @@ export interface components {
     DossierSection: 'score' | 'evolution' | 'fit' | 'evidence' | 'limits'
     /** EditorialBrief */
     EditorialBrief: {
+      /** Id */
+      id?: number | null
       /** Opportunity Id */
       opportunity_id: string
       /** Topic */
@@ -439,6 +474,29 @@ export interface components {
       limitations: string[]
       /** Model */
       model: string
+    }
+    /** SavedBrief */
+    SavedBrief: {
+      /** Id */
+      id: number
+      /** Created At */
+      created_at: string
+      request: components['schemas']['BriefRequest']
+      brief: components['schemas']['EditorialBrief']
+    }
+    /** SavedBriefSummary */
+    SavedBriefSummary: {
+      /** Id */
+      id: number
+      /** Opportunity Id */
+      opportunity_id: string
+      /** Topic */
+      topic: string
+      platform: components['schemas']['BriefPlatform']
+      goal: components['schemas']['BriefGoal']
+      format: components['schemas']['BriefFormat']
+      /** Created At */
+      created_at: string
     }
     /**
      * ErrorCode
@@ -1045,6 +1103,46 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  list_briefs_api_v1_editorial_briefs_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SavedBriefSummary'][]
+        }
+      }
+    }
+  }
+  get_brief_api_v1_editorial_briefs__brief_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        brief_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SavedBrief']
+        }
+      }
+    }
+  }
   list_opportunities_api_v1_opportunities_get: {
     parameters: {
       query?: {
