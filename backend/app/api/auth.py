@@ -190,6 +190,23 @@ def require_user(
     return _verify(credentials, settings, keys)
 
 
+def user_if_signed_in(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    keys: Annotated[SigningKeySource | None, Depends(get_signing_keys)],
+) -> CurrentUser | None:
+    """Como `require_user_if_enabled`, pero con AUTH_REQUIRED apagado un token válido sigue dando
+    usuario. Uno inválido se ignora: sin el flag, una sesión caducada no bloquea la petición."""
+    if settings.auth_required:
+        return _verify(credentials, settings, keys)
+    if credentials is None:
+        return None
+    try:
+        return _verify(credentials, settings, keys)
+    except HTTPException:
+        return None
+
+
 def require_user_if_enabled(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
     settings: Annotated[Settings, Depends(get_settings)],

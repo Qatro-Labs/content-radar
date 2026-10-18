@@ -5,6 +5,7 @@ cerradas: no hay texto libre del usuario que llegue al LLM, y los briefs que se 
 cacheados.
 """
 
+from datetime import datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -47,6 +48,12 @@ class BriefPoint(BaseModel):
 
 
 class EditorialBrief(BaseModel):
+    id: int | None = Field(
+        default=None, description="Id del brief guardado; None si no hay usuario y no se guardó"
+    )
+    version: int | None = Field(
+        default=None, description="Versión dentro de su cadena; None si no se guardó"
+    )
     opportunity_id: str
     topic: str
     platform: BriefPlatform
@@ -64,3 +71,47 @@ class EditorialBrief(BaseModel):
     evidence: list[Evidence] = Field(description="Las piezas que cita el brief")
     limitations: list[str]
     model: str
+
+
+class BriefCreate(BriefRequest):
+    """Cuerpo de `POST /editorial/brief`. Solo para la ruta: la tool MCP usa `BriefRequest` y el
+    asistente no ve `parent_brief_id`."""
+
+    parent_brief_id: int | None = Field(
+        default=None,
+        description="Brief del usuario del que se regenera: la nueva versión va a su cadena",
+    )
+
+
+class SavedBriefSummary(BaseModel):
+    """Una fila por cadena de versiones, con los datos de la última."""
+
+    id: int = Field(description="Id de la última versión")
+    root_id: int
+    version: int = Field(description="Número de la última versión")
+    version_count: int
+    opportunity_id: str
+    topic: str = Field(description="El tema de la oportunidad cuando se generó el brief")
+    platform: BriefPlatform
+    goal: BriefGoal
+    format: BriefFormat
+    created_at: datetime = Field(description="Cuándo se guardó la última versión")
+
+
+class BriefVersion(BaseModel):
+    id: int
+    version: int
+    platform: BriefPlatform
+    goal: BriefGoal
+    format: BriefFormat
+    created_at: datetime
+
+
+class SavedBrief(BaseModel):
+    id: int
+    root_id: int
+    version: int
+    created_at: datetime
+    request: BriefRequest
+    brief: EditorialBrief
+    versions: list[BriefVersion] = Field(description="Toda la cadena, por versión ascendente")
