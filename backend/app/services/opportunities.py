@@ -306,6 +306,11 @@ def _served(r: OpportunityRecord) -> ServedOpportunity:
     )
 
 
+async def served_run_id(session: AsyncSession) -> int | None:
+    run = await _served_run(session)
+    return None if run is None else run.id
+
+
 async def get_served(session: AsyncSession, opportunity_id: str) -> ServedOpportunity | None:
     r = await _record(session, opportunity_id)
     return None if r is None else _served(r)

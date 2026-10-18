@@ -5,6 +5,7 @@ cerradas: no hay texto libre del usuario que llegue al LLM, y los briefs que se 
 cacheados.
 """
 
+from datetime import datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -47,6 +48,9 @@ class BriefPoint(BaseModel):
 
 
 class EditorialBrief(BaseModel):
+    id: int | None = Field(
+        default=None, description="Id del brief guardado; None si no hay usuario y no se guardó"
+    )
     opportunity_id: str
     topic: str
     platform: BriefPlatform
@@ -64,3 +68,20 @@ class EditorialBrief(BaseModel):
     evidence: list[Evidence] = Field(description="Las piezas que cita el brief")
     limitations: list[str]
     model: str
+
+
+class SavedBriefSummary(BaseModel):
+    id: int
+    opportunity_id: str
+    topic: str = Field(description="El tema de la oportunidad cuando se generó el brief")
+    platform: BriefPlatform
+    goal: BriefGoal
+    format: BriefFormat
+    created_at: datetime
+
+
+class SavedBrief(BaseModel):
+    id: int
+    created_at: datetime
+    request: BriefRequest
+    brief: EditorialBrief
