@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     cors_allowed_origins: str = "http://localhost:5173"
     mcp_public_url: str = ""
 
+    # Apagado: todo funciona sin sesión, como antes. Encendido, las rutas que gastan LLM (agente y
+    # briefs) piden un access token de Supabase Auth.
+    auth_required: bool = False
+    # URL del proyecto (https://<ref>.supabase.co): de ella salen el JWKS y el `iss` esperado.
+    supabase_url: str = ""
+
     # Ejecución de `analyze` revisada a mano para la demo (CLAUDE.md §13). Sin valor, la API y el
     # MCP sirven la última ejecución correcta, que cambia con cada recolección.
     demo_run_id: int | None = None
