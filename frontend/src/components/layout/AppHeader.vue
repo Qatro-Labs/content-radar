@@ -49,50 +49,55 @@ function isCurrent(routes: readonly string[]): boolean {
 </script>
 
 <template>
-  <header class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-    <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-      <RouterLink
-        :to="{ name: RouteName.Discover }"
-        class="flex h-11 items-center gap-2 rounded-[10px] font-display text-xl font-bold tracking-[-0.03em]"
-      >
-        <span class="size-3.5 rounded-[4px] bg-signal" aria-hidden="true" />
-        30X Signal
-      </RouterLink>
+  <!-- La cuenta va en su propia columna: el resto se parte en filas a su izquierda y ella se
+       queda siempre arriba a la derecha. -->
+  <header class="flex items-start gap-x-4">
+    <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-6 gap-y-3">
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <RouterLink
+          :to="{ name: RouteName.Discover }"
+          class="flex h-11 items-center gap-2 rounded-[10px] font-display text-xl font-bold tracking-[-0.03em]"
+        >
+          <span class="size-3.5 rounded-[4px] bg-signal" aria-hidden="true" />
+          30X Signal
+        </RouterLink>
 
-      <nav aria-label="Vistas" class="flex flex-wrap items-center gap-1">
-        <HoverHint v-for="view in views" :key="view.name" :text="view.help">
-          <RouterLink
-            :to="{ name: view.name }"
-            :data-agent="view.agentTarget"
-            :aria-current="isCurrent(view.routes) ? 'page' : undefined"
-            class="flex h-11 items-center gap-2 rounded-[10px] px-3.5 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
-          >
-            <component
-              :is="view.icon"
-              class="size-4 shrink-0"
-              :stroke-width="2"
-              aria-hidden="true"
-            />
-            {{ view.label }}
-          </RouterLink>
+        <nav aria-label="Vistas" class="flex flex-wrap items-center gap-1">
+          <HoverHint v-for="view in views" :key="view.name" :text="view.help">
+            <RouterLink
+              :to="{ name: view.name }"
+              :data-agent="view.agentTarget"
+              :aria-current="isCurrent(view.routes) ? 'page' : undefined"
+              class="flex h-11 items-center gap-2 rounded-[10px] px-3.5 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
+            >
+              <component
+                :is="view.icon"
+                class="size-4 shrink-0"
+                :stroke-width="2"
+                aria-hidden="true"
+              />
+              {{ view.label }}
+            </RouterLink>
+          </HoverHint>
+        </nav>
+
+        <SearchButton />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <HoverHint :text="HELP.lastCollection"><DataStatus /></HoverHint>
+        <HoverHint v-if="route.name === RouteName.Discover" :text="HELP.period">
+          <span class="text-[13px] font-medium text-ink-soft">Últimos 7 días</span>
         </HoverHint>
-      </nav>
-
-      <SearchButton />
+        <span
+          v-if="USING_FIXTURES"
+          class="rounded-full bg-sample px-3 py-1.5 text-[13px] font-medium text-notice-foreground"
+        >
+          Datos de ejemplo
+        </span>
+      </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <HoverHint :text="HELP.lastCollection"><DataStatus /></HoverHint>
-      <HoverHint v-if="route.name === RouteName.Discover" :text="HELP.period">
-        <span class="text-[13px] font-medium text-ink-soft">Últimos 7 días</span>
-      </HoverHint>
-      <span
-        v-if="USING_FIXTURES"
-        class="rounded-full bg-sample px-3 py-1.5 text-[13px] font-medium text-notice-foreground"
-      >
-        Datos de ejemplo
-      </span>
-      <AuthControl />
-    </div>
+    <AuthControl class="shrink-0" />
   </header>
 </template>
