@@ -414,6 +414,7 @@ def advise(st, conf=Confidence.HIGH, *, fit=None, org=None, gap=None, acc=0.6) -
 
 SATURATED, ACCELERATING = stage(acc=-0.3, sat=80), stage(acc=0.6, sources=3)
 NO_RULE, NO_DATA = stage(acc=0.3, sat=50), stage(sources=1)
+EMERGING = stage(acc=0.3, sources=2, sat=10)
 
 
 @pytest.mark.parametrize(
@@ -424,8 +425,10 @@ NO_RULE, NO_DATA = stage(acc=0.3, sat=50), stage(sources=1)
         (NO_DATA, Confidence.MEDIUM, None, None, None, Recommendation.WAIT_FOR_CASE),
         (ACCELERATING, Confidence.HIGH, 90, 1, None, Recommendation.WAIT_FOR_CASE),
         (NO_RULE, Confidence.MEDIUM, 90, 0, None, Recommendation.WAIT_FOR_CASE),
-        (NO_RULE, Confidence.MEDIUM, 90, 3, None, Recommendation.FIND_ANGLE),
-        (ACCELERATING, Confidence.HIGH, 90, 3, False, Recommendation.FIND_ANGLE),
+        (NO_RULE, Confidence.MEDIUM, 90, 3, False, Recommendation.FIND_ANGLE),
+        (ACCELERATING, Confidence.HIGH, 90, 3, False, Recommendation.PUBLISH_NOW),
+        (ACCELERATING, Confidence.HIGH, 59, 3, False, Recommendation.FIND_ANGLE),
+        (EMERGING, Confidence.HIGH, 90, 3, False, Recommendation.FIND_ANGLE),
         (ACCELERATING, Confidence.HIGH, None, None, None, Recommendation.FIND_ANGLE),
         (ACCELERATING, Confidence.HIGH, 59, 3, None, Recommendation.FIND_ANGLE),
         (ACCELERATING, Confidence.HIGH, 60, 2, True, Recommendation.PUBLISH_NOW),
@@ -437,7 +440,9 @@ NO_RULE, NO_DATA = stage(acc=0.3, sat=50), stage(sources=1)
         "no-real-case-waits",
         "no-real-case-waits-before-angle",
         "unknown-with-data-finds-angle",
-        "latam-covered-finds-angle",
+        "proven-growth-covered-in-latam-publishes-with-own-angle",
+        "covered-in-latam-with-low-fit-finds-angle",
+        "emerging-covered-in-latam-finds-angle",
         "no-fit-never-publishes",
         "fit-below-60-finds-angle",
         "growing-with-fit-and-case-publishes",
@@ -467,7 +472,8 @@ UNPROVEN, DECLINING = stage(acc=0.6, sources=3, p=0.4), stage(acc=-0.3, sat=50)
     [
         (UNPROVEN, Confidence.MEDIUM, 60, 2, True, 0.6, Recommendation.PUBLISH_NOW),
         (NO_RULE, Confidence.MEDIUM, 73, 3, True, 0.3, Recommendation.PUBLISH_NOW),
-        (UNPROVEN, Confidence.MEDIUM, 60, 2, None, 0.6, Recommendation.FIND_ANGLE),
+        (UNPROVEN, Confidence.MEDIUM, 60, 2, None, 0.6, Recommendation.PUBLISH_NOW),
+        (UNPROVEN, Confidence.MEDIUM, 90, 3, False, 0.6, Recommendation.FIND_ANGLE),
         (UNPROVEN, Confidence.MEDIUM, 59, 2, True, 0.6, Recommendation.FIND_ANGLE),
         (UNPROVEN, Confidence.MEDIUM, None, None, True, 0.6, Recommendation.FIND_ANGLE),
         (UNPROVEN, Confidence.MEDIUM, 90, 1, True, 0.6, Recommendation.WAIT_FOR_CASE),
@@ -477,7 +483,8 @@ UNPROVEN, DECLINING = stage(acc=0.6, sources=3, p=0.4), stage(acc=-0.3, sat=50)
     ids=[
         "unproven-rise-with-gap-publishes",
         "no-stage-rising-with-gap-publishes",
-        "no-gap-finds-angle",
+        "partial-latam-coverage-publishes",
+        "unproven-rise-covered-in-latam-finds-angle",
         "fit-below-60-finds-angle",
         "no-fit-finds-angle",
         "no-real-case-waits",
@@ -499,3 +506,24 @@ def test_latam_gap_reason_says_growth_is_unproven():
         acceleration=0.6,
     )
     assert "no está demostrado" in advice.reason
+
+
+def test_reasons_say_what_is_missing():
+    partial = recommend(
+        UNPROVEN,
+        Confidence.MEDIUM,
+        audience_fit=80,
+        org_application=4,
+        latam_gap=None,
+        acceleration=0.6,
+    )
+    assert "parcial o no está medida" in partial.reason
+    covered = recommend(
+        ACCELERATING,
+        Confidence.HIGH,
+        audience_fit=60,
+        org_application=3,
+        latam_gap=False,
+        acceleration=0.6,
+    )
+    assert "ángulo propio" in covered.reason
