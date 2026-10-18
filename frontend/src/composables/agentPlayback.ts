@@ -11,6 +11,7 @@ import { countWords } from '@/lib/answerWords'
 
 const CONNECTION_LOST_MESSAGE =
   'Se cortó la conexión con el agente. Lo que ya cambió en la vista se queda'
+const STEP_FAILED_MESSAGE = 'Rad no pudo terminar este paso. Lo que ya cambió en la vista se queda.'
 
 export interface PlaybackHost {
   // El turno reactivo que pinta la barra.
@@ -99,22 +100,44 @@ export function createAgentPlayback(host: PlaybackHost): AgentPlayback {
     host.onFinish()
   }
 
-  async function pump() {
-    if (isPumping) return
-    isPumping = true
+  // Un paso que la página no pudo hacer (p. ej. no cargó la pantalla a la que iba) corta el turno:
+  // sin esto se quedaría «en curso». Lo que siga llegando del stream se descarta. Tras «Detener»,
+  // el turno ya está parado y no se pinta como fallido.
+  function failTurn() {
+    buffer = []
+    if (signal.aborted) return
+    for (const row of turn.steps) if (row.status === 'running') row.status = 'failed'
+    turn.failure = STEP_FAILED_MESSAGE
+    turn.status = 'failed'
+    finish()
+  }
+
+  async function playBuffered() {
     for (;;) {
       const { ready, rest } = takePlayable(buffer, streamEnded)
       buffer = rest
-      if (ready.length === 0 || signal.aborted) break
+      if (ready.length === 0 || signal.aborted) return
       await playInOrder(ready)
     }
-    isPumping = false
+  }
+
+  async function pump() {
+    if (isPumping || isFinished) return
+    isPumping = true
+    try {
+      await playBuffered()
+    } catch {
+      failTurn()
+      return
+    } finally {
+      isPumping = false
+    }
     if (streamEnded && buffer.length === 0) finish()
   }
 
   return {
     push(event) {
-      if (signal.aborted) return
+      if (signal.aborted || isFinished) return
       buffer.push(event)
       void pump()
     },
