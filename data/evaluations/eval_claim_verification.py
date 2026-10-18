@@ -407,4 +407,5 @@ def main() -> None:
         score(args.sample, args.answers)
 
 
-main()
+if __name__ == "__main__":
+    main()
