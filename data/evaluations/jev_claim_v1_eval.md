@@ -2,6 +2,10 @@
 
 18/10/2026 · modelo `jev-1.13.0` · plan `.claude/plans/intel-claim-verification.plan.md` (D10).
 
+> **Actualización (18/10):** una segunda evaluación pre-registrada, con el prompt
+> `explain_opportunity.v2`, `claim.v2`, umbral 0,6 y una muestra nueva, sí cumplió el criterio y se
+> adoptó: [`jev_claim_adoption_eval.md`](jev_claim_adoption_eval.md).
+
 **Resultado: no se adopta.** `JEV_VERIFY_CLAIMS` se queda en `false`. Ni `claim.v1` ni su única
 revisión, `claim.v2`, cumplen el criterio «conserva» fijado antes de mirar resultados. Las dos
 filtran bien las negativas.
