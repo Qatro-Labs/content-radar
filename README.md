@@ -43,6 +43,8 @@
 | API REST y su documentación | https://content-radar-production-9453.up.railway.app/docs |
 | Servidor MCP | https://content-radar-production-9453.up.railway.app/mcp |
 
+El dashboard pide iniciar sesión. Las credenciales del usuario demo van en la entrega del reto, no en este repositorio.
+
 ## Cómo funciona
 
 ![Componentes de 30X Signal: fuentes públicas, colectores, motor de análisis con modelos de IA, base de datos, servicios, API REST, agente Rad y servidor MCP, y los clientes](docs/diagrams/arquitectura.svg)
@@ -62,7 +64,8 @@ Cada paso del producto responde una pregunta:
 | Medios y blogs (tech, negocio, LATAM) | RSS |
 | TikTok · Reddit | ScrapeCreators, un proveedor de datos públicos: búsquedas por palabra clave y subreddits |
 | Instagram | ScrapeCreators, solo los reels de perfiles elegidos a mano |
-| LinkedIn · X | **Fuera del MVP.** Sin login no se puede buscar su contenido. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS) |
+| X | twitterapi.io, un proveedor de datos públicos: solo los últimos tweets de perfiles elegidos a mano |
+| LinkedIn | **Fuera del MVP.** Sin login no se puede buscar su contenido. Sus referentes entran por sus canales abiertos (YouTube, newsletters, RSS) |
 
 Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales. Límites de cada fuente: [docs/sources.md](docs/sources.md).
 
