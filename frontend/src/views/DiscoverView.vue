@@ -13,7 +13,7 @@ import { useAgentPeek } from '@/composables/useAgentPeek'
 import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
-import { buildRadarView, RADAR_TOP } from '@/lib/radarView'
+import { buildRadarView, RADAR_TOP, stagePatch } from '@/lib/radarView'
 
 const { query, update } = useRadarQuery()
 // Rad repite el barrido cuando empieza a leer datos (DESIGN.md §7).
@@ -100,6 +100,7 @@ function hover(id: string | null) {
             @select="select"
             @hover="hover"
             @toggle-all="showsAllBubbles = !showsAllBubbles"
+            @filter-stage="(stage) => update(stagePatch(stage, query))"
           >
             <template #title><RadarTabs /></template>
           </OpportunityRadar>

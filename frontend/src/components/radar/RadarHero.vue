@@ -66,7 +66,7 @@ const counters = computed<Counter[]>(() => [
   },
 ])
 // «Sin tendencia clara» no tiene contador: era la cifra más grande de la cabecera y solo dice lo
-// que no sabemos. Sigue en la leyenda, en «Qué no sabemos» y en la URL (Rad puede filtrarla).
+// que no sabemos. Se filtra desde la leyenda del radar, como las demás etapas, y por URL.
 
 // Los resaltados también atenúan el radar, así que cuentan como vista cambiada y se
 // restablecen con los filtros (artboard E).

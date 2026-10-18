@@ -4,8 +4,8 @@ import { RouteName } from '@/router/routeNames'
 
 import type { AgentScreen, AgentTarget, DossierSection, Navigation, RadarPatch } from './agentTypes'
 import { EXPLORE_TEXT_PARAM } from './exploreView'
-import { DEFAULT_RANKING_SORT, type RadarQuery } from './radarQuery'
-import { activeCounterOf, type CounterFilter } from './radarView'
+import { DEFAULT_RANKING_SORT, type Lifecycle, type RadarQuery } from './radarQuery'
+import { activeCounterOf, activeStageOf, type CounterFilter } from './radarView'
 
 // D8 del plan fe-radar-agent: a dónde va la presencia de Rad antes de actuar. Cada objetivo es el
 // valor de `data-agent` de un elemento de la página.
@@ -29,6 +29,8 @@ export const AGENT_ANCHOR = {
 // Las burbujas son canvas: su ancla es un elemento invisible en la posición de la burbuja.
 export const bubbleAnchor = (id: string) => `bubble-${id}`
 export const rowAnchor = (id: string) => `row-${id}`
+// Los chips de etapa de la leyenda del radar (OpportunityRadar.vue).
+export const stageAnchor = (stage: Lifecycle) => `legend-lc-${stage}`
 
 export const SECTION_ANCHOR: Record<DossierSection, string> = {
   score: 'dossier-score',
@@ -88,12 +90,17 @@ function selectionTarget(id: string, hasAnchor: PatchContext['hasAnchor']): Agen
   return block(AGENT_ANCHOR.detail)
 }
 
-function counterTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget | null {
+function filterTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget | null {
   if (patch.lifecycle === undefined && patch.recommendation === undefined) return null
-  const counter = activeCounterOf({ ...query, ...patchToQuery(patch) })
-  // «Sin tendencia clara» filtra por URL pero no tiene contador en la cabecera.
-  if (counter === null || !hasAnchor(COUNTER_ANCHOR[counter])) return null
-  return control(COUNTER_ANCHOR[counter])
+  const next = { ...query, ...patchToQuery(patch) }
+  const counter = activeCounterOf(next)
+  if (counter !== null && hasAnchor(COUNTER_ANCHOR[counter]))
+    return control(COUNTER_ANCHOR[counter])
+  // Las etapas sin contador en la cabecera (En pico, Saturado, Sin tendencia clara) se pulsan en
+  // la leyenda del radar, que solo está en su pestaña.
+  const stage = activeStageOf(next)
+  if (stage !== null && hasAnchor(stageAnchor(stage))) return control(stageAnchor(stage))
+  return null
 }
 
 // Lo mismo que quitan `resetViewPatch()` y el `reset_view` del agente.
@@ -108,8 +115,8 @@ function isSortOnly(patch: RadarPatch): boolean {
 
 export function patchTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget {
   if (patch.selected) return selectionTarget(patch.selected, hasAnchor)
-  const counter = counterTarget(patch, { query, hasAnchor })
-  if (counter !== null) return counter
+  const filter = filterTarget(patch, { query, hasAnchor })
+  if (filter !== null) return filter
   if (isReset(patch)) {
     return hasAnchor(AGENT_ANCHOR.reset) ? control(AGENT_ANCHOR.reset) : block(AGENT_ANCHOR.radar)
   }
