@@ -99,3 +99,22 @@ export function useSavedBrief(id: MaybeRefOrGetter<number>) {
     enabled: isSignedIn,
   })
 }
+
+async function deleteSavedBrief(id: number): Promise<void> {
+  const { response } = await api.DELETE('/api/v1/editorial/briefs/{brief_id}', {
+    params: { path: { brief_id: id } },
+  })
+  // Si ya no estaba, el resultado es el mismo: deja de aparecer en la lista.
+  if (!response.ok && response.status !== BRIEF_NOT_FOUND) {
+    throw new Error('DELETE /editorial/briefs/{id} falló')
+  }
+}
+
+export function useDeleteSavedBrief() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteSavedBrief,
+    retry: false,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: SAVED_BRIEFS_KEY }),
+  })
+}

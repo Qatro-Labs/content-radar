@@ -30,7 +30,8 @@ const isSingleColumn = computed(() => savedBriefId.value !== null || opportunity
     <!-- Por tema: otro tema empieza en blanco, sin el brief del anterior. -->
     <CreateStudio v-else :key="opportunityId" :opportunity-id="opportunityId" />
 
-    <div :class="isSingleColumn ? 'mx-auto w-full max-w-[880px]' : 'w-full'">
+    <!-- Sin Supabase no hay cuentas: la vista queda exactamente como sin login. -->
+    <div v-if="isConfigured" :class="isSingleColumn ? 'mx-auto w-full max-w-[880px]' : 'w-full'">
       <MyBriefs />
     </div>
   </div>

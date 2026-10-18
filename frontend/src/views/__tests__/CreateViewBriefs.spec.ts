@@ -68,6 +68,10 @@ function json(body: unknown): Response {
 function respond(request: Request, stub: ApiStub): Response {
   const path = new URL(request.url).pathname
   if (path === '/api/v1/editorial/briefs') return json(stub.savedBriefs ?? [])
+  if (path === `/api/v1/editorial/briefs/${SUMMARY.id}` && request.method === 'DELETE') {
+    stub.savedBriefs = (stub.savedBriefs ?? []).filter((saved) => saved.id !== SUMMARY.id)
+    return new Response(null, { status: 204 })
+  }
   if (path === `/api/v1/editorial/briefs/${SUMMARY.id}`) {
     return json({ id: SUMMARY.id, created_at: SUMMARY.created_at, request: REQUEST, brief: BRIEF })
   }
@@ -170,6 +174,22 @@ describe('CreateView · Mis briefs', () => {
       await vi.waitFor(() => expect(router.currentRoute.value.query.brief).toBe('7'))
       expect(await screen.findByText(`«${BRIEF.hook}»`)).toBeTruthy()
       expect(screen.getByText('Brief guardado el 17/10, 19:00 UTC')).toBeTruthy()
+    })
+
+    it('deletes a saved brief and closes it when it was open', async () => {
+      const fetchMock = stubApi({ savedBriefs: [SUMMARY] })
+      const router = await renderCreateAt(`/create?brief=${SUMMARY.id}`)
+
+      await fireEvent.click(
+        await screen.findByRole('button', { name: `Borrar el brief «${SUMMARY.topic}»` }),
+      )
+
+      expect(await screen.findByText('Todavía no has creado briefs.')).toBeTruthy()
+      await vi.waitFor(() => expect(router.currentRoute.value.query.brief).toBeUndefined())
+      const deletions = fetchMock.mock.calls.filter(
+        ([input]) => input instanceof Request && input.method === 'DELETE',
+      )
+      expect(deletions).toHaveLength(1)
     })
 
     it('says there are no briefs yet when the list is empty', async () => {
