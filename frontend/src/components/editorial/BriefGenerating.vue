@@ -98,8 +98,8 @@ const citationViews = computed<CitationView[]>(() => {
   return citations.value.map((name, index) => ({ name, isChecked: index < checkedCount }))
 })
 
-// Rad mira la pieza que lee y, al redactar, el borrador. La tarjeta es su `data-agent-root`: la
-// marca mide su mirada respecto a ella (Rad no vive en Crear, así que no choca con la presencia).
+// Rad mira la pieza que lee. La tarjeta es su `data-agent-root`: la marca mide su mirada respecto a
+// ella (en Crear no está la presencia del agente, así que no chocan).
 const card = useTemplateRef<HTMLElement>('card')
 const lookAt = ref<Point | null>(null)
 
@@ -110,14 +110,11 @@ function centerInCard(element: Element | null): Point | null {
   return { x: box.left - origin.left + box.width / 2, y: box.top - origin.top + box.height / 2 }
 }
 
+// Solo mira mientras lee: en radar, RadMark deja el iris quieto en el centro.
 function gazeTarget(): Point | null {
   const { stage, readingIndex } = timeline.value
-  if (isReduced.value || !card.value || stage === GenerationStage.Done) return null
-  const selector =
-    stage === GenerationStage.Read
-      ? `[data-generating-piece="${readingIndex}"]`
-      : '[data-generating-draft]'
-  return centerInCard(card.value.querySelector(selector))
+  if (isReduced.value || !card.value || stage !== GenerationStage.Read) return null
+  return centerInCard(card.value.querySelector(`[data-generating-piece="${readingIndex}"]`))
 }
 
 function updateGaze() {

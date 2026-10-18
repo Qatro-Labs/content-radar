@@ -199,7 +199,7 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   (§7): es su personaje, no un dato. Se para mientras trabaja, con la pestaña oculta y con movimiento reducido.
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
   un ojo que mira el cursor (de reojo si está cerca, hasta el borde si está lejos; al frente con movimiento
-  reducido); mientras trabaja mira hacia su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
+  reducido); mientras trabaja se abre en un radar (dos anillos) con el iris quieto en el centro, y su haz da una
   sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles, salvo en Crear:
   mientras redacta un brief el haz gira sin parar (§7).
 - **Transcripción del agente** (dentro de la barra, encima del campo; alto máximo 46vh con scroll):

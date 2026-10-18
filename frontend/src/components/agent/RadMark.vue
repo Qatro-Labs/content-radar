@@ -58,12 +58,13 @@ function gazeToward(lookAt: RadMarkState['lookAt']): Point {
   return { x: (dx / distance) * reach, y: (dy / distance) * reach }
 }
 
+// Abierto en radar, el iris es el centro del radar: se queda quieto al frente mientras gira el haz.
 function updateGaze() {
-  gaze.value = gazeToward(state.lookAt)
+  gaze.value = state.working ? LOOK_AHEAD : gazeToward(state.lookAt)
 }
 
 onMounted(updateGaze)
-watch(() => state.lookAt, updateGaze, { deep: true })
+watch([() => state.lookAt, () => state.working], updateGaze, { deep: true })
 
 const containerStyle = computed(() => ({
   width: `${size}px`,

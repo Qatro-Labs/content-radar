@@ -65,4 +65,21 @@ describe('RadMark', () => {
 
     expect(screen.getByTestId('rad-gaze').style.transform).toBe(transform)
   })
+
+  it('keeps the iris centred while it works as a radar, whatever it follows', async () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return this.hasAttribute('data-agent-root') ? box(0, 0, 1000) : box(10, 10, 40)
+    })
+    const state: RadMarkState = { ...RESTING, working: true, lookAt: { x: 430, y: 30 } }
+    const App = defineComponent({
+      render: () => h('div', { 'data-agent-root': '' }, [h(RadMark, { state })]),
+    })
+
+    render(App)
+    await nextTick()
+
+    expect(screen.getByTestId('rad-gaze').style.transform).toBe('translate(0px, 0px)')
+  })
 })
