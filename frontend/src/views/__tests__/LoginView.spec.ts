@@ -98,18 +98,38 @@ describe('LoginView', () => {
     await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('discover'))
   })
 
-  it('shows neither the form nor the sign-in heading while a signed-in session loads', async () => {
+  it('goes to the Radar after signing in without a redirect', async () => {
+    auth.signInWithPassword.mockResolvedValue({
+      data: { session: SESSION, user: SESSION.user },
+      error: null,
+    })
+    const router = await renderLoginAt('/login')
+
+    await submitCredentials()
+
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('discover'))
+  })
+
+  it('sends a signed-in visitor straight to the Radar without showing the form', async () => {
     let resolveSession: (value: unknown) => void = () => {}
     auth.getSession.mockReturnValue(new Promise((done) => (resolveSession = done)))
-    await renderLoginAt('/login')
+    const router = await renderLoginAt('/login')
 
     expect(screen.queryByRole('heading', { name: 'Iniciar sesión' })).toBeNull()
     expect(screen.queryByLabelText('Correo')).toBeNull()
 
     resolveSession({ data: { session: SESSION }, error: null })
 
-    expect(await screen.findByRole('heading', { name: 'Sesión iniciada' })).toBeTruthy()
-    expect(screen.queryByRole('heading', { name: 'Iniciar sesión' })).toBeNull()
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('discover'))
+    expect(screen.queryByLabelText('Correo')).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Sesión iniciada' })).toBeNull()
+  })
+
+  it('sends a signed-in visitor to the redirect target', async () => {
+    auth.getSession.mockResolvedValue({ data: { session: SESSION }, error: null })
+    const router = await renderLoginAt('/login?redirect=/explore/opp_001')
+
+    await vi.waitFor(() => expect(router.currentRoute.value.fullPath).toBe('/explore/opp_001'))
   })
 
   it('says the login is not configured and creates no Supabase client without its env vars', async () => {
