@@ -87,7 +87,7 @@ describe('BriefComposer', () => {
     expect(
       screen.getByText('Con qué lo escribirá · las 3 piezas del tema', { exact: false }),
     ).toBeTruthy()
-    expect(screen.getByText('6,1× su canal')).toBeTruthy()
+    expect(screen.getByText('6,1×')).toBeTruthy()
     expect(screen.getAllByRole('link')).toHaveLength(3)
   })
 

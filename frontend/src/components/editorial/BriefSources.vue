@@ -3,7 +3,8 @@ import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
 import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
-import { featuredPieces, featuredPiecesCaption, outlierBadgeLabel } from '@/lib/briefView'
+import { featuredPieces, featuredPiecesCaption } from '@/lib/briefView'
+import { outlierBadge } from '@/lib/evidenceFormat'
 import { PLATFORM_LABEL } from '@/lib/evidenceFormat'
 import { formatUtcDay } from '@/lib/format'
 import type { components } from '@/types/api'
@@ -53,10 +54,10 @@ const caption = computed(() => {
       </span>
       <!-- DESIGN.md §4: badge de outlier en Lima señal con texto Tinta. -->
       <span
-        v-if="outlierBadgeLabel(piece)"
+        v-if="outlierBadge(piece)"
         class="shrink-0 rounded-lg bg-signal px-2.5 py-1 text-[13px] font-semibold whitespace-nowrap text-signal-foreground"
       >
-        {{ outlierBadgeLabel(piece) }}
+        {{ outlierBadge(piece) }}
       </span>
     </a>
   </div>

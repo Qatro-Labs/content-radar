@@ -9,7 +9,6 @@ import {
   featuredPieces,
   featuredPiecesCaption,
   HOOK_MISSING,
-  outlierBadgeLabel,
   parseBriefQuery,
   sameRequest,
   serializeBriefQuery,
@@ -157,16 +156,6 @@ describe('featuredPiecesCaption', () => {
 
   it('does not pass the API cap off as the total', () => {
     expect(featuredPiecesCaption(25)).toBe('las que más pesan de las 25 primeras piezas del tema')
-  })
-})
-
-describe('outlierBadgeLabel', () => {
-  it('labels only the pieces the API marks as outliers', () => {
-    expect(outlierBadgeLabel(piece('a', { outlier_ratio: 8.6, is_outlier: true }))).toBe(
-      '8,6× su canal',
-    )
-    expect(outlierBadgeLabel(piece('b', { outlier_ratio: 2.4, is_outlier: false }))).toBeNull()
-    expect(outlierBadgeLabel(piece('c'))).toBeNull()
   })
 })
 

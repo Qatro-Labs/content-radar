@@ -7,6 +7,7 @@ import {
   formatRatio,
   formatVelocity,
   missingRatioLabel,
+  outlierBadge,
   performanceFraction,
   ratioLabel,
   shortSourceName,
@@ -111,5 +112,13 @@ describe('shortSourceName', () => {
     ['midudev', 'midudev'],
   ])('shortens %s', (source, expected) => {
     expect(shortSourceName(source)).toBe(expected)
+  })
+})
+
+describe('outlierBadge', () => {
+  it('only labels pieces the API marks as outliers', () => {
+    expect(outlierBadge({ is_outlier: true, outlier_ratio: 8.6 })).toBe('8,6×')
+    expect(outlierBadge({ is_outlier: false, outlier_ratio: 2.4 })).toBeNull()
+    expect(outlierBadge({ is_outlier: null, outlier_ratio: null })).toBeNull()
   })
 })

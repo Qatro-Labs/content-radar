@@ -1,6 +1,6 @@
 import type { components } from '@/types/api'
 
-import { countLabel, EVIDENCE_LIMIT, formatCount, formatRatio } from './evidenceFormat'
+import { countLabel, EVIDENCE_LIMIT, formatCount } from './evidenceFormat'
 import { foldForSearch } from './exploreView'
 import {
   formatAcceleration,
@@ -12,7 +12,6 @@ import {
 
 type Schemas = components['schemas']
 type Opportunity = Schemas['Opportunity']
-type Evidence = Schemas['Evidence']
 
 // Artboard A de Crear: sin búsqueda, la lista enseña los primeros del ranking y el resto se
 // despliega; con todos a la vista, la lista empuja el destacado fuera de la pantalla.
@@ -75,13 +74,6 @@ export function featuredTiles(opportunity: Opportunity): FeaturedTile[] {
       isNegative: false,
     },
   ]
-}
-
-// DESIGN.md §4: el badge de outlier es Lima señal, y solo lo lleva lo que la API marca como
-// outlier; una pieza destacada (2×) no lo es.
-export function outlierBadge(piece: Pick<Evidence, 'is_outlier' | 'outlier_ratio'>): string | null {
-  if (piece.is_outlier !== true || piece.outlier_ratio == null) return null
-  return formatRatio(piece.outlier_ratio)
 }
 
 // La API devuelve hasta EVIDENCE_LIMIT piezas por tema: con el tope lleno puede haber más.

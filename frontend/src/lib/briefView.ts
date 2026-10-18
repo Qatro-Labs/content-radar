@@ -3,7 +3,7 @@ import type { LocationQuery } from 'vue-router'
 import type { components } from '@/types/api'
 
 import { citationChipsFor, type CitationChip } from './dossierView'
-import { compareRatios, countLabel, EVIDENCE_LIMIT, formatRatio } from './evidenceFormat'
+import { compareRatios, countLabel, EVIDENCE_LIMIT } from './evidenceFormat'
 
 type Schemas = components['schemas']
 type BriefPlatform = Schemas['BriefPlatform']
@@ -203,12 +203,6 @@ export function briefPoints(brief: EditorialBrief): BriefPointView[] {
     text: point.text,
     chips: citationChipsFor(point.evidence_urls, brief.evidence),
   }))
-}
-
-// Solo los outliers llevan badge (DESIGN.md §4): lo decide la API con `is_outlier`, no el front.
-export function outlierBadgeLabel(piece: Evidence): string | null {
-  if (piece.is_outlier !== true || piece.outlier_ratio == null) return null
-  return `${formatRatio(piece.outlier_ratio)} su canal`
 }
 
 // Texto plano para pegar en un documento o un chat, en el orden de la pantalla: lo copiado lleva
