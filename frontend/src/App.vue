@@ -56,10 +56,10 @@ const bottomSpace = computed(() => {
   // Lo que mide la barra: su cabecera con «−» y el campo (116 px), o además la respuesta plegada.
   const docked = turns.value.length > 0 ? 'pb-48' : 'pb-[132px]'
   const scrolling = isMinimized.value ? 'pb-20' : docked
-  // Sin scroll, debajo de la barra no puede quedar nada: la vista acaba justo encima de ella (la
-  // barra mide 116 px y flota a 24 px del borde, que ya es el padding de la raíz).
+  // En la vista ajustada a la ventana (el Radar, en escritorio), la barra flota encima: abrir Rad no
+  // encoge la vista, que siempre ocupa el alto entero (decidido el 18/10).
   if (!fitsViewport.value) return scrolling
-  return isMinimized.value ? `${scrolling} lg:pb-0` : `${scrolling} lg:pb-[124px]`
+  return `${scrolling} lg:pb-0`
 })
 
 // La marca de Rad refleja lo que hace: se abre en radar mientras trabaja, el haz pasa en cada
