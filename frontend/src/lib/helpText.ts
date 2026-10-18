@@ -71,6 +71,7 @@ export const HELP = {
   openDossier: 'Abre el expediente completo: evolución, encaje con 30X y toda la evidencia.',
   generateBrief: 'Prepara un brief de contenido a partir de este tema y su evidencia.',
   rad: 'Rad, el agente del Radar: pregúntale en lenguaje natural y responde moviendo la página, con los mismos filtros que usas tú y citando la evidencia.',
+  minimizeRad: 'Minimizar',
   resetView: 'Quita los filtros y los resaltados y vuelve a la vista de todos los temas.',
 
   // Explorar

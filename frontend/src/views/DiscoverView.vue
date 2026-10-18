@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useOpportunities } from '@/api/opportunities'
 import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
@@ -8,6 +8,7 @@ import RadarFootnote from '@/components/radar/RadarFootnote.vue'
 import RadarHero from '@/components/radar/RadarHero.vue'
 import RadarPreviewCard from '@/components/radar/RadarPreviewCard.vue'
 import RadarStates, { RadarPlaceholder } from '@/components/radar/RadarStates.vue'
+import { useAgentPeek } from '@/composables/useAgentPeek'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import { buildRadarView } from '@/lib/radarView'
@@ -20,6 +21,8 @@ const { data, isPending, isError, refetch } = useOpportunities(() => query.value
 const view = computed(() => buildRadarView(data.value ?? null, query.value))
 // El hover enlaza radar, ranking y panel, pero no va en la URL: no es un estado que se comparta.
 const hovered = ref<string | null>(null)
+// El vistazo de Rad a un tema citado lo resalta como el hover, sin tocar la URL ni la selección.
+watch(useAgentPeek().peekedId, (id) => (hovered.value = id))
 
 // Sin una lista con temas no se monta la cabecera: "0 temas esta semana" se leería como un
 // resultado real (CLAUDE.md §2.3).

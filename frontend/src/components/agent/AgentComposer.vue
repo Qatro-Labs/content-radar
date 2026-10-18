@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ChevronDown } from '@lucide/vue'
 import { computed, ref, useId } from 'vue'
 
 import HoverHint from '@/components/layout/HoverHint.vue'
@@ -16,7 +15,6 @@ const { busy, suggestions, mark } = defineProps<{
 const emit = defineEmits<{
   ask: [question: string]
   stop: []
-  minimize: []
 }>()
 
 // El mismo límite que `MAX_QUESTION_CHARS` en backend/app/schemas/agent.py: más larga, la API
@@ -70,6 +68,8 @@ function submit() {
     </ul>
 
     <form data-agent="composer" class="flex items-center gap-2" @submit.prevent="submit">
+      <!-- Sin conversación, la barra no tiene cabecera y «Minimizar» va aquí (AgentDock). -->
+      <slot name="leading" />
       <!-- `data-rad-mark`: de aquí sale y aquí vuelve el ojo al reducir y abrir la barra. -->
       <HoverHint :text="HELP.rad">
         <RadMark data-rad-mark :state="mark" />
@@ -103,16 +103,6 @@ function submit() {
         :class="BUTTON_CLASS"
       >
         Preguntar
-      </button>
-      <!-- La barra se reduce al ojo de Rad para no tapar la página; la conversación se conserva. -->
-      <button
-        type="button"
-        aria-label="Reducir a Rad"
-        title="Reducir"
-        class="flex size-12 shrink-0 items-center justify-center rounded-xl text-ink-soft transition-[background-color,scale] duration-150 ease-out hover:bg-secondary active:scale-[0.96]"
-        @click="emit('minimize')"
-      >
-        <ChevronDown class="size-5" :stroke-width="2" aria-hidden="true" />
       </button>
     </form>
 
