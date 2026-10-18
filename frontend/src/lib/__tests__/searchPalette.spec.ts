@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import fixture from '@fixtures/opportunities.json'
+import { RouteName } from '@/router/routeNames'
 import type { components } from '@/types/api'
 
-import { buildSearchResults, hasResults, MAX_RESULTS_PER_GROUP } from '../searchPalette'
+import {
+  buildSearchResults,
+  hasResults,
+  MAX_RESULTS_PER_GROUP,
+  topicDestination,
+} from '../searchPalette'
 
 type Schemas = components['schemas']
 type TopicEvidence = Schemas['TopicEvidence']
@@ -109,4 +115,23 @@ describe('buildSearchResults', () => {
     expect(results.topics.map((t) => t.id)).toEqual(['opp_b'])
     expect(hasResults(results)).toBe(true)
   })
+})
+
+describe('topicDestination', () => {
+  it('opens the brief of the topic from Create, with a fresh query', () => {
+    expect(topicDestination(RouteName.Create, 'opp_b')).toEqual({
+      name: RouteName.Create,
+      query: { opportunity: 'opp_b' },
+    })
+  })
+
+  it.each([RouteName.Discover, RouteName.Explore, RouteName.Dossier, undefined])(
+    'opens the dossier from anywhere else (%s)',
+    (routeName) => {
+      expect(topicDestination(routeName, 'opp_b')).toEqual({
+        name: RouteName.Dossier,
+        params: { id: 'opp_b' },
+      })
+    },
+  )
 })
