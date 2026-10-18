@@ -18,7 +18,12 @@ from app.intelligence.audience_mix import (
     latam_gap,
     latam_share,
 )
-from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
+from app.intelligence.cross_source import (
+    cross_source_score,
+    outlet_key,
+    percentile_scores,
+    saturation_score,
+)
 from app.intelligence.evidence import (
     PERFORMANCE_METRIC,
     ranked_pieces,
@@ -99,6 +104,7 @@ class _ActiveTopic:
     broad: bool
     story_counts: WindowCounts  # solo notas originales: son las muestras independientes
     p_value: float  # de la aceleración, sobre las notas originales
+    saturation: float  # cuota de las notas originales del corpus en las dos ventanas
 
 
 @dataclass
@@ -172,6 +178,7 @@ def _active_topics(
     # Una republicación no es una observación independiente: el test de la aceleración cuenta
     # notas, en el tema y en el corpus (CLAUDE.md §7, "Cross-source").
     story_corpus = window_counts([p.published_at for p in _originals(pieces, stories)], as_of)
+    corpus_stories = story_corpus.current + story_corpus.previous
     topics = []
     for members, rep, is_broad in zip(clusters, representatives, broad, strict=True):
         group = [pieces[i] for i in members]
@@ -181,8 +188,11 @@ def _active_topics(
         velocity = topic_velocity(counts, corpus)
         story_counts = window_counts([p.published_at for p in _originals(group, stories)], as_of)
         p_value = acceleration_p_value(story_counts, story_corpus)
+        saturation = saturation_score(story_counts.current + story_counts.previous, corpus_stories)
         topics.append(
-            _ActiveTopic(group, pieces[rep], counts, velocity, is_broad, story_counts, p_value)
+            _ActiveTopic(
+                group, pieces[rep], counts, velocity, is_broad, story_counts, p_value, saturation
+            )
         )
     return topics
 
@@ -451,14 +461,10 @@ def _topic_result(
     return TopicResult(opportunity, evidence, points, stage, pieces, facts.replica_ids)
 
 
-def _across_topics(topics: Sequence[_ActiveTopic]) -> list[tuple[float, float]]:
-    # Saturación y percentil de velocidad se normalizan entre temas: necesitan todos los activos.
-    # La saturación cuenta notas, no copias (CLAUDE.md §7); la velocidad sigue por pieza.
-    saturation = saturation_scores(
-        [t.story_counts.current + t.story_counts.previous for t in topics]
-    )
-    velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
-    return list(zip(saturation, velocity_pct, strict=True))
+def _velocity_percentiles(topics: Sequence[_ActiveTopic]) -> list[float]:
+    # El percentil de velocidad se normaliza entre temas: necesita todos los activos. Cuenta
+    # piezas, no notas (CLAUDE.md §7).
+    return percentile_scores([t.velocity.current_count for t in topics])
 
 
 def build_opportunities(
@@ -484,12 +490,12 @@ def build_opportunities(
             ratios,
             stories,
             business_use or {},
-            saturation=sat,
+            saturation=topic.saturation,
             velocity_percentile=vel_pct,
             as_of=as_of,
             monitoring_started_at=monitoring_started_at,
         )
-        for topic, (sat, vel_pct) in zip(topics, _across_topics(topics), strict=True)
+        for topic, vel_pct in zip(topics, _velocity_percentiles(topics), strict=True)
     ]
     return rank(results)
 
