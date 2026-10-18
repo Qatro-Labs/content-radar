@@ -189,9 +189,13 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
   presencia sigue actuando en la página. Si termina una respuesta con la barra reducida, un punto Lima de 14px en la
   esquina del ojo lo avisa («Rad respondió») hasta que se abre. Al abrirlo vuelve la barra con la conversación.
-  Sin conversación, la barra aparece abierta, lista para preguntar. Al reducir, el ojo sale volando de su sitio en la
-  barra hasta la esquina (460ms, ease-out) mientras la barra se funde y se encoge hacia allí; al abrir, vuelve volando
-  a la barra, que aparece con un fundido. Solo `transform` y `opacity`.
+  Sin conversación, la barra aparece abierta, lista para preguntar. Al reducir, el ojo sale de un salto de su sitio
+  en la barra hasta la esquina (640ms: un arco de 64px, un 12 % más grande en lo alto, que aterriza con un leve
+  rebote) mientras la barra se funde y se encoge hacia allí; al abrir, vuelve igual a la barra, que aparece con un
+  fundido. Al aterrizar parpadea. Solo `transform` y `opacity`.
+- **Rad vivo en reposo:** parpadea cada 3–7 s (a veces dos veces; uno de «hola» al cargar) y, si el cursor lleva
+  2,5 s quieto, mira un momento (1,3 s) a otro punto de la página y vuelve. Es la única excepción a «nada de bucles»
+  (§7): es su personaje, no un dato. Se para mientras trabaja, con la pestaña oculta y con movimiento reducido.
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
   un ojo que mira el cursor (de reojo si está cerca, hasta el borde si está lejos; al frente con movimiento
   reducido); mientras trabaja mira hacia su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
@@ -316,7 +320,7 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   controles.
 - **`prefers-reduced-motion: reduce`:** sin barrido, ping, latido ni entradas; los datos aparecen al instante. Se
   mantiene el feedback de hover y active.
-- Nada de bucles infinitos fuera del latido. Nada de puntos "live" que parpadean.
+- Nada de bucles infinitos fuera del latido y de la vida en reposo de Rad (§4). Nada de puntos "live" que parpadean.
 
 ## 8. Gráficos (ECharts + `vue-echarts`)
 

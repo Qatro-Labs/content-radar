@@ -16,7 +16,7 @@ export const AGENT_TIMING = {
   tapMs: 420,
   // Reducir y abrir la barra (useRadMorph): el ojo vuela entre la barra y la esquina, y la barra
   // se funde un poco antes al irse y un poco después al volver.
-  eyeFlightMs: 460,
+  eyeFlightMs: 640,
   dockInMs: 320,
   dockOutMs: 200,
 } as const

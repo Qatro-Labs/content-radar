@@ -8,21 +8,34 @@ import AgentPresence from '@/components/agent/AgentPresence.vue'
 import type { RadMarkState } from '@/components/agent/RadMark.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import { useRadarAgent } from '@/composables/useRadarAgent'
+import { useRadIdleLife } from '@/composables/useRadIdleLife'
 import { useRadMorph } from '@/composables/useRadMorph'
 
 const agent = useRadarAgent()
 const { turns, status, presence, suggestions, isAvailable, isMinimized, hasUnread } = agent
-const morph = useRadMorph()
 
-// En reposo, Rad mira el cursor; mientras trabaja, mira hacia su presencia. Las coordenadas van
-// relativas a `[data-agent-root]`, como la presencia. Con movimiento reducido mira al frente.
+// En reposo, Rad mira el cursor (y de vez en cuando, otro sitio de la página); mientras trabaja,
+// mira hacia su presencia. Las coordenadas van relativas a `[data-agent-root]`, como la
+// presencia. Con movimiento reducido mira al frente.
 const root = useTemplateRef<HTMLElement>('root')
 const rootBox = useElementBounding(root)
 const cursor = useMouse({ type: 'client' })
 const motionPreference = usePreferredReducedMotion()
+const life = useRadIdleLife({
+  isResting: computed(() => status.value === 'idle'),
+  cursor,
+  randomGlanceTarget: () => ({
+    x: Math.random() * window.innerWidth - rootBox.left.value,
+    y: Math.random() * window.innerHeight - rootBox.top.value,
+  }),
+})
+// Al aterrizar tras reducir o abrir la barra, Rad parpadea.
+const morph = useRadMorph({ onLanded: life.blink })
 const lookAt = computed(() => {
   if (presence.value.visible) return { x: presence.value.x, y: presence.value.y }
-  if (motionPreference.value === 'reduce' || cursor.sourceType.value === null) return null
+  if (motionPreference.value === 'reduce') return null
+  if (life.glance.value !== null) return life.glance.value
+  if (cursor.sourceType.value === null) return null
   return { x: cursor.x.value - rootBox.left.value, y: cursor.y.value - rootBox.top.value }
 })
 
@@ -34,14 +47,14 @@ const bottomSpace = computed(() => {
 })
 
 // La marca de Rad refleja lo que hace: se abre en radar mientras trabaja, el haz pasa en cada
-// paso de datos, parpadea al terminar y mira hacia donde está su presencia (plan fe-radar-agent,
-// C.2).
+// paso de datos, parpadea al terminar (y de vez en cuando en reposo) y mira hacia su presencia o
+// hacia el cursor (plan fe-radar-agent, C.2).
 const mark = computed<RadMarkState>(() => {
   const latest = turns.value.at(-1)
   return {
     working: status.value !== 'idle',
     scanKey: latest?.steps.filter((step) => step.kind === 'data').length ?? 0,
-    blinkKey: turns.value.filter((turn) => turn.status === 'done').length,
+    blinkKey: turns.value.filter((turn) => turn.status === 'done').length + life.blinks.value,
     lookAt: lookAt.value,
   }
 })

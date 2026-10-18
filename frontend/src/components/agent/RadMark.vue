@@ -159,8 +159,9 @@ const isScanning = computed(() => state.working && state.scanKey > 0)
   animation: rad-sweep 1100ms linear both;
 }
 
+/* Se cierra rápido y se abre con un leve rebote: más vivo que un parpadeo simétrico. */
 .rad-blink {
-  animation: rad-blink 320ms ease-in-out;
+  animation: rad-blink 300ms cubic-bezier(0.3, 0, 0.4, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -189,12 +190,17 @@ const isScanning = computed(() => state.working && state.scanKey > 0)
 }
 
 @keyframes rad-blink {
-  0%,
-  100% {
+  0% {
     transform: scaleY(1);
   }
-  50% {
-    transform: scaleY(0.08);
+  35% {
+    transform: scaleY(0.06);
+  }
+  70% {
+    transform: scaleY(1.06);
+  }
+  100% {
+    transform: scaleY(1);
   }
 }
 </style>
