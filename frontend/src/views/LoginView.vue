@@ -54,7 +54,9 @@ async function submit() {
 
 <template>
   <div class="mx-auto flex w-full max-w-[420px] flex-col gap-6 pt-[8vh]">
-    <div class="flex items-center gap-2 font-display text-xl font-bold tracking-[-0.03em]">
+    <div
+      class="flex items-center justify-center gap-2 font-display text-xl font-bold tracking-[-0.03em]"
+    >
       <span class="size-3.5 rounded-[4px] bg-signal" aria-hidden="true" />
       30X Signal
     </div>
