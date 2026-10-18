@@ -6,6 +6,7 @@ import { USING_FIXTURES } from '@/api/opportunities'
 import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { RouteName } from '@/router'
 
+import AuthControl from './AuthControl.vue'
 import DataStatus from './DataStatus.vue'
 import PeriodControl from './PeriodControl.vue'
 import SearchButton from './SearchButton.vue'
@@ -80,6 +81,7 @@ function isCurrent(routes: readonly string[]): boolean {
       >
         Datos de ejemplo
       </span>
+      <AuthControl />
     </div>
   </header>
 </template>
