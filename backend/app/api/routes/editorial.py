@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.limits import GLOBAL_PER_DAY, PER_IP_PER_HOUR, LimitResult, RateLimiter
+from app.api.auth import require_user_if_enabled
 from app.api.routes.agent import client_ip
 from app.core.config import get_settings
 from app.db.session import get_session
@@ -69,7 +70,8 @@ async def admit_brief(
         code: {"description": ERROR_DESCRIPTION}
         for code in [*ERROR_STATUS.values(), status.HTTP_429_TOO_MANY_REQUESTS]
     },
-    dependencies=[Depends(admit_brief)],
+    # En este orden: un 401 no gasta el cupo de la IP.
+    dependencies=[Depends(require_user_if_enabled), Depends(admit_brief)],
 )
 async def create_brief(
     # Mismo nombre que en `admit_brief`: con otro, FastAPI esperaría dos cuerpos anidados.
