@@ -117,3 +117,10 @@ en empresas» explica la «automejora recursiva de la IA», el título de su pie
 - La línea base v1 sigue siendo el texto servido en la ejecución 38, que se generó con el rótulo
   antiguo. El guard compara la cobertura de la posición 2, no el contenido, así que se mantiene.
 - Nada más cambia: candidato, criterios, guard, tolerancia, muestra y semilla.
+
+## Enmienda 2 (antes de mirar ninguna salida)
+
+En los briefs y en esta evaluación, el nombre del tema cuenta como título de pieza también si
+coincide con algún `content_items.title` de la DB, no solo con la evidencia servida (recortada a
+25): así falla en cerrado (regla 6). Comprobado en solo lectura: en la ejecución 38 no cambia
+ninguno de los 53 rótulos, así que las salidas v2 generadas tras la enmienda 1 siguen valiendo.

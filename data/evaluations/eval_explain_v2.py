@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from anthropic import AsyncAnthropic
-from eval_claim_verification import (
+from eval_claim_verification import (  # pyright: ignore[reportMissingImports]
     COLUMNS,
     FACTS,
     FILTER_MIN,
@@ -57,7 +57,7 @@ from sqlalchemy import select, text
 
 from app.core.config import get_settings
 from app.db.session import SessionLocal
-from app.editorial.audience import MAX_PIECES, evidence_piece, named_label
+from app.editorial.audience import MAX_PIECES, evidence_piece
 from app.editorial.evaluator import LLM_CONCURRENCY, EvaluationError, StructuredLlm
 from app.editorial.explanation import (
     PROMPTS_DIR,
@@ -80,6 +80,7 @@ from app.intelligence.jev import (
 )
 from app.models import OpportunityRecord, PipelineRun
 from app.services.classification import load_judgments
+from app.services.editorial import topic_label
 from app.services.opportunities import ANALYZE_JOB, _served, load_evidence_pieces
 
 PROMPT_FILE = PROMPTS_DIR / "explain_opportunity.v2.md"
@@ -128,7 +129,7 @@ async def load_inputs(run_id: int) -> dict[str, dict[str, Any]]:
             if not safe:
                 continue
             explain = ExplainInput(
-                label=named_label(o.topic, [e.title for e in served.evidence], safe),
+                label=await topic_label(session, served, safe),
                 facts=opportunity_facts(o, served.timeline),
                 fit=fit_notes(o),
                 pieces=[evidence_piece(p) for p in safe],
