@@ -3,9 +3,12 @@ import { useElementSize, usePreferredReducedMotion, useTimeoutFn } from '@vueuse
 import type { ECElementEvent } from 'echarts/core'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
+import HoverHint from '@/components/layout/HoverHint.vue'
+import InfoTip from '@/components/layout/InfoTip.vue'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import { bubbleAnchor } from '@/lib/agentTargets'
 import { VChart } from '@/lib/echarts'
+import { HELP } from '@/lib/helpText'
 import {
   bubblePosition,
   buildRadarOption,
@@ -35,7 +38,7 @@ const emit = defineEmits<{
 // DESIGN.md §6: en un área estrecha las etiquetas se pisan y queda la tarjeta flotante.
 const LABELS_MIN_WIDTH_PX = 640
 const DATA_LINE = 'absolute bg-data-line'
-const QUADRANT_NOTE = 'absolute z-[1] text-[13px] text-muted-foreground'
+const QUADRANT_NOTE = 'absolute z-[1] cursor-help text-[13px] text-muted-foreground'
 // Capas del área: nombres de cuadrante y mira (z-1) quedan bajo las burbujas; anillos, ping y
 // tarjeta flotante (z-3 y z-4, RadarSelectionLayer) van encima.
 const CHART_LAYER = 'relative z-[2]'
@@ -102,10 +105,15 @@ const leaveBubble = () => emit('hover', null)
   <section
     data-agent="radar"
     aria-label="Radar de oportunidades"
-    class="flex min-w-0 flex-col gap-3.5 overflow-x-clip rounded-card bg-card px-6 pt-5 pb-[22px]"
+    class="flex min-w-0 flex-col gap-3 overflow-x-clip rounded-card bg-card px-5 pt-5 pb-4"
   >
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h2 class="font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]">Radar</h2>
+      <h2
+        class="flex items-center gap-1.5 font-display text-[22px] leading-tight font-semibold tracking-[-0.02em]"
+      >
+        Radar
+        <InfoTip label="el radar" :text="HELP.radar" />
+      </h2>
       <!-- La leyenda es HTML para que sea accesible (DESIGN.md §8); no filtra. -->
       <ul aria-label="Etapas" class="flex flex-wrap gap-1.5">
         <li v-for="lifecycle in LIFECYCLES" :key="lifecycle">
@@ -114,23 +122,27 @@ const leaveBubble = () => emit('hover', null)
       </ul>
     </div>
     <div class="relative pt-1 pb-[30px] pl-[30px]">
-      <span
-        class="absolute top-1/2 left-0 -translate-y-1/2 rotate-180 text-[13px] whitespace-nowrap text-muted-foreground [writing-mode:vertical-rl]"
-      >
-        Crecimiento ↑
-      </span>
+      <HoverHint :text="HELP.axisGrowth">
+        <span
+          class="absolute top-1/2 left-0 -translate-y-1/2 rotate-180 cursor-help text-[13px] whitespace-nowrap text-muted-foreground [writing-mode:vertical-rl]"
+        >
+          Crecimiento ↑
+        </span>
+      </HoverHint>
       <div
         class="absolute right-0 bottom-0 left-[30px] flex justify-between text-[13px] text-muted-foreground"
       >
         <span>0</span>
-        <span>Encaje con 30X →</span>
+        <HoverHint :text="HELP.axisFit">
+          <span class="cursor-help">Encaje con 30X →</span>
+        </HoverHint>
         <span>100</span>
       </div>
       <!-- `max-w-full`: con `aspect-ratio`, el alto mínimo ensancharía el área a 533 px; así, en
            un área estrecha el radar solo crece en alto. -->
       <div
         ref="plot"
-        class="relative isolate min-h-[300px] max-w-full rounded-tile bg-plot"
+        class="relative isolate min-h-[240px] max-w-full rounded-tile bg-plot"
         :style="{ aspectRatio: PLOT_ASPECT }"
       >
         <div
@@ -139,10 +151,20 @@ const leaveBubble = () => emit('hover', null)
         />
         <div :class="[DATA_LINE, 'inset-y-0 left-1/2 w-px']" aria-hidden="true" />
         <div :class="[DATA_LINE, 'inset-x-0 top-1/2 h-px']" aria-hidden="true" />
-        <span class="absolute top-3 right-4 z-[1] text-sm font-semibold">Prioridad</span>
-        <span :class="[QUADRANT_NOTE, 'top-3 left-4']">Crece, pero no es para 30X</span>
-        <span :class="[QUADRANT_NOTE, 'right-4 bottom-3']">Es para 30X, pero no crece</span>
-        <span :class="[QUADRANT_NOTE, 'bottom-3 left-4']">Poca señal</span>
+        <HoverHint :text="HELP.quadrantPriority">
+          <span class="absolute top-3 right-4 z-[1] cursor-help text-sm font-semibold"
+            >Prioridad</span
+          >
+        </HoverHint>
+        <HoverHint :text="HELP.quadrantGrowthOnly">
+          <span :class="[QUADRANT_NOTE, 'top-3 left-4']">Crece, pero no es para 30X</span>
+        </HoverHint>
+        <HoverHint :text="HELP.quadrantFitOnly">
+          <span :class="[QUADRANT_NOTE, 'right-4 bottom-3']">Es para 30X, pero no crece</span>
+        </HoverHint>
+        <HoverHint :text="HELP.quadrantWeak">
+          <span :class="[QUADRANT_NOTE, 'bottom-3 left-4']">Poca señal</span>
+        </HoverHint>
         <div v-if="isMeasured" :key="sweepKey" class="absolute inset-0">
           <RadarSweep />
           <VChart
@@ -173,9 +195,8 @@ const leaveBubble = () => emit('hover', null)
       </div>
     </div>
     <!-- DESIGN.md §7: el latido codifica la aceleración, y la nota lo dice. -->
-    <p class="text-[13.5px] text-muted-foreground">
-      Las burbujas que laten están creciendo: cuanto más rápido laten, más aceleran. El tamaño es la
-      fuerza de la evidencia.
+    <p class="text-[13px] text-muted-foreground">
+      Laten las que crecen: más rápido, más aceleran. El tamaño es la fuerza de la evidencia.
     </p>
     <p v-if="unevaluatedNote" class="text-[13.5px] text-muted-foreground">{{ unevaluatedNote }}</p>
   </section>

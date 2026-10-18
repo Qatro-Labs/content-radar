@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import HoverHint from '@/components/layout/HoverHint.vue'
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { useClipboard } from '@vueuse/core'
 
 import ScoreRing from '@/components/opportunities/ScoreRing.vue'
@@ -37,7 +40,10 @@ function copyLink() {
     <div class="flex items-center gap-5">
       <ScoreRing :score="opportunity.opportunity_score ?? null" :size-px="RING_SIZE_PX" />
       <div class="flex flex-col gap-1">
-        <h2 class="font-display text-xl font-semibold tracking-[-0.02em]">Oportunidad</h2>
+        <h2 class="flex items-center gap-1.5 font-display text-xl font-semibold tracking-[-0.02em]">
+          Oportunidad
+          <InfoTip label="la oportunidad" :text="HELP.opportunityRing" />
+        </h2>
         <span v-if="rankText" class="text-sm text-muted-foreground">{{ rankText }}</span>
         <a
           href="#como-se-calcula"
@@ -48,20 +54,24 @@ function copyLink() {
       </div>
     </div>
     <div class="flex flex-col gap-2">
-      <RouterLink
-        :to="{ name: RouteName.Create, query: { opportunity: opportunity.id } }"
-        :class="[PRIMARY_BUTTON_CLASS, ACTION_CLASS]"
-      >
-        Generar brief
-      </RouterLink>
-      <button
-        type="button"
-        aria-live="polite"
-        :class="[SECONDARY_BUTTON_CLASS, ACTION_CLASS]"
-        @click="copyLink"
-      >
-        {{ copied ? 'Enlace copiado' : 'Copiar enlace' }}
-      </button>
+      <HoverHint :text="HELP.generateBrief">
+        <RouterLink
+          :to="{ name: RouteName.Create, query: { opportunity: opportunity.id } }"
+          :class="[PRIMARY_BUTTON_CLASS, ACTION_CLASS]"
+        >
+          Generar brief
+        </RouterLink>
+      </HoverHint>
+      <HoverHint :text="HELP.copyLink">
+        <button
+          type="button"
+          aria-live="polite"
+          :class="[SECONDARY_BUTTON_CLASS, ACTION_CLASS]"
+          @click="copyLink"
+        >
+          {{ copied ? 'Enlace copiado' : 'Copiar enlace' }}
+        </button>
+      </HoverHint>
     </div>
   </section>
 </template>

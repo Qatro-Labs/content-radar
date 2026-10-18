@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { usePreferredReducedMotion } from '@vueuse/core'
+import { type ComponentPublicInstance, computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import { useOpportunities } from '@/api/opportunities'
 import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
@@ -38,6 +39,24 @@ function changeSelection(id: string | null) {
   update({ selected: id })
 }
 
+// El tema elegido se abre debajo del radar: si el panel queda fuera de la pantalla, la página baja
+// lo justo para enseñarlo.
+const panel = useTemplateRef<ComponentPublicInstance>('panel')
+const reducedMotion = usePreferredReducedMotion()
+watch(
+  () => view.value.selected?.id,
+  async (id) => {
+    if (!id) return
+    await nextTick()
+    const element = panel.value?.$el
+    if (!(element instanceof HTMLElement)) return
+    element.scrollIntoView({
+      block: 'nearest',
+      behavior: reducedMotion.value === 'reduce' ? 'auto' : 'smooth',
+    })
+  },
+)
+
 // D7: elegir el tema ya seleccionado lo deselecciona.
 function select(id: string) {
   changeSelection(view.value.selected?.id === id ? null : id)
@@ -58,33 +77,34 @@ function hover(id: string | null) {
   <div v-else-if="data" class="flex flex-col gap-4">
     <RadarHero :view :query class="pt-5 pb-1" />
 
-    <div class="flex flex-wrap items-start gap-4">
-      <div class="flex min-w-0 flex-[999_1_720px] flex-col gap-4">
-        <OpportunityRadar
-          :view
-          :hovered-id="hovered"
-          :sweep-key="`${query.period}:${sweepCount}`"
-          @select="select"
-          @hover="hover"
-        />
-        <OpportunityRanking
-          :rows="view.visible"
-          :is-filtered="view.isFiltered"
-          :selected-id="view.selected?.id ?? null"
-          :hovered-id="hovered"
-          @select="select"
-          @hover="hover"
-        />
-        <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
-      </div>
-
-      <RadarSidePanel
+    <!-- Radar y ranking lado a lado para no hacer scroll: el ranking toma el alto del radar y
+         desplaza sus filas dentro de su tarjeta. Por debajo de 1280 px se apilan. -->
+    <div class="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+      <OpportunityRadar
         :view
-        :monitoring-started-at="data.monitoring_started_at"
+        :hovered-id="hovered"
+        :sweep-key="`${query.period}:${sweepCount}`"
         @select="select"
         @hover="hover"
-        @clear="clearSelection"
+      />
+      <OpportunityRanking
+        :rows="view.visible"
+        :is-filtered="view.isFiltered"
+        :selected-id="view.selected?.id ?? null"
+        :hovered-id="hovered"
+        @select="select"
+        @hover="hover"
       />
     </div>
+
+    <RadarSidePanel
+      ref="panel"
+      :view
+      :monitoring-started-at="data.monitoring_started_at"
+      @select="select"
+      @hover="hover"
+      @clear="clearSelection"
+    />
+    <RadarFootnote :monitoring-started-at="data.monitoring_started_at" />
   </div>
 </template>

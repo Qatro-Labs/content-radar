@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import InfoTip from '@/components/layout/InfoTip.vue'
 import ViewHeader from '@/components/layout/ViewHeader.vue'
+import { HELP } from '@/lib/helpText'
 import { formatCount, PLATFORM_LABEL } from '@/lib/evidenceFormat'
 import { exploreSummary, type ExploreFilter, type ExploreViewModel } from '@/lib/exploreView'
 
@@ -40,31 +42,34 @@ function clearFilter() {
   <section class="flex flex-col gap-5">
     <ViewHeader title="Lo que está funcionando">{{ exploreSummary(view) }}</ViewHeader>
 
-    <div
-      role="group"
-      aria-label="Filtrar piezas"
-      class="flex flex-wrap gap-0.5 self-start rounded-xl bg-input p-1"
-    >
-      <button
-        type="button"
-        :aria-pressed="filter === null"
-        :class="SEGMENT_CLASS"
-        @click="clearFilter"
+    <div class="flex flex-wrap items-center gap-2">
+      <div
+        role="group"
+        aria-label="Filtrar piezas"
+        class="flex flex-wrap gap-0.5 self-start rounded-xl bg-input p-1"
       >
-        Todas
-        <span class="text-muted-foreground">{{ formatCount(view.counts.total) }}</span>
-      </button>
-      <button
-        v-for="counter in counters"
-        :key="counter.filter"
-        type="button"
-        :aria-pressed="filter === counter.filter"
-        :class="SEGMENT_CLASS"
-        @click="emit('toggle', counter.filter)"
-      >
-        {{ counter.label }}
-        <span class="text-muted-foreground">{{ formatCount(counter.value) }}</span>
-      </button>
+        <button
+          type="button"
+          :aria-pressed="filter === null"
+          :class="SEGMENT_CLASS"
+          @click="clearFilter"
+        >
+          Todas
+          <span class="text-muted-foreground">{{ formatCount(view.counts.total) }}</span>
+        </button>
+        <button
+          v-for="counter in counters"
+          :key="counter.filter"
+          type="button"
+          :aria-pressed="filter === counter.filter"
+          :class="SEGMENT_CLASS"
+          @click="emit('toggle', counter.filter)"
+        >
+          {{ counter.label }}
+          <span class="text-muted-foreground">{{ formatCount(counter.value) }}</span>
+        </button>
+      </div>
+      <InfoTip label="el filtro de piezas" :text="HELP.exploreFilter" />
     </div>
   </section>
 </template>

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import HoverHint from '@/components/layout/HoverHint.vue'
 import ViewHeader from '@/components/layout/ViewHeader.vue'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
 import { AGENT_ANCHOR, COUNTER_ANCHOR } from '@/lib/agentTargets'
+import { HELP } from '@/lib/helpText'
 import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
 import { RECOMMENDATION_LABEL } from '@/lib/opportunityFormat'
 import { resetViewPatch, serializeRadarQuery, type RadarQuery } from '@/lib/radarQuery'
@@ -30,6 +32,7 @@ interface Counter {
   swatch: CounterSwatch
   // Objetivo del agente del Radar: el mismo control que pulsa una persona.
   agentTarget: string
+  help: string
 }
 
 const counters = computed<Counter[]>(() => [
@@ -39,6 +42,7 @@ const counters = computed<Counter[]>(() => [
     count: view.counts.publishNow,
     swatch: 'signal',
     agentTarget: COUNTER_ANCHOR.publish_now,
+    help: HELP.counterPublishNow,
   },
   {
     filter: 'accelerating',
@@ -46,6 +50,7 @@ const counters = computed<Counter[]>(() => [
     count: view.counts.accelerating,
     swatch: 'accelerating',
     agentTarget: COUNTER_ANCHOR.accelerating,
+    help: HELP.counterAccelerating,
   },
   {
     filter: 'emerging',
@@ -54,6 +59,7 @@ const counters = computed<Counter[]>(() => [
     count: view.counts.emerging,
     swatch: 'emerging',
     agentTarget: COUNTER_ANCHOR.emerging,
+    help: HELP.counterEmerging,
   },
 ])
 // «Sin tendencia clara» no tiene contador: era la cifra más grande de la cabecera y solo dice lo
@@ -79,16 +85,16 @@ const isSetByRad = computed(
 
     <div class="flex flex-wrap items-center gap-2">
       <div role="group" aria-label="Filtrar por" class="flex flex-wrap gap-2">
-        <CounterFilter
-          v-for="counter in counters"
-          :key="counter.filter"
-          :data-agent="counter.agentTarget"
-          :count="counter.count"
-          :label="counter.label"
-          :swatch="counter.swatch"
-          :pressed="view.activeCounter === counter.filter"
-          @click="update(counterPatch(counter.filter, query))"
-        />
+        <HoverHint v-for="counter in counters" :key="counter.filter" :text="counter.help">
+          <CounterFilter
+            :data-agent="counter.agentTarget"
+            :count="counter.count"
+            :label="counter.label"
+            :swatch="counter.swatch"
+            :pressed="view.activeCounter === counter.filter"
+            @click="update(counterPatch(counter.filter, query))"
+          />
+        </HoverHint>
       </div>
 
       <span v-if="isSetByRad" class="text-[13.5px] text-muted-foreground">
@@ -98,15 +104,16 @@ const isSetByRad = computed(
         enter-from-class="translate-y-1 opacity-0"
         enter-active-class="transition duration-300 ease-out motion-reduce:transition-none"
       >
-        <button
-          v-if="isViewChanged"
-          type="button"
-          :data-agent="AGENT_ANCHOR.reset"
-          class="min-h-11 rounded-xl bg-card px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
-          @click="update(resetViewPatch())"
-        >
-          Restablecer vista
-        </button>
+        <HoverHint v-if="isViewChanged" :text="HELP.resetView">
+          <button
+            type="button"
+            :data-agent="AGENT_ANCHOR.reset"
+            class="min-h-11 rounded-xl bg-card px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
+            @click="update(resetViewPatch())"
+          >
+            Restablecer vista
+          </button>
+        </HoverHint>
       </Transition>
     </div>
   </section>

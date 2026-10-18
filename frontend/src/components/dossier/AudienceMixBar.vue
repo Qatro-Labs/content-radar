@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { computed } from 'vue'
 
 import { SEGMENT_LABEL } from '@/lib/evidenceFormat'
@@ -30,7 +32,10 @@ const reading = computed(() => audienceReading(opportunity))
 
 <template>
   <div class="flex min-w-0 flex-col gap-2">
-    <h3 class="text-sm font-semibold">Para quién importa</h3>
+    <h3 class="flex items-center gap-1 text-sm font-semibold">
+      Para quién importa
+      <InfoTip label="Para quién importa" :text="HELP.audienceMix" />
+    </h3>
     <!-- `flex-grow` con base 0 reparte el ancho sin los huecos; si las proporciones no suman 1,
          el resto queda vacío en lugar de estirarse. -->
     <div

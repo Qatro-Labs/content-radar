@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { computed } from 'vue'
 
 import { citationChips } from '@/lib/dossierView'
@@ -34,7 +36,10 @@ const criteria = computed(() =>
   >
     <div class="flex flex-wrap gap-x-10 gap-y-6">
       <div class="flex flex-[1_1_260px] flex-col gap-2">
-        <h2 :class="CARD_TITLE_CLASS">Encaje con 30X</h2>
+        <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+          Encaje con 30X
+          <InfoTip label="el encaje con 30X" :text="HELP.fit" />
+        </h2>
         <span class="font-display text-5xl leading-none font-semibold tracking-[-0.04em]">
           {{ formatFit(opportunity.audience_fit_score) }}
         </span>

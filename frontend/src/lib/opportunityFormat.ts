@@ -94,8 +94,9 @@ export function pulsePeriodSeconds(lifecycle: Lifecycle, acceleration: number): 
 }
 
 // DESIGN.md §8: `18 + 0.34·s` px, con `s` = `evidence_strength` (0–100).
-const BUBBLE_MIN_PX = 18
-const BUBBLE_PX_PER_STRENGTH = 0.34
+// Radar compacto, al lado del ranking: burbujas un tercio más pequeñas que en DESIGN.md §8.
+const BUBBLE_MIN_PX = 12
+const BUBBLE_PX_PER_STRENGTH = 0.24
 
 export function bubbleSize(evidenceStrength: number): number {
   return Math.round(BUBBLE_MIN_PX + BUBBLE_PX_PER_STRENGTH * evidenceStrength)

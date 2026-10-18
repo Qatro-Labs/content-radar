@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
@@ -26,7 +28,10 @@ const pieces = computed(() => featuredPieces(evidence.data ?? []))
   <!-- Antes de generar, la vista ya enseña algo real: con qué piezas se escribirá el brief. -->
   <section aria-label="Con qué se escribirá" :class="[CARD_CLASS, 'flex-col gap-4']">
     <div class="flex flex-col gap-1.5">
-      <h2 :class="CARD_TITLE_CLASS">Con qué se escribirá</h2>
+      <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+        Con qué se escribirá
+        <InfoTip label="Con qué se escribirá" :text="HELP.briefSources" />
+      </h2>
       <p class="text-[15px] text-ink-soft">
         Las piezas que mejor rinden frente a lo normal en su canal. Encaje con 30X:
         {{ formatFit(opportunity.audience_fit_score) }}.

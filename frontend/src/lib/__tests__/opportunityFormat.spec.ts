@@ -65,8 +65,8 @@ describe('pulsePeriodSeconds', () => {
 
 describe('bubbleSize', () => {
   it.each([
-    { name: '43 px for strength 74 (18 + 0.34 · 74 = 43.16)', strength: 74, expected: 43 },
-    { name: 'the 18 px floor for strength 0', strength: 0, expected: 18 },
+    { name: '30 px for strength 74 (12 + 0.24 · 74 = 29.76)', strength: 74, expected: 30 },
+    { name: 'the 12 px floor for strength 0', strength: 0, expected: 12 },
   ])('gives $name', ({ strength, expected }) => {
     expect(bubbleSize(strength)).toBe(expected)
   })

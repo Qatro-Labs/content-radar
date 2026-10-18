@@ -2,7 +2,9 @@
 import { computed } from 'vue'
 
 import { useAllTimelines } from '@/api/opportunities'
+import InfoTip from '@/components/layout/InfoTip.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
+import { HELP } from '@/lib/helpText'
 import { countLabel } from '@/lib/evidenceFormat'
 import { formatScore, growthCaveat, windowTotals } from '@/lib/opportunityFormat'
 import { describeStageUnknowns, describeWeekPicks, type RadarView } from '@/lib/radarView'
@@ -42,16 +44,23 @@ const LINK_ROW_CLASS =
 </script>
 
 <template>
-  <div class="flex flex-col gap-[18px]">
+  <div
+    class="grid gap-5 lg:grid-cols-[minmax(200px,0.8fr)_minmax(0,2fr)_minmax(260px,1fr)] lg:items-start"
+  >
+    <!-- A lo ancho, debajo del radar y del ranking: qué publicar a la izquierda, los temas en el
+         centro y lo que funciona y lo que no sabemos a la derecha. En móvil se apila. -->
     <div class="flex flex-col gap-1">
-      <h2 class="font-display text-2xl leading-tight font-semibold tracking-[-0.02em]">
+      <h2
+        class="flex items-center gap-1.5 font-display text-2xl leading-tight font-semibold tracking-[-0.02em]"
+      >
         Esta semana
+        <InfoTip label="Esta semana" :text="HELP.weekSummary" />
       </h2>
       <p class="text-[14.5px] text-label">{{ describeWeekPicks(view.weekPicks) }}</p>
     </div>
 
-    <ul class="flex flex-col gap-2">
-      <li v-for="topic in view.weekPicks.topics" :key="topic.id">
+    <ul class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      <li v-for="topic in view.weekPicks.topics" :key="topic.id" class="flex">
         <button
           type="button"
           class="flex min-h-[68px] w-full items-center gap-3 rounded-tile bg-sunken px-3.5 py-3 text-left transition-colors duration-150 ease-out hover:bg-track"
@@ -86,18 +95,23 @@ const LINK_ROW_CLASS =
       </li>
     </ul>
 
-    <RouterLink :to="{ name: RouteName.Explore }" :class="LINK_ROW_CLASS">
-      <span v-if="view.outlierPieces > 0">
-        <strong class="font-semibold">{{ outlierLine.count }}</strong>
-        {{ outlierLine.verb }} 3× o más que lo normal en su canal
-      </span>
-      <span v-else>Ninguna pieza rinde 3× o más que su canal todavía.</span>
-      <span class="shrink-0 font-semibold">Ver ›</span>
-    </RouterLink>
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center gap-1">
+        <RouterLink :to="{ name: RouteName.Explore }" :class="[LINK_ROW_CLASS, 'grow']">
+          <span v-if="view.outlierPieces > 0">
+            <strong class="font-semibold">{{ outlierLine.count }}</strong>
+            {{ outlierLine.verb }} 3× o más que lo normal en su canal
+          </span>
+          <span v-else>Ninguna pieza rinde 3× o más que lo normal en su canal todavía.</span>
+          <span class="shrink-0 font-semibold">Ver ›</span>
+        </RouterLink>
+        <InfoTip label="un outlier" :text="HELP.outliers" />
+      </div>
 
-    <p class="rounded-tile bg-notice px-3.5 py-3 text-[13.5px] text-ink-soft">
-      <strong class="font-semibold text-notice-foreground">Qué no sabemos.</strong>
-      {{ describeStageUnknowns(view.ranked, monitoringStartedAt) }}
-    </p>
+      <p class="rounded-tile bg-notice px-3.5 py-3 text-[13.5px] text-ink-soft">
+        <strong class="font-semibold text-notice-foreground">Qué no sabemos.</strong>
+        {{ describeStageUnknowns(view.ranked, monitoringStartedAt) }}
+      </p>
+    </div>
   </div>
 </template>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { computed, ref } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
@@ -39,17 +41,26 @@ const TILE_VALUE_CLASS =
     <div class="flex flex-wrap gap-2">
       <div :class="TILE_CLASS">
         <span :class="TILE_VALUE_CLASS">{{ newPieces }}</span>
-        <span class="text-sm text-ink-soft">{{ newPiecesNote }}</span>
+        <span class="flex items-center gap-0.5 text-sm text-ink-soft">
+          {{ newPiecesNote }}
+          <InfoTip label="las piezas nuevas" :text="HELP.tileNewPieces" />
+        </span>
       </div>
       <div :class="TILE_CLASS">
         <span :class="TILE_VALUE_CLASS">{{ formatFit(opportunity.audience_fit_score) }}</span>
-        <span class="text-sm text-ink-soft">encaje con 30X · evaluación editorial</span>
+        <span class="flex items-center gap-0.5 text-sm text-ink-soft">
+          encaje con 30X · evaluación editorial
+          <InfoTip label="el encaje con 30X" :text="HELP.tileFit" />
+        </span>
       </div>
       <div :class="TILE_CLASS">
         <span :class="TILE_VALUE_CLASS">
           {{ countLabel(opportunity.source_count, 'fuente', 'fuentes') }}
         </span>
-        <span class="text-sm text-ink-soft">un medio o canal cuenta una vez</span>
+        <span class="flex items-center gap-0.5 text-sm text-ink-soft">
+          un medio o canal cuenta una vez
+          <InfoTip label="las fuentes" :text="HELP.tileSources" />
+        </span>
       </div>
     </div>
 
@@ -58,7 +69,10 @@ const TILE_VALUE_CLASS =
         aria-label="Por qué importa"
         :class="[CARD_CLASS, 'flex-[999_1_560px] flex-col gap-2.5']"
       >
-        <h2 :class="CARD_TITLE_CLASS">Por qué importa</h2>
+        <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+          Por qué importa
+          <InfoTip label="Por qué importa" :text="HELP.whyItMatters" />
+        </h2>
         <p
           class="max-w-[720px] text-[17px] leading-[1.55] text-ink-read"
           :class="{ 'line-clamp-3': !isWhyOpen }"
@@ -82,7 +96,10 @@ const TILE_VALUE_CLASS =
         aria-label="Qué no sabemos"
         class="flex min-w-0 flex-[1_1_320px] flex-col gap-2 rounded-card bg-notice px-6 py-5"
       >
-        <h2 class="text-[15px] font-semibold text-notice-foreground">Qué no sabemos</h2>
+        <h2 class="flex items-center gap-1 text-[15px] font-semibold text-notice-foreground">
+          Qué no sabemos
+          <InfoTip label="Qué no sabemos" :text="HELP.limits" />
+        </h2>
         <template v-if="limitations.length > 0">
           <!-- Por índice: el LLM puede repetir una limitación y la clave dejaría de ser única. -->
           <p

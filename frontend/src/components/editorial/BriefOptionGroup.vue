@@ -1,8 +1,11 @@
 <script setup lang="ts" generic="T extends string">
+import InfoTip from '@/components/layout/InfoTip.vue'
 import { computed, useId } from 'vue'
 
-const { label, options, labels } = defineProps<{
+const { label, options, labels, help } = defineProps<{
   label: string
+  // Qué cambia esta opción en el brief: va en el tooltip del rótulo.
+  help: string
   options: readonly T[]
   labels: Record<T, string>
 }>()
@@ -21,7 +24,10 @@ const columnsClass = computed(() => (options.length === PAIRS ? 'grid-cols-2' : 
   <!-- Opciones cerradas, nunca texto libre: ningún texto de la persona llega al LLM (CLAUDE.md
        §2.6). Segmented control como el del periodo, con la pista dentro de la tarjeta. -->
   <div class="flex flex-col gap-2">
-    <span :id="labelId" class="text-sm font-semibold text-label">{{ label }}</span>
+    <span class="flex items-center gap-1">
+      <span :id="labelId" class="text-sm font-semibold text-label">{{ label }}</span>
+      <InfoTip :label="label" :text="help" />
+    </span>
     <div
       role="group"
       :aria-labelledby="labelId"

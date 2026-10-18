@@ -2,6 +2,9 @@
 import { ChevronDown } from '@lucide/vue'
 import { computed, ref, useId } from 'vue'
 
+import HoverHint from '@/components/layout/HoverHint.vue'
+import { HELP } from '@/lib/helpText'
+
 import RadMark, { type RadMarkState } from './RadMark.vue'
 
 const { busy, suggestions, mark } = defineProps<{
@@ -68,7 +71,9 @@ function submit() {
 
     <form data-agent="composer" class="flex items-center gap-2" @submit.prevent="submit">
       <!-- `data-rad-mark`: de aquí sale y aquí vuelve el ojo al reducir y abrir la barra. -->
-      <RadMark data-rad-mark :state="mark" />
+      <HoverHint :text="HELP.rad">
+        <RadMark data-rad-mark :state="mark" />
+      </HoverHint>
 
       <label :for="inputId" class="sr-only">Pregunta para Rad</label>
       <input

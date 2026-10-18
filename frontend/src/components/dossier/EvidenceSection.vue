@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { usePreferredReducedMotion } from '@vueuse/core'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
@@ -79,7 +81,10 @@ watch(
     <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
       <div class="flex flex-col gap-2.5">
         <div class="flex flex-col gap-0.5">
-          <h2 :class="CARD_TITLE_CLASS">Evidencia</h2>
+          <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+            Evidencia
+            <InfoTip label="la evidencia" :text="HELP.evidence" />
+          </h2>
           <span v-if="evidence.data" class="text-sm text-muted-foreground">
             {{ countLabel(shown.length, 'pieza', 'piezas') }} · outliers primero
           </span>
@@ -127,7 +132,10 @@ watch(
 
     <template v-else>
       <p class="hidden justify-end pr-[18px] text-[13px] text-muted-foreground md:flex">
-        <span class="w-[300px]">Frente a lo normal en su canal</span>
+        <span class="flex w-[300px] items-center gap-0.5">
+          Frente a lo normal en su canal
+          <InfoTip label="frente a lo normal" :text="HELP.performance" />
+        </span>
       </p>
       <div ref="list" class="flex flex-col gap-2">
         <EvidenceRow

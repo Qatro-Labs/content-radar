@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import HoverHint from '@/components/layout/HoverHint.vue'
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP, SCORE_COMPONENT_HELP } from '@/lib/helpText'
 import { ChevronRight } from '@lucide/vue'
 import { computed } from 'vue'
 
@@ -42,12 +45,15 @@ const subline = computed(() => compositionSubline(rankText, breakdown.value))
         Cómo se calcula el {{ formatScore(opportunity.opportunity_score) }}
       </h2>
       <span class="text-sm text-muted-foreground">{{ subline }}</span>
+      <InfoTip label="el desglose" :text="HELP.scoreBreakdown" />
     </summary>
 
     <template v-if="breakdown">
       <div class="flex flex-col gap-3">
         <div v-for="(row, index) in rows" :key="row.name" class="flex items-center gap-3">
-          <span class="w-[156px] shrink-0 text-sm text-label">{{ row.label }}</span>
+          <HoverHint :text="SCORE_COMPONENT_HELP[row.name]">
+            <span class="w-[156px] shrink-0 cursor-help text-sm text-label">{{ row.label }}</span>
+          </HoverHint>
           <span class="h-1.5 grow overflow-hidden rounded-full bg-track" aria-hidden="true">
             <span
               class="composition-bar block h-full origin-left rounded-full bg-foreground"

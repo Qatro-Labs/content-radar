@@ -90,7 +90,7 @@ describe('buildRadarOption', () => {
 
   it('rings only the growing bubbles that are not dimmed, with a silent transparent symbol', () => {
     // Crecen opp_001 (+86 %), opp_002 (+67 %) y opp_003 (+6 %); opp_004 cae (−30 %) y opp_002 se
-    // atenúa. El anillo mide lo mismo que la burbuja: opp_001, seleccionada, 18 + 0,34 · 74 + 6 = 49.
+    // atenúa. El anillo mide lo mismo que la burbuja: opp_001, seleccionada, 12 + 0,24 · 74 + 6 = 36.
     const option = buildRadarOption(input({ dimmedIds: new Set(['opp_002']) }))
     const rings = seriesOfType(option, 'effectScatter')
 
@@ -102,7 +102,7 @@ describe('buildRadarOption', () => {
     expect(rings?.data).toContainEqual(
       expect.objectContaining({
         name: 'opp_001',
-        symbolSize: 49,
+        symbolSize: 36,
         itemStyle: expect.objectContaining({ color: 'transparent' }),
       }),
     )

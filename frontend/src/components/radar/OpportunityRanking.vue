@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import { useAllTimelines, type QueryState } from '@/api/opportunities'
 import { useRadarQuery } from '@/composables/useRadarQuery'
+import InfoTip from '@/components/layout/InfoTip.vue'
 import { formatUtcDay } from '@/lib/format'
+import { HELP } from '@/lib/helpText'
 import { resetViewPatch } from '@/lib/radarQuery'
+import { rowAnchor } from '@/lib/agentTargets'
 import type { RankedOpportunity } from '@/lib/radarView'
 import type { components } from '@/types/api'
 
@@ -26,7 +29,13 @@ const emit = defineEmits<{
 
 const { update } = useRadarQuery()
 
-const COLUMNS = ['Puesto', 'Tema', 'Últimos 6 días', 'Piezas nuevas', 'Oportunidad'] as const
+const COLUMNS = [
+  { label: '#', name: 'el puesto', help: HELP.colRank },
+  { label: 'Tema', name: 'la columna Tema', help: HELP.colTopic },
+  { label: '6 días', name: 'las barras de 6 días', help: HELP.colBars },
+  { label: 'Nuevas', name: 'las piezas nuevas', help: HELP.colNewPieces },
+  { label: 'Oportunidad', name: 'la oportunidad', help: HELP.colScore },
+] as const
 // DESIGN.md §4: el ranking enseña 10 filas y el resto se despliega.
 const COLLAPSED_ROWS = 10
 
@@ -37,6 +46,21 @@ watch(
   () => rows.map((row) => row.id).join(),
   () => {
     isExpanded.value = false
+  },
+)
+
+// La tabla desplaza sus filas dentro de la tarjeta: la fila del tema elegido (en el radar, en el
+// panel o por Rad) se trae a la vista.
+const scroller = useTemplateRef<HTMLElement>('scroller')
+watch(
+  () => selectedId,
+  async (id) => {
+    if (!id) return
+    await nextTick()
+    const row = scroller.value?.querySelector<HTMLElement>(`[data-agent="${rowAnchor(id)}"]`)
+    if (!row || !scroller.value) return
+    const top = row.offsetTop - scroller.value.clientHeight / 2
+    scroller.value.scrollTo({ top, behavior: 'smooth' })
   },
 )
 
@@ -59,69 +83,82 @@ function timelineOf(id: string): QueryState<OpportunityTimeline | null> {
   }
 }
 
-const WINDOWS_NOTE =
-  'en gris los 3 días anteriores y en negro los últimos 3, que son las piezas nuevas'
-
-// Las fechas salen del primer timeline con puntos: todos comparten ventana. Sin ninguno, sin fechas.
+// Las fechas salen del primer timeline con puntos: todos comparten ventana. Sin ninguno, sin nota.
+// Qué son las barras lo explica el tooltip de la columna.
 const barsNote = computed(() => {
   const points = [...(timelines.value?.values() ?? [])]
     .map((timeline) => timeline.points)
     .find((loaded) => loaded.length > 0)
   const first = points?.at(0)
   const last = points?.at(-1)
-  const span = first && last ? ` del ${formatUtcDay(first.date)} al ${formatUtcDay(last.date)}` : ''
-  return `Barras: piezas nuevas cada 24 h${span}; ${WINDOWS_NOTE}.`
+  if (!first || !last) return ''
+  return `Barras de 6 días: del ${formatUtcDay(first.date)} al ${formatUtcDay(last.date)}.`
 })
 </script>
 
 <template>
+  <!-- En escritorio la tarjeta toma el alto del radar (su contenido va en absoluto y no empuja la
+       fila) y las filas se desplazan dentro. -->
   <section
     data-agent="ranking"
     aria-label="Ranking"
-    class="flex min-w-0 flex-col gap-1 rounded-card bg-card px-5 pt-5 pb-3"
+    class="relative flex min-h-[420px] min-w-0 flex-col rounded-card bg-card xl:min-h-0"
   >
-    <h2 class="px-1 pb-2 font-display text-[22px] font-semibold tracking-[-0.02em]">Ranking</h2>
-
-    <div v-if="isEmptyAfterFilter" class="flex flex-wrap items-center gap-x-4 gap-y-3 px-1 py-6">
-      <p class="text-[15px] text-ink-soft">Ningún tema cumple estos filtros.</p>
-      <button
-        type="button"
-        class="min-h-11 rounded-xl bg-secondary px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
-        @click="update(resetViewPatch())"
+    <div class="flex min-h-0 flex-1 flex-col gap-1 px-4 pt-5 pb-3 xl:absolute xl:inset-0">
+      <h2
+        class="flex items-center gap-1.5 px-1 pb-2 font-display text-[22px] font-semibold tracking-[-0.02em]"
       >
-        Restablecer vista
-      </button>
-    </div>
+        Ranking
+        <InfoTip label="el ranking" :text="HELP.ranking" />
+      </h2>
 
-    <template v-else>
-      <div class="overflow-x-auto">
-        <div class="min-w-[660px]">
-          <div class="py-2 text-[13px] text-muted-foreground" :class="RANKING_GRID_CLASS">
-            <span v-for="column in COLUMNS" :key="column">{{ column }}</span>
-          </div>
-          <RankingRow
-            v-for="(row, index) in shownRows"
-            :key="row.id"
-            :row
-            :index
-            :selected="row.id === selectedId"
-            :hovered="row.id === hoveredId"
-            :timeline="timelineOf(row.id)"
-            @select="(id) => emit('select', id)"
-            @hover="(id) => emit('hover', id)"
-          />
-        </div>
+      <div v-if="isEmptyAfterFilter" class="flex flex-wrap items-center gap-x-4 gap-y-3 px-1 py-6">
+        <p class="text-[15px] text-ink-soft">Ningún tema cumple estos filtros.</p>
+        <button
+          type="button"
+          class="min-h-11 rounded-xl bg-secondary px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
+          @click="update(resetViewPatch())"
+        >
+          Restablecer vista
+        </button>
       </div>
-      <button
-        v-if="isCollapsible"
-        type="button"
-        :aria-expanded="isExpanded"
-        class="mt-2 min-h-10 self-center rounded-[10px] bg-secondary px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
-        @click="isExpanded = !isExpanded"
-      >
-        {{ isExpanded ? 'Ver menos' : `Ver los ${rows.length} temas` }}
-      </button>
-      <p class="px-1 pt-2 text-[13px] text-muted-foreground">{{ barsNote }}</p>
-    </template>
+
+      <template v-else>
+        <div ref="scroller" class="relative min-h-0 flex-1 overflow-auto">
+          <div class="min-w-[560px]">
+            <div
+              class="sticky top-0 z-[1] bg-card py-2 text-[13px] text-muted-foreground"
+              :class="RANKING_GRID_CLASS"
+            >
+              <span v-for="column in COLUMNS" :key="column.label" class="flex items-center gap-0.5">
+                {{ column.label }}
+                <InfoTip :label="column.name" :text="column.help" />
+              </span>
+            </div>
+            <RankingRow
+              v-for="(row, index) in shownRows"
+              :key="row.id"
+              :row
+              :index
+              :selected="row.id === selectedId"
+              :hovered="row.id === hoveredId"
+              :timeline="timelineOf(row.id)"
+              @select="(id) => emit('select', id)"
+              @hover="(id) => emit('hover', id)"
+            />
+            <button
+              v-if="isCollapsible"
+              type="button"
+              :aria-expanded="isExpanded"
+              class="mx-auto mt-2 flex min-h-10 items-center rounded-[10px] bg-secondary px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
+              @click="isExpanded = !isExpanded"
+            >
+              {{ isExpanded ? 'Ver menos' : `Ver los ${rows.length} temas` }}
+            </button>
+          </div>
+        </div>
+        <p v-if="barsNote" class="px-1 pt-2 text-[13px] text-muted-foreground">{{ barsNote }}</p>
+      </template>
+    </div>
   </section>
 </template>

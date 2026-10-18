@@ -1,15 +1,15 @@
 <script lang="ts">
-// D6 del plan fe-dashboard-v2 (artboard D2): por debajo de 660 px la tabla hace scroll dentro de
-// su tarjeta. La cabecera de OpportunityRanking comparte la rejilla. La etapa va bajo el tema.
+// Al lado del radar la tabla es estrecha: por debajo de 560 px hace scroll dentro de su tarjeta.
+// La cabecera de OpportunityRanking comparte la rejilla. La etapa va bajo el tema.
 export const RANKING_GRID_CLASS =
-  'grid grid-cols-[52px_minmax(260px,2.4fr)_84px_112px_150px] items-center gap-x-3.5 px-3.5'
+  'grid grid-cols-[32px_minmax(190px,1fr)_70px_86px_118px] items-center gap-x-3 px-3'
 </script>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 
 import type { QueryState } from '@/api/opportunities'
-import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
+import StageDot from '@/components/explore/StageDot.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { rowAnchor } from '@/lib/agentTargets'
 import {
@@ -62,7 +62,7 @@ const toneClass = computed(() => {
     type="button"
     :data-agent="rowAnchor(row.id)"
     :aria-pressed="selected"
-    class="min-h-14 w-full border-t border-table-line text-left text-[15px] transition-colors duration-150 ease-out"
+    class="min-h-12 w-full border-t border-table-line text-left text-[14.5px] transition-colors duration-150 ease-out"
     :class="[RANKING_GRID_CLASS, ROW_ENTER_CLASS, toneClass]"
     :style="{ animationDelay: enterDelay }"
     @click="emit('select', row.id)"
@@ -72,11 +72,17 @@ const toneClass = computed(() => {
     <span :class="selected ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'">
       {{ row.rank }}
     </span>
-    <span class="flex min-w-0 flex-col gap-1.5 py-2.5">
-      <span class="font-medium">{{ row.topic }}</span>
-      <span class="flex flex-wrap items-center gap-1.5">
-        <LifecycleChip :lifecycle="row.lifecycle" :title="row.lifecycle_reason" size="sm" />
-        <!-- Lo que la persona viene a buscar: solo se marca «Publicar ya», el resto está en el detalle. -->
+    <!-- Al lado del radar cada fila cuenta: la etapa es el punto de color (con su nombre en el
+         tooltip) y solo se marca «Publicar ya», lo que la persona viene a buscar. -->
+    <span class="flex min-w-0 flex-col gap-1 py-2">
+      <span class="flex items-baseline gap-2">
+        <StageDot :lifecycle="row.lifecycle" class="translate-y-[-1px]" />
+        <span class="font-medium">{{ row.topic }}</span>
+      </span>
+      <span
+        v-if="row.recommendation === 'publish_now' || row.audience_fit_score == null"
+        class="flex flex-wrap items-center gap-1.5 pl-[17px]"
+      >
         <RecommendationChip
           v-if="row.recommendation === 'publish_now'"
           :recommendation="row.recommendation"

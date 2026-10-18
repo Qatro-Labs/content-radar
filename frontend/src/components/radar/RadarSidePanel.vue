@@ -17,11 +17,8 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <!-- DESIGN.md §4: sticky, visible mientras se baja por el ranking. -->
-  <aside
-    aria-label="Panel del tema"
-    class="sticky top-4 flex min-w-0 flex-[1_1_360px] flex-col self-start rounded-card bg-card p-[22px]"
-  >
+  <!-- Debajo del radar y del ranking, a lo ancho: «Esta semana» o la vista previa del tema. -->
+  <aside aria-label="Panel del tema" class="flex min-w-0 flex-col rounded-card bg-card p-[22px]">
     <!-- DESIGN.md §7: cambia de estado con fundido y 6 px de subida (280 ms). La vista previa no
          se remonta al cambiar de tema: así el anillo cuenta hasta el nuevo valor. -->
     <Transition

@@ -5,6 +5,9 @@ import { onKeyStroke } from '@vueuse/core'
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { useSearchPalette } from '@/composables/useSearchPalette'
 
+import { HELP } from '@/lib/helpText'
+
+import HoverHint from './HoverHint.vue'
 import SearchPalette from './SearchPalette.vue'
 
 const LABEL = 'Buscar tema o pieza'
@@ -23,22 +26,25 @@ onKeyStroke(['k', 'K'], (event) => {
 <template>
   <Dialog v-model:open="open">
     <!-- Por debajo de 768px solo queda la lupa: el nombre accesible va siempre en aria-label. -->
-    <DialogTrigger as-child>
-      <button
-        type="button"
-        :aria-label="LABEL"
-        aria-keyshortcuts="Meta+K Control+K"
-        class="flex h-11 min-w-11 shrink-0 items-center justify-center gap-2.5 rounded-xl bg-card px-3 text-sm text-muted-foreground transition-colors duration-150 ease-out hover:bg-secondary-hover md:w-[280px] md:shrink"
-      >
-        <Search class="size-4 shrink-0" :stroke-width="2" aria-hidden="true" />
-        <span class="hidden flex-1 truncate text-left md:inline">{{ LABEL }}</span>
-        <kbd
-          class="hidden rounded-md bg-secondary px-[7px] py-0.5 font-sans text-[12.5px] font-semibold text-label md:inline"
+    <!-- El tooltip envuelve al disparador del diálogo: los dos se funden en el mismo botón. -->
+    <HoverHint :text="HELP.search">
+      <DialogTrigger as-child>
+        <button
+          type="button"
+          :aria-label="LABEL"
+          aria-keyshortcuts="Meta+K Control+K"
+          class="flex h-11 min-w-11 shrink-0 items-center justify-center gap-2.5 rounded-xl bg-card px-3 text-sm text-muted-foreground transition-colors duration-150 ease-out hover:bg-secondary-hover md:w-[280px] md:shrink"
         >
-          ⌘K
-        </kbd>
-      </button>
-    </DialogTrigger>
+          <Search class="size-4 shrink-0" :stroke-width="2" aria-hidden="true" />
+          <span class="hidden flex-1 truncate text-left md:inline">{{ LABEL }}</span>
+          <kbd
+            class="hidden rounded-md bg-secondary px-[7px] py-0.5 font-sans text-[12.5px] font-semibold text-label md:inline"
+          >
+            ⌘K
+          </kbd>
+        </button>
+      </DialogTrigger>
+    </HoverHint>
     <SearchPalette v-model:open="open" />
   </Dialog>
 </template>

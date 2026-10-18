@@ -10,6 +10,9 @@ export type BriefStage = (typeof BriefStage)[keyof typeof BriefStage]
 </script>
 
 <script setup lang="ts">
+import HoverHint from '@/components/layout/HoverHint.vue'
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { useClipboard } from '@vueuse/core'
 
 import { recommendationReasonText } from '@/lib/opportunityFormat'
@@ -69,7 +72,10 @@ function copyLink() {
 
 <template>
   <section aria-label="Opciones del brief" :class="[CARD_CLASS, 'flex-col gap-5']">
-    <h2 :class="CARD_TITLE_CLASS">Brief</h2>
+    <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+      Brief
+      <InfoTip label="el brief" :text="HELP.briefPanel" />
+    </h2>
 
     <!-- La API genera el brief igual y lo devuelve con la recomendación: la UI no lo esconde,
          pero avisa antes de que se pida. -->
@@ -85,6 +91,7 @@ function copyLink() {
 
     <BriefOptionGroup
       label="Plataforma"
+      :help="HELP.briefPlatform"
       :options="BRIEF_PLATFORMS"
       :labels="BRIEF_PLATFORM_LABEL"
       :model-value="options.platform"
@@ -92,6 +99,7 @@ function copyLink() {
     />
     <BriefOptionGroup
       label="Objetivo"
+      :help="HELP.briefGoal"
       :options="BRIEF_GOALS"
       :labels="BRIEF_GOAL_LABEL"
       :model-value="options.goal"
@@ -99,6 +107,7 @@ function copyLink() {
     />
     <BriefOptionGroup
       label="Formato"
+      :help="HELP.briefFormat"
       :options="BRIEF_FORMATS"
       :labels="BRIEF_FORMAT_LABEL"
       :model-value="options.format"
@@ -106,15 +115,16 @@ function copyLink() {
     />
 
     <div class="flex flex-col gap-2 pt-1">
-      <button
-        v-if="stage === BriefStage.Ready"
-        type="button"
-        aria-live="polite"
-        :class="[PRIMARY_BUTTON_CLASS, ACTION_CLASS]"
-        @click="copyBrief"
-      >
-        {{ brief.copied.value ? 'Brief copiado' : 'Copiar brief' }}
-      </button>
+      <HoverHint v-if="stage === BriefStage.Ready" :text="HELP.copyBrief">
+        <button
+          type="button"
+          aria-live="polite"
+          :class="[PRIMARY_BUTTON_CLASS, ACTION_CLASS]"
+          @click="copyBrief"
+        >
+          {{ brief.copied.value ? 'Brief copiado' : 'Copiar brief' }}
+        </button>
+      </HoverHint>
       <button
         v-else
         type="button"
@@ -128,15 +138,16 @@ function copyLink() {
       >
         Generar brief
       </button>
-      <button
-        v-if="stage === BriefStage.Ready"
-        type="button"
-        aria-live="polite"
-        :class="[SECONDARY_BUTTON_CLASS, ACTION_CLASS]"
-        @click="copyLink"
-      >
-        {{ link.copied.value ? 'Enlace copiado' : 'Copiar enlace' }}
-      </button>
+      <HoverHint v-if="stage === BriefStage.Ready" :text="HELP.copyLink">
+        <button
+          type="button"
+          aria-live="polite"
+          :class="[SECONDARY_BUTTON_CLASS, ACTION_CLASS]"
+          @click="copyLink"
+        >
+          {{ link.copied.value ? 'Enlace copiado' : 'Copiar enlace' }}
+        </button>
+      </HoverHint>
     </div>
   </section>
 </template>
