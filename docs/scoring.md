@@ -273,7 +273,7 @@ clasificadas tratan del uso en organizaciones (`backend/app/intelligence/opportu
 
 El LLM recibe, por tema, hasta 10 piezas seguras (sin las marcadas por inyección), con la
 descripción cortada a 500 caracteres, el audience mix y las pistas de Jev
-(`backend/app/editorial/audience.py:32`, `:33`, `:138`). El system prompt lleva la rúbrica
+(`backend/app/editorial/audience.py:32`, `:33`, `:147`). El system prompt lleva la rúbrica
 (`backend/app/editorial/prompts/audience_fit_rubric.v1.yaml`) y el perfil
 [`data/audiences/30x.yaml`](../data/audiences/30x.yaml). Prompt `evaluate_topic.v2`
 (`backend/app/editorial/audience.py:27`).
@@ -303,7 +303,7 @@ actionability_score = nivel de actionable_content / 5 × 100
 - **Citas:** se quitan las URLs que el LLM no recibió, y se anota cuántas
   (`backend/app/intelligence/audience_fit.py:55`).
 - **Bandas** para el texto: bajo < 40 ≤ medio < 60 ≤ alto
-  (`backend/app/editorial/explanation.py:34`, `:35`).
+  (`backend/app/editorial/explanation.py:40`, `:41`).
 - Si el LLM falla o la respuesta no llega entera (`stop_reason` distinto de `end_turn`), el fit queda
   en `null` con una limitación (`backend/app/editorial/evaluator.py:21`, `:67`).
 
