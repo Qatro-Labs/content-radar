@@ -6,7 +6,7 @@ const { data: latest, isPending, isError } = useLatestObservation()
 </script>
 
 <template>
-  <p class="text-[13px] text-muted-foreground" aria-live="polite">
+  <p class="text-[13px] whitespace-nowrap text-muted-foreground" aria-live="polite">
     <span
       v-if="isPending"
       class="block h-4 w-52 animate-pulse rounded-full bg-track motion-reduce:animate-none"
