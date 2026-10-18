@@ -17,6 +17,7 @@ import DossierSummary from '@/components/dossier/DossierSummary.vue'
 import EvidenceSection from '@/components/dossier/EvidenceSection.vue'
 import FitSection from '@/components/dossier/FitSection.vue'
 import ScoreComposition from '@/components/dossier/ScoreComposition.vue'
+import WhyItWorked from '@/components/dossier/WhyItWorked.vue'
 import { rankLabel, rankOf } from '@/lib/dossierView'
 import { formatUtcTimestamp } from '@/lib/format'
 import { DEFAULT_PERIOD } from '@/lib/radarQuery'
@@ -90,6 +91,10 @@ const monitoringStartedAt = computed(() => listQuery.data.value?.monitoring_star
     <DossierSummary :opportunity :timeline />
     <DossierEvolution :opportunity :timeline />
     <FitSection :opportunity :evidence="citablePieces" :cited-url="citedUrl" @cite="cite" />
+    <WhyItWorked
+      v-if="opportunity.outlier_hooks?.hooks.length"
+      :hooks="opportunity.outlier_hooks"
+    />
     <EvidenceSection
       :opportunity
       :evidence

@@ -108,6 +108,8 @@ export const HELP = {
   performance:
     'Frente a lo normal en su canal: 1× es lo normal y 3× o más es un outlier. La barra llega hasta 6×.',
   scoreBreakdown: 'Cada componente con su valor y el peso con que entra en la oportunidad.',
+  whyItWorked:
+    'Compara el tipo de gancho del título de los outliers con el del resto del tema, solo con notas originales. «Patrón observado»: el gancho sale al menos el doble que en el resto y en 2 outliers o más. Con tan pocas piezas es una pista para probar, no una causa.',
 
   // Crear
   briefPanel:
