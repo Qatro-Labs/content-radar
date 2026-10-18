@@ -10,7 +10,12 @@ from app.intelligence.audience_mix import (
     latam_gap,
     latam_share,
 )
-from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
+from app.intelligence.cross_source import (
+    cross_source_score,
+    outlet_key,
+    percentile_scores,
+    saturation_score,
+)
 from app.intelligence.lifecycle import ACCELERATION_MAX_P, classify
 from app.intelligence.outliers import (
     MEDIAN,
@@ -297,10 +302,19 @@ def test_cross_source_score():
     assert cross_source_score({f"rss:{i}" for i in range(10)}, {"rss"}) == 100
 
 
-def test_saturation_percentiles():
-    assert saturation_scores([]) == []
-    assert saturation_scores([7]) == [50.0]
-    assert saturation_scores([1, 5, 10]) == [0.0, 50.0, 100.0]
+def test_percentiles():
+    assert percentile_scores([]) == []
+    assert percentile_scores([7]) == [50.0]
+    assert percentile_scores([1, 5, 10]) == [0.0, 50.0, 100.0]
+
+
+def test_saturation_is_the_share_of_the_corpus():
+    # 100 = el 2 % de las notas; no depende de cuántos temas haya.
+    assert saturation_score(20, 1000) == 100.0
+    assert saturation_score(15, 1000) == 75.0
+    assert saturation_score(5, 1000) == 25.0
+    assert saturation_score(40, 1000) == 100.0
+    assert saturation_score(3, 0) == 0.0
 
 
 def test_declining_topic_reason():

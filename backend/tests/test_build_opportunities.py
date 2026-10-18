@@ -394,7 +394,12 @@ def test_replicas_do_not_raise_saturation():
     copied = [
         piece(10 + i, hours_ago=5 + i * 6, platform=Platform.RSS, source=f"B{i}") for i in range(6)
     ]
-    pieces = plain + copied
+    # Corpus de fondo: la saturación es la cuota del tema en las notas del corpus.
+    background = [
+        piece(100 + i, hours_ago=1 + i % 140, platform=Platform.RSS, source=f"Otro {i}")
+        for i in range(500)
+    ]
+    pieces = plain + copied + background
     edges = [ReplicaEdge(15, 10 + i, ReplicaBasis.SAME_LINK) for i in range(3)]
     plain_r, copied_r = (
         {r.opportunity.id: r for r in build_opportunities(
