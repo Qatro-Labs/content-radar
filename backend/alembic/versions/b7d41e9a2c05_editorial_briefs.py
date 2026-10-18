@@ -21,6 +21,8 @@ def upgrade() -> None:
     op.create_table(
         "editorial_briefs",
         sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("root_id", sa.BigInteger(), nullable=False),
+        sa.Column("version", sa.Integer(), nullable=False),
         sa.Column("user_id", sa.Text(), nullable=False),
         sa.Column("opportunity_id", sa.String(length=64), nullable=False),
         sa.Column("run_id", sa.Integer(), nullable=True),
@@ -32,16 +34,23 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
+        sa.ForeignKeyConstraint(
+            ["root_id"],
+            ["editorial_briefs.id"],
+            name=op.f("fk_editorial_briefs_root_id_editorial_briefs"),
+            ondelete="CASCADE",
+        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_editorial_briefs")),
+        sa.UniqueConstraint("root_id", "version", name="uq_editorial_briefs_root_id_version"),
     )
     op.create_index(
-        "ix_editorial_briefs_user_id_created_at",
+        "ix_editorial_briefs_user_id_root_id",
         "editorial_briefs",
-        ["user_id", sa.text("created_at DESC")],
+        ["user_id", "root_id"],
         unique=False,
     )
 
 
 def downgrade() -> None:
-    op.drop_index("ix_editorial_briefs_user_id_created_at", table_name="editorial_briefs")
+    op.drop_index("ix_editorial_briefs_user_id_root_id", table_name="editorial_briefs")
     op.drop_table("editorial_briefs")

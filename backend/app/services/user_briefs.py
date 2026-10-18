@@ -154,7 +154,7 @@ async def list_briefs(session: AsyncSession, user_id: str) -> list[SavedBriefSum
         .order_by(ranked.c.created_at.desc(), ranked.c.id.desc())
         .limit(MAX_LISTED_BRIEFS)
     )
-    return [_summary(r, count) for r, count in rows.tuples()]
+    return [_summary(r, count) for r, count in rows]
 
 
 async def get_brief(session: AsyncSession, user_id: str, brief_id: int) -> SavedBrief | None:
