@@ -29,9 +29,9 @@ Convierte señales públicas de Internet (YouTube, Hacker News, medios y blogs p
 - Los scores se calculan en Python, de forma determinista. Los modelos de IA clasifican, evalúan y redactan; no calculan.
 - Qué hace cada componente: [docs/architecture.md](docs/architecture.md). El algoritmo: [docs/scoring.md](docs/scoring.md).
 
-Cada paso del producto responde una pregunta y se ve en el dashboard y en el MCP:
+Cada paso del producto responde una pregunta:
 
-![De la señal a la oportunidad: cinco pasos con su pregunta, su vista del dashboard y su tool MCP](docs/diagrams/flujo-senal-oportunidad.svg)
+![De la señal al contenido: cinco pasos con la pregunta que responde cada uno y la vista del dashboard donde se ve](docs/diagrams/flujo-senal-oportunidad.svg)
 
 ## Fuentes
 

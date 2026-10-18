@@ -25,7 +25,6 @@ INK = "#1f2328"
 MUTED = "#57606a"
 LINE = "#d0d7de"
 BG = "#ffffff"
-SOFT = "#f6f8fa"
 
 # Un color por actor: así se lee de un vistazo quién calcula, quién juzga y quién redacta.
 TONES = {
@@ -204,41 +203,10 @@ def card(
     return h
 
 
-def band(svg: Svg, y: float, h: float, label: str, note: str | None = None) -> None:
-    svg.rect(MARGIN - 16, y, WIDTH - 2 * (MARGIN - 16), h, SOFT, LINE, r=16, dash=True)
-    svg.text(MARGIN + 4, y + 30, label.upper(), 14, MUTED, 700)
-    if note:
-        svg.text(WIDTH - MARGIN - 4, y + 30, note, 14, MUTED, 400, anchor="end")
-
-
 def header(svg: Svg, title: str, subtitle: str) -> float:
     svg.text(MARGIN, 58, title, TITLE, INK, 700)
     y = draw_lines(svg, MARGIN, 72, [("muted", subtitle)], WIDTH - 2 * MARGIN, SUB, MUTED)
     return y + 20
-
-
-def legend(svg: Svg, y: float, items: list[tuple[str, str]]) -> float:
-    x = MARGIN
-    for tone, label in items:
-        fill, stroke, _ = TONES[tone]
-        svg.rect(x, y, 22, 22, fill, stroke, r=6)
-        svg.text(x + 32, y + 17, label, SMALL, MUTED)
-        x += 32 + len(label) * char_w(SMALL) + 30
-    return y + 22
-
-
-def row(
-    svg: Svg, y: float, specs: list[tuple[str, list[Line], str]], gap: float = 20
-) -> tuple[float, list[float]]:
-    """Tarjetas de la misma altura a lo ancho; devuelve la altura y el centro x de cada una."""
-    w = (WIDTH - 2 * MARGIN - gap * (len(specs) - 1)) / len(specs)
-    h = max(card_height(t, ls, w) for t, ls, _ in specs)
-    centers = []
-    for i, (t, ls, tone) in enumerate(specs):
-        x = MARGIN + i * (w + gap)
-        card(svg, x, y, w, t, ls, tone, h)
-        centers.append(x + w / 2)
-    return h, centers
 
 
 # ---------------------------------------------------------------------------------------------
@@ -339,53 +307,16 @@ def architecture() -> None:
 # 2. De la señal a la oportunidad
 
 
-FLOW = [
+FLOW: list[tuple[str, str, str]] = [
+    ("Señal", "Una pieza pública con sus métricas.", "¿Qué se publica?"),
+    ("Tendencia", "Piezas parecidas agrupadas en un tema que crece.", "¿Qué está creciendo?"),
     (
-        "1 · Señal",
-        "Pieza pública: URL, título, fecha, métricas tal como las da la fuente, idioma y segment.",
-        "¿Qué se está publicando?",
-        "Explorar, filtrado por plataforma",
-        "search_content_signals",
+        "Oportunidad",
+        "El tema puntuado para la audiencia de 30X, con una recomendación.",
+        "¿Vale la pena?",
     ),
-    (
-        "2 · Tendencia",
-        "Piezas agrupadas por similitud (ES y EN en el mismo espacio). Velocidad y aceleración "
-        "ajustadas por volumen, y etapa del ciclo de vida.",
-        "¿Qué crece y en qué etapa está?",
-        "Radar: el eje vertical es el momentum",
-        "get_trending_opportunities",
-    ),
-    (
-        "3 · Oportunidad",
-        "Contrato Opportunity: momentum, audience fit, fuentes independientes, saturación, "
-        "confianza, LATAM gap y una recomendación con la regla que la produjo.",
-        "¿Vale la pena para 30X?",
-        "Radar: el eje horizontal es el audience fit y el tamaño, la fuerza de la evidencia. "
-        "Ranking por Opportunity Score",
-        "analyze_opportunity · compare_audience_fit",
-    ),
-    (
-        "4 · Evidencia",
-        "Piezas enlazadas con fecha y métricas, outliers (≥ 3× su referencia), gancho de los "
-        "outliers y timeline de la ventana actual frente a la anterior.",
-        "¿Por qué lo creemos? ¿Por qué funcionó?",
-        "Expediente del tema: evidencia, timeline, para quién importa y lo que no sabemos",
-        "analyze_opportunity (con URLs)",
-    ),
-    (
-        "5 · Contenido recomendado",
-        "Brief editorial: ángulo, gancho, estructura y las evidencias que lo respaldan.",
-        "¿Qué publicamos y cómo?",
-        "Crear (Content Studio) y Mis briefs, con versiones",
-        "generate_editorial_brief",
-    ),
-]
-
-FLOW_LINKS = [
-    ("embeddings + clustering", "jev"),
-    ("scores en Python", "python"),
-    ("evidencia enlazada y verificable", "data"),
-    ("el LLM redacta, Jev verifica", "llm"),
+    ("Evidencia", "Las piezas que lo respaldan, enlazadas a su fuente.", "¿Por qué lo creemos?"),
+    ("Contenido", "Un brief con ángulo, gancho y estructura.", "¿Qué publicamos?"),
 ]
 
 
@@ -393,207 +324,73 @@ def flow() -> None:
     svg = Svg()
     y = header(
         svg,
-        "30X Signal · De la señal a la oportunidad",
-        "¿Cuáles son los temas de IA que más crecen esta semana, por qué funcionan y cómo los adapta "
-        "30X para ejecutivos y equipos de Latinoamérica?",
+        "30X Signal · De la señal al contenido",
+        "Cada paso responde una pregunta. El dashboard y los asistentes de IA (por MCP) recorren los mismos pasos.",
     )
-    cols = [("Paso", 380), ("Pregunta", 200), ("Dashboard", 250), ("Tool MCP", 290)]
-    gap = 0
-    x = MARGIN
-    xs = []
-    for name, w in cols:
-        xs.append(x)
-        svg.text(x + 18, y + 22, name.upper(), 14, MUTED, 700)
-        x += w + gap
-    y += 40
-    for i, (step, what, question, dash, tool) in enumerate(FLOW):
-        texts: list[tuple[str, list[Line]]] = [
-            (step, [what]),
-            ("", [("bold", question)]),
-            ("", [dash]),
-            ("", [("mono", tool)]),
-        ]
-        hs = []
-        for (_, w), (title, ls) in zip(cols, texts, strict=True):
-            th = len(wrap(title, w - 36, HEAD)) * HEAD * 1.3 + 8 if title else 0
-            hs.append(14 + th + lines_height(ls, w - 36, BODY) + 20)
-        h = max(hs)
-        total = sum(w for _, w in cols)
-        svg.rect(MARGIN, y, total, h, BG, LINE, r=14)
-        fill, stroke, accent = TONES["python"]
-        svg.add(
-            f'<path d="M{MARGIN + 14} {y:.1f} H{MARGIN + cols[0][1]} V{y + h:.1f} H{MARGIN + 14} '
-            f'a14 14 0 0 1 -14 -14 V{y + 14:.1f} a14 14 0 0 1 14 -14z" fill="{fill}" stroke="{stroke}" stroke-width="1.5"/>'
-        )
-        for k, ((_, w), (title, ls)) in enumerate(zip(cols, texts, strict=True)):
-            cx = xs[k]
-            ty = y + 14
-            if title:
-                for part in wrap(title, w - 36, HEAD):
-                    ty += HEAD * 1.3
-                    svg.text(cx + 18, ty - 4, part, HEAD, accent, 650)
-                ty += 8
-            draw_lines(svg, cx + 18, ty, ls, w - 36, BODY, INK)
-            if k > 1:
-                svg.add(
-                    f'<line x1="{cx:.1f}" y1="{y + 12:.1f}" x2="{cx:.1f}" y2="{y + h - 12:.1f}" stroke="{LINE}" stroke-width="1"/>'
-                )
-        y += h
-        if i < len(FLOW_LINKS):
-            label, tone = FLOW_LINKS[i]
-            svg.arrow(MARGIN + 200, y + 2, MARGIN + 200, y + 50)
-            f2, s2, a2 = TONES[tone]
-            w = len(label) * char_w(SMALL) + 24
-            svg.rect(MARGIN + 220, y + 12, w, 28, f2, s2, r=14)
-            svg.text(MARGIN + 232, y + 31, label, SMALL, a2, 600)
-            y += 54
-    y += 30
-    rules: list[Line] = [
-        "Solo contenido público, sin login propio ni cuentas falsas.",
-        "Nunca se inventan datos: si hay 7 oportunidades se muestran 7, y un dato que falta se muestra como «no disponible».",
-        "El LLM evalúa y explica; los scores los calcula Python.",
-        "Cada crecimiento dice si es observed (≥ 2 mediciones), estimated (1 medición) o preliminary.",
-        "El texto de Internet entra como dato, nunca como instrucción. El monitoreo empezó el 17/10.",
+    y += 10
+    gap = 28
+    n = len(FLOW)
+    w = (WIDTH - 2 * MARGIN - gap * (n - 1)) / n
+    specs = [
+        (f"{i} · {name}", [what, ("bold", question)])
+        for i, (name, what, question) in enumerate(FLOW, 1)
     ]
-    h = card(
-        svg,
-        MARGIN,
-        y,
-        WIDTH - 2 * MARGIN,
-        "Reglas en todo el flujo",
-        [f"•  {r}" for r in rules],
-        "neutral",
-    )
-    svg.height = y + h + 40
+    h = max(card_height(t, ls, w) for t, ls in specs)
+    for i, (title, lines) in enumerate(specs):
+        x = MARGIN + i * (w + gap)
+        card(svg, x, y, w, title, lines, "data" if i == n - 1 else "python", h)
+        if i < n - 1:
+            svg.arrow(x + w + 2, y + h / 2, x + w + gap - 2, y + h / 2)
+    y += h + 28
+    spans = [("Explorar", 0, 1), ("Radar", 1, 3), ("Expediente del tema", 3, 4), ("Crear", 4, 5)]
+    svg.text(MARGIN, y + 20, "EN EL DASHBOARD", 14, MUTED, 700)
+    y += 34
+    for label, a, b in spans:
+        x0 = MARGIN + a * (w + gap)
+        x1 = MARGIN + b * (w + gap) - gap
+        fill, stroke, accent = TONES["client"]
+        svg.rect(x0, y, x1 - x0, 40, fill, stroke, r=10)
+        svg.text((x0 + x1) / 2, y + 26, label, BODY, accent, 600, anchor="middle")
+    svg.height = y + 40 + 40
     (OUT / "flujo-senal-oportunidad.svg").write_text(
         svg.render(
-            "30X Signal · De la señal a la oportunidad",
-            "Cinco pasos: señal, tendencia, oportunidad, evidencia y contenido recomendado, con la "
-            "pregunta que responde cada uno, dónde se ve en el dashboard y qué tool MCP lo consulta.",
+            "30X Signal · De la señal al contenido",
+            "Cinco pasos: señal, tendencia, oportunidad, evidencia y contenido, con la pregunta que "
+            "responde cada uno y la vista del dashboard donde se ve.",
         )
     )
 
 
 # ---------------------------------------------------------------------------------------------
-# 3. Pipeline de analyze
+# 3. Pipeline de análisis
 
 
-STEPS = [
+STEPS: list[tuple[str, str, str, str]] = [
     (
-        "1 · Cargar",
-        "python",
-        "Python",
-        ["Piezas de fuentes activas publicadas en los últimos 14 días, con sus snapshots."],
-    ),
-    (
-        "2 · Clasificar cada pieza",
+        "Clasificar",
         "jev",
         "Jev",
-        [
-            "Batería piece.v3, una llamada por pieza nueva (las demás salen de la caché): ¿trata de IA?, "
-            "formato, gancho, uso en empresas, caso real, contexto LATAM, inyección de instrucciones.",
-        ],
+        "Decide si cada pieza trata de IA y etiqueta su formato y su gancho.",
     ),
     (
-        "3 · Filtrar",
-        "python",
-        "Python",
-        [
-            "Sale solo la pieza que, según Jev con seguridad, no trata de IA ni en el tema ni en el título."
-        ],
-    ),
-    (
-        "4 · Agrupar en temas",
+        "Agrupar",
         "neutral",
         "Embeddings",
-        [
-            "MiniLM multilingüe (ES y EN en el mismo espacio) y clustering aglomerativo por coseno: distancia 0,5, mínimo 5 piezas."
-        ],
+        "Une las piezas parecidas en temas, en español y en inglés.",
     ),
     (
-        "5 · Unir réplicas",
-        "jev",
-        "Python + Jev",
-        [
-            "La misma nota en otro medio cuenta una vez: enlace compartido, después Jev pair.v1 en los "
-            "pares dudosos y, sin respuesta de Jev, una regla de respaldo.",
-        ],
-    ),
-    (
-        "6 · Medir cada tema",
+        "Medir",
         "python",
         "Python",
-        [
-            "Velocidad y aceleración: 72 h frente a las 72 h anteriores, ajustadas por volumen y con p-valor.",
-            "Outliers: ≥ 3× la referencia de su fuente. Saturación: cuota del corpus (100 = 2 %).",
-            "Fuentes independientes, para quién importa (audience mix) y LATAM gap.",
-        ],
+        "Velocidad, aceleración, outliers, saturación y fuentes independientes de cada tema.",
     ),
+    ("Evaluar", "llm", "LLM", "Encaje del tema con la audiencia de 30X, en seis criterios."),
+    ("Decidir", "python", "Python", "Opportunity Score, confianza y recomendación."),
     (
-        "7 · Etapa y confianza",
-        "python",
-        "Python",
-        [
-            "Primera regla que se cumple: unknown → saturated → peaking → accelerating "
-            "(aceleración ≥ 0,5, ≥ 3 fuentes y p ≤ 0,10) → emerging.",
-        ],
-    ),
-    (
-        "8 · Audience fit",
-        "llm",
-        "LLM",
-        [
-            "6 criterios con justificación, citas y nivel 0–5, y el nombre del tema. Python pondera los niveles en un score."
-        ],
-    ),
-    (
-        "9 · Score y recomendación",
-        "python",
-        "Python",
-        [
-            ("mono", "0,30·momentum + 0,25·fit + 0,20·fuentes"),
-            ("mono", "+ 0,15·(100 − saturación) + 0,10·accionabilidad"),
-            (
-                "muted",
-                "Menos penalizaciones por una sola fuente o muestra pequeña. La confianza va aparte.",
-            ),
-        ],
-    ),
-    (
-        "10 · Explicar y verificar",
+        "Explicar",
         "llm",
         "LLM + Jev",
-        [
-            "El LLM redacta por qué importa y las limitaciones. Python quita citas a piezas no enviadas y "
-            "cifras no observadas; Jev verifica cada afirmación y solo se publica lo respaldado.",
-        ],
-    ),
-    (
-        "11 · Guardar",
-        "data",
-        "Python",
-        [
-            "Una fila por tema en opportunities, con payload, evidence y timeline validados contra el contrato."
-        ],
-    ),
-]
-
-RECOMMENDATION: list[tuple[str, str, list[str]]] = [
-    ("discard", "neutral", ["Tema saturado."]),
-    (
-        "wait_for_case",
-        "neutral",
-        ["Datos insuficientes, confianza baja o ninguna pieza muestra un caso real."],
-    ),
-    ("find_angle", "neutral", ["En su pico, sin etapa clara, ya cubierto en LATAM o fit < 60."]),
-    (
-        "publish_now",
-        "data",
-        [
-            "Emerging o accelerating con fit ≥ 60.",
-            "Subida aún sin demostrar, con caso real, fit ≥ 60 y LATAM sin cubrir.",
-            "Accelerating ya cubierto en LATAM: con ángulo propio.",
-        ],
+        "El LLM redacta por qué importa; Jev verifica cada afirmación.",
     ),
 ]
 
@@ -602,79 +399,44 @@ def pipeline() -> None:
     svg = Svg()
     y = header(
         svg,
-        "30X Signal · Pipeline de analyze",
-        "Velocidad, no popularidad: ningún total de views o puntos entra en un score. Python calcula de "
-        "forma determinista, Jev emite juicios tipados y el LLM evalúa y redacta.",
+        "30X Signal · Pipeline de análisis",
+        "Velocidad, no popularidad. Python calcula todos los scores; los modelos de IA clasifican, evalúan y redactan.",
     )
-    y = legend(
+    y += 10
+    full = WIDTH - 2 * MARGIN
+    h = card(
         svg,
+        MARGIN,
         y,
-        [
-            ("python", "Python"),
-            ("jev", "Jev (TypeSafe)"),
-            ("llm", "LLM"),
-            ("neutral", "Embeddings"),
-            ("data", "Datos"),
-        ],
+        full,
+        "Entrada",
+        ["Piezas públicas de los últimos 14 días, con sus métricas."],
+        "neutral",
     )
-    y += 30
-    left_w = 700
-    right_x = MARGIN + left_w + 40
-    right_w = WIDTH - MARGIN - right_x
-    start = y
-    for i, (title, tone, who, lines) in enumerate(STEPS):
-        h = card(svg, MARGIN, y, left_w, title, lines, tone, badge=who)
-        y += h
-        if i < len(STEPS) - 1:
-            svg.arrow(MARGIN + left_w / 2, y + 2, MARGIN + left_w / 2, y + 26)
-            y += 28
-    end = y
-
-    ry = start
-    svg.text(right_x, ry + 18, "RECOMENDACIÓN", 14, MUTED, 700)
-    ry = draw_lines(
+    y += h
+    for i, (name, tone, who, what) in enumerate(STEPS, 1):
+        svg.arrow(WIDTH / 2, y + 2, WIDTH / 2, y + 30)
+        y += 32
+        y += card(svg, MARGIN, y, full, f"{i} · {name}", [what], tone, badge=who)
+    svg.arrow(WIDTH / 2, y + 2, WIDTH / 2, y + 30)
+    y += 32
+    h = card(
         svg,
-        right_x,
-        ry + 26,
+        MARGIN,
+        y,
+        full,
+        "Salida: ranking de oportunidades",
         [
-            (
-                "muted",
-                "Primera regla que se cumple, de arriba abajo. La UI y el MCP muestran la regla en texto.",
-            )
+            "Cada tema con su evidencia y una recomendación: publicar ya · buscar ángulo · esperar caso · descartar."
         ],
-        right_w,
-        SMALL,
-        MUTED,
+        "data",
     )
-    ry += 12
-    for label, tone, lines in RECOMMENDATION:
-        h = card_height(label, lines, right_w)
-        card(
-            svg,
-            right_x,
-            ry,
-            right_w,
-            label,
-            [f"•  {s}" if len(lines) > 1 else s for s in lines],
-            tone,
-            h,
-        )
-        ry += h + 12
-    ry += 20
-    ref_lines: list[Line] = [
-        ("mono", "backend/app/intelligence/"),
-        ("muted", "Umbrales como constantes con nombre."),
-        ("mono", "docs/scoring.md"),
-        ("muted", "Fórmulas y umbrales, tal como están en el código."),
-    ]
-    h = card(svg, right_x, ry, right_w, "Dónde está el detalle", ref_lines, "neutral")
-    ry += h
-    svg.height = max(end, ry) + 40
+    svg.height = y + h + 40
     (OUT / "pipeline-scoring.svg").write_text(
         svg.render(
-            "30X Signal · Pipeline de analyze",
-            "Los once pasos del job analyze, quién hace cada uno (Python, Jev, embeddings o LLM) y "
-            "las reglas de la recomendación.",
+            "30X Signal · Pipeline de análisis",
+            "Seis pasos, de las piezas públicas al ranking: clasificar, agrupar, medir, evaluar, "
+            "decidir y explicar, con quién hace cada uno.",
         )
     )
 
