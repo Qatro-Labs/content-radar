@@ -33,7 +33,7 @@ export const GENERATION_TITLE: Record<GenerationStage, string> = {
   done: 'Brief listo',
 }
 
-// La misma estimación que da BriefSkeleton («Tarda unos 15 s»).
+// La misma estimación que da la frase de Crear («Unos 15 segundos»).
 export const TYPICAL_WAIT_LABEL = 'unos 15 s'
 
 export const GENERATION_STEPS = [

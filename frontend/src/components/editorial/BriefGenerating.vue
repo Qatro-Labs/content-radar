@@ -18,7 +18,7 @@ import {
   type TrackerStatus,
   TYPICAL_WAIT_LABEL,
 } from '@/lib/briefStages'
-import { type BriefOptions, briefOptionsLine } from '@/lib/briefView'
+import { type BriefOptions, briefSentence } from '@/lib/briefView'
 import { countLabel } from '@/lib/evidenceFormat'
 import type { components } from '@/types/api'
 
@@ -101,7 +101,7 @@ const steps = computed(() =>
     status: trackerStatus(step.stage, timeline.value.stage),
   })),
 )
-const subtitle = computed(() => `${briefOptionsLine(options)} · ${TYPICAL_WAIT_LABEL}`)
+const subtitle = computed(() => `${briefSentence(options)} · ${TYPICAL_WAIT_LABEL}`)
 const morePieces = computed(() => (pieceCount === null ? 0 : pieceCount - pieces.length))
 const citationViews = computed<CitationView[]>(() => {
   const { stage, checkedCount } = timeline.value

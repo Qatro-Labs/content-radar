@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useBrief } from '@/api/editorial'
@@ -7,6 +7,7 @@ import { useOpportunity, useOpportunityEvidence } from '@/api/opportunities'
 import DossierStates, { DossierPlaceholder } from '@/components/dossier/DossierStates.vue'
 import {
   type BriefOptions,
+  featuredPieces,
   parseBriefQuery,
   sameRequest,
   serializeBriefQuery,
@@ -15,8 +16,8 @@ import type { components } from '@/types/api'
 
 import BriefComposer from './BriefComposer.vue'
 import BriefErrorCard from './BriefErrorCard.vue'
+import BriefGenerating from './BriefGenerating.vue'
 import BriefResult from './BriefResult.vue'
-import BriefSkeleton from './BriefSkeleton.vue'
 import CreateHeader from './CreateHeader.vue'
 
 type BriefRequest = components['schemas']['BriefRequest']
@@ -65,6 +66,28 @@ const editing = ref(false)
 const showsResult = computed(() => hasCurrentBrief.value && !editing.value)
 const showsError = computed(() => brief.isError.value && isCurrent.value)
 
+// DESIGN.md §7: un brief cacheado llega en un segundo, así que Rad solo aparece si la espera pasa de
+// este umbral. Una vez en pantalla, se queda hasta su cierre (`finished`) o hasta un error.
+const GENERATING_DELAY_MS = 800
+const showsGenerating = ref(false)
+let generatingTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => brief.isPending.value,
+  (pending) => {
+    clearTimeout(generatingTimer)
+    if (pending)
+      generatingTimer = setTimeout(() => (showsGenerating.value = true), GENERATING_DELAY_MS)
+  },
+)
+watch(
+  () => brief.isError.value,
+  (failed) => {
+    if (failed) showsGenerating.value = false
+  },
+)
+onBeforeUnmount(() => clearTimeout(generatingTimer))
+const featured = computed(() => featuredPieces(evidence.value.data ?? []))
+
 function generate() {
   editing.value = false
   // Con las opciones del brief que ya hay, la API devolvería el mismo (lo cachea): se vuelve a él
@@ -107,8 +130,14 @@ watch(
   <div v-else-if="opportunity" class="mx-auto flex w-full max-w-[880px] flex-col gap-5">
     <CreateHeader :opportunity />
 
-    <!-- Provisional: BriefGenerating sustituye a este skeleton. -->
-    <BriefSkeleton v-if="brief.isPending.value" :pieces="evidence.data?.length ?? null" />
+    <BriefGenerating
+      v-if="showsGenerating"
+      :pieces="featured"
+      :piece-count="evidence.data?.length ?? null"
+      :options
+      :done="brief.isSuccess.value"
+      @finished="showsGenerating = false"
+    />
     <BriefResult
       v-else-if="showsResult && brief.data.value"
       :brief="brief.data.value"

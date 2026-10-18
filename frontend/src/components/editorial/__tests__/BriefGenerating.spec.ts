@@ -81,7 +81,7 @@ describe('BriefGenerating', () => {
 
     expect(screen.getByRole('region', { name: 'Generando el brief' }).ariaBusy).toBe('true')
     expect(stageTitle()).toBe('Leyendo las piezas del tema')
-    expect(screen.getByText('LinkedIn · Educar · Post · unos 15 s')).toBeTruthy()
+    expect(screen.getByText('Post en LinkedIn para educar · unos 15 s')).toBeTruthy()
     expect(screen.getByText('What does AI really cost?')).toBeTruthy()
     expect(screen.getByText('y 4 piezas más del tema')).toBeTruthy()
   })
