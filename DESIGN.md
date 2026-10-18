@@ -197,8 +197,11 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   descartó por la pausa en lo alto) mientras la barra se funde y se encoge hacia allí; al abrir, vuelve igual a la
   barra, que aparece con un fundido. Al aterrizar parpadea. Solo `transform` y `opacity`.
 - **Rad vivo en reposo:** parpadea cada 3–7 s (a veces dos veces; uno de «hola» al cargar) y, si el cursor lleva
-  2,5 s quieto, mira un momento (1,3 s) a otro punto de la página y vuelve. Es la única excepción a «nada de bucles»
-  (§7): es su personaje, no un dato. Se para mientras trabaja, con la pestaña oculta y con movimiento reducido.
+  2,5 s quieto, mira un momento (1,3 s) a otro punto de la página y vuelve. Reducido, además, cada 25–45 s (nunca
+  al cargar ni al reducir) se abre en radar, su haz da una sola pasada y vuelve a ser un ojo que parpadea, con la
+  misma transformación que al trabajar; el cursor o el foco encima la cancelan y vuelve a ojo sin pausas, y no
+  parpadea a mitad de la pasada. Es la única excepción a «nada de bucles» (§7): es su personaje, no un dato. Se para
+  mientras trabaja, con la pestaña oculta y con movimiento reducido.
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
   un ojo que mira el cursor (de reojo si está cerca, hasta el borde si está lejos; al frente con movimiento
   reducido); mientras trabaja se abre en un radar (dos anillos) con el iris quieto en el centro, y su haz da una
@@ -389,8 +392,8 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   controles.
 - **`prefers-reduced-motion: reduce`:** sin barrido, ping, latido ni entradas; los datos aparecen al instante. Se
   mantiene el feedback de hover y active.
-- Nada de bucles infinitos fuera del latido, de la vida en reposo de Rad (§4) y de su haz mientras redacta un brief
-  («Crear: Rad redactando»). Nada de puntos "live" que parpadean.
+- Nada de bucles infinitos fuera del latido, de la vida en reposo de Rad (§4: parpadeos, miradas y, reducido, una
+  pasada del haz de vez en cuando) y de su haz mientras redacta un brief («Crear: Rad redactando»). Nada de puntos "live" que parpadean.
 
 ## 8. Gráficos (ECharts + `vue-echarts`)
 
