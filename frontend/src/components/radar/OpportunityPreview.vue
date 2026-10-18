@@ -16,6 +16,7 @@ import {
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
 import { cn } from '@/lib/utils'
+import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { RouteName } from '@/router'
 
 const { opportunity, total } = defineProps<{ opportunity: RankedOpportunity; total: number }>()
@@ -126,6 +127,7 @@ const BUTTON_CLASS =
 
     <div class="flex flex-wrap gap-2">
       <RouterLink
+        :data-agent="AGENT_ANCHOR.openDossier"
         :to="{ name: RouteName.Dossier, params: { id: opportunity.id } }"
         class="flex-[1_1_150px] bg-primary text-primary-foreground hover:bg-primary-hover"
         :class="BUTTON_CLASS"

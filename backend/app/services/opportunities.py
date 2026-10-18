@@ -6,10 +6,10 @@ nunca recalcula.
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 import numpy as np
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -36,8 +36,6 @@ from app.services.replicas import ReplicaStats, detect_replicas
 
 ANALYZE_JOB = "analyze"
 LOOKBACK = timedelta(days=14)
-# Día en que empezó el monitoreo con snapshots (CLAUDE.md §9): lo anterior es backfill.
-MONITORING_STARTED_AT = datetime(2026, 10, 16, tzinfo=UTC)
 # Lo que cubren las ventanas de 3 + 3 días de `analyze`: es el único periodo que se calcula.
 SERVED_PERIOD = Period.D7
 
@@ -148,13 +146,24 @@ async def compute_opportunities(
     removed = len(loaded) - len(pieces)
     if not pieces:
         return ComputedOpportunities(0, removed, [], ReplicaStats())
+    started = await monitoring_started_at(session) or as_of
     vectors = embed([embedding_text(p.title, p.description) for p in pieces])
     clusters = cluster(vectors)
     # Entre clustering y scores: los pares se buscan dentro de cada tema (CLAUDE.md §7).
     stories, replica_stats = await detect_replicas(
         session, pieces=pieces, clusters=clusters, vectors=vectors, judge=judge, meter=meter
     )
-    results = _scored_topics(pieces, vectors, clusters, loaded=loaded, stories=stories, as_of=as_of)
+    business_use = {item_id: j.business_use for item_id, j in (judgments or {}).items()}
+    results = _scored_topics(
+        pieces,
+        vectors,
+        clusters,
+        loaded=loaded,
+        stories=stories,
+        business_use=business_use,
+        as_of=as_of,
+        started=started,
+    )
     return ComputedOpportunities(len(pieces), removed, results, replica_stats)
 
 
@@ -165,19 +174,22 @@ def _scored_topics(
     *,
     loaded: list[Piece],
     stories: StoryAssignment,
+    business_use: Mapping[int, bool | None],
     as_of: datetime,
+    started: datetime,
 ) -> list[TopicResult]:
     return build_opportunities(
         pieces,
         clusters,
         [representative(vectors, c) for c in clusters],
         as_of=as_of,
-        monitoring_started_at=MONITORING_STARTED_AT,
+        monitoring_started_at=started,
         broad=[is_broad(vectors, c) for c in clusters],
         # La referencia de outliers es cómo rinde la cuenta, no cómo rinde en IA (CLAUDE.md §7):
         # también cuentan las piezas que Jev quita por fuera de tema.
         reference=loaded,
         stories=stories,
+        business_use=business_use,
     )
 
 
@@ -193,6 +205,14 @@ async def save_opportunities(session: AsyncSession, run_id: int, results: list[T
                 timeline=r.timeline.model_dump(mode="json"),
             )
         )
+
+
+async def monitoring_started_at(session: AsyncSession) -> datetime | None:
+    """La primera observación guardada: lo publicado antes es backfill, no historial medido.
+
+    Se lee de la DB, no de una constante, para que siga siendo cierta si la base se vacía.
+    """
+    return await session.scalar(select(func.min(ContentItem.first_observed_at)))
 
 
 async def _served_run(session: AsyncSession) -> PipelineRun | None:
@@ -247,7 +267,7 @@ async def list_opportunities(
         ],
         period=SERVED_PERIOD,
         generated_at=run.finished_at,
-        monitoring_started_at=MONITORING_STARTED_AT,
+        monitoring_started_at=await monitoring_started_at(session) or run.finished_at,
     )
 
 
@@ -274,6 +294,7 @@ class ServedOpportunity:
 @dataclass(frozen=True)
 class ServedRun:
     generated_at: datetime
+    monitoring_started_at: datetime
     items: list[ServedOpportunity]
 
 
@@ -304,6 +325,7 @@ async def list_served(
     served = [_served(r) for r in await _ranked_records(session, run)]
     return ServedRun(
         generated_at=run.finished_at,
+        monitoring_started_at=await monitoring_started_at(session) or run.finished_at,
         items=[
             s
             for s in served

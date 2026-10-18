@@ -1,4 +1,9 @@
-"""Etapa de la tendencia (CLAUDE.md §7). Primera regla que se cumple; `unknown` va primero."""
+"""Etapa de la tendencia (CLAUDE.md §7). Primera regla que se cumple; `unknown` va primero.
+
+`accelerating` afirma un crecimiento sostenido, así que además exige que la subida no se explique
+por azar (`acceleration_p_value` ≤ `ACCELERATION_MAX_P`). `emerging` es temprano por definición:
+no lleva esa puerta, pero su razón avisa cuando la subida aún puede ser azar.
+"""
 
 from dataclasses import dataclass
 
@@ -12,6 +17,9 @@ ACCELERATING_MIN_ACCEL = 0.5
 ACCELERATING_MIN_SOURCES = 3
 EMERGING_MAX_SOURCES = 3
 EMERGING_MAX_SATURATION = 40
+# Por tema, sin corregir por comparaciones múltiples: con ventanas de 3 días y pocas piezas,
+# Benjamini–Hochberg sobre todos los temas no deja pasar ninguno. Se documenta como limitación.
+ACCELERATION_MAX_P = 0.10
 
 
 @dataclass(frozen=True)
@@ -27,7 +35,12 @@ def is_insufficient(source_count: int, item_count: int) -> bool:
 
 
 def classify(
-    *, acceleration: float, saturation: float, source_count: int, item_count: int
+    *,
+    acceleration: float,
+    p_value: float,
+    saturation: float,
+    source_count: int,
+    item_count: int,
 ) -> Stage:
     if is_insufficient(source_count, item_count):
         return Stage(
@@ -47,11 +60,14 @@ def classify(
             f"Saturación {saturation:.0f} ≥ {PEAKING_MIN} y |aceleración| "
             f"{abs(acceleration):.2f} < {PEAKING_MAX_ABS_ACCEL}.",
         )
-    if acceleration >= ACCELERATING_MIN_ACCEL and source_count >= ACCELERATING_MIN_SOURCES:
+    accelerating = (
+        acceleration >= ACCELERATING_MIN_ACCEL and source_count >= ACCELERATING_MIN_SOURCES
+    )
+    if accelerating and p_value <= ACCELERATION_MAX_P:
         return Stage(
             Lifecycle.ACCELERATING,
-            f"Aceleración {acceleration:+.2f} ≥ {ACCELERATING_MIN_ACCEL} y {source_count} "
-            f"fuentes independientes (≥ {ACCELERATING_MIN_SOURCES}).",
+            f"Aceleración {acceleration:+.2f} ≥ {ACCELERATING_MIN_ACCEL} ({_p_text(p_value)}) y "
+            f"{source_count} fuentes independientes (≥ {ACCELERATING_MIN_SOURCES}).",
         )
     if (
         acceleration > 0
@@ -60,9 +76,15 @@ def classify(
     ):
         return Stage(
             Lifecycle.EMERGING,
-            f"Aceleración {acceleration:+.2f} > 0, {source_count} fuentes independientes "
-            f"(≤ {EMERGING_MAX_SOURCES}) y saturación {saturation:.0f} "
-            f"< {EMERGING_MAX_SATURATION}.",
+            f"Aceleración {acceleration:+.2f} > 0 ({_p_text(p_value)}), {source_count} fuentes "
+            f"independientes (≤ {EMERGING_MAX_SOURCES}) y saturación {saturation:.0f} "
+            f"< {EMERGING_MAX_SATURATION}.{_unproven_note(p_value)}",
+        )
+    if accelerating:
+        return Stage(
+            Lifecycle.UNKNOWN,
+            f"Aceleración {acceleration:+.2f} sin demostrar: {_p_text(p_value)} > "
+            f"{ACCELERATION_MAX_P:.2f}, con tan pocas piezas la subida puede ser azar.",
         )
     if acceleration < 0:
         # Sin etapa `declining` en el contrato: el texto explica que el tema se enfría.
@@ -76,3 +98,18 @@ def classify(
         f"Ninguna regla se cumple (aceleración {acceleration:+.2f}, saturación {saturation:.0f}, "
         f"{source_count} fuentes).",
     )
+
+
+def _unproven_note(p_value: float) -> str:
+    if p_value <= ACCELERATION_MAX_P:
+        return ""
+    return " Señal temprana: con tan pocas piezas, la subida aún puede ser azar."
+
+
+def _p_text(p_value: float) -> str:
+    # Con dos decimales, p = 0.004 se leería "p = 0.00" y p = 0.103 "p = 0.10 > 0.10".
+    if round(p_value, 2) == 0:
+        return "p < 0.01"
+    if p_value > ACCELERATION_MAX_P and round(p_value, 2) <= ACCELERATION_MAX_P:
+        return f"p = {p_value:.3f}"
+    return f"p = {p_value:.2f}"

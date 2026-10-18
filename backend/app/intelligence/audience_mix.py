@@ -6,6 +6,7 @@ from app.schemas.opportunity import AudienceMix
 from app.schemas.signal import Segment
 
 GAP_MIN_BUSINESS = 0.15  # hay conversación de negocio…
+GAP_MIN_BUSINESS_PIECES = 2  # …de más de una pieza…
 GAP_MAX_LATAM = 0.10  # …y casi nada de fuentes latinoamericanas
 COVERED_MIN_LATAM = 0.30  # ya cubierto en la región
 
@@ -45,14 +46,28 @@ def latam_share(pieces: Sequence[tuple[str | None, float]]) -> float | None:
     return round(latam / total, 3)
 
 
-def latam_gap(mix: AudienceMix | None, latam: float | None) -> bool | None:
+def has_business_conversation(mix: AudienceMix, business_use: Sequence[bool | None]) -> bool:
+    """`business_use` = juicio de Jev por pieza (None = incierto o sin clasificar).
+
+    Jev decide por el contenido: un tema de HN sobre adopción en empresas es conversación de
+    negocio aunque ninguna fuente sea de segmento `business` (solo ~8 % del corpus lo es). Sin
+    juicios de Jev, decide el segmento de la fuente.
+    """
+    decided = [label for label in business_use if label is not None]
+    if not decided:
+        return mix.business >= GAP_MIN_BUSINESS
+    yes = sum(decided)
+    return yes >= GAP_MIN_BUSINESS_PIECES and yes / len(decided) >= GAP_MIN_BUSINESS
+
+
+def latam_gap(business: bool, latam: float | None) -> bool | None:
     """True = negocio presente y LATAM ausente. False = ya cubierto en la región.
     None = no hay señal de negocio suficiente para decidir.
     """
-    if mix is None or latam is None:
+    if latam is None:
         return None
     if latam >= COVERED_MIN_LATAM:
         return False
-    if mix.business >= GAP_MIN_BUSINESS and latam < GAP_MAX_LATAM:
+    if business and latam < GAP_MAX_LATAM:
         return True
     return None

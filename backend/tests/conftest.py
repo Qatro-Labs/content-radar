@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.config import get_settings
 from app.models import Base
+from tests.test_opportunity_routes import add_run, fixture_results
 
 # Los tests nunca derivan su DB de DATABASE_URL: puede apuntar a Supabase, que es la DB real.
 # Por defecto, el Postgres de docker-compose.
@@ -48,3 +49,10 @@ async def engine():
 async def session(engine):
     async with async_sessionmaker(engine, expire_on_commit=False)() as s:
         yield s
+
+
+# Una ejecución servida con las oportunidades de data/fixtures/opportunities.json: la comparten los
+# tests del agente (test_agent.py y test_agent_tools.py).
+@pytest.fixture
+async def seeded(session):
+    await add_run(session, fixture_results())

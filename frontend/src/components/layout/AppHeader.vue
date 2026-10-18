@@ -3,6 +3,7 @@ import { ChartLine, PenLine, Radar } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 
 import { USING_FIXTURES } from '@/api/opportunities'
+import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { RouteName } from '@/router'
 
 import DataStatus from './DataStatus.vue'
@@ -13,14 +14,28 @@ const route = useRoute()
 
 // Una vista de la nav puede abarcar varias rutas: Explorar incluye el expediente de cada tema.
 const views = [
-  { name: RouteName.Discover, label: 'Radar', icon: Radar, routes: [RouteName.Discover] },
+  {
+    name: RouteName.Discover,
+    label: 'Radar',
+    icon: Radar,
+    routes: [RouteName.Discover],
+    agentTarget: AGENT_ANCHOR.navRadar,
+  },
   {
     name: RouteName.Explore,
     label: 'Explorar',
     icon: ChartLine,
     routes: [RouteName.Explore, RouteName.Dossier],
+    agentTarget: AGENT_ANCHOR.navExplore,
   },
-  { name: RouteName.Create, label: 'Crear', icon: PenLine, routes: [RouteName.Create] },
+  // Rad no actúa en Crear: no necesita ancla.
+  {
+    name: RouteName.Create,
+    label: 'Crear',
+    icon: PenLine,
+    routes: [RouteName.Create],
+    agentTarget: undefined,
+  },
 ] as const
 
 function isCurrent(routes: readonly string[]): boolean {
@@ -44,6 +59,7 @@ function isCurrent(routes: readonly string[]): boolean {
           v-for="view in views"
           :key="view.name"
           :to="{ name: view.name }"
+          :data-agent="view.agentTarget"
           :aria-current="isCurrent(view.routes) ? 'page' : undefined"
           class="flex h-11 items-center gap-2 rounded-[10px] px-3.5 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
         >

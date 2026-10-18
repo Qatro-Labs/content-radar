@@ -4,8 +4,16 @@ import type { ECElementEvent } from 'echarts/core'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
+import { bubbleAnchor } from '@/lib/agentTargets'
 import { VChart } from '@/lib/echarts'
-import { buildRadarOption, PLOT_ASPECT, resolveRadarPalette, SWEEP } from '@/lib/radarChart'
+import {
+  bubblePosition,
+  buildRadarOption,
+  PLOT_ASPECT,
+  resolveRadarPalette,
+  SWEEP,
+  translateTo,
+} from '@/lib/radarChart'
 import { LIFECYCLES } from '@/lib/radarQuery'
 import type { RadarView } from '@/lib/radarView'
 
@@ -150,6 +158,16 @@ const leaveBubble = () => emit('hover', null)
             :hovered="hovered"
             :size="plotSize"
             :sweeping="isSweeping"
+          />
+          <!-- Las burbujas son canvas: la presencia de Rad apunta a estas anclas invisibles, una
+               en el centro de cada burbuja (plan fe-radar-agent, D8). -->
+          <span
+            v-for="opportunity in view.plotted"
+            :key="opportunity.id"
+            :data-agent="bubbleAnchor(opportunity.id)"
+            class="pointer-events-none absolute top-0 left-0 size-0"
+            :style="{ transform: translateTo(bubblePosition(opportunity, plotSize)) }"
+            aria-hidden="true"
           />
         </div>
       </div>

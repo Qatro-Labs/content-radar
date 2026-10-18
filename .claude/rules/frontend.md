@@ -23,12 +23,14 @@ Antes de tocar UI, lee `DESIGN.md`.
      una métrica falta, la UI lo dice; no la rellena.
    - Avisar de forma visible desde cuándo se monitorea (primer snapshot: 17/10 ~02:50 UTC) para que
      nadie lea los periodos largos como historial medido.
-   - **Agente del Radar** (artboard E, aprobado el 17/10): una barra de pregunta fija abajo. El agente
-     responde moviendo la página: pulsa los mismos filtros, resalta, selecciona y cita la evidencia,
-     con una presencia que viaja hasta cada objetivo antes de actuar. Sus acciones de UI cambian el
-     estado de la URL (`useRadarQuery`), igual que los controles, así que una vista del agente se puede
-     compartir y repetir. El frontend no llama al LLM ni al MCP: consume el stream de eventos del
-     backend. Componentes y movimiento en `DESIGN.md` §4 y §7.
+   - **Rad, el agente del Radar** (artboards E y «Rad», 17–18/10): una barra de pregunta fija abajo en
+     Radar, Explorar y el expediente. Rad responde moviendo la página: pulsa los mismos filtros,
+     resalta, selecciona, abre el expediente y señala sus secciones, y busca piezas en Explorar, con una
+     presencia que viaja hasta cada objetivo antes de actuar. Se puede charlar: cada pregunta lleva las
+     anteriores, los temas citados y lo que se ve (nunca las respuestas del modelo). Sus acciones cambian
+     la URL igual que los controles, así que una vista de Rad se puede compartir y repetir. El frontend
+     no llama al LLM ni al MCP: consume el stream de eventos del backend (`useRadarAgent`). Componentes
+     y movimiento en `DESIGN.md` §4 y §7.
 2. **Explore (Evidencia):** dos estados, los dos con contenido propio.
    - **Sin tema (`/explore`): «Lo que está funcionando».** Todas las piezas de todos los temas: tabla ordenada por
      rendimiento frente a su canal (outliers primero; sin gráfico de dispersión, descartado el 17/10) y panel lateral

@@ -2,12 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import DiscoverView from '@/views/DiscoverView.vue'
 
-export const RouteName = {
-  Discover: 'discover',
-  Explore: 'explore',
-  Dossier: 'dossier',
-  Create: 'create',
-} as const
+import { RouteName } from './routeNames'
+
+export { RouteName }
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

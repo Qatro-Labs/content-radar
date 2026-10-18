@@ -12,7 +12,12 @@ from datetime import datetime, timedelta
 from typing import TypedDict
 
 from app.intelligence import outliers as out
-from app.intelligence.audience_mix import audience_mix, latam_gap, latam_share
+from app.intelligence.audience_mix import (
+    audience_mix,
+    has_business_conversation,
+    latam_gap,
+    latam_share,
+)
 from app.intelligence.cross_source import cross_source_score, outlet_key, saturation_scores
 from app.intelligence.evidence import (
     PERFORMANCE_METRIC,
@@ -37,6 +42,7 @@ from app.intelligence.replicas import (
 from app.intelligence.velocity import (
     TopicVelocity,
     WindowCounts,
+    acceleration_p_value,
     topic_velocity,
     window_counts,
 )
@@ -91,6 +97,8 @@ class _ActiveTopic:
     counts: WindowCounts
     velocity: TopicVelocity
     broad: bool
+    story_counts: WindowCounts  # solo notas originales: son las muestras independientes
+    p_value: float  # de la aceleración, sobre las notas originales
 
 
 @dataclass
@@ -158,8 +166,12 @@ def _active_topics(
     representatives: Sequence[int],
     broad: Sequence[bool],
     as_of: datetime,
+    stories: StoryAssignment,
 ) -> list[_ActiveTopic]:
     corpus = window_counts([p.published_at for p in pieces], as_of)
+    # Una republicación no es una observación independiente: el test de la aceleración cuenta
+    # notas, en el tema y en el corpus (CLAUDE.md §7, "Cross-source").
+    story_corpus = window_counts([p.published_at for p in _originals(pieces, stories)], as_of)
     topics = []
     for members, rep, is_broad in zip(clusters, representatives, broad, strict=True):
         group = [pieces[i] for i in members]
@@ -167,18 +179,22 @@ def _active_topics(
         if counts.current + counts.previous < MIN_RECENT_ITEMS:
             continue
         velocity = topic_velocity(counts, corpus)
-        topics.append(_ActiveTopic(group, pieces[rep], counts, velocity, is_broad))
+        story_counts = window_counts([p.published_at for p in _originals(group, stories)], as_of)
+        p_value = acceleration_p_value(story_counts, story_corpus)
+        topics.append(
+            _ActiveTopic(group, pieces[rep], counts, velocity, is_broad, story_counts, p_value)
+        )
     return topics
 
 
 def _audience(
-    group: Sequence[Piece], ratios: Sequence[float | None]
+    group: Sequence[Piece], ratios: Sequence[float | None], business_use: Sequence[bool | None]
 ) -> tuple[AudienceMix, bool | None]:
     weights = [min(max(r or 1.0, MIX_WEIGHT_MIN), MIX_WEIGHT_MAX) for r in ratios]
     mix = audience_mix([(p.segment, w) for p, w in zip(group, weights, strict=True)])
     latam = latam_share([(p.region, w) for p, w in zip(group, weights, strict=True)])
     assert mix is not None  # el grupo nunca está vacío
-    return mix, latam_gap(mix, latam)
+    return mix, latam_gap(has_business_conversation(mix, business_use), latam)
 
 
 def _why_it_matters(topic: _ActiveTopic, source_count: int, outlier_count: int) -> str:
@@ -200,6 +216,7 @@ class _TopicFacts:
     replica_ids: frozenset[int]
     story_count: int
     unverified: bool  # alguna republicación decidida solo por título o similitud
+    business_use: list[bool | None]  # juicio de Jev por pieza; None = incierto o sin juicio
 
     @property
     def replica_count(self) -> int:
@@ -207,7 +224,10 @@ class _TopicFacts:
 
 
 def _topic_facts(
-    group: Sequence[Piece], ratios: list[float | None], stories: StoryAssignment
+    group: Sequence[Piece],
+    ratios: list[float | None],
+    stories: StoryAssignment,
+    business_use: Mapping[int, bool | None],
 ) -> _TopicFacts:
     flagged = [r for r in ratios if r is not None]
     originals = _originals(group, stories)
@@ -221,6 +241,7 @@ def _topic_facts(
         replica_ids=replica_ids,
         story_count=len(originals),
         unverified=bool(replica_ids & stories.unverified),
+        business_use=[business_use.get(p.item_id) for p in group],
     )
 
 
@@ -266,12 +287,13 @@ def _score_topic(
     source_count = len(facts.outlets)
     stage = classify(
         acceleration=acceleration,
+        p_value=topic.p_value,
         saturation=saturation,
         source_count=source_count,
         item_count=item_count,
     )
     growth = growth_status(stage.insufficient, topic.counts.previous)
-    momentum = momentum_score(velocity_percentile, acceleration, facts.outlier_count)
+    momentum = momentum_score(velocity_percentile, topic.velocity.log_ratio, facts.outlier_count)
     cross = cross_source_score(facts.outlets, {p.value for p in facts.original_platforms})
     breakdown = score_breakdown(
         momentum=momentum,
@@ -329,7 +351,7 @@ def _trend_fields(topic: _ActiveTopic, facts: _TopicFacts, scores: _TopicScores)
 def _score_fields(
     topic: _ActiveTopic, facts: _TopicFacts, scores: _TopicScores, *, saturation: float
 ) -> _ScoreFields:
-    mix, gap = _audience(topic.group, facts.ratios)
+    mix, gap = _audience(topic.group, facts.ratios, facts.business_use)
     advice = recommend(
         scores.stage, scores.confidence, audience_fit=None, org_application=None, latam_gap=gap
     )
@@ -355,9 +377,22 @@ def _description(group: Sequence[Piece], facts: _TopicFacts) -> str:
         replicas = " (1 republicación)"
     elif facts.replica_count > 1:
         replicas = f" ({facts.replica_count} republicaciones)"
-    return (
+    text = (
         f"Tema agrupado automáticamente: {len(group)} piezas{replicas} de "
         f"{len(facts.outlets)} fuentes independientes ({platforms})."
+    )
+    return text + _business_note(facts.business_use)
+
+
+def _business_note(business_use: Sequence[bool | None]) -> str:
+    # El hueco LATAM se decide con este conteo, no con el segmento de las fuentes: sin decirlo,
+    # "negocio 0 %" junto a "hueco en LATAM" parecería una contradicción.
+    decided = [label for label in business_use if label is not None]
+    if not decided:
+        return ""
+    return (
+        f" {sum(decided)} de {len(decided)} piezas clasificadas tratan del uso de la IA en "
+        "organizaciones."
     )
 
 
@@ -392,6 +427,7 @@ def _topic_result(
     topic: _ActiveTopic,
     ratios: Mapping[int, float | None],
     stories: StoryAssignment,
+    business_use: Mapping[int, bool | None],
     *,
     saturation: float,
     velocity_percentile: float,
@@ -399,7 +435,7 @@ def _topic_result(
     monitoring_started_at: datetime,
 ) -> TopicResult:
     group_ratios = [ratios[p.item_id] for p in topic.group]
-    facts = _topic_facts(topic.group, group_ratios, stories)
+    facts = _topic_facts(topic.group, group_ratios, stories, business_use)
     opportunity, stage = _opportunity(
         topic,
         facts,
@@ -415,21 +451,12 @@ def _topic_result(
     return TopicResult(opportunity, evidence, points, stage, pieces, facts.replica_ids)
 
 
-def _story_saturation(
-    topics: Sequence[_ActiveTopic], stories: StoryAssignment, as_of: datetime
-) -> list[float]:
-    # Cuenta notas, no copias (CLAUDE.md §7); la velocidad sigue por pieza.
-    counts = [
-        window_counts([p.published_at for p in _originals(t.group, stories)], as_of) for t in topics
-    ]
-    return saturation_scores([c.current + c.previous for c in counts])
-
-
-def _across_topics(
-    topics: Sequence[_ActiveTopic], stories: StoryAssignment, as_of: datetime
-) -> list[tuple[float, float]]:
+def _across_topics(topics: Sequence[_ActiveTopic]) -> list[tuple[float, float]]:
     # Saturación y percentil de velocidad se normalizan entre temas: necesitan todos los activos.
-    saturation = _story_saturation(topics, stories, as_of)
+    # La saturación cuenta notas, no copias (CLAUDE.md §7); la velocidad sigue por pieza.
+    saturation = saturation_scores(
+        [t.story_counts.current + t.story_counts.previous for t in topics]
+    )
     velocity_pct = saturation_scores([t.velocity.current_count for t in topics])
     return list(zip(saturation, velocity_pct, strict=True))
 
@@ -444,24 +471,25 @@ def build_opportunities(
     broad: Sequence[bool] | None = None,
     reference: Sequence[Piece] | None = None,
     stories: StoryAssignment | None = None,
+    business_use: Mapping[int, bool | None] | None = None,
 ) -> list[TopicResult]:
+    """`business_use`: juicio de Jev por pieza (CLAUDE.md §7, LATAM Gap); sin él, el segmento."""
     stories = stories if stories is not None else NO_REPLICAS
     broad_flags = broad if broad is not None else [False] * len(clusters)
-    topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of)
+    topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of, stories)
     ratios = outlier_ratios(pieces, as_of, reference=reference)
     results = [
         _topic_result(
             topic,
             ratios,
             stories,
+            business_use or {},
             saturation=sat,
             velocity_percentile=vel_pct,
             as_of=as_of,
             monitoring_started_at=monitoring_started_at,
         )
-        for topic, (sat, vel_pct) in zip(
-            topics, _across_topics(topics, stories, as_of), strict=True
-        )
+        for topic, (sat, vel_pct) in zip(topics, _across_topics(topics), strict=True)
     ]
     return rank(results)
 

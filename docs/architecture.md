@@ -83,7 +83,7 @@ ser la servida. Un `pg_try_advisory_lock` impide que corran dos a la vez
 
 | Paso | Qué pasa | Quién |
 |---|---|---|
-| 1. Cargar | Piezas de fuentes activas publicadas en los últimos 14 días, con sus snapshots hasta `as_of` | Python (`backend/app/services/opportunities.py:55`) |
+| 1. Cargar | Piezas de fuentes activas publicadas en los últimos 14 días, con sus snapshots hasta `as_of` | Python (`backend/app/services/opportunities.py:53`) |
 | 2. Clasificar | Una llamada a Jev por pieza nueva con la batería `piece.v3`; lo ya clasificado sale de la caché `jev_judgments` | **Jev** |
 | 3. Filtrar | Sale una pieza solo si Jev dice con seguridad que ni el tema ni el título son de IA | Python |
 | 4. Agrupar | Embeddings multilingües (ES y EN en el mismo espacio) y clustering aglomerativo por coseno | sentence-transformers + scikit-learn |
@@ -125,7 +125,7 @@ verificación de cada afirmación con Jev que describe CLAUDE.md §7 no está im
 
 Cada `analyze` correcto es una ejecución con su propio ranking; los clusters cambian entre
 ejecuciones. La API, el MCP y el agente leen siempre la misma, elegida en
-`backend/app/services/opportunities.py:198`:
+`backend/app/services/opportunities.py:218`:
 
 - Con `DEMO_RUN_ID` fijado en Railway, esa ejecución. Si no existe o no terminó bien, **no se sirve
   nada**: una demo fijada a una ejecución inexistente tiene que notarse.
@@ -142,7 +142,7 @@ dice el periodo real.
 | Datos personales | Solo metadatos, enlaces y métricas públicas; nunca el autor de Reddit (CLAUDE.md §2, regla 1) |
 | Prompt injection en texto de Internet | El texto externo va solo en el mensaje del usuario, escapado y dentro de bloques `<evidence>` (`backend/app/editorial/audience.py:185`). El system prompt solo lleva texto nuestro. Jev marca cada pieza con la pregunta `injection`: una pieza con probabilidad > 0,5, o sin respuesta, no se envía al LLM en el audience fit, «por qué importa» ni los briefs (`backend/app/intelligence/jev.py:281`). El agente del Radar sí lee los títulos de la evidencia servida; a él lo protegen el saneado, los delimitadores y el canario (fila de abajo). En Jev, el texto va en `state` y nuestras instrucciones en las preguntas |
 | Salida del LLM no fiable | Pydantic, `stop_reason`, citas solo a piezas enviadas, cifras solo observadas (`backend/app/intelligence/explanation.py:57`, `backend/app/intelligence/briefs.py`) |
-| Agente del Radar | Ámbito cerrado con `decline`; solo lee la ejecución servida y sus acciones solo cambian la vista. Máx. 8 pasos (`backend/app/agent/limits.py:11`), 45 s por pregunta (`backend/app/agent/runner.py:57`), 4 preguntas a la vez (`backend/app/api/routes/agent.py:41`), 20 por IP y hora y 300 al día (`backend/app/agent/limits.py:15`). Entradas y salidas saneadas: se quitan caracteres invisibles, `<` y `>` externos se cambian por sus formas de ancho completo y un canario detecta si el modelo filtra el prompt (`backend/app/agent/sanitize.py`) |
+| Rad, el agente del Radar | Ámbito cerrado con `decline`; solo lee la ejecución servida y sus acciones solo cambian la vista o navegan entre Radar, Explorar y expediente. Recibe como contexto (`<contexto>`, tratado como datos) las preguntas anteriores, los temas citados y lo que ve la persona, nunca sus propias respuestas. Máx. 10 pasos (`backend/app/agent/limits.py:12`), 45 s por pregunta (`backend/app/agent/runner.py:61`), 4 preguntas a la vez (`backend/app/api/routes/agent.py:41`), 60 por IP y hora y 300 al día (`backend/app/agent/limits.py:17`). Entradas y salidas saneadas: se quitan caracteres invisibles, `<` y `>` externos se cambian por sus formas de ancho completo y un canario detecta si el modelo filtra el prompt (`backend/app/agent/sanitize.py`) |
 | Coste de las llamadas públicas al LLM | Briefs por REST: 20 por IP y hora, 300 al día y 4 a la vez (`backend/app/api/routes/editorial.py:33`). Briefs por MCP: 20 por hora y 100 al día compartidos y 2 a la vez (`backend/app/mcp/server.py:35`) |
 | MCP | Sin SQL arbitrario ni acceso a archivos; solo lee servicios. Todas las tools son de solo lectura salvo `generate_editorial_brief`, que escribe en la caché de briefs y en `usage_events` (`backend/app/mcp/server.py:39`). Acepta solo el `Host` de `MCP_PUBLIC_URL` o uno local (protección contra DNS rebinding). Sin autenticación: solo expone datos públicos ([`mcp.md`](mcp.md)) |
 | Secretos | Solo en el backend y en los secrets de Actions; `backend/.env` está en `.gitignore`. Los logs de Jev y del LLM no llevan texto de la pieza |
