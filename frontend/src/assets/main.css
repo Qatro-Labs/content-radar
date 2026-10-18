@@ -44,6 +44,7 @@
   --sample: #fff0dc;
   --secondary-hover: #e8eaed;
   --primary-hover: #2a2e35;
+  --on-ink-muted: #d5d8dd; /* Texto secundario sobre Tinta (contador-filtro activo) */
   --ink-read: #22262c;
   --neutral-action: #f0f1f3;
   --negative-bg: #fde8e9;
@@ -124,6 +125,7 @@
   --color-sample: var(--sample);
   --color-secondary-hover: var(--secondary-hover);
   --color-primary-hover: var(--primary-hover);
+  --color-on-ink-muted: var(--on-ink-muted);
   --color-ink-read: var(--ink-read);
   --color-neutral-action: var(--neutral-action);
   --color-negative-bg: var(--negative-bg);

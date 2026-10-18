@@ -68,8 +68,8 @@ const counters = computed<Counter[]>(() => [
 // «Sin tendencia clara» no tiene contador: era la cifra más grande de la cabecera y solo dice lo
 // que no sabemos. Se filtra desde la leyenda del radar, como las demás etapas, y por URL.
 
-// Los resaltados también atenúan el radar, así que cuentan como vista cambiada y se
-// restablecen con los filtros (artboard E).
+// Los resaltados también atenúan el radar, así que cuentan como vista cambiada y «Todos» los
+// quita con los filtros (artboard E).
 const isViewChanged = computed(() => view.isFiltered || query.highlight.length > 0)
 // DESIGN.md §4: si la vista es justo la que dejó Rad, se dice; en cuanto la persona toca un filtro,
 // la URL cambia y la frase desaparece.
@@ -89,14 +89,26 @@ const isSetByRad = computed(
     </ViewHeader>
 
     <div class="flex flex-wrap items-center gap-2">
-      <div role="group" aria-label="Filtrar por" class="flex flex-wrap gap-2">
+      <!-- Selección única: «Todos» es la vista sin cambios y sustituye al antiguo «Restablecer
+           vista», que aparecía al filtrar y movía la fila. -->
+      <div role="radiogroup" aria-label="Filtrar por" class="flex flex-wrap gap-2">
+        <HoverHint :text="HELP.counterAll">
+          <CounterFilter
+            :data-agent="AGENT_ANCHOR.reset"
+            :count="view.total"
+            label="Todos"
+            swatch="all"
+            :checked="!isViewChanged"
+            @click="update(resetViewPatch())"
+          />
+        </HoverHint>
         <HoverHint v-for="counter in counters" :key="counter.filter" :text="counter.help">
           <CounterFilter
             :data-agent="counter.agentTarget"
             :count="counter.count"
             :label="counter.label"
             :swatch="counter.swatch"
-            :pressed="view.activeCounter === counter.filter"
+            :checked="view.activeCounter === counter.filter"
             @click="update(counterPatch(counter.filter, query))"
           />
         </HoverHint>
@@ -105,21 +117,6 @@ const isSetByRad = computed(
       <span v-if="isSetByRad" class="text-[13.5px] text-muted-foreground">
         Filtros puestos por Rad
       </span>
-      <Transition
-        enter-from-class="translate-y-1 opacity-0"
-        enter-active-class="transition duration-300 ease-out motion-reduce:transition-none"
-      >
-        <HoverHint v-if="isViewChanged" :text="HELP.resetView">
-          <button
-            type="button"
-            :data-agent="AGENT_ANCHOR.reset"
-            class="min-h-11 rounded-xl bg-card px-4 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-secondary-hover active:scale-[0.98]"
-            @click="update(resetViewPatch())"
-          >
-            Restablecer vista
-          </button>
-        </HoverHint>
-      </Transition>
     </div>
   </section>
 </template>
