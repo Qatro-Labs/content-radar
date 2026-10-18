@@ -30,6 +30,12 @@ variable:
     unit: requests
     price_per_unit: 0.00188
     source: https://scrapecreators.com
+  twitterapi:
+    # X. 0,15 $ por 1.000 tweets devueltos (15 créditos por tweet, 1 $ = 100.000 créditos), con un
+    # mínimo de un tweet por llamada.
+    unit: tweets
+    price_per_unit: 0.00015
+    source: https://twitterapi.io/pricing
   typesafe_jev:
     unit: input_tokens
     price_per_unit: 0.000000042 # 0,042 $ por millón de tokens de entrada; la salida es gratis

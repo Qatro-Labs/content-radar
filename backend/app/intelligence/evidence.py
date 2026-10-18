@@ -34,6 +34,7 @@ PERFORMANCE_METRIC = {
     Platform.YOUTUBE: "views",
     Platform.TIKTOK: "views",
     Platform.INSTAGRAM: "views",
+    Platform.X: "views",
     Platform.HACKERNEWS: "points",
     Platform.REDDIT: "points",
 }

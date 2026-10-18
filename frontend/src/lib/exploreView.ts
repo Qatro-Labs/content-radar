@@ -19,6 +19,7 @@ export const FILTERABLE_PLATFORMS = [
   'tiktok',
   'reddit',
   'instagram',
+  'x',
 ] as const satisfies readonly Platform[]
 export type FilterablePlatform = (typeof FILTERABLE_PLATFORMS)[number]
 

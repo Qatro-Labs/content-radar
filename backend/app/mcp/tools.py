@@ -56,8 +56,8 @@ MIN_COMPARED = 2
 MAX_COMPARED = 5
 
 COVERAGE_NOTE = (
-    "Ranking sobre las fuentes que monitoreamos (YouTube, Hacker News, medios y RSS). "
-    "LinkedIn, Instagram y TikTok no entran."
+    "Ranking sobre las fuentes que monitoreamos (YouTube, Hacker News, medios y RSS, TikTok, "
+    "Reddit, Instagram y X). LinkedIn no entra."
 )
 NO_DATA = "Todavía no hay oportunidades calculadas: no hay datos que mostrar."
 UNKNOWN_OPPORTUNITY = (

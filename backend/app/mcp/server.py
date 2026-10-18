@@ -47,7 +47,7 @@ INSTRUCTIONS = """\
 30X Signal es el radar editorial de 30X sobre temas de inteligencia artificial para ejecutivos y \
 equipos de Latinoamérica. Lee oportunidades ya calculadas a partir de fuentes públicas que \
 monitoreamos (YouTube, Hacker News, medios y RSS, búsquedas de TikTok, subreddits y perfiles \
-concretos de Instagram). LinkedIn y X no se monitorean.
+concretos de Instagram y de X). LinkedIn no se monitorea.
 
 Flujo recomendado: get_trending_opportunities → analyze_opportunity → (opcional) \
 compare_audience_fit o search_content_signals → generate_editorial_brief.

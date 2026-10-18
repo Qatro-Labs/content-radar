@@ -16,6 +16,14 @@ from app.collectors.scrapecreators import (
     TikTokCollector,
 )
 from app.collectors.text import clean_html, is_ai_related
+from app.collectors.twitterapi import API_BASE as TWITTERAPI
+from app.collectors.twitterapi import (
+    LAST_TWEETS_PATH,
+    TWEET_DATE_FORMAT,
+    TwitterApiClient,
+    TwitterApiError,
+    XCollector,
+)
 from app.collectors.usage import UsageMeter
 from app.collectors.youtube import API_BASE, YouTubeClient, YouTubeCollector, parse_duration
 from app.models import Source
@@ -406,3 +414,90 @@ async def test_scrapecreators_does_not_retry_paid_errors():
 
     assert route.call_count == 1
     assert not usage.counts  # un error no gasta crédito: no cuenta como coste medido
+
+
+# --- X vía twitterapi.io -----------------------------------------------------------------
+
+
+def tweet(
+    tweet_id: str,
+    text: str | None,
+    *,
+    days_ago: float = 1,
+    views: int | None = 50000,
+    retweet: bool = False,
+    reply: bool = False,
+    links: tuple[str, ...] = (),
+):
+    return {
+        "id": tweet_id,
+        "text": text,
+        "createdAt": (NOW - timedelta(days=days_ago)).strftime(TWEET_DATE_FORMAT),
+        "viewCount": views,
+        "likeCount": 1200,
+        "replyCount": 80,
+        "retweetCount": 150,
+        "isReply": reply,
+        "retweeted_tweet": {"id": "orig"} if retweet else None,
+        "entities": {"urls": [{"expanded_url": url} for url in links]},
+    }  # fmt: skip
+
+
+def last_tweets_response(*tweets: dict) -> httpx.Response:
+    return httpx.Response(200, json={"status": "success", "data": {"tweets": list(tweets)}})
+
+
+@respx.mock
+async def test_x_keeps_own_recent_ai_posts_with_views():
+    route = respx.get(f"{TWITTERAPI}{LAST_TWEETS_PATH}").mock(
+        return_value=last_tweets_response(
+            tweet(
+                "1",
+                "Agents &gt; chatbots: how firms use AI\n\nthread below",
+                links=("https://x.com/a/status/9", "https://example.com/report"),
+            ),
+            tweet("2", "RT @lab: New AI model", retweet=True),
+            tweet("3", "@someone yes, the AI did it", reply=True),
+            tweet("4", "Old AI take", days_ago=30),
+            tweet("5", "What a match last night"),  # no es IA
+            tweet("6", "AI without view count", views=None),
+            tweet("7", None),
+        )
+    )
+    source = make_source("x", "creadora", ai_filter=True)
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        collector = XCollector(TwitterApiClient("k", http, usage))
+        signals = await collector.collect(source, backfill_days=14)
+
+    assert route.calls[0].request.url.params["userName"] == "creadora"
+    assert route.calls[0].request.headers["X-API-Key"] == "k"
+    # Se paga por tweet devuelto, también por los que el filtro descarta.
+    assert usage.counts[(Provider.TWITTERAPI, LAST_TWEETS_PATH)].units == 7
+    assert [s.external_id for s in signals] == ["1"]
+    s = signals[0]
+    assert str(s.url) == "https://x.com/creadora/status/1"
+    assert str(s.target_url) == "https://example.com/report"
+    assert s.title == "Agents > chatbots: how firms use AI"
+    assert s.author_name == "@creadora"
+    assert s.format is ContentFormat.POST
+    assert (s.metrics.views, s.metrics.likes, s.metrics.comments, s.metrics.shares) == (
+        50000,
+        1200,
+        80,
+        150,
+    )
+
+
+@respx.mock
+async def test_x_reports_provider_error_without_charging():
+    respx.get(f"{TWITTERAPI}{LAST_TWEETS_PATH}").mock(
+        return_value=httpx.Response(200, json={"status": "error", "msg": "User not found"})
+    )
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        collector = XCollector(TwitterApiClient("k", http, usage))
+        with pytest.raises(TwitterApiError, match="User not found"):
+            await collector.collect(make_source("x", "nadie"))
+
+    assert not usage.counts

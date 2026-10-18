@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     youtube_api_key: str = ""
     brave_api_key: str = ""
     scrapecreators_api_key: str = ""
+    twitterapi_api_key: str = ""
 
     typesafe_api_key: str = ""
     jev_model: str = "jev-1.13.0"

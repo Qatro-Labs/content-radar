@@ -65,6 +65,10 @@ class InstagramSeed(_Common):
     handle: str
 
 
+class XSeed(_Common):
+    handle: str
+
+
 class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
     hackernews: list[HackerNewsSeed] = []
@@ -72,6 +76,7 @@ class SeedFile(BaseModel):
     tiktok: list[TikTokSeed] = []
     reddit: list[RedditSeed] = []
     instagram: list[InstagramSeed] = []
+    x: list[XSeed] = []
 
 
 def load_seed_file(path: Path) -> SeedFile:
@@ -176,6 +181,22 @@ async def _seed_instagram(session: AsyncSession, seeds: list[InstagramSeed]) -> 
     return len(seeds)
 
 
+async def _seed_x(session: AsyncSession, seeds: list[XSeed]) -> int:
+    for s in seeds:
+        handle = s.handle.removeprefix("@")
+        await upsert_source(
+            session,
+            platform=Platform.X.value,
+            kind=SourceKind.CHANNEL.value,
+            external_id=handle,
+            name=f"X · @{handle}",
+            url=f"https://x.com/{handle}",
+            config={"ai_filter": s.ai_filter},
+            **_common(s),
+        )
+    return len(seeds)
+
+
 async def _seed_youtube(
     session: AsyncSession, seeds: list[YouTubeSeed], youtube: YouTubeClient
 ) -> tuple[int, list[str]]:
@@ -210,6 +231,7 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
         "tiktok": await _seed_tiktok(session, data.tiktok),
         "reddit": await _seed_reddit(session, data.reddit),
         "instagram": await _seed_instagram(session, data.instagram),
+        "x": await _seed_x(session, data.x),
         "youtube": 0,
         "youtube_unresolved": [],
     }
@@ -231,7 +253,7 @@ async def main(path: Path, dry_run: bool) -> int:
     print(
         f"{path.name}: {len(data.youtube)} YouTube · {len(data.hackernews)} HN · "
         f"{len(data.rss)} RSS · {len(data.tiktok)} TikTok · {len(data.reddit)} Reddit · "
-        f"{len(data.instagram)} Instagram"
+        f"{len(data.instagram)} Instagram · {len(data.x)} X"
     )
     if dry_run:
         return 0

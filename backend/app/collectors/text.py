@@ -18,6 +18,7 @@ _CASE_INSENSITIVE = re.compile(
     re.IGNORECASE,
 )
 
+HEADLINE_CHARS = 140
 _TAG = re.compile(r"<[^>]+>")
 _SPACES = re.compile(r"\s+")
 
@@ -33,3 +34,9 @@ def clean_html(value: str | None, max_length: int = 2000) -> str | None:
         return None
     text = _SPACES.sub(" ", html.unescape(_TAG.sub(" ", value))).strip()
     return text[:max_length] or None
+
+
+def headline(text: str) -> str:
+    """Título de una pieza sin título propio (vídeo corto, reel, tweet): su primera línea."""
+    first_line = text.strip().split("\n", 1)[0]
+    return first_line[:HEADLINE_CHARS] or text[:HEADLINE_CHARS]

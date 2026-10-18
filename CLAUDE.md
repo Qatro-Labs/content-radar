@@ -109,7 +109,8 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 | Brave Search | API oficial (5 $/1.000 consultas, 5 $ de crédito gratis al mes). Sus términos solo permiten guardar resultados de forma **transitoria**: se persisten agregados, no resultados | Descubrimiento web (nunca LinkedIn) | P1 |
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
 | TikTok · Reddit · Instagram | **ScrapeCreators** (pago por crédito: 1 crédito por fuente y ejecución, ~1,9 $/1.000; el cron solo lo consulta dos veces al día). TikTok: búsqueda por palabra clave de la semana, por región. Reddit: top de la semana por subreddit. Instagram: últimos reels de perfiles elegidos a mano (no descubre temas, sirve para outliers) | Vídeos cortos (views, likes, comentarios, shares) y conversación (score, comentarios) | P1 (17/10) |
-| LinkedIn · X | **Fuera del MVP.** ScrapeCreators los cubre, pero su búsqueda depende de lo que indexa Google (incompleta y con poco de lo reciente). Roadmap: vías oficiales (API de portabilidad DMA, API de X) | — | Roadmap |
+| X | **twitterapi.io** (desde el 18/10): últimos tweets de perfiles elegidos a mano, como Instagram (no descubre temas, sirve para outliers). 0,15 $ por 1.000 tweets | Tweets propios (views, likes, respuestas, retweets) | P1 (18/10) |
+| LinkedIn | **Fuera del MVP.** ScrapeCreators lo cubre, pero su búsqueda depende de lo que indexa Google (incompleta y con poco de lo reciente). Roadmap: API de portabilidad DMA | — | Roadmap |
 
 **Límites de cada fuente y vías oficiales para el roadmap:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
 
@@ -283,7 +284,7 @@ GET  /health
 **Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, LiteLLM, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
 
 **Variables de entorno** (solo en el backend; ver `.env.example`):
-`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `SCRAPECREATORS_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `JEV_VERIFY_CLAIMS`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
+`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `SCRAPECREATORS_API_KEY`, `TWITTERAPI_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `JEV_VERIFY_CLAIMS`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
 
 ---
 
