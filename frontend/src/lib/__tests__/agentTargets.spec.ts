@@ -16,6 +16,10 @@ describe('patchToQuery', () => {
     })
   })
 
+  it('opens the ranking tab to show a sort', () => {
+    expect(patchToQuery({ sort: 'acceleration' })).toEqual({ sort: 'acceleration', tab: 'ranking' })
+  })
+
   it('leaves out the keys the patch does not bring', () => {
     expect(patchToQuery({ highlight: ['opp_001'], selected: 'opp_001' })).toStrictEqual({
       highlight: ['opp_001'],
@@ -54,22 +58,28 @@ describe('patchTarget', () => {
       target: { anchor: 'row-opp_001', kind: 'control' },
     },
     {
-      case: 'a selection without a bubble or a row goes to the ranking',
+      case: 'a selection without a bubble or a row goes to its preview beside',
       patch: { selected: 'opp_011' },
       anchors: [],
-      target: { anchor: 'ranking', kind: 'block' },
+      target: { anchor: 'detail', kind: 'block' },
     },
     {
       case: 'a filter equal to a counter presses that counter',
       patch: { lifecycle: ['accelerating'] },
-      anchors: ['reset'],
+      anchors: ['reset', 'filter-lc-accelerating'],
       target: { anchor: 'filter-lc-accelerating', kind: 'control' },
     },
     {
       case: 'publish now presses its counter',
       patch: { recommendation: 'publish_now' },
-      anchors: [],
+      anchors: ['filter-rec-publish_now'],
       target: { anchor: 'filter-rec-publish_now', kind: 'control' },
+    },
+    {
+      case: 'a counter that is not on screen leaves the presence on the radar',
+      patch: { lifecycle: ['unknown'] },
+      anchors: [],
+      target: { anchor: 'radar', kind: 'block' },
     },
     {
       case: 'a reset presses «Restablecer vista»',

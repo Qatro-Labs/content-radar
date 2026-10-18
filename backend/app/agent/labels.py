@@ -15,7 +15,7 @@ LIFECYCLE_LABELS = {
     Lifecycle.ACCELERATING: "Acelerando",
     Lifecycle.PEAKING: "En pico",
     Lifecycle.SATURATED: "Saturado",
-    Lifecycle.UNKNOWN: "Sin etapa",
+    Lifecycle.UNKNOWN: "Sin tendencia clara",
 }
 RECOMMENDATION_LABELS = {
     Recommendation.PUBLISH_NOW: "Publicar ya",

@@ -65,15 +65,11 @@ const velocity = computed(() => formatVelocity(evidence.velocity))
       </p>
     </div>
 
+    <!-- El rótulo «Frente a lo normal en su canal» va una vez, en la cabecera de la sección, y la
+         velocidad ausente se dice allí (EvidenceSection): aquí solo se escribe la que existe. -->
     <div class="flex min-w-[240px] flex-[0_1_300px] flex-col gap-1.5">
-      <span class="text-[13px] text-muted-foreground">Rendimiento frente a su canal</span>
       <PerformanceBar :evidence />
-      <span
-        class="text-sm"
-        :class="velocity ? 'font-medium text-ink-read' : 'text-muted-foreground'"
-      >
-        {{ velocity ?? 'Velocidad no disponible' }}
-      </span>
+      <span v-if="velocity" class="text-sm font-medium text-ink-read">{{ velocity }}</span>
     </div>
   </article>
 </template>

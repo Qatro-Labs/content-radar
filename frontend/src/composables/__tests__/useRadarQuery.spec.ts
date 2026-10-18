@@ -37,12 +37,13 @@ describe('useRadarQuery', () => {
       gap: false,
       sort: 'opportunity',
       recommendation: null,
+      tab: 'radar',
     })
   })
 
   it('reads every radar param from the URL', async () => {
     const { radar } = await mountAt(
-      '/?period=24h&lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004&gap=1&sort=acceleration&recommendation=publish_now',
+      '/?period=24h&lifecycle=emerging&confidence=high&topic=agentes&selected=opp_001&highlight=opp_001,opp_004&gap=1&sort=acceleration&recommendation=publish_now&tab=ranking',
     )
 
     expect(radar.query.value).toEqual({
@@ -55,6 +56,7 @@ describe('useRadarQuery', () => {
       gap: true,
       sort: 'acceleration',
       recommendation: 'publish_now',
+      tab: 'ranking',
     })
   })
 

@@ -4,10 +4,12 @@ import { useRoute } from 'vue-router'
 
 import { USING_FIXTURES } from '@/api/opportunities'
 import { AGENT_ANCHOR } from '@/lib/agentTargets'
+import { HELP } from '@/lib/helpText'
 import { RouteName } from '@/router'
 
 import AuthControl from './AuthControl.vue'
 import DataStatus from './DataStatus.vue'
+import HoverHint from './HoverHint.vue'
 import PeriodControl from './PeriodControl.vue'
 import SearchButton from './SearchButton.vue'
 
@@ -21,6 +23,7 @@ const views = [
     icon: Radar,
     routes: [RouteName.Discover],
     agentTarget: AGENT_ANCHOR.navRadar,
+    help: HELP.navRadar,
   },
   {
     name: RouteName.Explore,
@@ -28,6 +31,7 @@ const views = [
     icon: ChartLine,
     routes: [RouteName.Explore, RouteName.Dossier],
     agentTarget: AGENT_ANCHOR.navExplore,
+    help: HELP.navExplore,
   },
   // Rad no actúa en Crear: no necesita ancla.
   {
@@ -36,6 +40,7 @@ const views = [
     icon: PenLine,
     routes: [RouteName.Create],
     agentTarget: undefined,
+    help: HELP.navCreate,
   },
 ] as const
 
@@ -56,25 +61,32 @@ function isCurrent(routes: readonly string[]): boolean {
       </RouterLink>
 
       <nav aria-label="Vistas" class="flex flex-wrap items-center gap-1">
-        <RouterLink
-          v-for="view in views"
-          :key="view.name"
-          :to="{ name: view.name }"
-          :data-agent="view.agentTarget"
-          :aria-current="isCurrent(view.routes) ? 'page' : undefined"
-          class="flex h-11 items-center gap-2 rounded-[10px] px-3.5 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
-        >
-          <component :is="view.icon" class="size-4 shrink-0" :stroke-width="2" aria-hidden="true" />
-          {{ view.label }}
-        </RouterLink>
+        <HoverHint v-for="view in views" :key="view.name" :text="view.help">
+          <RouterLink
+            :to="{ name: view.name }"
+            :data-agent="view.agentTarget"
+            :aria-current="isCurrent(view.routes) ? 'page' : undefined"
+            class="flex h-11 items-center gap-2 rounded-[10px] px-3.5 text-sm font-medium text-ink-soft transition-colors duration-150 ease-out hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-semibold aria-[current=page]:text-foreground"
+          >
+            <component
+              :is="view.icon"
+              class="size-4 shrink-0"
+              :stroke-width="2"
+              aria-hidden="true"
+            />
+            {{ view.label }}
+          </RouterLink>
+        </HoverHint>
       </nav>
 
       <SearchButton />
     </div>
 
     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <DataStatus />
-      <PeriodControl v-if="route.name === RouteName.Discover" />
+      <HoverHint :text="HELP.lastCollection"><DataStatus /></HoverHint>
+      <HoverHint v-if="route.name === RouteName.Discover" :text="HELP.period">
+        <PeriodControl />
+      </HoverHint>
       <span
         v-if="USING_FIXTURES"
         class="rounded-full bg-sample px-3 py-1.5 text-[13px] font-medium text-notice-foreground"

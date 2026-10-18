@@ -5,6 +5,7 @@ from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import get_settings
+from app.db.session import POOLER_CONNECT_ARGS
 from app.models import Base
 
 config = context.config
@@ -28,7 +29,7 @@ def do_run_migrations(connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    engine = create_async_engine(DATABASE_URL)
+    engine = create_async_engine(DATABASE_URL, connect_args=POOLER_CONNECT_ARGS)
     async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await engine.dispose()

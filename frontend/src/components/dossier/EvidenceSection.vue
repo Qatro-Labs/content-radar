@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { usePreferredReducedMotion } from '@vueuse/core'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
@@ -35,6 +37,16 @@ const platform = ref<PlatformFilter>(ALL_PLATFORMS)
 const segments = computed(() => platformCounts(pieces.value))
 const shown = computed(() => filterByPlatform(pieces.value, platform.value))
 const isCapped = computed(() => pieces.value.length >= EVIDENCE_LIMIT)
+// CLAUDE.md §2.3: la velocidad ausente se dice, pero una vez por sección y no en cada pieza.
+const withoutVelocity = computed(() => shown.value.filter((piece) => piece.velocity == null).length)
+const velocityNote = computed(() => {
+  if (withoutVelocity.value === 0) return VELOCITY_NOTE
+  const which =
+    withoutVelocity.value === shown.value.length
+      ? 'ninguna pieza'
+      : `${countLabel(withoutVelocity.value, 'pieza', 'piezas')} de ${shown.value.length}`
+  return `${VELOCITY_NOTE} Velocidad no disponible en ${which}: hace falta una segunda medición.`
+})
 
 const list = useTemplateRef<HTMLElement>('list')
 const reducedMotion = usePreferredReducedMotion()
@@ -69,7 +81,10 @@ watch(
     <div class="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
       <div class="flex flex-col gap-2.5">
         <div class="flex flex-col gap-0.5">
-          <h2 :class="CARD_TITLE_CLASS">Evidencia</h2>
+          <h2 :class="[CARD_TITLE_CLASS, 'flex items-center gap-1.5']">
+            Evidencia
+            <InfoTip label="la evidencia" :text="HELP.evidence" />
+          </h2>
           <span v-if="evidence.data" class="text-sm text-muted-foreground">
             {{ countLabel(shown.length, 'pieza', 'piezas') }} · outliers primero
           </span>
@@ -116,6 +131,12 @@ watch(
     </p>
 
     <template v-else>
+      <p class="hidden justify-end pr-[18px] text-[13px] text-muted-foreground md:flex">
+        <span class="flex w-[300px] items-center gap-0.5">
+          Frente a lo normal en su canal
+          <InfoTip label="frente a lo normal" :text="HELP.performance" />
+        </span>
+      </p>
       <div ref="list" class="flex flex-col gap-2">
         <EvidenceRow
           v-for="(piece, index) in shown"
@@ -126,7 +147,7 @@ watch(
         />
       </div>
       <div class="flex flex-col gap-1 text-[13.5px] text-muted-foreground">
-        <p>{{ PERFORMANCE_LEGEND }} {{ VELOCITY_NOTE }}</p>
+        <p>{{ PERFORMANCE_LEGEND }} {{ velocityNote }}</p>
         <p v-if="isCapped">Se muestran las {{ EVIDENCE_LIMIT }} primeras piezas del tema.</p>
       </div>
     </template>

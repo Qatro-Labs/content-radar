@@ -7,7 +7,6 @@ import {
   formatFit,
   formatScore,
   formatShare,
-  GROWTH_LABEL,
   latamGapLabel,
 } from './opportunityFormat'
 
@@ -30,14 +29,26 @@ const MINUS_SIGN = '−'
 const RANGE_DASH = '–'
 const LIST_SEPARATOR = ' · '
 
+// Tres datos. «Observado» va con la evolución, y un hueco en LATAM sin calcular pasa a «Qué no
+// sabemos» (`dossierLimitations`): la cabecera no enumera lo que falta.
 export function dossierStatusLine(opportunity: Opportunity): string {
-  return [
-    GROWTH_LABEL[opportunity.growth_status],
+  const parts = [
     `confianza ${CONFIDENCE_LABEL[opportunity.confidence]}`,
-    countLabel(opportunity.source_count, 'fuente independiente', 'fuentes independientes'),
-    latamGapLabel(opportunity.latam_gap),
-    `actualizado el ${formatUtcTimestamp(opportunity.last_updated)}`,
-  ].join(LIST_SEPARATOR)
+    countLabel(opportunity.source_count, 'fuente', 'fuentes'),
+  ]
+  if (opportunity.latam_gap !== null) parts.push(latamGapLabel(opportunity.latam_gap))
+  parts.push(`actualizado el ${formatUtcTimestamp(opportunity.last_updated)}`)
+  return parts.join(LIST_SEPARATOR)
+}
+
+// Sin causa: el backend da `null` por varios motivos (sobre todo, poca señal de negocio).
+const LATAM_GAP_UNKNOWN = 'Hueco en LATAM: no disponible.'
+
+// CLAUDE.md §2.3: un dato ausente se dice; aquí, junto al resto de lo que no sabemos.
+export function dossierLimitations(opportunity: Opportunity): string[] {
+  const limitations = [...opportunity.limitations]
+  if (opportunity.latam_gap === null) limitations.push(LATAM_GAP_UNKNOWN)
+  return limitations
 }
 
 export interface TopicRank {
@@ -112,11 +123,11 @@ export function splitTimeline(timeline: OpportunityTimeline, lastUpdated: string
 }
 
 export const COMPONENT_LABEL: Record<ScoreComponentName, string> = {
-  momentum: 'Momentum',
+  momentum: 'Crecimiento',
   audience_fit: 'Encaje con 30X',
-  cross_source: 'Fuentes independientes',
-  freshness: 'Frescura',
-  actionability: 'Accionabilidad',
+  cross_source: 'Fuentes',
+  freshness: 'Poco cubierto todavía',
+  actionability: 'Fácil de llevar a contenido',
 }
 
 export interface ComponentRow {
@@ -143,14 +154,15 @@ export const PENALTY_LABEL: Record<ScorePenaltyName, string> = {
   small_sample: 'Muestra pequeña',
 }
 
-export function describePenalties(penalties: readonly ScorePenalty[]): string {
-  if (penalties.length === 0) return 'sin penalizaciones'
+// Sin penalizaciones no se dice nada: solo se nombra lo que resta.
+export function describePenalties(penalties: readonly ScorePenalty[]): string | null {
+  if (penalties.length === 0) return null
   return penalties
     .map(({ name, points }) => `${PENALTY_LABEL[name]} ${MINUS_SIGN}${formatScore(points)}`)
     .join(LIST_SEPARATOR)
 }
 
-// "Oportunidad · puesto 3 de 38 · sin penalizaciones". Sin `rankText` (la lista aún no llegó) se
+// "Oportunidad · puesto 3 de 38 · Una sola fuente −10". Sin `rankText` (la lista aún no llegó) se
 // omite el puesto; sin desglose no hay penalizaciones que contar.
 export function compositionSubline(
   rankText: string | null,
@@ -158,7 +170,8 @@ export function compositionSubline(
 ): string {
   const parts = ['Oportunidad']
   if (rankText !== null) parts.push(rankText)
-  if (breakdown !== null) parts.push(describePenalties(breakdown.penalties))
+  const penalties = breakdown === null ? null : describePenalties(breakdown.penalties)
+  if (penalties !== null) parts.push(penalties)
   return parts.join(LIST_SEPARATOR)
 }
 
@@ -168,7 +181,7 @@ export const CRITERION_LABEL: Record<FitCriterion, string> = {
   exec_readability: 'Comprensible para directivos no técnicos',
   latam_relevance: 'Relevancia para LATAM',
   pillar_fit: 'Encaje con los pilares de 30X',
-  actionable_content: 'Convertible en contenido accionable',
+  actionable_content: 'Fácil de llevar a contenido',
 }
 
 export interface CitationChip {

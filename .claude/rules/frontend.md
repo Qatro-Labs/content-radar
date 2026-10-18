@@ -10,15 +10,17 @@ Antes de tocar UI, lee `DESIGN.md`.
 
 ## Tres vistas
 
-1. **Discover (Radar):** gráfico de burbujas de ECharts como protagonista y ranking sincronizado.
+1. **Discover (Radar):** gráfico de burbujas de ECharts y ranking, en dos pestañas del mismo peso (18/10:
+   `?tab=ranking`, Radar por defecto; `DESIGN.md` §5).
    - **Arranca sin tema seleccionado** (D2, 17/10). El panel lateral muestra «Esta semana» (los temas de «Publicar
      ya»); al elegir una burbuja o una fila pasa a la vista previa del tema, y "Ver expediente" abre
      `/explore/:id`. Ninguna vista pide «elige algo».
    - X = audience fit · Y = momentum · tamaño = evidence strength (normalizado) · color = lifecycle.
    - Cuadrante superior derecho = prioridad. Filtros: periodo y los contadores-filtro de la cabecera (Publicar ya ·
-     Acelerando · Emergentes · Sin etapa), todos en la URL. El ranking lleva mini barras de 6 días (`/timeline`).
-   - Ranking (D6, 17/10): Puesto · Tema · Etapa (badge con `lifecycle_reason` en el tooltip) · 6 días ·
-     Aceleración (↑ +80 %, con Observado · Estimado · Preliminar) · Oportunidad. Se ordena por oportunidad;
+     Acelerando · Emergentes; «Sin tendencia clara» solo por URL), todos en la URL. El ranking lleva mini barras
+     de 6 días (`/timeline`).
+   - Ranking (18/10): Puesto · Tema (punto de etapa) · 6 días · Aceleración (↑ +80 %, piezas de cada ventana
+     debajo, y Estimado · Preliminar cuando toca) · Recomendación (chip con el motivo) · Oportunidad. Se ordena por oportunidad;
      el orden por aceleración se pide por URL (`sort=acceleration`, lo usa el agente) y no tiene botón. Si
      una métrica falta, la UI lo dice; no la rellena.
    - Avisar de forma visible desde cuándo se monitorea (primer snapshot: 17/10 ~02:50 UTC) para que

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import fixture from '@fixtures/opportunities.json'
+import type { components } from '@/types/api'
+
 import {
   audienceReading,
   bubbleSize,
@@ -9,7 +12,13 @@ import {
   formatScore,
   latamGapLabel,
   pulsePeriodSeconds,
+  recommendationReasonText,
 } from '../opportunityFormat'
+
+type Schemas = components['schemas']
+
+// TS lee los enums del JSON como `string`; el fixture cumple el contrato (opportunities.spec.ts).
+const opportunity = (fixture.opportunities as Schemas['OpportunityList']).items[0]!
 
 describe('formatAcceleration', () => {
   it.each([
@@ -20,8 +29,65 @@ describe('formatAcceleration', () => {
     },
     { name: 'decline with a down arrow and U+2212', acceleration: -0.3, expected: '↓ −30\u00a0%' },
     { name: 'flat when it rounds to 0 %', acceleration: 0.004, expected: '→ 0\u00a0%' },
+    {
+      name: '"no disponible" when it is not a number',
+      acceleration: NaN,
+      expected: 'no disponible',
+    },
   ])('writes $name', ({ acceleration, expected }) => {
     expect(formatAcceleration(acceleration)).toBe(expected)
+  })
+})
+
+// Los motivos tal como los escribe backend/app/intelligence/ranking.py.
+describe('recommendationReasonText', () => {
+  it.each([
+    {
+      recommendation: 'publish_now',
+      reason: 'Publicar: tema en crecimiento con encaje alto con la audiencia de 30X (≥ 60).',
+      expected: 'Tema en crecimiento con encaje alto con la audiencia de 30X (≥ 60).',
+    },
+    {
+      recommendation: 'publish_now',
+      reason: 'Publicar ya: encaje alto y aún no se cubre en LATAM.',
+      expected: 'Encaje alto y aún no se cubre en LATAM.',
+    },
+    {
+      recommendation: 'publish_now',
+      reason: 'Publicar ya con ángulo propio: crece de forma demostrada.',
+      expected: 'Con ángulo propio: crece de forma demostrada.',
+    },
+    {
+      recommendation: 'find_angle',
+      reason: 'Buscar ángulo: el tema está en su pico.',
+      expected: 'El tema está en su pico.',
+    },
+    {
+      recommendation: 'wait_for_case',
+      reason: 'Esperar: no hay datos suficientes para afirmar una tendencia.',
+      expected: 'No hay datos suficientes para afirmar una tendencia.',
+    },
+    {
+      recommendation: 'wait_for_case',
+      reason: 'Esperar caso: en los títulos no aparece ninguna organización.',
+      expected: 'En los títulos no aparece ninguna organización.',
+    },
+    {
+      recommendation: 'discard',
+      reason: 'Tema saturado: mucho contenido similar y en descenso.',
+      expected: 'Tema saturado: mucho contenido similar y en descenso.',
+    },
+  ] as const)(
+    'drops what repeats the chip in «$reason»',
+    ({ recommendation, reason, expected }) => {
+      expect(
+        recommendationReasonText({ ...opportunity, recommendation, recommendation_reason: reason }),
+      ).toBe(expected)
+    },
+  )
+
+  it('has no text when the run has no reason', () => {
+    expect(recommendationReasonText({ ...opportunity, recommendation_reason: null })).toBeNull()
   })
 })
 

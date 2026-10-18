@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InfoTip from '@/components/layout/InfoTip.vue'
+import { HELP } from '@/lib/helpText'
 import { computed } from 'vue'
 
 import { countLabel, formatCount } from '@/lib/evidenceFormat'
@@ -28,8 +30,11 @@ function outlierLabel(count: number): string {
 <template>
   <div class="flex flex-col gap-[18px]">
     <div class="flex flex-col gap-1">
-      <h2 class="font-display text-2xl leading-tight font-semibold tracking-[-0.02em]">
+      <h2
+        class="flex items-center gap-1.5 font-display text-2xl leading-tight font-semibold tracking-[-0.02em]"
+      >
         Dónde está funcionando
+        <InfoTip label="Dónde está funcionando" :text="HELP.whereItWorks" />
       </h2>
       <p class="text-sm text-muted-foreground">Temas y fuentes con más outliers.</p>
     </div>
