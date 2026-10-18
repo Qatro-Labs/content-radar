@@ -6,21 +6,20 @@ import { SECONDARY_ON_CANVAS_CLASS } from '@/components/dossier/dossierClasses'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { countLabel } from '@/lib/evidenceFormat'
-import { CONFIDENCE_LABEL, formatScore, GROWTH_LABEL, SCORE_MAX } from '@/lib/opportunityFormat'
+import { formatScore, SCORE_MAX } from '@/lib/opportunityFormat'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
 
 const { opportunity } = defineProps<{ opportunity: components['schemas']['Opportunity'] }>()
 
-// Jerarquía score → explicación → acción: la cabecera da la oportunidad y su confianza.
+// Lo que decide al escribir: la oportunidad y de cuántas fuentes sale. La confianza y el tipo de
+// evidencia están en el expediente, a un clic.
 const statusLine = computed(() =>
   [
     opportunity.opportunity_score == null
       ? 'Oportunidad no disponible'
       : `Oportunidad ${formatScore(opportunity.opportunity_score)} de ${SCORE_MAX}`,
-    GROWTH_LABEL[opportunity.growth_status],
-    `confianza ${CONFIDENCE_LABEL[opportunity.confidence]}`,
-    countLabel(opportunity.source_count, 'fuente independiente', 'fuentes independientes'),
+    countLabel(opportunity.source_count, 'fuente', 'fuentes'),
   ].join(' · '),
 )
 </script>

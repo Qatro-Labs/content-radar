@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 const { update } = useRadarQuery()
 
-const COLUMNS = ['Puesto', 'Tema', 'Etapa', '6 días', 'Aceleración', 'Oportunidad'] as const
+const COLUMNS = ['Puesto', 'Tema', 'Últimos 6 días', 'Piezas nuevas', 'Oportunidad'] as const
 // DESIGN.md §4: el ranking enseña 10 filas y el resto se despliega.
 const COLLAPSED_ROWS = 10
 
@@ -59,7 +59,8 @@ function timelineOf(id: string): QueryState<OpportunityTimeline | null> {
   }
 }
 
-const BARS_NOTE = 'Barras: piezas nuevas por periodo de 24 h'
+const WINDOWS_NOTE =
+  'en gris los 3 días anteriores y en negro los últimos 3, que son las piezas nuevas'
 
 // Las fechas salen del primer timeline con puntos: todos comparten ventana. Sin ninguno, sin fechas.
 const barsNote = computed(() => {
@@ -68,8 +69,8 @@ const barsNote = computed(() => {
     .find((loaded) => loaded.length > 0)
   const first = points?.at(0)
   const last = points?.at(-1)
-  if (!first || !last) return BARS_NOTE
-  return `${BARS_NOTE}, del ${formatUtcDay(first.date)} al ${formatUtcDay(last.date)}`
+  const span = first && last ? ` del ${formatUtcDay(first.date)} al ${formatUtcDay(last.date)}` : ''
+  return `Barras: piezas nuevas cada 24 h${span}; ${WINDOWS_NOTE}.`
 })
 </script>
 
@@ -79,10 +80,7 @@ const barsNote = computed(() => {
     aria-label="Ranking"
     class="flex min-w-0 flex-col gap-1 rounded-card bg-card px-5 pt-5 pb-3"
   >
-    <div class="flex flex-wrap items-center justify-between gap-3 px-1 pb-2">
-      <h2 class="font-display text-[22px] font-semibold tracking-[-0.02em]">Ranking</h2>
-      <span class="text-[13.5px] text-muted-foreground">{{ barsNote }}</span>
-    </div>
+    <h2 class="px-1 pb-2 font-display text-[22px] font-semibold tracking-[-0.02em]">Ranking</h2>
 
     <div v-if="isEmptyAfterFilter" class="flex flex-wrap items-center gap-x-4 gap-y-3 px-1 py-6">
       <p class="text-[15px] text-ink-soft">Ningún tema cumple estos filtros.</p>
@@ -97,7 +95,7 @@ const barsNote = computed(() => {
 
     <template v-else>
       <div class="overflow-x-auto">
-        <div class="min-w-[780px]">
+        <div class="min-w-[660px]">
           <div class="py-2 text-[13px] text-muted-foreground" :class="RANKING_GRID_CLASS">
             <span v-for="column in COLUMNS" :key="column">{{ column }}</span>
           </div>
@@ -123,6 +121,7 @@ const barsNote = computed(() => {
       >
         {{ isExpanded ? 'Ver menos' : `Ver los ${rows.length} temas` }}
       </button>
+      <p class="px-1 pt-2 text-[13px] text-muted-foreground">{{ barsNote }}</p>
     </template>
   </section>
 </template>

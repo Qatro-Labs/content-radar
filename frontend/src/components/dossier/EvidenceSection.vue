@@ -35,6 +35,16 @@ const platform = ref<PlatformFilter>(ALL_PLATFORMS)
 const segments = computed(() => platformCounts(pieces.value))
 const shown = computed(() => filterByPlatform(pieces.value, platform.value))
 const isCapped = computed(() => pieces.value.length >= EVIDENCE_LIMIT)
+// CLAUDE.md §2.3: la velocidad ausente se dice, pero una vez por sección y no en cada pieza.
+const withoutVelocity = computed(() => shown.value.filter((piece) => piece.velocity == null).length)
+const velocityNote = computed(() => {
+  if (withoutVelocity.value === 0) return VELOCITY_NOTE
+  const which =
+    withoutVelocity.value === shown.value.length
+      ? 'ninguna pieza'
+      : `${countLabel(withoutVelocity.value, 'pieza', 'piezas')} de ${shown.value.length}`
+  return `${VELOCITY_NOTE} Velocidad no disponible en ${which}: hace falta una segunda medición.`
+})
 
 const list = useTemplateRef<HTMLElement>('list')
 const reducedMotion = usePreferredReducedMotion()
@@ -116,6 +126,9 @@ watch(
     </p>
 
     <template v-else>
+      <p class="hidden justify-end pr-[18px] text-[13px] text-muted-foreground md:flex">
+        <span class="w-[300px]">Frente a lo normal en su canal</span>
+      </p>
       <div ref="list" class="flex flex-col gap-2">
         <EvidenceRow
           v-for="(piece, index) in shown"
@@ -126,7 +139,7 @@ watch(
         />
       </div>
       <div class="flex flex-col gap-1 text-[13.5px] text-muted-foreground">
-        <p>{{ PERFORMANCE_LEGEND }} {{ VELOCITY_NOTE }}</p>
+        <p>{{ PERFORMANCE_LEGEND }} {{ velocityNote }}</p>
         <p v-if="isCapped">Se muestran las {{ EVIDENCE_LIMIT }} primeras piezas del tema.</p>
       </div>
     </template>

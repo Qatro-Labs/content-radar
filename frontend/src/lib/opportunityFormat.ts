@@ -7,6 +7,7 @@ type Opportunity = Schemas['Opportunity']
 type Recommendation = Schemas['Recommendation']
 type GrowthStatus = Schemas['GrowthStatus']
 type Confidence = Schemas['Confidence']
+type TimelinePoint = Schemas['TimelinePoint']
 
 // Los scores del contrato van de 0 a 100 (CLAUDE.md §6).
 export const SCORE_MAX = 100
@@ -146,10 +147,43 @@ export const RECOMMENDATION_LABEL: Record<Recommendation, string> = {
   discard: 'Descartar',
 }
 
+// El motivo que escribe el backend empieza a veces con la etiqueta («Buscar ángulo: tema en
+// crecimiento…»); junto al chip, la etiqueta sobra.
+export function recommendationReasonText(opportunity: Opportunity): string | null {
+  const reason = opportunity.recommendation_reason
+  if (!reason) return null
+  const prefix = `${RECOMMENDATION_LABEL[opportunity.recommendation]}:`
+  if (!reason.startsWith(prefix)) return reason
+  const rest = reason.slice(prefix.length).trim()
+  return rest.charAt(0).toUpperCase() + rest.slice(1)
+}
+
 export const GROWTH_LABEL: Record<GrowthStatus, string> = {
   observed: 'Observado',
   estimated: 'Estimado',
   preliminary: 'Preliminar',
+}
+
+// En las listas, «Observado» es lo normal y no se repite en cada fila: solo se marca lo que no lo
+// es. El detalle (vista previa, expediente) sigue diciendo los tres (CLAUDE.md §2.5).
+export function growthCaveat(status: GrowthStatus): string | null {
+  return status === 'observed' ? null : GROWTH_LABEL[status]
+}
+
+export interface WindowTotals {
+  current: number
+  previous: number
+}
+
+// Piezas nuevas de cada ventana del timeline. Con bases tan pequeñas, «7 · antes 1» se lee mejor
+// que «↑ +604 %», que además va ajustado por volumen y no es la resta de estas cifras.
+export function windowTotals(points: readonly TimelinePoint[]): WindowTotals | null {
+  if (points.length === 0) return null
+  const sum = (window: TimelinePoint['window']) =>
+    points
+      .filter((point) => point.window === window)
+      .reduce((total, point) => total + point.count, 0)
+  return { current: sum('current'), previous: sum('previous') }
 }
 
 // Se escribe detrás de "confianza": "confianza alta".

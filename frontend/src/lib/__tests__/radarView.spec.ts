@@ -294,22 +294,22 @@ describe('describeStageUnknowns', () => {
     {
       case: 'for lack of data and because no rule matches',
       counts: { preliminary: 8, unmatched: 11 },
-      text: '19 de 38 temas no tienen etapa: 8 por falta de datos y 11 porque ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      text: '19 de 38 temas no tienen una tendencia clara: 8 por falta de datos y 11 porque ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
     },
     {
       case: 'only because no rule matches',
       counts: { preliminary: 0, unmatched: 19 },
-      text: '19 de 38 temas no tienen etapa: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      text: '19 de 38 temas no tienen una tendencia clara: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
     },
     {
       case: 'one topic, in the singular',
       counts: { preliminary: 0, unmatched: 1 },
-      text: '1 de 38 temas no tiene etapa: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
+      text: '1 de 38 temas no tiene una tendencia clara: ninguna regla se cumple. Datos desde el 16/10, 00:00 UTC.',
     },
     {
       case: 'every topic has a stage',
       counts: { preliminary: 0, unmatched: 0 },
-      text: 'Todos los temas tienen etapa. Datos desde el 16/10, 00:00 UTC.',
+      text: 'Todos los temas tienen una tendencia clara. Datos desde el 16/10, 00:00 UTC.',
     },
   ])('$case', ({ counts, text }) => {
     expect(describeStageUnknowns(topics(counts), MONITORING_STARTED_AT)).toBe(text)

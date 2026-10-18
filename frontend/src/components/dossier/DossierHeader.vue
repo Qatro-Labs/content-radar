@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { dossierStatusLine } from '@/lib/dossierView'
+import { recommendationReasonText } from '@/lib/opportunityFormat'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
 
@@ -13,6 +14,7 @@ import { SECONDARY_ON_CANVAS_CLASS } from './dossierClasses'
 const { opportunity } = defineProps<{ opportunity: components['schemas']['Opportunity'] }>()
 
 const statusLine = computed(() => dossierStatusLine(opportunity))
+const reason = computed(() => recommendationReasonText(opportunity))
 </script>
 
 <template>
@@ -31,13 +33,11 @@ const statusLine = computed(() => dossierStatusLine(opportunity))
     >
       {{ opportunity.topic }}
     </h1>
-    <p class="text-base text-label">{{ statusLine }}</p>
-    <div class="mt-auto flex flex-wrap items-center gap-x-3.5 gap-y-2.5">
+    <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2.5">
       <RecommendationChip :recommendation="opportunity.recommendation" />
       <!-- Ejecuciones anteriores a #23 no traen la regla: sin texto, no "no disponible". -->
-      <p v-if="opportunity.recommendation_reason" class="text-[15px] text-ink-soft">
-        {{ opportunity.recommendation_reason }}
-      </p>
+      <p v-if="reason" class="text-[17px] text-ink-read">{{ reason }}</p>
     </div>
+    <p class="text-[15px] text-label">{{ statusLine }}</p>
   </div>
 </template>

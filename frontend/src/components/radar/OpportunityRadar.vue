@@ -117,13 +117,13 @@ const leaveBubble = () => emit('hover', null)
       <span
         class="absolute top-1/2 left-0 -translate-y-1/2 rotate-180 text-[13px] whitespace-nowrap text-muted-foreground [writing-mode:vertical-rl]"
       >
-        Momentum
+        Crecimiento ↑
       </span>
       <div
         class="absolute right-0 bottom-0 left-[30px] flex justify-between text-[13px] text-muted-foreground"
       >
         <span>0</span>
-        <span>Encaje con la audiencia de 30X</span>
+        <span>Encaje con 30X →</span>
         <span>100</span>
       </div>
       <!-- `max-w-full`: con `aspect-ratio`, el alto mínimo ensancharía el área a 533 px; así, en
@@ -140,8 +140,8 @@ const leaveBubble = () => emit('hover', null)
         <div :class="[DATA_LINE, 'inset-y-0 left-1/2 w-px']" aria-hidden="true" />
         <div :class="[DATA_LINE, 'inset-x-0 top-1/2 h-px']" aria-hidden="true" />
         <span class="absolute top-3 right-4 z-[1] text-sm font-semibold">Prioridad</span>
-        <span :class="[QUADRANT_NOTE, 'top-3 left-4']">Momentum sin encaje</span>
-        <span :class="[QUADRANT_NOTE, 'right-4 bottom-3']">Encaje sin momentum</span>
+        <span :class="[QUADRANT_NOTE, 'top-3 left-4']">Crece, pero no es para 30X</span>
+        <span :class="[QUADRANT_NOTE, 'right-4 bottom-3']">Es para 30X, pero no crece</span>
         <span :class="[QUADRANT_NOTE, 'bottom-3 left-4']">Poca señal</span>
         <div v-if="isMeasured" :key="sweepKey" class="absolute inset-0">
           <RadarSweep />

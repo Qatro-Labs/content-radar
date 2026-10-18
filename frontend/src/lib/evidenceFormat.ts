@@ -131,10 +131,11 @@ export function performanceFraction(ratio: number): number {
   return Math.min(Math.max(ratio, 0) / PERFORMANCE_SCALE_MAX, 1)
 }
 
-// HN no tiene canal: su referencia es el p90 de la búsqueda (CLAUDE.md §7).
+// HN y TikTok no tienen canal: su referencia es el p90 de la búsqueda (CLAUDE.md §7). Se dice
+// sin «mediana» ni «p90»: quien lee decide qué publicar, no audita el cálculo.
 export const PERFORMANCE_LEGEND =
-  '1× = mediana del canal (YouTube, ajustada por la edad de la pieza) o p90 de la búsqueda ' +
-  '(Hacker News). 3× = outlier. La barra llega hasta 6×.'
+  '1× es lo normal en su canal, según la edad de la pieza. En Hacker News y TikTok, lo normal es ' +
+  'una pieza fuerte de la misma búsqueda. 3× o más es un outlier.'
 export const VELOCITY_NOTE = 'Velocidad entre la primera y la última medición.'
 
 // "Xataka · Inteligencia artificial" → "Xataka"; "The AI Daily Brief: Artificial…" → "The AI

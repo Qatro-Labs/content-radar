@@ -62,14 +62,20 @@ describe('patchTarget', () => {
     {
       case: 'a filter equal to a counter presses that counter',
       patch: { lifecycle: ['accelerating'] },
-      anchors: ['reset'],
+      anchors: ['reset', 'filter-lc-accelerating'],
       target: { anchor: 'filter-lc-accelerating', kind: 'control' },
     },
     {
       case: 'publish now presses its counter',
       patch: { recommendation: 'publish_now' },
-      anchors: [],
+      anchors: ['filter-rec-publish_now'],
       target: { anchor: 'filter-rec-publish_now', kind: 'control' },
+    },
+    {
+      case: 'a counter that is not on screen leaves the presence on the radar',
+      patch: { lifecycle: ['unknown'] },
+      anchors: [],
+      target: { anchor: 'radar', kind: 'block' },
     },
     {
       case: 'a reset presses «Restablecer vista»',

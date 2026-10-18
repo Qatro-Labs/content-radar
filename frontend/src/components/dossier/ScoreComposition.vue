@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { ChevronRight } from '@lucide/vue'
 import { computed } from 'vue'
 
-import ScoreRing from '@/components/opportunities/ScoreRing.vue'
 import { componentRows, compositionSubline } from '@/lib/dossierView'
 import { formatScore, SCORE_MAX } from '@/lib/opportunityFormat'
 import type { components } from '@/types/api'
@@ -24,18 +24,25 @@ const subline = computed(() => compositionSubline(rankText, breakdown.value))
 </script>
 
 <template>
-  <section
-    data-agent="dossier-score"
-    aria-label="Cómo se compone la oportunidad"
-    :class="[CARD_CLASS, 'flex-col flex-[1_1_440px] gap-[18px]']"
+  <!-- Para quien quiere auditar el score, no para decidir: va al final y plegado. El anillo está en
+       la cabecera (DossierActions), que enlaza aquí. -->
+  <details
+    id="como-se-calcula"
+    aria-label="Cómo se calcula la oportunidad"
+    :class="[CARD_CLASS, 'group flex-col gap-[18px]']"
   >
-    <div class="flex items-center gap-5">
-      <ScoreRing :score="opportunity.opportunity_score ?? null" />
-      <div class="flex flex-col gap-1">
-        <h2 class="font-display text-xl font-semibold tracking-[-0.02em]">Cómo se compone</h2>
-        <span class="text-sm text-muted-foreground">{{ subline }}</span>
-      </div>
-    </div>
+    <summary
+      class="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 [&::-webkit-details-marker]:hidden"
+    >
+      <ChevronRight
+        class="size-5 text-muted-foreground transition-transform duration-200 ease-out group-open:rotate-90 motion-reduce:transition-none"
+        aria-hidden="true"
+      />
+      <h2 class="font-display text-xl font-semibold tracking-[-0.02em]">
+        Cómo se calcula el {{ formatScore(opportunity.opportunity_score) }}
+      </h2>
+      <span class="text-sm text-muted-foreground">{{ subline }}</span>
+    </summary>
 
     <template v-if="breakdown">
       <div class="flex flex-col gap-3">
@@ -61,14 +68,14 @@ const subline = computed(() => compositionSubline(rankText, breakdown.value))
         </div>
       </div>
       <p class="text-[13.5px] text-muted-foreground">
-        Frescura = 100 − saturación ({{ formatScore(opportunity.saturation_score) }}, dentro de las
-        fuentes monitoreadas).
+        «Poco cubierto todavía» sube cuanto menos contenido parecido hay: hoy, saturación
+        {{ formatScore(opportunity.saturation_score) }} de 100 dentro de las fuentes monitoreadas.
       </p>
     </template>
     <p v-else class="text-[15px] text-ink-soft">
       Sin desglose: falta el encaje con la audiencia, así que no hay puntuación de oportunidad.
     </p>
-  </section>
+  </details>
 </template>
 
 <style scoped>

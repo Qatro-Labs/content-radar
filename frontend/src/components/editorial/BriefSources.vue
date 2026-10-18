@@ -28,8 +28,8 @@ const pieces = computed(() => featuredPieces(evidence.data ?? []))
     <div class="flex flex-col gap-1.5">
       <h2 :class="CARD_TITLE_CLASS">Con qué se escribirá</h2>
       <p class="text-[15px] text-ink-soft">
-        Encaje con 30X: {{ formatFit(opportunity.audience_fit_score) }}. El brief parte de la
-        evidencia del tema y de los criterios de encaje; estas son las piezas que mejor rinden.
+        Las piezas que mejor rinden frente a lo normal en su canal. Encaje con 30X:
+        {{ formatFit(opportunity.audience_fit_score) }}.
       </p>
     </div>
 

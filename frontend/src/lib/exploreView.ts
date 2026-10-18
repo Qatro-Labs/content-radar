@@ -249,10 +249,10 @@ export function exploreSummary(input: ExploreSummaryInput): string {
   const pieces = countLabel(counts.total, 'pieza', 'piezas')
   const topics =
     topicsWithPiecesCount === 1 ? '1 tema' : `los ${formatCount(topicsWithPiecesCount)} temas`
-  const outliers = countLabel(counts.outliers, 'rinde', 'rinden')
-  const cap = isCapped ? ` Hasta ${EVIDENCE_LIMIT} piezas por tema.` : ''
+  const rinden = counts.outliers === 1 ? 'rinde' : 'rinden'
+  const cap = isCapped ? ` (hasta ${EVIDENCE_LIMIT} por tema)` : ''
   return (
-    `${pieces} de ${topics}${describePublished(publishedRange, counts.total)}. ` +
-    `${outliers} 3× o más que su canal.${cap}`
+    `${formatCount(counts.outliers)} ${rinden} 3× o más que lo normal en su canal. ` +
+    `${pieces} de ${topics}${cap}${describePublished(publishedRange, counts.total)}.`
   )
 }

@@ -55,14 +55,9 @@ const counters = computed<Counter[]>(() => [
     swatch: 'emerging',
     agentTarget: COUNTER_ANCHOR.emerging,
   },
-  {
-    filter: 'unknown',
-    label: LIFECYCLE_STYLE.unknown.label,
-    count: view.counts.unknown,
-    swatch: 'unknown',
-    agentTarget: COUNTER_ANCHOR.unknown,
-  },
 ])
+// «Sin tendencia clara» no tiene contador: era la cifra más grande de la cabecera y solo dice lo
+// que no sabemos. Sigue en la leyenda, en «Qué no sabemos» y en la URL (Rad puede filtrarla).
 
 // Los resaltados también atenúan el radar, así que cuentan como vista cambiada y se
 // restablecen con los filtros (artboard E).

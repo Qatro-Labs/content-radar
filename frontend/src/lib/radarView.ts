@@ -288,11 +288,11 @@ export function describeStageUnknowns(
 ): string {
   const since = `Datos desde el ${formatUtcTimestamp(monitoringStartedAt)}.`
   const unknown = topics.filter((opportunity) => opportunity.lifecycle === 'unknown')
-  if (unknown.length === 0) return `Todos los temas tienen etapa. ${since}`
+  if (unknown.length === 0) return `Todos los temas tienen una tendencia clara. ${since}`
   const preliminaryCount = unknown.filter(
     (opportunity) => opportunity.growth_status === 'preliminary',
   ).length
   const verb = unknown.length === 1 ? 'tiene' : 'tienen'
   const share = `${unknown.length} de ${topicsLabel(topics.length)}`
-  return `${share} no ${verb} etapa: ${missingStageReason(unknown.length, preliminaryCount)}. ${since}`
+  return `${share} no ${verb} una tendencia clara: ${missingStageReason(unknown.length, preliminaryCount)}. ${since}`
 }

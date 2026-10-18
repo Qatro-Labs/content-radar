@@ -75,11 +75,11 @@ describe('componentRows', () => {
     const rows = componentRows(list.items[0]!.score_breakdown!)
 
     expect(rows.map((row) => row.label)).toEqual([
-      'Momentum',
+      'Crecimiento',
       'Encaje con 30X',
-      'Fuentes independientes',
-      'Frescura',
-      'Accionabilidad',
+      'Fuentes',
+      'Poco cubierto todavía',
+      'Fácil de llevar a contenido',
     ])
     expect(rows[0]).toMatchObject({ value: 78.8, display: '79', weightLabel: 'peso 30 %' })
     expect(rows[1]!.display).toBe('Alto · 83')
@@ -88,7 +88,7 @@ describe('componentRows', () => {
 
 describe('describePenalties', () => {
   it.each([
-    { name: 'no penalty', penalties: [], expected: 'sin penalizaciones' },
+    { name: 'no penalty', penalties: [], expected: null },
     {
       name: 'both penalties with U+2212',
       penalties: [

@@ -12,6 +12,8 @@ export type BriefStage = (typeof BriefStage)[keyof typeof BriefStage]
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
 
+import { recommendationReasonText } from '@/lib/opportunityFormat'
+
 import {
   CARD_CLASS,
   CARD_TITLE_CLASS,
@@ -76,8 +78,8 @@ function copyLink() {
       class="flex flex-col items-start gap-2 rounded-tile bg-sunken px-4 py-3.5"
     >
       <RecommendationChip :recommendation="opportunity.recommendation" size="sm" />
-      <p v-if="opportunity.recommendation_reason" class="text-sm text-ink-soft">
-        {{ opportunity.recommendation_reason }}
+      <p v-if="recommendationReasonText(opportunity)" class="text-sm text-ink-soft">
+        {{ recommendationReasonText(opportunity) }}
       </p>
     </div>
 

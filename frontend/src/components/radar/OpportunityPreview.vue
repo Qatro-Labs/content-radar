@@ -7,12 +7,14 @@ import RecommendationChip from '@/components/opportunities/RecommendationChip.vu
 import ScoreRing from '@/components/opportunities/ScoreRing.vue'
 import { countLabel } from '@/lib/evidenceFormat'
 import { TEXT_ENTER_CLASS } from '@/lib/motion'
+import { useAllTimelines } from '@/api/opportunities'
 import {
   CONFIDENCE_LABEL,
-  formatAcceleration,
   formatFit,
   GROWTH_LABEL,
-  isDeclining,
+  NOT_AVAILABLE,
+  recommendationReasonText,
+  windowTotals,
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
 import { cn } from '@/lib/utils'
@@ -41,16 +43,18 @@ const evidenceSummary = computed(() =>
   ].join(SUMMARY_SEPARATOR),
 )
 
+// La misma consulta que las mini barras del ranking: ya está en caché.
+const { data: timelines } = useAllTimelines()
+const newPieces = computed(() => {
+  const totals = windowTotals(timelines.value?.get(opportunity.id)?.points ?? [])
+  return totals ? `${totals.current} · antes ${totals.previous}` : NOT_AVAILABLE
+})
+const reason = computed(() => recommendationReasonText(opportunity))
+
 const tiles = computed<StatTile[]>(() => [
-  {
-    label: 'Aceleración',
-    value: formatAcceleration(opportunity.acceleration),
-    // "↑ +100 %" no cabe en la baldosa y partiría el "%" solo en otra línea. DESIGN.md §2: la
-    // aceleración negativa va en Negativo.
-    valueClass: cn('whitespace-nowrap', {
-      'text-destructive': isDeclining(opportunity.acceleration),
-    }),
-  },
+  // Piezas de los últimos 3 días frente a los 3 anteriores: con bases pequeñas, un porcentaje
+  // exagera (+104 % son 2 piezas frente a 1).
+  { label: 'Piezas nuevas', value: newPieces.value, valueClass: cn('whitespace-nowrap') },
   { label: 'Encaje', value: formatFit(opportunity.audience_fit_score), valueClass: '' },
   { label: 'Outliers', value: String(opportunity.outlier_count), valueClass: '' },
 ])
@@ -91,12 +95,12 @@ const BUTTON_CLASS =
 
     <!-- Ejecuciones anteriores a #23 no traen la regla: sin texto, no "no disponible". -->
     <p
-      v-if="opportunity.recommendation_reason"
+      v-if="reason"
       :key="`reason-${opportunity.id}`"
       class="text-sm text-ink-soft"
       :class="TEXT_ENTER_CLASS"
     >
-      {{ opportunity.recommendation_reason }}
+      {{ reason }}
     </p>
 
     <!-- D8: solo el inicio; el texto entero vive en el expediente. -->

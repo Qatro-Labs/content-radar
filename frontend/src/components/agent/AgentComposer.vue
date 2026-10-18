@@ -25,9 +25,23 @@ const BUTTON_CLASS =
   'flex min-h-[46px] shrink-0 items-center justify-center rounded-xl px-4 font-semibold whitespace-nowrap transition-[background-color,scale] duration-150 ease-out active:scale-[0.98]'
 
 const inputId = useId()
+const hintId = useId()
 const draft = ref('')
+// Las sugerencias solo salen mientras la persona está en la barra: en reposo, la barra es una
+// línea y no tapa la página.
+const isFocused = ref(false)
 
-const showSuggestions = computed(() => !busy && draft.value === '' && suggestions.length > 0)
+const showSuggestions = computed(
+  () => isFocused.value && !busy && draft.value === '' && suggestions.length > 0,
+)
+
+// Pasar el foco del campo a una sugerencia no cuenta como salir de la barra.
+function leave(event: FocusEvent) {
+  const next = event.relatedTarget
+  const root = event.currentTarget
+  if (next instanceof Node && root instanceof Node && root.contains(next)) return
+  isFocused.value = false
+}
 
 // Mientras Rad trabaja, Enter no envía: el borrador se queda para la siguiente pregunta.
 function submit() {
@@ -39,7 +53,7 @@ function submit() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="flex flex-col gap-3" @focusin="isFocused = true" @focusout="leave">
     <ul v-if="showSuggestions" aria-label="Preguntas sugeridas" class="flex flex-wrap gap-2">
       <li v-for="suggestion in suggestions" :key="suggestion">
         <button
@@ -63,6 +77,7 @@ function submit() {
         type="text"
         autocomplete="off"
         :maxlength="MAX_QUESTION_CHARS"
+        :aria-describedby="hintId"
         placeholder="Pregúntale a Rad: ¿qué conviene publicar esta semana?"
         class="h-12 min-w-0 flex-1 rounded-xl bg-secondary px-4 text-[15px] text-foreground placeholder:text-muted-foreground"
       />
@@ -96,7 +111,7 @@ function submit() {
       </button>
     </form>
 
-    <p class="text-[13px] text-muted-foreground">
+    <p :id="hintId" class="sr-only">
       Rad lee las mismas oportunidades que ves y usa los mismos controles
     </p>
   </div>

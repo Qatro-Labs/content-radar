@@ -18,7 +18,7 @@ const text = defineModel<string>('text', { required: true })
 
 const emit = defineEmits<{ select: [url: string] }>()
 
-const COLUMNS = ['Pieza', 'Tema', 'Plataforma', 'Publicada', 'Rendimiento'] as const
+const COLUMNS = ['Pieza', 'Tema', 'Frente a lo normal'] as const
 
 // Cientos de piezas no caben de una vez: se muestran de 25 en 25, y al cambiar el filtro o el
 // texto se vuelve a las 25 primeras.
@@ -77,9 +77,15 @@ function showMore() {
     </p>
 
     <div v-else class="overflow-x-auto">
-      <div class="min-w-[900px]">
+      <div class="min-w-[620px]">
         <div class="py-1.5 text-[13px] text-muted-foreground" :class="PIECES_GRID_CLASS">
-          <span v-for="column in COLUMNS" :key="column">{{ column }}</span>
+          <span
+            v-for="column in COLUMNS"
+            :key="column"
+            :class="{ 'text-right': column === COLUMNS.at(-1) }"
+          >
+            {{ column }}
+          </span>
         </div>
         <PieceRow
           v-for="piece in shownRows"

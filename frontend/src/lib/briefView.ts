@@ -41,8 +41,8 @@ export const BRIEF_PLATFORM_LABEL: Record<BriefPlatform, string> = {
 }
 export const BRIEF_GOAL_LABEL: Record<BriefGoal, string> = {
   educate: 'Educar',
-  spark_conversation: 'Abrir conversación',
-  generate_leads: 'Generar leads',
+  spark_conversation: 'Conversación',
+  generate_leads: 'Captar leads',
 }
 export const BRIEF_FORMAT_LABEL: Record<BriefFormat, string> = {
   post: 'Post',

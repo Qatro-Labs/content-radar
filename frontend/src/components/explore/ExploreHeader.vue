@@ -26,34 +26,45 @@ const counters = computed<Counter[]>(() => [
   })),
 ])
 
-// DESIGN.md §4, contador-filtro: baldosa blanca de radio 16px y cifra Bricolage de 32px.
-const TILE_CLASS = 'flex min-w-[128px] flex-col items-start gap-0.5 rounded-2xl bg-card px-5 py-4'
-const VALUE_CLASS = 'font-display text-[32px] leading-[1.05] font-semibold tracking-[-0.03em]'
+// Un segmented control en una fila (como el periodo): siete baldosas grandes empujaban la tabla
+// fuera de la primera pantalla. «Todas» quita el filtro.
+const SEGMENT_CLASS =
+  'flex min-h-9 items-center gap-1.5 rounded-[9px] px-3.5 text-sm font-medium whitespace-nowrap text-ink-soft transition duration-150 ease-out hover:text-foreground active:scale-[0.98] aria-pressed:bg-card aria-pressed:font-semibold aria-pressed:text-foreground'
+
+function clearFilter() {
+  if (filter !== null) emit('toggle', filter)
+}
 </script>
 
 <template>
-  <section class="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+  <section class="flex flex-col gap-5">
     <ViewHeader title="Lo que está funcionando">{{ exploreSummary(view) }}</ViewHeader>
 
-    <ul class="flex flex-wrap gap-2" aria-label="Filtrar piezas">
-      <li v-for="counter in counters" :key="counter.filter" class="flex">
-        <button
-          type="button"
-          :aria-pressed="filter === counter.filter"
-          class="text-left transition-[background-color,box-shadow,scale] duration-150 ease-out hover:bg-sunken active:scale-[0.98] aria-pressed:ring-2 aria-pressed:ring-foreground"
-          :class="TILE_CLASS"
-          @click="emit('toggle', counter.filter)"
-        >
-          <span :class="VALUE_CLASS">{{ formatCount(counter.value) }}</span>
-          <span class="text-sm text-ink-soft">{{ counter.label }}</span>
-        </button>
-      </li>
-      <!-- RSS no publica métricas: no hay rendimiento que filtrar, solo se cuenta. -->
-      <li :class="TILE_CLASS">
-        <span :class="VALUE_CLASS">{{ formatCount(view.counts.rss) }}</span>
-        <span class="text-sm text-ink-soft">{{ PLATFORM_LABEL.rss }}</span>
-        <span class="text-[13px] text-muted-foreground">sin métricas públicas</span>
-      </li>
-    </ul>
+    <div
+      role="group"
+      aria-label="Filtrar piezas"
+      class="flex flex-wrap gap-0.5 self-start rounded-xl bg-input p-1"
+    >
+      <button
+        type="button"
+        :aria-pressed="filter === null"
+        :class="SEGMENT_CLASS"
+        @click="clearFilter"
+      >
+        Todas
+        <span class="text-muted-foreground">{{ formatCount(view.counts.total) }}</span>
+      </button>
+      <button
+        v-for="counter in counters"
+        :key="counter.filter"
+        type="button"
+        :aria-pressed="filter === counter.filter"
+        :class="SEGMENT_CLASS"
+        @click="emit('toggle', counter.filter)"
+      >
+        {{ counter.label }}
+        <span class="text-muted-foreground">{{ formatCount(counter.value) }}</span>
+      </button>
+    </div>
   </section>
 </template>

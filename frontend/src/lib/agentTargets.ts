@@ -85,10 +85,12 @@ function selectionTarget(id: string, hasAnchor: PatchContext['hasAnchor']): Agen
   return block(AGENT_ANCHOR.ranking)
 }
 
-function counterTarget(patch: RadarPatch, query: RadarQuery): AgentTarget | null {
+function counterTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget | null {
   if (patch.lifecycle === undefined && patch.recommendation === undefined) return null
   const counter = activeCounterOf({ ...query, ...patchToQuery(patch) })
-  return counter === null ? null : control(COUNTER_ANCHOR[counter])
+  // «Sin tendencia clara» filtra por URL pero no tiene contador en la cabecera.
+  if (counter === null || !hasAnchor(COUNTER_ANCHOR[counter])) return null
+  return control(COUNTER_ANCHOR[counter])
 }
 
 // Lo mismo que quitan `resetViewPatch()` y el `reset_view` del agente.
@@ -103,7 +105,7 @@ function isSortOnly(patch: RadarPatch): boolean {
 
 export function patchTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): AgentTarget {
   if (patch.selected) return selectionTarget(patch.selected, hasAnchor)
-  const counter = counterTarget(patch, query)
+  const counter = counterTarget(patch, { query, hasAnchor })
   if (counter !== null) return counter
   if (isReset(patch)) {
     return hasAnchor(AGENT_ANCHOR.reset) ? control(AGENT_ANCHOR.reset) : block(AGENT_ANCHOR.radar)

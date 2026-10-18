@@ -163,9 +163,9 @@ const tiles = computed<WindowTile[]>(() => {
       <span class="text-[15px] text-ink-soft">
         {{ formatDecimal(opportunity.velocity) }} piezas nuevas al día en la ventana actual.
       </span>
-      <span class="text-sm text-muted-foreground">
-        Etapa «{{ LIFECYCLE_STYLE[opportunity.lifecycle].label }}»:
-        {{ opportunity.lifecycle_reason }}
+      <span class="text-sm text-muted-foreground" :title="opportunity.lifecycle_reason">
+        {{ LIFECYCLE_STYLE[opportunity.lifecycle].label }}:
+        {{ LIFECYCLE_STYLE[opportunity.lifecycle].meaning }}
       </span>
     </div>
   </section>
