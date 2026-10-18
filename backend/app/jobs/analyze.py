@@ -30,6 +30,7 @@ from app.editorial.evaluator import build_evaluator
 from app.editorial.explanation import build_explainer
 from app.intelligence.jev import build_judge, to_piece_judgment
 from app.intelligence.opportunities import TopicResult, rank
+from app.intelligence.why_it_worked import with_outlier_hooks
 from app.models import PipelineRun
 from app.services.audience_fit import FitStats, evaluate_topics
 from app.services.classification import ClassificationStats, classify_pieces, load_judgments
@@ -73,9 +74,14 @@ async def _evaluate(session: AsyncSession, run_id: int, as_of: datetime) -> _Eva
         session, as_of, pieces=loaded, judgments=judgments, judge=judge, meter=pair_meter
     )
     await record_meter(session, pair_meter, pipeline_run_id=run_id)
+    hooks = {item_id: j.hook for item_id, j in judgments.items()}
     llm_meter = UsageMeter()
     results, fit, explain = await _fit_and_explain(
-        session, computed.results, answers=answers, settings=settings, meter=llm_meter
+        session,
+        with_outlier_hooks(computed.results, hooks),
+        answers=answers,
+        settings=settings,
+        meter=llm_meter,
     )
     await record_meter(session, llm_meter, pipeline_run_id=run_id)
     # El orden se decide después del audience fit: antes no hay Opportunity Score.

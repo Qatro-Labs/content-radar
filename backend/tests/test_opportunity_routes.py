@@ -1,6 +1,7 @@
 """Rutas REST de oportunidades contra la DB de tests, sembradas con el fixture del frontend."""
 
 import json
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -13,7 +14,14 @@ from app.intelligence.lifecycle import Stage
 from app.intelligence.opportunities import TopicResult
 from app.main import app
 from app.models import ContentItem, PipelineRun, Source
-from app.schemas.opportunity import Evidence, Lifecycle, Opportunity, OpportunityTimeline
+from app.schemas.opportunity import (
+    Evidence,
+    HookLift,
+    Lifecycle,
+    Opportunity,
+    OpportunityTimeline,
+    OutlierHooks,
+)
 from app.services import opportunities
 from app.services.opportunities import ANALYZE_JOB, save_opportunities
 
@@ -272,3 +280,29 @@ async def test_list_served_applies_the_same_filters_as_the_list(session):
 
 async def test_list_served_is_none_before_any_analyze_run(session):
     assert await opportunities.list_served(session) is None
+
+
+async def test_outlier_hooks_are_served(session, client):
+    hooks = OutlierHooks(
+        hooks=[
+            HookLift(
+                hook="data",
+                outliers_with=2,
+                outliers_total=3,
+                rest_with=1,
+                rest_total=6,
+                lift=4.0,
+                observed_pattern=True,
+            )
+        ],
+        outliers_unclassified=1,
+    )
+    [first, *rest] = fixture_results()
+    with_hooks = replace(
+        first, opportunity=first.opportunity.model_copy(update={"outlier_hooks": hooks})
+    )
+    await add_run(session, [with_hooks, *rest])
+
+    body = (await client.get(f"/api/v1/opportunities/{first.opportunity.id}")).json()
+
+    assert body["outlier_hooks"] == hooks.model_dump(mode="json")

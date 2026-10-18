@@ -394,7 +394,8 @@ Lo que estos números **no** dicen (CLAUDE.md §2, regla 3; [`brief.md`](brief.m
   ejecución 37 el mejor p era ≈ 0,02 frente a un primer umbral de ≈ 0,002. La etapa es una señal
   para priorizar, no una prueba.
 - **No es causalidad.** Un outlier dice que una pieza rindió más que su referencia, no por qué. El
-  "por qué funcionó" (lift de rasgos entre outliers y el resto) no está implementado.
+  "por qué funcionó" (`outlier_hooks`) compara solo el gancho del título entre outliers y el resto
+  del tema: es una hipótesis con muestra pequeña, y con pocos outliers casi todo sale anecdótico.
 - **Las métricas son las de la fuente.** RSS no tiene métricas, así que no da outliers; HN y Reddit
   se comparan en puntos brutos, sin ajustar por edad.
 - **La detección de réplicas no es completa.** Solo compara piezas del mismo tema, y las que salen
@@ -425,7 +426,7 @@ momentum y la regla de negocio del LATAM gap; el resto de CLAUDE.md no se ha toc
 | 9 | Audience mix (§7) | Ponderado por el engagement normalizado | Ponderado por el outlier ratio acotado a [0,5, 3,0], 1,0 sin ratio (`backend/app/intelligence/opportunities.py:203`) |
 | 10 | LATAM gap ([`brief.md`](brief.md) §7) | Se sostiene "cuando ambos grupos de fuentes tienen cobertura suficiente" | No comprueba la cobertura del grupo A (global); solo la proporción LATAM y la conversación de negocio (`backend/app/intelligence/audience_mix.py:63`) |
 | 11 | Verificación de afirmaciones (§7) | Jev verifica cada afirmación del LLM; se publica con `confidence` ≥ 0,8 | Implementada, pero **apagada por defecto** (`JEV_VERIFY_CLAIMS=false`) porque no superó la validación con afirmaciones reales: con `claim.v1`, la batería que se entrega, conserva el 58 % de las respaldadas (el 67 % con su revisión `claim.v2`) y el criterio pide el 70 % ([`jev_claim_v1_eval.md`](../data/evaluations/jev_claim_v1_eval.md)). Con el flag apagado, Python solo exige que cada afirmación cite una pieza enviada y que sus cifras estén en los datos (`backend/app/intelligence/explanation.py:57`). Con el flag encendido, Jev responde `claim.v1` contra las piezas citadas y los datos medidos (`backend/app/services/verification.py`), y los briefs siguen sin verificar ([`jev.md`](jev.md) §3) |
-| 12 | "Por qué funcionó" (§7) | Lift de gancho y formato entre outliers y el resto del tema | No implementado. Jev ya clasifica gancho y formato, pero solo llegan al LLM como conteos |
+| 12 | "Por qué funcionó" (§7) | Lift de gancho y formato entre outliers y el resto del tema | Solo el gancho, en `outlier_hooks` (`intelligence/why_it_worked.py`), sin hipótesis redactada por el LLM: el asistente del MCP lee la tabla. El formato sigue llegando al LLM solo como conteos |
 | 13 | Pistas de Jev (§7) | Incluye "pilar de 30X" | La batería `piece.v3` no tiene pregunta de pilar (pendiente en [`jev.md`](jev.md)) |
 | 14 | Fuentes (§2 regla 2, §5) | LinkedIn, Instagram y TikTok fuera del MVP; Brave en P1 | TikTok, Reddit e Instagram entran por ScrapeCreators desde el 17/10 ([`sources.md`](sources.md)). Brave no tiene colector |
 | 15 | MCP (§6) | Herramientas de solo lectura | `generate_editorial_brief` escribe en la caché de briefs y en `usage_events` (`backend/app/mcp/server.py:39`) |
