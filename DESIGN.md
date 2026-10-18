@@ -240,9 +240,14 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 - Contenedor máximo **1440px**, gutter 32px (16px en móvil). Base de 4px; huecos de 16px entre tarjetas, 8px entre
   baldosas, 20px dentro del panel de detalle.
 - **Radar (Discover):** cabecera (H1 + frase a la izquierda, contadores-filtro a la derecha) → fila principal: a
-  la izquierda (`flex: 999 1 720px`) el radar con su nota al pie y debajo el ranking; a la derecha el panel lateral
-  (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: fixed; bottom: 16px`, fuera del flujo). "Para quién
+  la izquierda (`flex: 999 1 720px`) el radar **o** el ranking, según una pestaña (18/10: son la misma lista en dos
+  formas), con su nota al pie; a la derecha el panel lateral (`flex: 1 1 360px`, sticky) → barra de pregunta, fija abajo (`position: fixed; bottom: 16px`, fuera del flujo). "Para quién
   importa" y "Por qué importa" completos viven en el expediente, no en el Radar.
+  - **Pestañas Radar · Ranking:** control segmentado en la cabecera de la tarjeta, las dos del mismo tamaño, cada una
+    con icono, nombre y lo que enseña («Crecimiento frente a encaje» · «Ordenados por oportunidad»). Radar por
+    defecto; `?tab=ranking` en la URL. Filtros, selección y panel se mantienen al cambiar; un orden de Rad abre el
+    Ranking. El Ranking ocupa todo el ancho: Puesto · Tema (punto de etapa) · 6 días · Aceleración (con las piezas de
+    cada ventana debajo) · Recomendación (chip con el motivo en el tooltip) · Oportunidad.
 - **Explorar sin tema:** cabecera (H1 «Lo que está funcionando» + contadores-filtro: Outliers y una baldosa por
   plataforma con métricas y piezas en el análisis servido —YouTube, Hacker News, TikTok, Reddit, Instagram—, de más a
   menos piezas; RSS se muestra sin filtrar porque no tiene métricas) → a la izquierda la tabla de piezas, ordenada por rendimiento
