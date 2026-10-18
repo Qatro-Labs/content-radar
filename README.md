@@ -68,12 +68,14 @@ Solo guardamos metadatos, enlaces y métricas públicas, nunca datos personales.
 
 ## Cómo se prioriza
 
+![Pipeline de análisis: clasificar, agrupar, medir, evaluar, decidir y explicar, con quién hace cada paso](docs/diagrams/pipeline-scoring.svg)
+
 - **Velocidad y aceleración, no popularidad.** Piezas nuevas al día en los últimos 3 días frente a los 3 anteriores, ajustadas por volumen. El total de views nunca entra en un score.
 - **Outliers.** Piezas que rinden 3× o más sobre la referencia de su canal o fuente. Lo que se deriva de ellas es una hipótesis, no una causa.
 - **Etapa del tema** (emerging → saturated), fuentes independientes, saturación, **para quién importa** y **LATAM Opportunity Gap**.
 - **Opportunity Score** = 0,30·momentum + 0,25·audience fit + 0,20·fuentes independientes + 0,15·(100 − saturación) + 0,10·accionabilidad. La confianza se muestra aparte, y cada oportunidad trae una recomendación con la regla que la produjo: publicar ya, buscar ángulo, esperar caso o descartar.
 
-El pipeline paso a paso, las fórmulas y los umbrales: [docs/scoring.md](docs/scoring.md).
+Las fórmulas y los umbrales de cada paso: [docs/scoring.md](docs/scoring.md).
 
 ## Conectar el MCP
 
