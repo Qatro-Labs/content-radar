@@ -37,7 +37,7 @@ from app.schemas.opportunity import (
 )
 from app.schemas.signal import Platform, Segment
 from app.services import costs, editorial, opportunities, signals
-from app.services.opportunities import MONITORING_STARTED_AT, SERVED_PERIOD, ServedOpportunity
+from app.services.opportunities import SERVED_PERIOD, ServedOpportunity
 
 if TYPE_CHECKING:
     # Solo para el tipo: `server.py` importa este módulo para registrar las tools.
@@ -151,7 +151,7 @@ class RadarTools:
             TrendingOpportunities(
                 period=SERVED_PERIOD,
                 generated_at=run.generated_at,
-                monitoring_started_at=MONITORING_STARTED_AT,
+                monitoring_started_at=run.monitoring_started_at,
                 matched=len(run.items),
                 items=[_trending_item(s) for s in run.items[:limit]],
                 coverage=COVERAGE_NOTE,

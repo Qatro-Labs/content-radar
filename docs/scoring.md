@@ -29,8 +29,8 @@ piezas de 14 días → filtro de Jev → embeddings → clusters → temas activ
 | Qué | Valor | Dónde |
 |---|---|---|
 | Ventana de piezas | Publicadas en los últimos 14 días hasta `as_of`, de fuentes activas | `backend/app/services/opportunities.py:38` |
-| Inicio del monitoreo (texto de las limitaciones) | 16/10/2026 | `backend/app/services/opportunities.py:40` |
-| Periodo servido | Solo `7d` (ventanas de 3 + 3 días) | `backend/app/services/opportunities.py:42` |
+| Inicio del monitoreo ("Datos desde" y texto de las limitaciones) | La primera observación guardada (`min(content_items.first_observed_at)`; hoy, 17/10, 02:48 UTC) | `backend/app/services/opportunities.py:200` |
+| Periodo servido | Solo `7d` (ventanas de 3 + 3 días) | `backend/app/services/opportunities.py:40` |
 
 Antes de llegar aquí, las fuentes con `ai_filter: true` ya descartaron en el colector las piezas sin
 términos de IA (`backend/app/collectors/text.py:25`).
@@ -102,7 +102,7 @@ views en YouTube, TikTok e Instagram; puntos en HN y Reddit; RSS no tiene
 | Qué | Valor | Dónde |
 |---|---|---|
 | Rendimiento | Views por día de vida (mínimo 1 día) en YouTube, TikTok e Instagram; puntos brutos en HN y Reddit | `backend/app/intelligence/outliers.py:46`, `backend/app/intelligence/opportunities.py:57` |
-| Referencia | Las **otras** piezas de la misma fuente (`source_id`: un canal, un perfil, un feed, una búsqueda de HN o TikTok, un subreddit) entre **todas las cargadas**, también las que el filtro de Jev quita por fuera de tema. Esas solo sirven de referencia: no reciben ratio, no son evidencia y no entran en el clustering | `backend/app/intelligence/opportunities.py:126`, `backend/app/services/opportunities.py:179` |
+| Referencia | Las **otras** piezas de la misma fuente (`source_id`: un canal, un perfil, un feed, una búsqueda de HN o TikTok, un subreddit) entre **todas las cargadas**, también las que el filtro de Jev quita por fuera de tema. Esas solo sirven de referencia: no reciben ratio, no son evidencia y no entran en el clustering | `backend/app/intelligence/opportunities.py:126`, `backend/app/services/opportunities.py:181` |
 | Cuantil | Mediana; **p90 en HN y TikTok**, que se leen por búsqueda y mezclan muchos autores. HN: con la mediana, ~4 puntos, un 22 % salía outlier; con el p90, un 3–6 %. TikTok (n = 72, 17/10): con la mediana un 33 %, con el p75 un 17 %, con el p90 un 6 % ([análisis](../data/evaluations/outlier_reference_scrapecreators.md)) | `backend/app/intelligence/outliers.py:21`, `:22`, `:26`, `:42`, `backend/app/intelligence/opportunities.py:144` |
 | Tamaño mínimo de la referencia | 5 piezas; con menos, ratio `null` | `backend/app/intelligence/outliers.py:20` |
 | Edad mínima para entrar en la referencia | 2 días en YouTube, TikTok e Instagram; 6 h en HN y Reddit. Lo recién publicado sí se puntúa, pero no hunde la referencia | `backend/app/intelligence/outliers.py:33` |

@@ -12,7 +12,7 @@ from app.db.session import get_session
 from app.intelligence.lifecycle import Stage
 from app.intelligence.opportunities import TopicResult
 from app.main import app
-from app.models import PipelineRun
+from app.models import ContentItem, PipelineRun, Source
 from app.schemas.opportunity import Evidence, Lifecycle, Opportunity, OpportunityTimeline
 from app.services import opportunities
 from app.services.opportunities import ANALYZE_JOB, save_opportunities
@@ -80,7 +80,34 @@ async def test_list_serves_latest_successful_run_in_rank_order(session, client):
     assert [o["id"] for o in body["items"]] == [r.opportunity.id for r in results]
     assert body["period"] == "7d"
     assert body["generated_at"] == "2026-10-17T12:00:00Z"
-    assert body["monitoring_started_at"] == "2026-10-16T00:00:00Z"
+    # Sin piezas guardadas no hay primera observación: la fecha es la del análisis servido.
+    assert body["monitoring_started_at"] == "2026-10-17T12:00:00Z"
+
+
+async def test_monitoring_starts_at_the_first_stored_observation(session, client, seeded):
+    source = Source(
+        platform="rss", kind="feed", external_id="feed", name="Feed", segment="tech", region="us"
+    )
+    for hour in (5, 2):
+        observed = datetime(2026, 10, 17, hour, 48, tzinfo=UTC)
+        session.add(
+            ContentItem(
+                source=source,
+                platform="rss",
+                external_id=f"piece-{hour}",
+                url=f"https://example.com/{hour}",
+                title="Pieza",
+                published_at=datetime(2026, 10, 10, tzinfo=UTC),
+                first_observed_at=observed,
+                last_observed_at=observed,
+            )
+        )
+    await session.commit()
+
+    body = (await client.get("/api/v1/opportunities")).json()
+
+    # Lo publicado antes (el backfill del 10/10) no adelanta el inicio del monitoreo.
+    assert body["monitoring_started_at"] == "2026-10-17T02:48:00Z"
 
 
 @pytest.fixture
