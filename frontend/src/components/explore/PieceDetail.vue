@@ -12,7 +12,7 @@ import {
 } from '@/lib/evidenceFormat'
 import type { Piece } from '@/lib/exploreView'
 import { formatUtcDay } from '@/lib/format'
-import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
+import { isDescending, topicStageStyle } from '@/lib/lifecycle'
 import { NOT_AVAILABLE } from '@/lib/opportunityFormat'
 import { RouteName } from '@/router'
 
@@ -93,11 +93,14 @@ const BUTTON_CLASS =
     <div class="flex flex-col gap-2 rounded-tile bg-sunken px-4 py-3.5">
       <span class="text-[13px] text-muted-foreground">Tema</span>
       <span class="flex items-center gap-2">
-        <StageDot :lifecycle="piece.opportunity.lifecycle" />
+        <StageDot
+          :lifecycle="piece.opportunity.lifecycle"
+          :descending="isDescending(piece.opportunity)"
+        />
         <span class="text-[15px] leading-[1.3] font-semibold">{{ piece.opportunity.topic }}</span>
       </span>
       <span class="text-[13.5px] text-label">
-        {{ LIFECYCLE_STYLE[piece.opportunity.lifecycle].label }}
+        {{ topicStageStyle(piece.opportunity).label }}
       </span>
     </div>
 

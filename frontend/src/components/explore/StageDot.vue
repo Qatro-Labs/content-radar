@@ -2,12 +2,15 @@
 import { computed } from 'vue'
 
 import HoverHint from '@/components/layout/HoverHint.vue'
-import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
+import { DESCENDING_STYLE, LIFECYCLE_STYLE } from '@/lib/lifecycle'
 import type { Lifecycle } from '@/lib/radarQuery'
 
-const { lifecycle } = defineProps<{ lifecycle: Lifecycle }>()
+const { lifecycle, descending = false } = defineProps<{
+  lifecycle: Lifecycle
+  descending?: boolean
+}>()
 
-const style = computed(() => LIFECYCLE_STYLE[lifecycle])
+const style = computed(() => (descending ? DESCENDING_STYLE : LIFECYCLE_STYLE[lifecycle]))
 
 // DESIGN.md §2: con el trazo de la etapa, el punto Acelerando se distingue sobre blanco; "Sin
 // etapa" va hueco y con trazo discontinuo.

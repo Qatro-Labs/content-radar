@@ -22,6 +22,7 @@ import {
   windowTotals,
 } from '@/lib/opportunityFormat'
 import type { RankedOpportunity } from '@/lib/radarView'
+import { isDescending } from '@/lib/lifecycle'
 import type { components } from '@/types/api'
 
 import RankingSparkline from './RankingSparkline.vue'
@@ -78,7 +79,11 @@ const toneClass = computed(() => {
     <!-- La etapa es el punto de color, con su nombre en el tooltip. -->
     <span class="flex min-w-0 flex-col gap-1 py-2">
       <span class="flex items-baseline gap-2">
-        <StageDot :lifecycle="row.lifecycle" class="translate-y-[-1px]" />
+        <StageDot
+          :lifecycle="row.lifecycle"
+          :descending="isDescending(row)"
+          class="translate-y-[-1px]"
+        />
         <span class="font-medium">{{ row.topic }}</span>
       </span>
       <span

@@ -18,6 +18,7 @@ import { outlierBadge } from '@/lib/evidenceFormat'
 import { PLATFORM_LABEL } from '@/lib/evidenceFormat'
 import { formatUtcDay } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
 
@@ -50,7 +51,11 @@ const moreLine = computed(() =>
     <div class="flex min-w-0 flex-[999_1_520px] flex-col gap-4">
       <div class="flex flex-wrap items-center gap-2">
         <RecommendationChip :recommendation="opportunity.recommendation" size="sm" />
-        <LifecycleChip :lifecycle="opportunity.lifecycle" :title="opportunity.lifecycle_reason" />
+        <LifecycleChip
+          :lifecycle="opportunity.lifecycle"
+          :descending="isDescending(opportunity)"
+          :title="opportunity.lifecycle_reason"
+        />
         <span class="text-sm text-muted-foreground">{{ note }}</span>
       </div>
       <h2

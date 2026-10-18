@@ -5,6 +5,7 @@ import { computed } from 'vue'
 
 import { countLabel, formatCount } from '@/lib/evidenceFormat'
 import type { SourceOutliers } from '@/lib/exploreView'
+import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
 
@@ -51,7 +52,7 @@ function outlierLabel(count: number): string {
             :to="{ name: RouteName.Dossier, params: { id: topic.id } }"
             class="flex min-h-12 items-center gap-2.5 rounded-xl bg-sunken px-3 py-1.5 transition-colors duration-150 ease-out hover:bg-track"
           >
-            <StageDot :lifecycle="topic.lifecycle" />
+            <StageDot :lifecycle="topic.lifecycle" :descending="isDescending(topic)" />
             <span class="min-w-0 grow text-sm leading-[1.3] font-medium">{{ topic.topic }}</span>
             <span class="shrink-0 text-[13.5px] font-semibold">
               {{ outlierLabel(topic.outlier_count) }}

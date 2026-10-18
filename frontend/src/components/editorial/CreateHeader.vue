@@ -7,6 +7,7 @@ import LifecycleChip from '@/components/opportunities/LifecycleChip.vue'
 import RecommendationChip from '@/components/opportunities/RecommendationChip.vue'
 import { countLabel } from '@/lib/evidenceFormat'
 import { CONFIDENCE_LABEL, formatScore, GROWTH_LABEL, SCORE_MAX } from '@/lib/opportunityFormat'
+import { isDescending } from '@/lib/lifecycle'
 import { RouteName } from '@/router'
 import type { components } from '@/types/api'
 
@@ -41,7 +42,7 @@ const statusLine = computed(() =>
       </RouterLink>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <LifecycleChip :lifecycle="opportunity.lifecycle" />
+      <LifecycleChip :lifecycle="opportunity.lifecycle" :descending="isDescending(opportunity)" />
       <RecommendationChip :recommendation="opportunity.recommendation" size="sm" />
     </div>
     <h1

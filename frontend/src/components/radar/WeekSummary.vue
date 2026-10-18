@@ -6,7 +6,7 @@ import InfoTip from '@/components/layout/InfoTip.vue'
 import StageDot from '@/components/explore/StageDot.vue'
 import { countLabel } from '@/lib/evidenceFormat'
 import { HELP } from '@/lib/helpText'
-import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
+import { isDescending, topicStageStyle } from '@/lib/lifecycle'
 import {
   formatAcceleration,
   formatScore,
@@ -37,7 +37,7 @@ const subline = computed(() => {
 const picks = computed(() =>
   view.weekPicks.topics.map((topic) => ({
     topic,
-    stage: LIFECYCLE_STYLE[topic.lifecycle].label,
+    stage: topicStageStyle(topic).label,
     acceleration: formatAcceleration(topic.acceleration),
     declining: isDeclining(topic.acceleration),
     caveat: growthCaveat(topic.growth_status),
@@ -80,7 +80,10 @@ const TILE_CLASS =
               <span class="text-[15px] leading-[1.3] font-semibold">{{ pick.topic.topic }}</span>
               <!-- CLAUDE.md §2.5: junto a la aceleración, lo que no es observado. -->
               <span class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-label">
-                <StageDot :lifecycle="pick.topic.lifecycle" />
+                <StageDot
+                  :lifecycle="pick.topic.lifecycle"
+                  :descending="isDescending(pick.topic)"
+                />
                 {{ pick.stage }} ·
                 <span :class="{ 'text-muted-foreground': pick.declining }">{{
                   pick.acceleration

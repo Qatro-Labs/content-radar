@@ -7,7 +7,7 @@ import { computed } from 'vue'
 import type { QueryState } from '@/api/opportunities'
 import SkeletonBone from '@/components/ui-states/SkeletonBone.vue'
 import { splitTimeline, type TimelineBar } from '@/lib/dossierView'
-import { LIFECYCLE_STYLE } from '@/lib/lifecycle'
+import { topicStageStyle } from '@/lib/lifecycle'
 import {
   formatAcceleration,
   formatDecimal,
@@ -24,6 +24,8 @@ const { opportunity, timeline } = defineProps<{
   opportunity: Schemas['Opportunity']
   timeline: QueryState<Schemas['OpportunityTimeline'] | null>
 }>()
+
+const stage = computed(() => topicStageStyle(opportunity))
 
 // La barra más alta de las seis mide 130 px; un periodo sin piezas es un trazo de 3 px, nunca una
 // barra vacía que se lea como "sin dato" (DESIGN.md §8). Las barras crecen escalonadas, 50 ms.
@@ -174,8 +176,8 @@ const tiles = computed<WindowTile[]>(() => {
         {{ formatDecimal(opportunity.velocity) }} piezas nuevas al día en la ventana actual.
       </span>
       <span class="text-sm text-muted-foreground" :title="opportunity.lifecycle_reason">
-        {{ LIFECYCLE_STYLE[opportunity.lifecycle].label }}:
-        {{ LIFECYCLE_STYLE[opportunity.lifecycle].meaning }}
+        {{ stage.label }}:
+        {{ stage.meaning }}
       </span>
     </div>
   </section>

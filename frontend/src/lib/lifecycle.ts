@@ -1,3 +1,5 @@
+import type { components } from '@/types/api'
+
 import type { Lifecycle } from './radarQuery'
 
 interface LifecycleCssVars {
@@ -70,6 +72,30 @@ export const LIFECYCLE_STYLE: Record<Lifecycle, LifecycleStyle> = {
     cssVar: cssVars('unknown', '--lc-unknown'),
     dashed: true,
   },
+}
+
+// El contrato no tiene etapa `declining`: el backend deja el tema sin etapa y escribe
+// «En descenso:» en `lifecycle_reason` justo cuando hay datos y la aceleración es negativa
+// (`intelligence/lifecycle.py`). Se nombra aquí; el color sigue siendo el de sin etapa.
+export const DESCENDING_STYLE: LifecycleStyle = {
+  ...LIFECYCLE_STYLE.unknown,
+  label: 'En descenso',
+  meaning: 'tiene datos, pero publica menos que en la ventana anterior y ninguna etapa aplica.',
+}
+
+type StageSignals = Pick<
+  components['schemas']['Opportunity'],
+  'lifecycle' | 'growth_status' | 'acceleration'
+>
+
+export function isDescending(topic: StageSignals): boolean {
+  return (
+    topic.lifecycle === 'unknown' && topic.growth_status !== 'preliminary' && topic.acceleration < 0
+  )
+}
+
+export function topicStageStyle(topic: StageSignals): LifecycleStyle {
+  return isDescending(topic) ? DESCENDING_STYLE : LIFECYCLE_STYLE[topic.lifecycle]
 }
 
 // ECharts pinta en canvas y necesita colores resueltos, no `var(--…)`.
