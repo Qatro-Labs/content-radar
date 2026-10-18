@@ -470,6 +470,34 @@ async def test_view_step_before_the_answer_skips_the_fallback(session, seeded):
     assert events[-1] == DoneEvent(steps=2, data_steps=1, view_steps=1)
 
 
+async def test_failed_view_step_does_not_skip_the_fallback(session, seeded):
+    # Un paso de vista fallido no movió la página: la respuesta con citas sigue sin enseñar nada.
+    model = ScriptedModel(
+        [
+            turn(("list_opportunities", {})),
+            turn(("highlight", {"ids": ["opp_nope"]})),
+            final(cited=["opp_001"]),
+        ]
+    )
+
+    events = await run(session, model)
+
+    assert kinds(events) == [
+        *["step", "step"],  # leer
+        *["step", "step"],  # resaltar, fallido
+        *["step", "step", "action"],  # respaldo
+        *["answer", "done"],
+    ]
+    assert events[3].status == "failed"
+    action = events[6]
+    assert isinstance(action, ActionEvent)
+    assert action.model_dump(mode="json", exclude_unset=True) == {
+        "step_id": 3,
+        "patch": {"highlight": ["opp_001"], "selected": "opp_001"},
+    }
+    assert events[-1] == DoneEvent(steps=3, data_steps=1, view_steps=2)
+
+
 async def test_fallback_in_the_dossier_shows_the_fit_of_the_open_topic(session, seeded):
     model = ScriptedModel([turn(("get_opportunity", {"id": "opp_001"})), final(cited=["opp_001"])])
 

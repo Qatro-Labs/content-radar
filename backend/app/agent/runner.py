@@ -85,6 +85,8 @@ class RunState:
     seen: Seen = field(default_factory=Seen)
     data_steps: int = 0
     view_steps: int = 0
+    # Solo los pasos de vista que movieron la página: uno fallido cuenta en `view_steps`, no aquí.
+    view_actions: int = 0
 
     @property
     def steps(self) -> int:
@@ -168,7 +170,7 @@ def _step_events(step_id: int, outcome: ToolOutcome) -> list[AgentEvent]:
 def _fallback_events(answer: AnswerEvent, state: RunState) -> list[AgentEvent]:
     # D4: una respuesta con citas siempre enseña algo en la página. Si el modelo no movió la
     # vista, lo hace Python con las citas ya validadas, sin consultar MAX_STEPS.
-    if not answer.cited or state.view_steps > 0:
+    if not answer.cited or state.view_actions > 0:
         return []
     outcome = fallback_view(answer.cited, state.view)
     step_id = state.count(outcome.kind)
@@ -201,6 +203,8 @@ async def _run_tools(
             outcome = await execute_tool(call.name, call.input, session, state.seen)
         results.append(_tool_result(call, outcome.content, is_error=outcome.is_error))
         for event in _step_events(step_id, outcome):
+            if isinstance(event, ActionEvent):
+                state.view_actions += 1
             yield event
 
 
