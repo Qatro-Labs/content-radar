@@ -110,6 +110,7 @@ class TopicResult:
     stage: Stage
     pieces: list[Piece]
     replica_ids: frozenset[int] = field(default_factory=frozenset)
+    ratios: dict[int, float | None] = field(default_factory=dict)  # outlier_ratio por item_id
 
     # Sin las republicaciones de la misma nota, que no cuentan como muestra (CLAUDE.md §7).
     @property
@@ -448,7 +449,15 @@ def _topic_result(
     evidence = topic_evidence(ranked, topic.group, stories)
     points = timeline(opportunity.id, [p.published_at for p in topic.group], as_of)
     pieces = [p for p, _ in ranked]
-    return TopicResult(opportunity, evidence, points, stage, pieces, facts.replica_ids)
+    return TopicResult(
+        opportunity,
+        evidence,
+        points,
+        stage,
+        pieces,
+        facts.replica_ids,
+        {p.item_id: r for p, r in ranked},
+    )
 
 
 def _across_topics(topics: Sequence[_ActiveTopic]) -> list[tuple[float, float]]:

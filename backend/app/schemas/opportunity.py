@@ -162,6 +162,30 @@ class AudienceFitCriterion(BaseModel):
     level: int = Field(ge=0, le=5, description="Nivel de la rúbrica 0–5 (LLM)")
 
 
+class HookLift(BaseModel):
+    hook: str = Field(description="Tipo de gancho del título, según Jev")
+    outliers_with: int = Field(ge=0)
+    outliers_total: int = Field(ge=0, description="Outliers del tema con gancho clasificado")
+    rest_with: int = Field(ge=0)
+    rest_total: int = Field(ge=0, description="Piezas no outlier con ratio y gancho clasificado")
+    lift: float | None = Field(
+        ge=0, description="% de outliers con el gancho / % del resto; None si el resto no lo usa"
+    )
+    observed_pattern: bool = Field(
+        description="lift ≥ 2 en ≥ 2 outliers: patrón observado; si no, anecdótico"
+    )
+
+
+class OutlierHooks(BaseModel):
+    """«Por qué funcionó»: ganchos de los outliers frente al resto del tema. Es una hipótesis con
+    muestra pequeña, nunca causalidad."""
+
+    hooks: list[HookLift] = Field(description="Un elemento por gancho que usa algún outlier")
+    outliers_unclassified: int = Field(
+        ge=0, description="Outliers sin gancho decidido (Jev incierto o sin juicio)"
+    )
+
+
 class Opportunity(BaseModel):
     id: str
     topic: str
@@ -203,6 +227,9 @@ class Opportunity(BaseModel):
     )
     why_it_matters: str
     limitations: list[str]
+    outlier_hooks: OutlierHooks | None = Field(
+        default=None, description="None si el tema no tiene outliers con gancho clasificado"
+    )
     last_updated: AwareDatetime
 
 

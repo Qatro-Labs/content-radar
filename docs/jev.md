@@ -154,8 +154,15 @@ lift = (% de outliers con el rasgo) / (% del resto con el rasgo)
 ```
 
 Un rasgo con lift ≥ 2 que tienen al menos 2 outliers es un "patrón observado". Si no llega, es
-"anecdótico". Con pocos outliers por tema, casi todo saldrá "anecdótico", y se dice así. El LLM
-redacta la hipótesis a partir de esa tabla y la batería 3 la verifica. Ejemplo: *"Los outliers usan
+"anecdótico". Con pocos outliers por tema, casi todo saldrá "anecdótico", y se dice así.
+
+**Implementado (18/10), solo para el gancho:** `intelligence/why_it_worked.py` → campo
+`outlier_hooks` de `Opportunity`, que el MCP devuelve en `analyze_opportunity`. Cuenta solo piezas
+originales (una republicación copia el título), deja fuera las piezas sin `outlier_ratio` y las de
+gancho incierto, y no compara si el resto tiene menos de 2 piezas. Si el resto no usa un gancho, el
+lift queda en `null`. El gancho se validó antes de usarlo: 94 % de acuerdo en las 31 de 36 piezas
+que Jev decide (`data/evaluations/jev_hook_v3_eval.md`). Pendiente: que el LLM redacte la hipótesis
+y Jev la verifique. Ejemplo: *"Los outliers usan
 ganchos de 'dato o cifra' 2,5 veces más que el resto (3 de 4, frente a 3 de 10). Hipótesis con
 muestra pequeña."*
 
