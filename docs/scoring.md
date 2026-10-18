@@ -37,23 +37,23 @@ términos de IA (`backend/app/collectors/text.py:25`).
 
 ## 2. Filtro de Jev
 
-Cada pieza pasa por la batería `piece.v3` (`backend/app/intelligence/jev.py:28`). Python convierte
+Cada pieza pasa por la batería `piece.v3` (`backend/app/intelligence/jev.py:29`). Python convierte
 las probabilidades en decisiones:
 
 | Tipo | Regla | Dónde |
 |---|---|---|
-| `noul` (sí/no) | ≥ 0,7 es sí; ≤ 0,3 es no; en medio, incierto | `backend/app/intelligence/jev.py:39`, `:40` |
-| `choice` (formato, gancho) | Probabilidad máxima ≥ 0,6 **y** la misma respuesta con las opciones en orden inverso (`_rev`); si no, incierto | `backend/app/intelligence/jev.py:38`, `:201` |
-| Inyección | Probabilidad > 0,5, o sin respuesta: la pieza no se envía al LLM en el audience fit, «por qué importa» ni los briefs (sí cuenta en los scores) | `backend/app/intelligence/jev.py:42`, `:227` |
+| `noul` (sí/no) | ≥ 0,7 es sí; ≤ 0,3 es no; en medio, incierto | `backend/app/intelligence/jev.py:48`, `:49` |
+| `choice` (formato, gancho) | Probabilidad máxima ≥ 0,6 **y** la misma respuesta con las opciones en orden inverso (`_rev`); si no, incierto | `backend/app/intelligence/jev.py:47`, `:243` |
+| Inyección | Probabilidad > 0,5, o sin respuesta: la pieza no se envía al LLM en el audience fit, «por qué importa» ni los briefs (sí cuenta en los scores) | `backend/app/intelligence/jev.py:51`, `:281` |
 
 **Qué sale del corpus:** solo las piezas en las que Jev dice con seguridad "no" a `about_ai` **y** a
 `ai_in_title`. Lo incierto o sin clasificar se queda, para no perder temas por un fallo de Jev
-(`backend/app/intelligence/jev.py:235`).
+(`backend/app/intelligence/jev.py:289`).
 
 **Qué recibe el LLM como pista:** los conteos de `business_use`, `business_case`, `dev_audience`,
 `tech_jargon`, `latam_context` y `launch` del tema ("8 de 20 piezas clasificadas…, 3 inciertas") y
 los formatos (`backend/app/editorial/audience.py:37`). El `state` de Jev nunca lleva el segmento ni la
-región de la fuente (`backend/app/intelligence/jev.py:140`).
+región de la fuente (`backend/app/intelligence/jev.py:156`).
 
 ## 3. Temas
 
@@ -358,7 +358,7 @@ Un fit bajo no descarta: da `find_angle` y la UI muestra la banda.
 ## 15. Orden del ranking
 
 `backend/app/intelligence/opportunities.py:506`, aplicado en `analyze` después del audience fit
-(`backend/app/jobs/analyze.py:79`). De mayor a menor:
+(`backend/app/jobs/analyze.py:82`). De mayor a menor:
 
 1. Temas con Opportunity Score antes que los que no lo tienen.
 2. Dentro de cada grupo, los que no son `discard` antes que los `discard`.
@@ -424,7 +424,7 @@ momentum y la regla de negocio del LATAM gap; el resto de CLAUDE.md no se ha toc
 | 8 | Etapa (§7) | Cinco reglas | Añade un `unknown` "sin demostrar" cuando `accelerating` solo falla por el p-valor (`backend/app/intelligence/lifecycle.py:83`) y otro "en descenso" con aceleración < 0 (`backend/app/intelligence/lifecycle.py:89`). Con clusters de ≥ 5 piezas, "menos de 5 piezas" no llega a darse |
 | 9 | Audience mix (§7) | Ponderado por el engagement normalizado | Ponderado por el outlier ratio acotado a [0,5, 3,0], 1,0 sin ratio (`backend/app/intelligence/opportunities.py:203`) |
 | 10 | LATAM gap ([`brief.md`](brief.md) §7) | Se sostiene "cuando ambos grupos de fuentes tienen cobertura suficiente" | No comprueba la cobertura del grupo A (global); solo la proporción LATAM y la conversación de negocio (`backend/app/intelligence/audience_mix.py:63`) |
-| 11 | Verificación de afirmaciones (§7) | Jev verifica cada afirmación del LLM; se publica con `confidence` ≥ 0,8 | No hay batería de verificación. Python exige que cada afirmación cite una pieza enviada y que sus cifras estén en los datos (`backend/app/intelligence/explanation.py:52`) |
+| 11 | Verificación de afirmaciones (§7) | Jev verifica cada afirmación del LLM; se publica con `confidence` ≥ 0,8 | Implementada, pero **apagada por defecto** (`JEV_VERIFY_CLAIMS=false`) porque no superó la validación con afirmaciones reales: con `claim.v1`, la batería que se entrega, conserva el 58 % de las respaldadas (el 67 % con su revisión `claim.v2`) y el criterio pide el 70 % ([`jev_claim_v1_eval.md`](../data/evaluations/jev_claim_v1_eval.md)). Con el flag apagado, Python solo exige que cada afirmación cite una pieza enviada y que sus cifras estén en los datos (`backend/app/intelligence/explanation.py:57`). Con el flag encendido, Jev responde `claim.v1` contra las piezas citadas y los datos medidos (`backend/app/services/verification.py`), y los briefs siguen sin verificar ([`jev.md`](jev.md) §3) |
 | 12 | "Por qué funcionó" (§7) | Lift de gancho y formato entre outliers y el resto del tema | No implementado. Jev ya clasifica gancho y formato, pero solo llegan al LLM como conteos |
 | 13 | Pistas de Jev (§7) | Incluye "pilar de 30X" | La batería `piece.v3` no tiene pregunta de pilar (pendiente en [`jev.md`](jev.md)) |
 | 14 | Fuentes (§2 regla 2, §5) | LinkedIn, Instagram y TikTok fuera del MVP; Brave en P1 | TikTok, Reddit e Instagram entran por ScrapeCreators desde el 17/10 ([`sources.md`](sources.md)). Brave no tiene colector |

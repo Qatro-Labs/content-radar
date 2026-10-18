@@ -253,7 +253,7 @@ GET  /health
 - **Jev (TypeSafe; lo sugiere el reto): decisiones atómicas sobre piezas.** Modelo de decisión: no genera texto. Responde preguntas tipadas (`noul` sí/no, `choice` opción, `score` nivel) con probabilidades y, en `choice` y `score`, `confidence`. Las preguntas de una llamada corren en paralelo y el `state` se paga una vez, así que cada entidad se evalúa en **una llamada con todas sus preguntas** (una *batería*):
   - **Pieza** (`piece.v3.yaml`, una condición por pregunta): trata de IA (y si el título habla de IA: el filtro de ruido exige "no" en las dos), formato, gancho, lanzamiento e inyección de instrucciones, más pistas para el LLM (uso en organizaciones, público desarrollador, caso real, jerga técnica, contexto LATAM sin España, pilar de 30X). Formato y gancho van repetidos con las opciones en orden inverso para detectar el sesgo hacia la primera opción.
   - **Par:** ¿es la misma nota replicada? → fuentes independientes y saturación.
-  - **Verificación:** cada afirmación del LLM contra la evidencia que cita; solo se publica lo respaldado con `confidence` ≥ 0,8 (regla 3). Como la evidencia es título y descripción, el LLM debe ceñirse a lo que dicen.
+  - **Verificación:** cada afirmación del LLM contra la evidencia que cita y los datos medidos que recibió el LLM; solo se publica lo respaldado con `confidence` ≥ 0,8 (regla 3). Implementada y **apagada por defecto** (`JEV_VERIFY_CLAIMS=false`) hasta pasar su validación (`docs/jev.md` §3). Como la evidencia es título y descripción, el LLM debe ceñirse a lo que dicen.
   - El juicio de conjunto sobre un tema (audience fit) no es de Jev: lee de forma literal, sus niveles de `score` no están calibrados como números y pierde precisión con contextos grandes.
   - Python convierte probabilidades en decisiones con umbrales, y lo incierto se muestra como tal. El texto externo va en `state` y nuestras instrucciones en `questions` (regla 6).
   - SDK `typesafe-sdk` (`AsyncTypeSafeClient`, concurrencia acotada), `JEV_MODEL=jev-1.13.0` fijado, y caché por hash del `state` + versión de la batería + versión del modelo en `jev_judgments`. Cuesta alrededor de 1 $ al mes. En cuanto haya clave, validarlo con 30–50 piezas etiquetadas a mano en `data/evaluations/`. **Acceso:** confirmar hoy la clave; si no la hay antes de las 19:00 ESP, el LLM hace la batería de pieza en lote con el mismo modelo Pydantic, y Jev la sustituye cuando llegue.
@@ -280,7 +280,7 @@ GET  /health
 **Fuera de la hackathon:** Kubernetes, Kafka, Redis, Celery, LangChain/LangGraph, LiteLLM, Scrapy, Elasticsearch, GraphQL, microservicios, Streamlit, Next.js / SSR.
 
 **Variables de entorno** (solo en el backend; ver `.env.example`):
-`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `SCRAPECREATORS_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
+`DATABASE_URL`, `YOUTUBE_API_KEY`, `BRAVE_API_KEY`, `SCRAPECREATORS_API_KEY`, `TYPESAFE_API_KEY`, `JEV_MODEL`, `JEV_VERIFY_CLAIMS`, `LLM_API_KEY`, `LLM_MODEL`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `APP_ENV`, `DEMO_RUN_ID`.
 
 ---
 
