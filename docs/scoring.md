@@ -42,18 +42,18 @@ las probabilidades en decisiones:
 
 | Tipo | Regla | Dónde |
 |---|---|---|
-| `noul` (sí/no) | ≥ 0,7 es sí; ≤ 0,3 es no; en medio, incierto | `backend/app/intelligence/jev.py:48`, `:49` |
-| `choice` (formato, gancho) | Probabilidad máxima ≥ 0,6 **y** la misma respuesta con las opciones en orden inverso (`_rev`); si no, incierto | `backend/app/intelligence/jev.py:47`, `:243` |
-| Inyección | Probabilidad > 0,5, o sin respuesta: la pieza no se envía al LLM en el audience fit, «por qué importa» ni los briefs (sí cuenta en los scores) | `backend/app/intelligence/jev.py:51`, `:281` |
+| `noul` (sí/no) | ≥ 0,7 es sí; ≤ 0,3 es no; en medio, incierto | `backend/app/intelligence/jev.py:50`, `:51` |
+| `choice` (formato, gancho) | Probabilidad máxima ≥ 0,6 **y** la misma respuesta con las opciones en orden inverso (`_rev`); si no, incierto | `backend/app/intelligence/jev.py:49`, `:245` |
+| Inyección | Probabilidad > 0,5, o sin respuesta: la pieza no se envía al LLM en el audience fit, «por qué importa» ni los briefs (sí cuenta en los scores) | `backend/app/intelligence/jev.py:53`, `:283` |
 
 **Qué sale del corpus:** solo las piezas en las que Jev dice con seguridad "no" a `about_ai` **y** a
 `ai_in_title`. Lo incierto o sin clasificar se queda, para no perder temas por un fallo de Jev
-(`backend/app/intelligence/jev.py:289`).
+(`backend/app/intelligence/jev.py:291`).
 
 **Qué recibe el LLM como pista:** los conteos de `business_use`, `business_case`, `dev_audience`,
 `tech_jargon`, `latam_context` y `launch` del tema ("8 de 20 piezas clasificadas…, 3 inciertas") y
 los formatos (`backend/app/editorial/audience.py:37`). El `state` de Jev nunca lleva el segmento ni la
-región de la fuente (`backend/app/intelligence/jev.py:156`).
+región de la fuente (`backend/app/intelligence/jev.py:158`).
 
 ## 3. Temas
 
@@ -291,7 +291,7 @@ de 0 a 5 (`backend/app/editorial/audience.py:47`). Los seis criterios
 | `pillar_fit` | Encaje con los pilares de 30X |
 | `actionable_content` | Convertible en contenido accionable |
 
-Python combina los niveles (`backend/app/intelligence/audience_fit.py:40`):
+Python combina los niveles (`backend/app/intelligence/audience_fit.py:42`):
 
 ```
 audience_fit_score  = media ponderada de los 6 niveles / 5 × 100
@@ -301,7 +301,7 @@ actionability_score = nivel de actionable_content / 5 × 100
 - **Pesos:** iguales (1,0 cada criterio) hasta que una validación con temas etiquetados justifique
   otros (`backend/app/intelligence/audience_fit.py:19`).
 - **Citas:** se quitan las URLs que el LLM no recibió, y se anota cuántas
-  (`backend/app/intelligence/audience_fit.py:55`).
+  (`backend/app/intelligence/audience_fit.py:57`).
 - **Bandas** para el texto: bajo < 40 ≤ medio < 60 ≤ alto
   (`backend/app/editorial/explanation.py:40`, `:41`).
 - Si el LLM falla o la respuesta no llega entera (`stop_reason` distinto de `end_turn`), el fit queda
