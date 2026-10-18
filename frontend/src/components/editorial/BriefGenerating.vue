@@ -141,13 +141,14 @@ watch([() => timeline.value.stage, () => timeline.value.readingIndex, isReduced]
   flush: 'post',
 })
 
-// Lee en reposo; al redactar se abre en radar y su haz da una pasada por etapa; al cerrar vuelve a
-// ser un ojo y parpadea una vez (DESIGN.md §4, «Marca de Rad»).
+// Lee en reposo; al redactar se abre en radar y su haz gira sin parar hasta que responde la API; al
+// cerrar vuelve a ser un ojo y parpadea una vez (DESIGN.md §4 y §7).
 const mark = computed<RadMarkState>(() => {
-  const workingIndex = WORKING_STAGES.indexOf(timeline.value.stage)
+  const isWorking = WORKING_STAGES.includes(timeline.value.stage)
   return {
-    working: workingIndex >= 0,
-    scanKey: workingIndex + 1,
+    working: isWorking,
+    scanKey: 0,
+    sweeping: isWorking,
     blinkKey: timeline.value.hasBlinked ? 1 : 0,
     lookAt: lookAt.value,
   }

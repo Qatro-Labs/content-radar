@@ -200,7 +200,8 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
   un ojo que mira el cursor (de reojo si está cerca, hasta el borde si está lejos; al frente con movimiento
   reducido); mientras trabaja mira hacia su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
-  sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles.
+  sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles, salvo en Crear:
+  mientras redacta un brief el haz gira sin parar (§7).
 - **Transcripción del agente** (dentro de la barra, encima del campo; alto máximo 46vh con scroll):
   - la pregunta en Bricolage 19px;
   - los pasos: hecho = check en Tinta suave; en curso = punto Tinta de 9px y peso 600. Cada paso lleva su etiqueta:
@@ -323,14 +324,16 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   en fila (una columna en móvil). La tarjeta reserva desde el principio el alto del borrador y sube a la vista.
 - **Leer:** Rad mira cada pieza. La tarjeta sube 6px, un rotulador lima subraya su título línea a línea (650ms) y
   una píldora con el nombre de la fuente vuela hasta Rad. Unos 1,1s por pieza.
-- **Redactar:** Rad absorbe las piezas (vuelan hasta él, escalonadas 60ms, 620ms) y se abre en radar, con una
-  pasada del haz por etapa. En el sitio de las piezas nace el bloque Gancho · Ángulo · Puntos clave y sus huesos se
-  entintan de izquierda a derecha. Nunca se escribe texto antes de tenerlo: llega con la respuesta.
+- **Redactar:** Rad absorbe las piezas (vuelan hasta él, escalonadas 60ms, 620ms) y se abre en radar. Su haz gira
+  sin parar (1,6s por vuelta) hasta que llega la respuesta: es la otra excepción a «sin bucles», porque codifica que
+  Rad sigue trabajando en una espera que no da progreso. En el sitio de las piezas nace el bloque Gancho · Ángulo ·
+  Puntos clave: sus huesos se entintan de izquierda a derecha y después laten como cualquier skeleton (§4). Nunca
+  se escribe texto antes de tenerlo: llega con la respuesta.
 - **Comprobar:** las citas, con el nombre real de cada fuente, pasan a lima una a una.
 - **Al llegar la respuesta:** un cierre corto (las citas que faltan en lima, «Brief listo», Rad parpadea) y entra el
   brief escalonado 80ms. Una respuesta cacheada, que llega en menos de un segundo, no muestra la animación.
-- **Movimiento reducido:** sin subrayado, vuelos, huesos ni haz; el título de la etapa cambia y el brief aparece al
-  llegar.
+- **Movimiento reducido:** sin subrayado, vuelos, latido de los huesos ni giro del haz; el título de la etapa cambia
+  y el brief aparece al llegar.
 
 **Agente**
 - **Primero llega, después actúa.** La presencia viaja hasta el objetivo (680ms, ease-out) y la acción se aplica al
@@ -358,7 +361,8 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
   controles.
 - **`prefers-reduced-motion: reduce`:** sin barrido, ping, latido ni entradas; los datos aparecen al instante. Se
   mantiene el feedback de hover y active.
-- Nada de bucles infinitos fuera del latido y de la vida en reposo de Rad (§4). Nada de puntos "live" que parpadean.
+- Nada de bucles infinitos fuera del latido, de la vida en reposo de Rad (§4) y de su haz mientras redacta un brief
+  («Crear: Rad redactando»). Nada de puntos "live" que parpadean.
 
 ## 8. Gráficos (ECharts + `vue-echarts`)
 

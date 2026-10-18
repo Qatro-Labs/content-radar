@@ -20,10 +20,11 @@ import { TEXT_ENTER_CLASS } from '@/lib/motion'
 // Vacío hasta que empieza la comprobación de citas.
 const { citations } = defineProps<{ citations: readonly CitationView[] }>()
 
-// Los huesos se dibujan de izquierda a derecha, escalonados a lo largo de todas las secciones.
 // Nace cuando Rad ya ha absorbido las piezas que ocupaban su sitio.
 const enterStyle = { animationDelay: `${DRAFT_ENTER_DELAY_MS}ms` }
 
+// Los huesos se dibujan de izquierda a derecha, escalonados a lo largo de todas las secciones, y
+// después laten como cualquier skeleton (DESIGN.md §4) hasta que llega el brief.
 const sections = DRAFT_SKETCH.map((section, sectionIndex) => {
   const before = DRAFT_SKETCH.slice(0, sectionIndex).reduce(
     (total, previous) => total + previous.bones.length,
@@ -33,8 +34,8 @@ const sections = DRAFT_SKETCH.map((section, sectionIndex) => {
     ...section,
     bones: section.bones.map((width, boneIndex) => ({
       width: `${width}%`,
-      animationDelay: `${BONE_LEAD_MS + (before + boneIndex) * BONE_STAGGER_MS}ms`,
-      animationDuration: `${BONE_DRAW_MS}ms`,
+      '--bone-delay': `${BONE_LEAD_MS + (before + boneIndex) * BONE_STAGGER_MS}ms`,
+      '--bone-draw': `${BONE_DRAW_MS}ms`,
     })),
   }
 })
@@ -93,9 +94,9 @@ const sections = DRAFT_SKETCH.map((section, sectionIndex) => {
 <style scoped>
 .brief-bone {
   transform-origin: left;
-  animation-name: brief-bone-draw;
-  animation-timing-function: var(--ease-out);
-  animation-fill-mode: both;
+  animation:
+    brief-bone-draw var(--bone-draw) var(--ease-out) var(--bone-delay) both,
+    brief-bone-pulse 1.6s ease-in-out calc(var(--bone-delay) + var(--bone-draw)) infinite;
 }
 
 .brief-cite-fill {
@@ -126,6 +127,13 @@ const sections = DRAFT_SKETCH.map((section, sectionIndex) => {
   .brief-cite-fill,
   .brief-cite-tick {
     transition: none;
+  }
+}
+
+/* El mismo latido que SkeletonBone: de Pista a Lienzo en 1,6 s. */
+@keyframes brief-bone-pulse {
+  50% {
+    background-color: var(--background);
   }
 }
 

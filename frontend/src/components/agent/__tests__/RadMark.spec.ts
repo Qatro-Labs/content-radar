@@ -26,6 +26,17 @@ describe('RadMark', () => {
     expect(screen.getByTestId('rad-pupil').style.opacity).toBe('0')
   })
 
+  it('keeps the beam sweeping while asked to, and stops it when Rad stops working', async () => {
+    const { container, rerender } = render(RadMark, {
+      props: { state: { ...RESTING, working: true, sweeping: true } },
+    })
+    expect(container.querySelector('.rad-sweep-loop')).not.toBeNull()
+
+    await rerender({ state: { ...RESTING, sweeping: true } })
+
+    expect(container.querySelector('.rad-sweep-loop')).toBeNull()
+  })
+
   it('looks straight ahead when there is nothing to look at', () => {
     render(RadMark, { props: { state: RESTING } })
 
