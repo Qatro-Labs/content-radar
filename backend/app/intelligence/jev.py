@@ -1,4 +1,5 @@
-"""Jev (TypeSafe): batería de pieza y conversión de sus respuestas en decisiones (CLAUDE.md §7).
+"""Jev (TypeSafe): baterías de pieza y de par, y conversión de sus respuestas en decisiones
+(CLAUDE.md §7).
 
 Jev solo emite juicios atómicos; los umbrales y la decisión están aquí, en Python (regla 4).
 El texto de la pieza va solo en `state`; nuestras instrucciones, en las preguntas (regla 6).
@@ -26,6 +27,12 @@ JudgeError = TypeSafeError
 PIECE_BATTERY = "piece"
 PIECE_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/piece.v3.yaml"
 MAX_DESCRIPTION_CHARS = 1000
+
+PAIR_BATTERY = "pair"
+PAIR_BATTERY_FILE = Path(__file__).resolve().parents[1] / "editorial/prompts/jev/pair.v1.yaml"
+# Con dos piezas por llamada, 500 caracteres mantienen el par en ~800 tokens.
+MAX_PAIR_DESCRIPTION_CHARS = 500
+SAME_STORY_QUESTION = "same_story"
 
 # Umbrales de docs/jev.md, "Del juicio a la decisión". Iniciales: se ajustan con la validación.
 CHOICE_MIN_PROB = 0.6
@@ -145,8 +152,31 @@ def piece_state(piece: Piece) -> dict[str, Any]:
     return state
 
 
+@lru_cache
+def pair_battery() -> Battery:
+    return load_battery(PAIR_BATTERY, PAIR_BATTERY_FILE)
+
+
+def _pair_side(piece: Piece) -> dict[str, Any]:
+    # La fuente ayuda a reconocer "WIRED" frente a "WIRED en Español". Sin URL: Jev contestaría
+    # por el dominio, como pasaba con el segmento en la batería de pieza.
+    side: dict[str, Any] = {"title": piece.title, "source": piece.source_name}
+    if piece.description:
+        side["description"] = piece.description[:MAX_PAIR_DESCRIPTION_CHARS]
+    return side
+
+
+def pair_state(a: Piece, b: Piece) -> dict[str, Any]:
+    # Ordenado por item_id: (a, b) y (b, a) comparten caché.
+    first, second = sorted((a, b), key=lambda p: p.item_id)
+    return {"a": _pair_side(first), "b": _pair_side(second)}
+
+
 def cache_key(state: dict[str, Any], model: str) -> str:
-    battery = piece_battery()
+    return battery_cache_key(piece_battery(), state, model)
+
+
+def battery_cache_key(battery: Battery, state: dict[str, Any], model: str) -> str:
     payload = {
         "state": state,
         "battery": battery.name,

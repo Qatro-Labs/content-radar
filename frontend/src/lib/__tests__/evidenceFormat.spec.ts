@@ -28,6 +28,7 @@ function piece(overrides: Partial<Evidence>): Evidence {
     observed_at: '2026-10-17T19:00:00Z',
     metrics: { ...NO_METRICS, views: 1000 },
     collection: 'automatic',
+    replica_count: 0,
     ...overrides,
   }
 }

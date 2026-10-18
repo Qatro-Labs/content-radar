@@ -84,7 +84,8 @@ def test_old_payload_still_validates(raw):
     for key in ("score_breakdown", "audience_fit_criteria"):
         old_opportunity.pop(key, None)
     old_evidence = dict(raw["evidence"]["opp_001"][0])
-    old_evidence.pop("collection", None)
+    for key in ("collection", "replica_of", "replica_count"):
+        old_evidence.pop(key, None)
 
     o = Opportunity.model_validate(old_opportunity)
     e = Evidence.model_validate(old_evidence)
@@ -92,3 +93,29 @@ def test_old_payload_still_validates(raw):
     assert o.score_breakdown is None
     assert o.audience_fit_criteria is None
     assert e.collection is Collection.AUTOMATIC
+    assert e.replica_of is None
+    assert e.replica_count == 0
+
+
+def test_fixture_replicas_point_inside_their_topic(raw):
+    replicas = 0
+    for evidence in raw["evidence"].values():
+        items = [Evidence.model_validate(e) for e in evidence]
+        originals = {str(e.url): e for e in items if e.replica_of is None}
+        for e in items:
+            if e.replica_of is None:
+                continue
+            replicas += 1
+            original = originals[str(e.replica_of)]
+            assert original.replica_count >= 1
+    assert replicas >= 1  # el fixture enseña al frontend al menos una republicación
+
+
+def test_fixture_replicas_are_explained(raw):
+    # Como en `build_opportunities`: si hay republicaciones, la descripción y las limitaciones
+    # lo dicen.
+    for o in OpportunityList.model_validate(raw["opportunities"]).items:
+        if all(e["replica_of"] is None for e in raw["evidence"][o.id]):
+            continue
+        assert "republica" in o.description
+        assert any("republica" in note for note in o.limitations)

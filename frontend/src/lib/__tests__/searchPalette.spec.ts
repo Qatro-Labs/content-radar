@@ -31,6 +31,7 @@ function piece(opportunityId: string, url: string, title: string, source: string
     outlier_ratio: null,
     is_outlier: null,
     collection: 'automatic',
+    replica_count: 0,
   }
 }
 

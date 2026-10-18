@@ -3,8 +3,17 @@
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+import numpy as np
+
 from app.intelligence.opportunities import Piece, build_opportunities, outlier_ratios
 from app.intelligence.outliers import is_outlier
+from app.intelligence.replicas import (
+    REPLICAS_UNVERIFIED_NOTE,
+    ReplicaBasis,
+    ReplicaEdge,
+    group_stories,
+    topic_pairs,
+)
 from app.schemas.opportunity import Collection, Confidence, GrowthStatus, Lifecycle
 from app.schemas.signal import Metrics, Platform, Segment, SourceKind
 
@@ -305,3 +314,156 @@ def test_empty_pieces_with_reference():
         )
         == []
     )
+
+
+def build_with(pieces, stories=None):
+    [r] = build_opportunities(
+        pieces,
+        [list(range(len(pieces)))],
+        [0],
+        as_of=AS_OF,
+        monitoring_started_at=STARTED,
+        stories=stories,
+    )
+    return r
+
+
+def replicated_topic():
+    """3 stories de HN (un medio) + 3 RSS de 3 medios; las RSS 11 y 12 republican la 10."""
+    hn = [piece(i, hours_ago=5 + i * 6) for i in range(3)]
+    rss = [
+        piece(10, hours_ago=20, platform=Platform.RSS, source="Medio 0"),
+        piece(11, hours_ago=4, platform=Platform.RSS, source="Medio 1"),
+        piece(12, hours_ago=3, platform=Platform.RSS, source="Medio 2"),
+    ]
+    pieces = hn + rss
+    edges = [ReplicaEdge(10, 11, ReplicaBasis.JEV), ReplicaEdge(10, 12, ReplicaBasis.JEV)]
+    return pieces, group_stories(pieces, edges)
+
+
+def test_replicas_do_not_count_as_independent_sources():
+    pieces, stories = replicated_topic()
+    before, after = build_with(pieces).opportunity, build_with(pieces, stories).opportunity
+    # Antes: 4 medios y 2 plataformas → 20·3 + 15·1 = 75; 6 piezas → 24 × (0,5 + 0,5·1) = 24.
+    assert (before.source_count, before.cross_source_score, before.evidence_strength) == (
+        4,
+        75.0,
+        24.0,
+    )
+    # Después: HN y Medio 0 → 20·1 + 15·1 = 35; 4 piezas → 16 × (0,5 + 0,5·2/3) = 13,3.
+    assert (after.source_count, after.cross_source_score, after.evidence_strength) == (
+        2,
+        35.0,
+        13.3,
+    )
+    assert "6 piezas (2 republicaciones) de 2 fuentes independientes" in after.description
+    assert "republicaciones" not in before.description
+
+
+def test_replica_on_another_platform_adds_no_platform():
+    hn = [piece(i, hours_ago=5 + i * 6) for i in range(4)]
+    rss = [piece(10 + i, hours_ago=3 + i, platform=Platform.RSS, source="Medio") for i in range(2)]
+    # La única pieza de YouTube republica la RSS 11: no suma plataforma al cross-source.
+    video = piece(20, hours_ago=1, platform=Platform.YOUTUBE, source="Canal")
+    pieces = hn + rss + [video]
+    stories = group_stories(pieces, [ReplicaEdge(11, 20, ReplicaBasis.JEV)])
+    o = build_with(pieces, stories).opportunity
+    assert (o.source_count, o.cross_source_score) == (2, 35.0)  # 20·1 + 15·1
+    assert o.description.endswith("de 2 fuentes independientes (hackernews, rss).")
+
+
+def test_copy_on_another_platform_keeps_the_single_platform_note():
+    hn = [piece(i, hours_ago=5 + i * 6) for i in range(5)]
+    # La única pieza de YouTube republica la HN 0: el tema sigue en una sola plataforma.
+    video = piece(20, hours_ago=1, platform=Platform.YOUTUBE, source="Canal")
+    pieces = [*hn, video]
+    stories = group_stories(pieces, [ReplicaEdge(0, 20, ReplicaBasis.JEV)])
+    o = build_with(pieces, stories).opportunity
+    assert "Solo aparece en una plataforma (hackernews)." in o.limitations
+
+
+def test_replicas_do_not_raise_saturation():
+    plain = [piece(i, hours_ago=5 + i * 6, platform=Platform.RSS, source=f"A{i}") for i in range(6)]
+    copied = [
+        piece(10 + i, hours_ago=5 + i * 6, platform=Platform.RSS, source=f"B{i}") for i in range(6)
+    ]
+    pieces = plain + copied
+    edges = [ReplicaEdge(15, 10 + i, ReplicaBasis.SAME_LINK) for i in range(3)]
+    plain_r, copied_r = (
+        {r.opportunity.id: r for r in build_opportunities(
+            pieces,
+            [list(range(6)), list(range(6, 12))],
+            [0, 6],
+            as_of=AS_OF,
+            monitoring_started_at=STARTED,
+            stories=group_stories(pieces, edges),
+        )}[oid]
+        for oid in ("opp_5", "opp_15")
+    )  # fmt: skip
+    # 6 piezas en las dos ventanas cada uno, pero el segundo solo tiene 3 notas.
+    assert copied_r.opportunity.saturation_score < plain_r.opportunity.saturation_score
+
+
+def test_all_replicas_single_story_is_low_confidence():
+    pieces = [
+        piece(i, hours_ago=5 + i * 6, platform=Platform.RSS, source=f"Medio {i}") for i in range(5)
+    ]
+    edges = [ReplicaEdge(4, i, ReplicaBasis.SAME_LINK) for i in range(4)]
+    o = build_with(pieces, group_stories(pieces, edges)).opportunity
+    assert o.source_count == 1
+    assert o.lifecycle is Lifecycle.UNKNOWN
+    assert o.confidence is Confidence.LOW
+
+
+def test_single_source_gives_no_pairs():
+    pieces = [piece(i, hours_ago=5 + i * 10) for i in range(6)]
+    same = np.tile([1.0, 0.0], (len(pieces), 1))  # todas iguales, pero del mismo medio
+    edges, candidates = topic_pairs(pieces, [list(range(len(pieces)))], same)
+    assert (edges, candidates) == ([], [])
+
+
+def test_evidence_marks_replicas_and_count():
+    pieces, stories = replicated_topic()
+    by_url = {str(e.url): e for e in build_with(pieces, stories).evidence}
+    original = by_url["https://example.com/10"]
+    assert (original.replica_of, original.replica_count) == (None, 2)
+    for i in (11, 12):
+        copy = by_url[f"https://example.com/{i}"]
+        assert str(copy.replica_of) == "https://example.com/10"
+        assert copy.replica_count == 0
+    assert all(by_url[f"https://example.com/{i}"].replica_of is None for i in range(3))
+
+
+def test_replicas_go_after_originals_in_evidence():
+    hn = [piece(i, hours_ago=10 + i) for i in range(5)]
+    hit = piece(5, hours_ago=12, points=200)  # outlier: 20× el p90 de su query
+    original = piece(20, hours_ago=40, platform=Platform.RSS, source="Medio")
+    pieces = [*hn, hit, original]
+    stories = group_stories(pieces, [ReplicaEdge(5, 20, ReplicaBasis.SAME_LINK)])
+    r = build_with(pieces, stories)
+    assert r.evidence[-1].is_outlier is True
+    assert str(r.evidence[-1].replica_of) == "https://example.com/20"
+    assert all(e.replica_of is None for e in r.evidence[:-1])
+    assert r.pieces[-1].item_id == 5  # lo que recibe el LLM sigue el mismo orden
+
+
+def test_replica_limitations():
+    pieces, stories = replicated_topic()
+    notes = build_with(pieces, stories).opportunity.limitations
+    assert any(n.startswith("2 piezas son republicaciones") for n in notes)
+    assert REPLICAS_UNVERIFIED_NOTE not in notes
+
+    by_rule = group_stories(pieces, [ReplicaEdge(10, 11, ReplicaBasis.SIMILARITY)])
+    o = build_with(pieces, by_rule).opportunity
+    notes = o.limitations
+    assert any(n.startswith("1 pieza es una republicación") for n in notes)
+    assert "6 piezas (1 republicación) de 3 fuentes independientes" in o.description
+    assert REPLICAS_UNVERIFIED_NOTE in notes
+
+
+def test_velocity_and_timeline_still_count_pieces():
+    pieces, stories = replicated_topic()
+    before, after = build_with(pieces), build_with(pieces, stories)
+    assert after.opportunity.velocity == before.opportunity.velocity
+    assert after.opportunity.acceleration == before.opportunity.acceleration
+    assert sum(p.count for p in after.timeline.points) == len(pieces)

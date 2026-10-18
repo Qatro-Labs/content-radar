@@ -237,7 +237,7 @@
       {
         "id": "opp_003",
         "topic": "[MOCK] IA en atención al cliente",
-        "description": "Asistentes de IA que responden a clientes en canales de mensajería y voz.",
+        "description": "Asistentes de IA que responden a clientes en canales de mensajería y voz. 1 republicación no cuenta como fuente independiente.",
         "lifecycle": "peaking",
         "lifecycle_reason": "Saturación ≥ 60 y |aceleración| < 0.2.",
         "growth_status": "observed",
@@ -338,14 +338,15 @@
           "total": 66.1
         },
         "confidence": "high",
-        "source_count": 6,
+        "source_count": 5,
         "evidence_strength": 81,
         "latam_gap": false,
         "recommendation": "find_angle",
         "recommendation_reason": "Buscar ángulo: el tema está en su pico y hace falta un enfoque propio.",
         "why_it_matters": "Tema maduro y ya cubierto en la región; solo vale la pena con un caso concreto o un ángulo de métricas.",
         "limitations": [
-          "La saturación se mide solo dentro de las fuentes monitoreadas."
+          "La saturación se mide solo dentro de las fuentes monitoreadas.",
+          "1 pieza es una republicación de la misma nota: no cuenta como fuente independiente ni para la saturación."
         ],
         "last_updated": "2026-10-17T09:00:00Z"
       },
@@ -528,7 +529,9 @@
         },
         "outlier_ratio": 6.1,
         "is_outlier": true,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/2",
@@ -549,7 +552,9 @@
         },
         "outlier_ratio": 3.4,
         "is_outlier": true,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/3",
@@ -564,7 +569,9 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ],
     "opp_002": [
@@ -584,7 +591,9 @@
         "velocity": null,
         "outlier_ratio": 2.2,
         "is_outlier": false,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/5",
@@ -603,7 +612,9 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ],
     "opp_003": [
@@ -627,7 +638,9 @@
         },
         "outlier_ratio": 1.8,
         "is_outlier": false,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       },
       {
         "url": "https://example.com/mock/7",
@@ -642,7 +655,29 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 1
+      },
+      {
+        "url": "https://example.com/mock/10",
+        "source": "Fuente mock hackernews tech",
+        "platform": "hackernews",
+        "segment": "tech",
+        "title": "[MOCK] Empresas latinoamericanas adoptan bots de atención",
+        "published_at": "2026-10-15T11:00:00Z",
+        "observed_at": "2026-10-17T09:00:00Z",
+        "language": "es",
+        "metrics": {
+          "points": 12,
+          "comments": 4
+        },
+        "velocity": null,
+        "outlier_ratio": null,
+        "is_outlier": null,
+        "collection": "automatic",
+        "replica_of": "https://example.com/mock/7",
+        "replica_count": 0
       }
     ],
     "opp_004": [
@@ -666,7 +701,9 @@
         },
         "outlier_ratio": 0.6,
         "is_outlier": false,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ],
     "opp_005": [
@@ -683,7 +720,9 @@
         "velocity": null,
         "outlier_ratio": null,
         "is_outlier": null,
-        "collection": "automatic"
+        "collection": "automatic",
+        "replica_of": null,
+        "replica_count": 0
       }
     ]
   },
