@@ -405,8 +405,11 @@ def test_growth_and_confidence():
     assert confidence(GrowthStatus.OBSERVED, 1, 50) is Confidence.LOW
 
 
-def advise(st, conf=Confidence.HIGH, *, fit=None, org=None, gap=None) -> Recommendation:
-    return recommend(st, conf, audience_fit=fit, org_application=org, latam_gap=gap).recommendation
+def advise(st, conf=Confidence.HIGH, *, fit=None, org=None, gap=None, acc=0.6) -> Recommendation:
+    advice = recommend(
+        st, conf, audience_fit=fit, org_application=org, latam_gap=gap, acceleration=acc
+    )
+    return advice.recommendation
 
 
 SATURATED, ACCELERATING = stage(acc=-0.3, sat=80), stage(acc=0.6, sources=3)
@@ -446,6 +449,53 @@ def test_recommendation_takes_the_first_rule_that_holds(st, conf, fit, org, gap,
 
 def test_recommendation_says_which_rule_held():
     advice = recommend(
-        ACCELERATING, Confidence.HIGH, audience_fit=90, org_application=1, latam_gap=None
+        ACCELERATING,
+        Confidence.HIGH,
+        audience_fit=90,
+        org_application=1,
+        latam_gap=None,
+        acceleration=0.6,
     )
     assert "ninguna organización aplicándolo" in advice.reason
+
+
+UNPROVEN, DECLINING = stage(acc=0.6, sources=3, p=0.4), stage(acc=-0.3, sat=50)
+
+
+@pytest.mark.parametrize(
+    ("st", "conf", "fit", "org", "gap", "acc", "expected"),
+    [
+        (UNPROVEN, Confidence.MEDIUM, 60, 2, True, 0.6, Recommendation.PUBLISH_NOW),
+        (NO_RULE, Confidence.MEDIUM, 73, 3, True, 0.3, Recommendation.PUBLISH_NOW),
+        (UNPROVEN, Confidence.MEDIUM, 60, 2, None, 0.6, Recommendation.FIND_ANGLE),
+        (UNPROVEN, Confidence.MEDIUM, 59, 2, True, 0.6, Recommendation.FIND_ANGLE),
+        (UNPROVEN, Confidence.MEDIUM, None, None, True, 0.6, Recommendation.FIND_ANGLE),
+        (UNPROVEN, Confidence.MEDIUM, 90, 1, True, 0.6, Recommendation.WAIT_FOR_CASE),
+        (UNPROVEN, Confidence.LOW, 90, 3, True, 0.6, Recommendation.WAIT_FOR_CASE),
+        (DECLINING, Confidence.HIGH, 90, 3, True, -0.3, Recommendation.FIND_ANGLE),
+    ],
+    ids=[
+        "unproven-rise-with-gap-publishes",
+        "no-stage-rising-with-gap-publishes",
+        "no-gap-finds-angle",
+        "fit-below-60-finds-angle",
+        "no-fit-finds-angle",
+        "no-real-case-waits",
+        "low-confidence-waits",
+        "declining-never-publishes",
+    ],
+)
+def test_latam_gap_publishes_without_proven_growth(st, conf, fit, org, gap, acc, expected):
+    assert advise(st, conf, fit=fit, org=org, gap=gap, acc=acc) is expected
+
+
+def test_latam_gap_reason_says_growth_is_unproven():
+    advice = recommend(
+        UNPROVEN,
+        Confidence.MEDIUM,
+        audience_fit=70,
+        org_application=2,
+        latam_gap=True,
+        acceleration=0.6,
+    )
+    assert "no está demostrado" in advice.reason

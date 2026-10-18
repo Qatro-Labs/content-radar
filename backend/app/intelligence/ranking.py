@@ -138,6 +138,7 @@ def confidence(growth: GrowthStatus, source_count: int, item_count: int) -> Conf
 # títulos y descripciones; leer los artículos completos de 5 temas no encontró ningún caso que se
 # le escapara (docs/scoring.md, Limitaciones).
 NO_CASE_MAX_LEVEL = 1
+LATAM_GAP_MIN_ORG_LEVEL = 2
 
 REASON_SATURATED = (
     "Tema saturado: mucho contenido similar y en descenso en las fuentes monitoreadas."
@@ -153,6 +154,10 @@ REASON_NO_STAGE = "Buscar ángulo: hay datos, pero no muestran una etapa clara."
 REASON_LATAM_COVERED = "Buscar ángulo: ya hay bastante cobertura en fuentes de Latinoamérica."
 REASON_PUBLISH = (
     f"Publicar: tema en crecimiento con encaje alto con la audiencia de 30X (≥ {PUBLISH_MIN_FIT})."
+)
+REASON_LATAM_GAP_UNPROVEN = (
+    "Publicar ya: encaje alto y aún no se cubre en LATAM; el crecimiento todavía no está "
+    "demostrado."
 )
 REASON_NO_FIT = "Buscar ángulo: falta evaluar el encaje con la audiencia de 30X."
 REASON_LOW_FIT = (
@@ -174,6 +179,7 @@ def recommend(
     audience_fit: float | None,
     org_application: int | None,
     latam_gap: bool | None,
+    acceleration: float,
 ) -> Advice:
     """Primera regla que se cumple (CLAUDE.md §7)."""
     if stage.lifecycle is Lifecycle.SATURATED:
@@ -186,6 +192,18 @@ def recommend(
         return Advice(Recommendation.WAIT_FOR_CASE, REASON_NO_CASE)
     if stage.lifecycle is Lifecycle.PEAKING:
         return Advice(Recommendation.FIND_ANGLE, REASON_PEAKING)
+    # Decidido el 18/10: con encaje alto, caso real y hueco en LATAM, sube sin demostrar basta
+    # para publicar. La razón dice que el crecimiento no está demostrado (CLAUDE.md §2.3).
+    if (
+        stage.lifecycle is Lifecycle.UNKNOWN
+        and acceleration > 0
+        and latam_gap is True
+        and org_application is not None
+        and org_application >= LATAM_GAP_MIN_ORG_LEVEL
+        and audience_fit is not None
+        and audience_fit >= PUBLISH_MIN_FIT
+    ):
+        return Advice(Recommendation.PUBLISH_NOW, REASON_LATAM_GAP_UNPROVEN)
     # unknown aquí es "ninguna regla se cumple": hay datos, falta ángulo.
     if stage.lifecycle is Lifecycle.UNKNOWN:
         return Advice(Recommendation.FIND_ANGLE, REASON_NO_STAGE)
