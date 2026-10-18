@@ -177,8 +177,9 @@ class HookLift(BaseModel):
 
 
 class OutlierHooks(BaseModel):
-    """«Por qué funcionó»: ganchos de los outliers frente al resto del tema. Es una hipótesis con
-    muestra pequeña, nunca causalidad."""
+    """«Por qué funcionó»: ganchos de los outliers frente al resto del tema, solo con piezas
+    originales (sin republicaciones), así que los totales pueden ser menores que `outlier_count`.
+    Es una hipótesis con muestra pequeña, nunca causalidad."""
 
     hooks: list[HookLift] = Field(description="Un elemento por gancho que usa algún outlier")
     outliers_unclassified: int = Field(

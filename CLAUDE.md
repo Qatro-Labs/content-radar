@@ -165,7 +165,7 @@ Grupos para el **LATAM Opportunity Gap** (decidido el 17/10: **target LATAM, det
 ```
 `Evidence`: `url`, `source`, `platform`, `segment`, `title`, `published_at`, `metrics` (tal cual la fuente), `observed_at`, `language`, `velocity` (`{"value": 950.0, "unit": "views/h"}`; `null` sin 2 snapshots), `outlier_ratio` (`null` sin referencia), `is_outlier` (`null` si no hay ratio), `replica_of` (URL de la original o `null`), `replica_count` (en la original: medios que la republican).
 
-**Implementación:** `backend/app/schemas/opportunity.py`. Además de lo anterior: `top_outlier_ratio` es `null` si ninguna pieza tiene ratio; `audience_mix` es un objeto con las tres claves fijas (suma 1).
+**Implementación:** `backend/app/schemas/opportunity.py`. Además de lo anterior: `top_outlier_ratio` es `null` si ninguna pieza tiene ratio; `audience_mix` es un objeto con las tres claves fijas (suma 1). `outlier_hooks` (opcional, `null` sin outliers con gancho clasificado): «por qué funcionó» por gancho del título, con su lift frente al resto del tema (§7).
 - `GET /opportunities` → `OpportunityList`: `{items, period, generated_at, monitoring_started_at}`.
 - `GET /opportunities/{id}/evidence` → `Evidence[]`.
 - `GET /opportunities/{id}/timeline` → `OpportunityTimeline`: `{opportunity_id, window_days, points: [{date, count, window: "current" | "previous"}]}`.
