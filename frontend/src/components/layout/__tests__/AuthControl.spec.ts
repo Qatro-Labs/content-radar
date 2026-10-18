@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/vue'
+import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
@@ -44,6 +44,14 @@ async function renderControl() {
   render(AuthControl, { global: { plugins: [router] } })
 }
 
+// Reka abre el menú con pointerdown o teclado, y lo pinta en un portal sobre `document.body`;
+// `screen` consulta todo el body, así que lo encuentra igual.
+async function openAccountMenu() {
+  const trigger = await screen.findByRole('button', { name: 'Cuenta' })
+  trigger.focus()
+  await fireEvent.keyDown(trigger, { key: 'Enter' })
+}
+
 describe('AuthControl', () => {
   beforeEach(() => {
     vi.resetModules()
@@ -64,8 +72,23 @@ describe('AuthControl', () => {
 
     resolveSession({ data: { session: SESSION }, error: null })
 
-    expect(await screen.findByRole('button', { name: 'Cerrar sesión' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Cuenta' })).toBeTruthy()
     expect(screen.queryByText('Iniciar sesión')).toBeNull()
+  })
+
+  it('shows the email and signs out from the account menu', async () => {
+    const resolveSession = deferSession()
+    auth.signOut.mockResolvedValue({ error: null })
+    await renderControl()
+    resolveSession({ data: { session: SESSION }, error: null })
+
+    expect(screen.queryByText('ana@example.com')).toBeNull()
+    await openAccountMenu()
+
+    expect(await screen.findByText('ana@example.com')).toBeTruthy()
+    await fireEvent.click(await screen.findByRole('menuitem', { name: 'Cerrar sesión' }))
+
+    expect(auth.signOut).toHaveBeenCalledOnce()
   })
 
   it('offers to sign in once the session resolves empty', async () => {
