@@ -71,6 +71,11 @@ las 168 respuestas guardadas los mismos 33/35, 9/15 y 49/53 que la copia de la r
 
 - **Filtra justo en el mínimo, con un intervalo ancho (36–80 %, n = 15).** Con otra muestra podría
   quedar por debajo.
+- **La decisión depende de una etiqueta.** El texto del evaluador decía 34/6, pero no nombra
+  ninguna fila negativa que su JSON (35/5, commiteado antes de Jev) dé como respaldada. Si hubiera
+  una negativa más y Jev la publicara, como publica 33 de las 35 respaldadas, «filtra» quedaría en
+  9/16 (56 %) y no se adoptaría. Solo si fuera la fila 18 o la 26, que Jev descarta, quedaría en
+  10/16 (63 %).
 - **Jev atrapa los hechos inventados, no las sobregeneralizaciones.** Filtra 5/5 de hecho insertado,
   pero deja pasar 4 de las 5 negativas naturales (filas 8, 13, 19 y 38, con `supports` y
   `confidence` de 0,76 a 0,94): «la mayoría», atribuir a las piezas lo que no dicen, o unir dos
