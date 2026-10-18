@@ -180,14 +180,16 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   la que dejó Rad, a su lado va la frase "Filtros puestos por Rad".
 - **Barra de pregunta:** fija abajo y centrada (`position: fixed`, ancho máximo 840px), tarjeta blanca de radio 20px
   con la sombra flotante (§5), porque flota sobre la página: la conversación no reserva espacio y el final de la
-  página solo deja sitio para el campo. A la derecha del primario, un botón ⌄ «Reducir a Rad». De izquierda a derecha: la marca de Rad, el campo (#F2F3F5, radio
-  12px, alto 48px, placeholder "Pregúntale a Rad: …" en Apagado) y el primario "Preguntar", que pasa a secundario
-  "Detener" mientras Rad trabaja. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los
-  mismos controles". En reposo, encima del campo, 3 preguntas sugeridas según el contexto (botones #F2F3F5, radio
-  10px, alto 40px): generales en el Radar, del tema con un tema abierto, de búsqueda en Explorar. Con la conversación
-  en marcha solo quedan las del tema.
-- **Rad reducido:** la barra se encoge hacia abajo a la derecha y queda el ojo de Rad flotando (56px, sombra
-  flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
+  página solo deja sitio para el campo. De izquierda a derecha: el botón «−» «Minimizar Rad» (32px, Lucide `Minus`,
+  tooltip «Minimizar»), la marca de Rad, el campo (#F2F3F5, radio 12px, alto 48px, placeholder "Pregúntale a Rad: …"
+  en Apagado) y el primario "Preguntar", que pasa a secundario "Detener" mientras Rad trabaja. Con conversación, el
+  «−» sube a una cabecera arriba a la izquierda: «−» · «Rad» (13px, 600, Tinta suave) · "Nueva conversación" a la
+  derecha. Debajo, en 13px Apagado: "Rad lee las mismas oportunidades que ves y usa los mismos controles". En
+  reposo, encima del campo, 3 preguntas sugeridas según el contexto (botones #F2F3F5, radio 10px, alto 40px):
+  generales en el Radar, del tema con un tema abierto, de búsqueda en Explorar. Con la conversación en marcha solo
+  quedan las del tema.
+- **Rad reducido** (botón «−»): la barra se encoge hacia abajo a la derecha y queda el ojo de Rad flotando (56px,
+  sombra flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
   presencia sigue actuando en la página. Si termina una respuesta con la barra reducida, un punto Lima de 14px en la
   esquina del ojo lo avisa («Rad respondió») hasta que se abre. Al abrirlo vuelve la barra con la conversación.
   Sin conversación, la barra aparece abierta, lista para preguntar. Al reducir, el ojo vuela en línea recta de su
@@ -212,6 +214,19 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
     un asistente (MCP)" (copia la pregunta y abre `docs/mcp.md`; nombrará un cliente cuando haya uno probado). Los
     pasos se pliegan en una línea subrayada ("Hizo 6 pasos: 3 de datos y 3 en la vista") que los vuelve a abrir;
   - una conversación: los turnos anteriores quedan plegados encima del actual y "Nueva conversación" los borra.
+- **Respuesta plegada** (A, 18/10): la barra abierta tapaba lo que Rad acababa de señalar. Al terminar bien una
+  respuesta, la transcripción se pliega en una fila encima del campo (#F6F7F8, radio 14px, 10px 12px): punto Lima de
+  9px con el trazo de Acelerando, «Rad respondió» (600), la pregunta en Apagado cortada a una línea y «· 3 temas
+  citados» si cita alguno. A la derecha, «Ver respuesta» ⌃ (blanco, radio 10px, alto 36px), que la abre y pasa a
+  «Ocultar respuesta» ⌄. Mientras Rad trabaja la transcripción va abierta; tras un error o «Detener» no se pliega.
+  Elegir un tema citado también la pliega. Al plegar, la barra se encoge sin animación y la fila entra con fundido y
+  4px de subida (300ms); al abrir, igual la transcripción.
+- **Vistazo** (D, 18/10): pasar el cursor o el foco por un chip de «Citadas» deja ver la página detrás. La barra
+  pierde fondo y sombra y queda un contorno interior de 1px rgb(18 20 24 / 0.16) (la única caja con contorno, y solo
+  mientras dura; sin cristal ni blur). Todo baja a opacidad 0.1 (el campo, a 0.35) salvo los chips: blancos con la
+  sombra flotante, el mirado con contorno de Tinta de 2px y los demás a 0.55. 150ms ease-out. En el Radar, su burbuja
+  y su fila se resaltan como con el hover, sin tocar la URL ni la selección. Termina al salir del chip, con Escape o al
+  pulsarlo.
 - **Presencia del agente:** un punto Lima de 16px con anillo de Tinta de 2px y la sombra flotante, más un rótulo en
   píldora Tinta (radio 10px, texto blanco 13px/600) con el paso en curso ("Pulsando «Hueco en LATAM»"). Al actuar
   sobre una sección o un control, la rodea un **anillo de foco** de 2px en Tinta, separado 5–6px y con el radio del

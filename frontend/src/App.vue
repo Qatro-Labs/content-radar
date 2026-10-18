@@ -7,12 +7,14 @@ import AgentLauncher from '@/components/agent/AgentLauncher.vue'
 import AgentPresence from '@/components/agent/AgentPresence.vue'
 import type { RadMarkState } from '@/components/agent/RadMark.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
+import { useAgentPeek } from '@/composables/useAgentPeek'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadIdleLife } from '@/composables/useRadIdleLife'
 import { useRadMorph } from '@/composables/useRadMorph'
 
 const agent = useRadarAgent()
 const { turns, status, presence, suggestions, isAvailable, isMinimized, hasUnread } = agent
+const { peek } = useAgentPeek()
 
 // En reposo, Rad mira el cursor (y de vez en cuando, otro sitio de la página); mientras trabaja,
 // mira hacia su presencia. Las coordenadas van relativas a `[data-agent-root]`, como la
@@ -87,6 +89,7 @@ const mark = computed<RadMarkState>(() => {
         @copy-link="agent.copyViewLink"
         @ask-from-assistant="agent.askFromAssistant"
         @minimize="agent.minimize"
+        @peek-cited="peek"
       />
     </Transition>
     <Transition :css="false" @enter="morph.onEyeEnter" @leave="morph.onEyeLeave">

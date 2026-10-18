@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useOpportunities } from '@/api/opportunities'
 import OpportunityRadar from '@/components/radar/OpportunityRadar.vue'
@@ -9,6 +9,7 @@ import RadarHero from '@/components/radar/RadarHero.vue'
 import RadarSidePanel from '@/components/radar/RadarSidePanel.vue'
 import RadarStates, { RadarPlaceholder } from '@/components/radar/RadarStates.vue'
 import RadarTabs, { TAB_PANEL_ID, tabId } from '@/components/radar/RadarTabs.vue'
+import { useAgentPeek } from '@/composables/useAgentPeek'
 import { AGENT_ANCHOR } from '@/lib/agentTargets'
 import { useRadarAgent } from '@/composables/useRadarAgent'
 import { useRadarQuery } from '@/composables/useRadarQuery'
@@ -22,6 +23,13 @@ const { data, isPending, isError, refetch } = useOpportunities(() => query.value
 const view = computed(() => buildRadarView(data.value ?? null, query.value))
 // El hover enlaza radar, ranking y panel, pero no va en la URL: no es un estado que se comparta.
 const hovered = ref<string | null>(null)
+// El vistazo de Rad a un tema citado lo resalta como el hover y enseña su vista previa en el
+// panel, sin tocar la URL ni la selección.
+const { peekedId } = useAgentPeek()
+watch(peekedId, (id) => (hovered.value = id))
+const peeked = computed(
+  () => view.value.ranked.find((topic) => topic.id === peekedId.value) ?? null,
+)
 
 // Sin una lista con temas no se monta la cabecera: "0 temas esta semana" se leería como un
 // resultado real (CLAUDE.md §2.3).
@@ -97,6 +105,7 @@ function hover(id: string | null) {
 
       <RadarSidePanel
         :view
+        :peeked
         :monitoring-started-at="data.monitoring_started_at"
         @select="select"
         @hover="hover"

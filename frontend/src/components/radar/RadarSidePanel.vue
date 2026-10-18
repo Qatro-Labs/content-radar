@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import type { RadarView } from '@/lib/radarView'
+import { computed } from 'vue'
+
+import type { RadarView, RankedOpportunity } from '@/lib/radarView'
 
 import OpportunityPreview from './OpportunityPreview.vue'
 import WeekSummary from './WeekSummary.vue'
 
-const { view, monitoringStartedAt } = defineProps<{
+const { view, peeked, monitoringStartedAt } = defineProps<{
   view: RadarView
+  // El tema citado por el que pasa el vistazo de Rad: se ve mientras dura, sin seleccionarlo.
+  peeked: RankedOpportunity | null
   monitoringStartedAt: string
 }>()
 
@@ -14,6 +18,8 @@ const emit = defineEmits<{
   hover: [id: string | null]
   clear: []
 }>()
+
+const previewed = computed(() => peeked ?? view.selected)
 </script>
 
 <template>
@@ -30,8 +36,8 @@ const emit = defineEmits<{
       enter-active-class="transition duration-[280ms] ease-out motion-reduce:transition-none"
     >
       <OpportunityPreview
-        v-if="view.selected"
-        :opportunity="view.selected"
+        v-if="previewed"
+        :opportunity="previewed"
         :total="view.total"
         @clear="emit('clear')"
       />
