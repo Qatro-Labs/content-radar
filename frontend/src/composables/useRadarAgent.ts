@@ -195,7 +195,7 @@ export const useRadarAgent = createSharedComposable(() => {
   // Al reducir o abrir la barra, su campo («composer») pasa a ser el ojo o vuelve a la barra: la
   // presencia se vuelve a medir cuando termina la transición, porque mientras sale sigue en el DOM.
   function relocatePresence() {
-    void promiseTimeout(AGENT_TIMING.dockToggleMs).then(presence.remeasure)
+    void promiseTimeout(AGENT_TIMING.eyeFlightMs).then(presence.remeasure)
   }
 
   function minimize() {

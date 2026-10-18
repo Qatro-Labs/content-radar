@@ -32,15 +32,19 @@ describe('RadMark', () => {
     expect(screen.getByTestId('rad-gaze').style.transform).toBe('translate(0px, 0px)')
   })
 
-  it('looks toward the presence, 3.2 viewBox units from the centre', async () => {
-    // Raíz de la app en (0, 0) y marca de 40 px en (10, 10): su centro es (30, 30). La presencia
-    // está 100 px a la derecha, en la misma altura.
+  // Raíz de la app en (0, 0) y marca de 40 px en (10, 10): su centro es (30, 30). Lo que mira está a
+  // la derecha, a la misma altura: lejos mira hasta el borde (3,2 unidades del viewBox); cerca, menos,
+  // como un ojo de verdad.
+  it.each([
+    { case: 'far away, to the edge', dx: 400, transform: 'translate(3.2px, 0px)' },
+    { case: 'close by, half way', dx: 80, transform: 'translate(1.6px, 0px)' },
+  ])('looks toward what it follows: $case', async ({ dx, transform }) => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
       this: HTMLElement,
     ) {
       return this.hasAttribute('data-agent-root') ? box(0, 0, 1000) : box(10, 10, 40)
     })
-    const state: RadMarkState = { ...RESTING, lookAt: { x: 130, y: 30 } }
+    const state: RadMarkState = { ...RESTING, lookAt: { x: 30 + dx, y: 30 } }
     const App = defineComponent({
       render: () => h('div', { 'data-agent-root': '' }, [h(RadMark, { state })]),
     })
@@ -48,6 +52,6 @@ describe('RadMark', () => {
     render(App)
     await nextTick()
 
-    expect(screen.getByTestId('rad-gaze').style.transform).toBe('translate(3.2px, 0px)')
+    expect(screen.getByTestId('rad-gaze').style.transform).toBe(transform)
   })
 })

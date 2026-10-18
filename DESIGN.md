@@ -189,9 +189,12 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   flotante, rótulo «Pregúntale a Rad» al pasar el ratón). Sigue vivo: se abre en radar mientras trabaja y la
   presencia sigue actuando en la página. Si termina una respuesta con la barra reducida, un punto Lima de 14px en la
   esquina del ojo lo avisa («Rad respondió») hasta que se abre. Al abrirlo vuelve la barra con la conversación.
-  Sin conversación, la barra aparece abierta, lista para preguntar.
+  Sin conversación, la barra aparece abierta, lista para preguntar. Al reducir, el ojo sale volando de su sitio en la
+  barra hasta la esquina (460ms, ease-out) mientras la barra se funde y se encoge hacia allí; al abrir, vuelve volando
+  a la barra, que aparece con un fundido. Solo `transform` y `opacity`.
 - **Marca de Rad** (opción C del artboard «Rad»): cuadrado Tinta de 40px y radio 11px con un ojo Lima. En reposo es
-  un ojo que mira hacia donde está su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
+  un ojo que mira el cursor (de reojo si está cerca, hasta el borde si está lejos; al frente con movimiento
+  reducido); mientras trabaja mira hacia su presencia; mientras trabaja se abre en un radar (dos anillos) y su haz da una
   sola pasada por cada paso de datos; al terminar vuelve a ser un ojo y parpadea una vez. Sin bucles.
 - **Transcripción del agente** (dentro de la barra, encima del campo; alto máximo 46vh con scroll):
   - la pregunta en Bricolage 19px;

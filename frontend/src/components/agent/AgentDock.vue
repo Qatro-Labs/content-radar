@@ -30,7 +30,7 @@ const emit = defineEmits<{
   <section
     data-agent-dock
     aria-label="Rad, el agente del Radar"
-    class="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-[840px] flex-col gap-3 rounded-card bg-card p-4 shadow-float md:bottom-6"
+    class="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-[840px] origin-bottom-right flex-col gap-3 rounded-card bg-card p-4 shadow-float md:bottom-6"
   >
     <AgentTranscript
       v-if="turns.length > 0"

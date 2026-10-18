@@ -53,7 +53,8 @@ function submit() {
     </ul>
 
     <form data-agent="composer" class="flex items-center gap-2" @submit.prevent="submit">
-      <RadMark :state="mark" />
+      <!-- `data-rad-mark`: de aquí sale y aquí vuelve el ojo al reducir y abrir la barra. -->
+      <RadMark data-rad-mark :state="mark" />
 
       <label :for="inputId" class="sr-only">Pregunta para Rad</label>
       <input

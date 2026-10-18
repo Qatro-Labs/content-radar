@@ -30,6 +30,8 @@ const RING_RADII = [8.6, 4.6]
 const HIDDEN_RINGS_SCALE = 0.6
 const WORKING_IRIS_SCALE = 0.48
 const GAZE_REACH = 3.2
+// Como un ojo de verdad: lo cercano se mira de reojo; a partir de esta distancia, hasta el borde.
+const GAZE_FULL_REACH_PX = 160
 // A menos de 1 px, la presencia está encima de la marca: mira al frente.
 const GAZE_DEAD_ZONE_PX = 1
 const LOOK_AHEAD: Point = { x: 0, y: 0 }
@@ -47,7 +49,8 @@ function gazeToward(lookAt: RadMarkState['lookAt']): Point {
   const dy = lookAt.y - (own.top - origin.top + own.height / 2)
   const distance = Math.hypot(dx, dy)
   if (distance < GAZE_DEAD_ZONE_PX) return LOOK_AHEAD
-  return { x: (dx / distance) * GAZE_REACH, y: (dy / distance) * GAZE_REACH }
+  const reach = GAZE_REACH * Math.min(1, distance / GAZE_FULL_REACH_PX)
+  return { x: (dx / distance) * reach, y: (dy / distance) * reach }
 }
 
 function updateGaze() {
@@ -113,7 +116,7 @@ const isScanning = computed(() => state.working && state.scanKey > 0)
         </g>
         <g
           data-testid="rad-gaze"
-          class="rad-layer"
+          class="rad-layer rad-gaze"
           :style="{ transform: `translate(${gaze.x}px, ${gaze.y}px)` }"
         >
           <g
@@ -144,6 +147,11 @@ const isScanning = computed(() => state.working && state.scanKey > 0)
 
 .rad-beam {
   opacity: 0;
+}
+
+/* La pupila sigue al cursor: más rápida que el resto de capas para que no parezca que se arrastra. */
+.rad-gaze {
+  transition-duration: 160ms;
 }
 
 /* DESIGN.md §7: sin bucles. Una sola pasada por paso de datos y un solo parpadeo al terminar. */
