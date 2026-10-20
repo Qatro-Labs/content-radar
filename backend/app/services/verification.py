@@ -35,9 +35,10 @@ from app.services.classification import SKIPPED_WITHOUT_KEY
 log = structlog.get_logger()
 
 CLAIM_BATTERY_OPERATION = "claim_battery"
-# Unas 170 afirmaciones por ejecución en frío (56 temas × 3): el tope cubre una completa y protege
-# de un bucle o de un corpus inesperado. Coste: 200 × ~800 tokens, menos de 0,01 $.
-MAX_CLAIM_VERIFICATIONS_PER_RUN = 200
+# Unas 250 afirmaciones por ejecución en frío (82 temas × 3 el 20/10; con 200 quedaban 32 sin
+# verificar): el tope cubre una completa y protege de un bucle o de un corpus inesperado.
+# Coste: 300 × ~800 tokens, menos de 0,01 $.
+MAX_CLAIM_VERIFICATIONS_PER_RUN = 300
 
 
 @dataclass(frozen=True)

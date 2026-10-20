@@ -167,7 +167,7 @@ circular.
 
 **Caché y presupuesto:** `jev_judgments` con `battery = "claim"` y `content_item_id` nulo. La clave
 es el hash del `state`, la batería, su versión y el modelo, así que una segunda ejecución con las
-mismas explicaciones no llama a Jev. Como mucho 200 llamadas nuevas por ejecución
+mismas explicaciones no llama a Jev. Como mucho 300 llamadas nuevas por ejecución
 (`MAX_CLAIM_VERIFICATIONS_PER_RUN`), repartidas en el orden del ranking, para gastar primero en lo
 que se ve arriba del Radar. Cada llamada real cuenta en `usage_events` como `claim_battery`.
 
@@ -187,7 +187,7 @@ la muestra conservan texto; la posición 2 queda en 49 de 53 temas tras Jev (v1 
   pieza lo que no dice, unir dos cifras). No se debe decir que Jev detecta esos fallos.
 - En las afirmaciones apoyadas solo en los datos medidos (por diseño, casi siempre las de posición
   2 y 3), una cita equivocada no se detecta: los datos siguen en el `state`.
-- Sin veredicto (sin clave, fallo o fuera del tope de 200 llamadas por ejecución) no se publica.
+- Sin veredicto (sin clave, fallo o fuera del tope de 300 llamadas por ejecución) no se publica.
   Con unos 53 temas × 3 afirmaciones entra una ejecución en frío; con más de unos 66 temas, las
   afirmaciones de los temas de abajo del ranking se quedarían sin publicar.
 - La evidencia es solo título y descripción. El LLM tiene que ceñirse a lo que dicen; si no, casi
