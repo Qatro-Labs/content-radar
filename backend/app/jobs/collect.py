@@ -23,6 +23,7 @@ import structlog
 from sqlalchemy import select, text
 
 from app.collectors.base import SignalCollector
+from app.collectors.gdelt import GDELTCollector
 from app.collectors.google_news import GoogleNewsCollector
 from app.collectors.hackernews import HackerNewsCollector
 from app.collectors.rss import RSSCollector
@@ -54,6 +55,7 @@ def build_collectors(http: httpx.AsyncClient, usage: UsageMeter) -> dict[str, Si
         Platform.HACKERNEWS.value: HackerNewsCollector(http, usage),
         Platform.RSS.value: RSSCollector(http, usage),
         Platform.GOOGLE_NEWS.value: GoogleNewsCollector(http, usage),
+        Platform.GDELT.value: GDELTCollector(http, usage),
     }
     settings = get_settings()
     if settings.youtube_api_key:

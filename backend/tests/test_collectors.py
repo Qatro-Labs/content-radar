@@ -1,3 +1,4 @@
+import asyncio
 from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
 
@@ -5,6 +6,8 @@ import httpx
 import pytest
 import respx
 
+from app.collectors.gdelt import API_URL as GDELT_URL
+from app.collectors.gdelt import GDELT_MIN_INTERVAL_SECONDS, GDELTCollector, GDELTError
 from app.collectors.google_news import GoogleNewsCollector, google_news_feed_url
 from app.collectors.hackernews import API_URL as HN_URL
 from app.collectors.hackernews import HackerNewsCollector
@@ -605,3 +608,76 @@ async def test_google_news_keeps_title_when_suffix_is_not_the_outlet():
         [signal] = await GoogleNewsCollector(http).collect(google_news_source())
 
     assert signal.title == "IA - lo que viene"
+
+
+# --- GDELT -------------------------------------------------------------------------------
+
+
+def gdelt_source(**config):
+    source = make_source("gdelt", "agentes de IA|CO|spanish", query="agentes de IA", **config)
+    source.kind = "query"
+    return source
+
+
+@respx.mock
+async def test_gdelt_maps_articles_without_metrics():
+    seen = (NOW - timedelta(hours=5)).strftime("%Y%m%dT%H%M%SZ")
+    article = {
+        "url": "https://www.eltiempo.com/tecnologia/agentes-ia",
+        "title": "Bancos colombianos prueban agentes de IA",
+        "seendate": seen,
+        "domain": "eltiempo.com",
+        "language": "Spanish",
+        "sourcecountry": "Colombia",
+    }
+    route = respx.get(GDELT_URL).mock(
+        return_value=httpx.Response(200, json={"articles": [article]})
+    )
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        source = gdelt_source(source_country="CO", source_lang="spanish")
+        [s] = await GDELTCollector(http, usage).collect(source, backfill_days=3)
+
+    assert s.published_at == datetime.strptime(seen, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
+    assert s.author_name == "eltiempo.com"
+    assert s.language == "es"
+    assert s.format is ContentFormat.ARTICLE
+    assert s.metrics.views is None
+    params = route.calls.last.request.url.params
+    assert params["query"] == "agentes de IA sourcecountry:CO sourcelang:spanish"
+    assert params["timespan"] == "3d"
+    assert usage.counts[(Provider.GDELT, "doc")].calls == 1
+
+
+@respx.mock
+async def test_gdelt_without_articles_returns_empty():
+    respx.get(GDELT_URL).mock(return_value=httpx.Response(200, json={}))
+    async with httpx.AsyncClient() as http:
+        assert await GDELTCollector(http).collect(gdelt_source()) == []
+
+
+@respx.mock
+async def test_gdelt_plain_text_error_raises_readable_error():
+    respx.get(GDELT_URL).mock(
+        return_value=httpx.Response(200, text="Please limit requests to one every 5 seconds")
+    )
+    async with httpx.AsyncClient() as http:
+        with pytest.raises(GDELTError, match="one every 5 seconds"):
+            await GDELTCollector(http).collect(gdelt_source())
+
+
+@respx.mock
+async def test_gdelt_spaces_requests_from_one_collector(monkeypatch):
+    respx.get(GDELT_URL).mock(return_value=httpx.Response(200, json={}))
+    waits: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr("app.collectors.gdelt.asyncio.sleep", fake_sleep)
+    async with httpx.AsyncClient() as http:
+        collector = GDELTCollector(http)
+        await asyncio.gather(collector.collect(gdelt_source()), collector.collect(gdelt_source()))
+
+    assert len(waits) == 1
+    assert waits[0] == pytest.approx(GDELT_MIN_INTERVAL_SECONDS, abs=0.5)

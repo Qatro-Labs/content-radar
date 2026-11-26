@@ -49,6 +49,12 @@ class YouTubeSearchSeed(_Common):
     query: str  # búsqueda de Shorts; `region` y `language` acotan la búsqueda
 
 
+class GDELTSeed(_Common):
+    query: str
+    source_country: str | None = None  # código FIPS de GDELT, p. ej. CO
+    source_lang: str | None = None  # nombre en inglés, p. ej. spanish
+
+
 class GoogleNewsSeed(_Common):
     query: str
     hl: str  # idioma de Google News, p. ej. es-419
@@ -86,6 +92,7 @@ class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
     youtube_search: list[YouTubeSearchSeed] = []
     google_news: list[GoogleNewsSeed] = []
+    gdelt: list[GDELTSeed] = []
     hackernews: list[HackerNewsSeed] = []
     rss: list[RSSSeed] = []
     tiktok: list[TikTokSeed] = []
@@ -222,6 +229,27 @@ async def _seed_x(session: AsyncSession, seeds: list[XSeed]) -> int:
     return len(seeds)
 
 
+async def _seed_gdelt(session: AsyncSession, seeds: list[GDELTSeed]) -> int:
+    for s in seeds:
+        place = s.source_country or "global"
+        await upsert_source(
+            session,
+            platform=Platform.GDELT.value,
+            kind=SourceKind.QUERY.value,
+            external_id=f"{s.query}|{place}|{s.source_lang or 'any'}",
+            name=f"GDELT · {s.query} ({place})",
+            url="https://api.gdeltproject.org/api/v2/doc/doc",
+            config={
+                "query": s.query,
+                "source_country": s.source_country,
+                "source_lang": s.source_lang,
+                "ai_filter": s.ai_filter,
+            },
+            **_common(s),
+        )
+    return len(seeds)
+
+
 async def _seed_google_news(session: AsyncSession, seeds: list[GoogleNewsSeed]) -> int:
     for s in seeds:
         await upsert_source(
@@ -295,6 +323,7 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
         "x": await _seed_x(session, data.x),
         "youtube_search": await _seed_youtube_search(session, data.youtube_search),
         "google_news": await _seed_google_news(session, data.google_news),
+        "gdelt": await _seed_gdelt(session, data.gdelt),
         "youtube": 0,
         "youtube_unresolved": [],
     }

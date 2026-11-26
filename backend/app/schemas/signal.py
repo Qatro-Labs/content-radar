@@ -20,6 +20,7 @@ class Platform(StrEnum):
     REDDIT = "reddit"  # vía ScrapeCreators
     X = "x"  # vía twitterapi.io
     GOOGLE_NEWS = "google_news"  # búsquedas por RSS
+    GDELT = "gdelt"  # DOC API, noticias globales
 
 
 class Segment(StrEnum):

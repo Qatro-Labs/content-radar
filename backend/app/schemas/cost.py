@@ -18,6 +18,7 @@ class Provider(StrEnum):
     SCRAPECREATORS = "scrapecreators"
     TWITTERAPI = "twitterapi"
     GOOGLE_NEWS = "google_news"
+    GDELT = "gdelt"
     TYPESAFE_JEV = "typesafe_jev"
     LLM_TEXT = "llm_text"
 
