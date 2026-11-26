@@ -102,6 +102,7 @@ def _to_piece(
         region=source.region,
         target_url=item.target_url,
         format=ContentFormat(item.format),
+        author=item.author_name,
     )
 
 

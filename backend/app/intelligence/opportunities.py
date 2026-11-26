@@ -94,6 +94,7 @@ class Piece:
     region: str | None = None  # de la fuente; decide si cuenta para el LATAM Gap
     target_url: str | None = None  # enlace externo de HN y Reddit: delata republicaciones
     format: ContentFormat = ContentFormat.UNKNOWN
+    author: str | None = None  # el medio en Google News y GDELT; el canal en YouTube
 
 
 @dataclass

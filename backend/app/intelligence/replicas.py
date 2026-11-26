@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from app.intelligence.cross_source import outlet_key
+from app.schemas.signal import Platform
 
 if TYPE_CHECKING:
     # Solo para tipos: `opportunities` importa este módulo y un import real sería circular.
@@ -83,7 +84,14 @@ class ReplicaEdge:
     basis: ReplicaBasis
 
 
+# En las búsquedas de noticias cada pieza viene de un medio distinto: para deduplicar cuenta el
+# medio, no la búsqueda. Si no, un teletipo republicado por 6 medios contaría como 6 notas.
+NEWS_SEARCH_PLATFORMS = {Platform.GOOGLE_NEWS, Platform.GDELT}
+
+
 def _outlet(p: Piece) -> str:
+    if p.platform in NEWS_SEARCH_PLATFORMS and p.author:
+        return f"{p.platform.value}:{p.author}"
     return outlet_key(p.platform.value, p.source_name, p.source_kind.value)
 
 
