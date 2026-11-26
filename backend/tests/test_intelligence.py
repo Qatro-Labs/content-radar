@@ -48,7 +48,7 @@ from app.schemas.opportunity import (
     ScoreComponentName,
     ScorePenaltyName,
 )
-from app.schemas.signal import Platform, Segment
+from app.schemas.signal import Segment, SourceKind
 
 NOW = datetime(2026, 10, 17, 12, tzinfo=UTC)
 
@@ -142,17 +142,12 @@ def test_outlier_ratio_with_quantile_reference():
 
 
 @pytest.mark.parametrize(
-    ("platform", "quantile"),
-    [
-        (Platform.HACKERNEWS, 0.9),
-        (Platform.TIKTOK, 0.9),
-        (Platform.REDDIT, MEDIAN),
-        (Platform.YOUTUBE, MEDIAN),
-        (Platform.INSTAGRAM, MEDIAN),
-    ],
+    ("kind", "quantile"),
+    [(SourceKind.QUERY, 0.9), (SourceKind.CHANNEL, MEDIAN), (SourceKind.FEED, MEDIAN)],
+    ids=["query-p90", "channel-median", "feed-median"],
 )
-def test_reference_quantile_per_platform(platform, quantile):
-    assert reference_quantile(platform) == quantile
+def test_reference_quantile_per_kind(kind, quantile):
+    assert reference_quantile(kind) == quantile
 
 
 def test_outlier_ratio_without_reference():

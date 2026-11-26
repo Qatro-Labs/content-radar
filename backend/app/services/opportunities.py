@@ -31,7 +31,7 @@ from app.schemas.opportunity import (
     Period,
     TopicEvidence,
 )
-from app.schemas.signal import Metrics, Platform, Segment, SourceKind
+from app.schemas.signal import ContentFormat, Metrics, Platform, Segment, SourceKind
 from app.services.replicas import ReplicaStats, detect_replicas
 
 ANALYZE_JOB = "analyze"
@@ -101,6 +101,7 @@ def _to_piece(
         snapshots=snapshots,
         region=source.region,
         target_url=item.target_url,
+        format=ContentFormat(item.format),
     )
 
 

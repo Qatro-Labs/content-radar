@@ -3,7 +3,7 @@
 from datetime import UTC, datetime, timedelta
 
 from app.models import ContentItem, MetricSnapshot, Source
-from app.schemas.signal import Metrics
+from app.schemas.signal import ContentFormat, Metrics
 from app.services.opportunities import load_pieces
 
 AS_OF = datetime(2026, 10, 17, 12, tzinfo=UTC)
@@ -81,3 +81,17 @@ async def test_load_pieces_carries_target_url(session):
     pieces = await load_pieces(session, AS_OF)
 
     assert [p.target_url for p in pieces] == ["https://arstechnica.com/ai/nota", None]
+
+
+async def test_load_pieces_carries_format(session):
+    src = Source(
+        platform="youtube", kind="channel", external_id="UC1", name="Canal", segment="tech"
+    )
+    short = item(src, 1, published_at=AS_OF - timedelta(hours=5), last_observed_at=AS_OF)
+    short.platform, short.format = "youtube", "short_video"
+    session.add_all([src, short])
+    await session.commit()
+
+    [piece] = await load_pieces(session, AS_OF)
+
+    assert piece.format is ContentFormat.SHORT_VIDEO

@@ -1,7 +1,8 @@
 """Outliers por pieza (estilo 1of10): rendimiento frente a la mediana de su referencia.
 
-- YouTube: views/día desde la publicación vs. los vídeos del mismo canal.
-- TikTok: views/día vs. el p90 de los vídeos de la misma búsqueda. Reddit: score vs. el mismo
+- YouTube: views/día desde la publicación vs. los vídeos del mismo canal y formato.
+- Búsquedas (HN, TikTok, YouTube Shorts): p90 de las piezas de la misma búsqueda.
+- TikTok: views/día vs. los vídeos de la misma búsqueda. Reddit: score vs. el mismo
   subreddit.
 - Instagram: views/día vs. los reels del mismo perfil.
 - HN: puntos vs. el p90 de las stories de la misma búsqueda y el mismo periodo. Con la mediana
@@ -13,21 +14,17 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from app.schemas.signal import Platform
+from app.schemas.signal import Platform, SourceKind
 
 OUTLIER_RATIO = 3.0
 NOTABLE_RATIO = 2.0
 MIN_REFERENCE = 5  # con menos piezas no hay referencia
 MEDIAN = 0.5
-HN_REFERENCE_QUANTILE = 0.9  # HN tiene cola larga: la mediana no separa nada
-# Una búsqueda de TikTok mezcla muchos autores (63 en 72 vídeos), como HN. Medido el 17/10 a las
-# 22:04 UTC, n = 72 en 4 búsquedas: con la mediana un 33 % de los vídeos salía ≥3×; con el p75,
-# un 17 %; con el p90, un 6 %.
-TIKTOK_REFERENCE_QUANTILE = 0.9
-REFERENCE_QUANTILE = {
-    Platform.HACKERNEWS: HN_REFERENCE_QUANTILE,
-    Platform.TIKTOK: TIKTOK_REFERENCE_QUANTILE,
-}
+# Una búsqueda mezcla muchos autores, así que la mediana no separa nada y se usa el p90.
+# - HN tiene cola larga: con la mediana (~4 puntos) un 22 % de las stories salía como outlier.
+# - TikTok: 63 autores en 72 vídeos. Medido el 17/10 a las 22:04 UTC, n = 72 en 4 búsquedas: con la
+#   mediana un 33 % de los vídeos salía ≥3×; con el p75, un 17 %; con el p90, un 6 %.
+SEARCH_REFERENCE_QUANTILE = 0.9
 # Las piezas recién publicadas aún no han acumulado métricas: dentro de la referencia hunden la
 # mediana (o el p90) y disparan los ratios del resto. Solo salen de la referencia; sí se puntúan.
 MIN_REFERENCE_AGE = {
@@ -42,8 +39,8 @@ MIN_REFERENCE_AGE = {
 }
 
 
-def reference_quantile(platform: Platform) -> float:
-    return REFERENCE_QUANTILE.get(platform, MEDIAN)
+def reference_quantile(kind: SourceKind) -> float:
+    return SEARCH_REFERENCE_QUANTILE if kind == SourceKind.QUERY else MEDIAN
 
 
 def age_adjusted(value: int, published_at: datetime, observed_at: datetime) -> float:

@@ -62,7 +62,7 @@ from app.schemas.opportunity import (
     Recommendation,
     ScoreBreakdown,
 )
-from app.schemas.signal import Metrics, Platform, Segment, SourceKind
+from app.schemas.signal import ContentFormat, Metrics, Platform, Segment, SourceKind
 
 # Plataformas cuyas views se acumulan con los días: su rendimiento se ajusta por edad.
 CUMULATIVE_VIEWS = {Platform.YOUTUBE, Platform.TIKTOK, Platform.INSTAGRAM, Platform.X}
@@ -93,6 +93,7 @@ class Piece:
     snapshots: list[tuple[datetime, Metrics]] = field(default_factory=list)
     region: str | None = None  # de la fuente; decide si cuenta para el LATAM Gap
     target_url: str | None = None  # enlace externo de HN y Reddit: delata republicaciones
+    format: ContentFormat = ContentFormat.UNKNOWN
 
 
 @dataclass
@@ -141,22 +142,24 @@ def _old_enough_for_reference(p: Piece, as_of: datetime) -> bool:
 def outlier_ratios(
     pieces: Sequence[Piece], as_of: datetime, *, reference: Sequence[Piece] | None = None
 ) -> dict[int, float | None]:
-    """Ratio de cada pieza de `pieces` frente a las otras de su fuente (canal o query) en
-    `reference` (por defecto, `pieces`) con edad suficiente: mediana, o p90 en HN y TikTok.
+    """Ratio de cada pieza de `pieces` frente a las otras de su fuente (canal o query) y su
+    formato en `reference` (por defecto, `pieces`) con edad suficiente: mediana, o p90 en las
+    búsquedas.
     """
-    by_source: dict[int, list[tuple[int, float]]] = defaultdict(list)
+    # Por formato: un Short no se compara con los vídeos largos de su canal, que rinden distinto.
+    by_source: dict[tuple[int, ContentFormat], list[tuple[int, float]]] = defaultdict(list)
     for p in pieces if reference is None else reference:
         value = _performance(p)
         if value is not None and _old_enough_for_reference(p, as_of):
-            by_source[p.source_id].append((p.item_id, value))
+            by_source[(p.source_id, p.format)].append((p.item_id, value))
     ratios: dict[int, float | None] = {}
     for p in pieces:
         value = _performance(p)
         if value is None:
             ratios[p.item_id] = None
             continue
-        others = [v for item_id, v in by_source[p.source_id] if item_id != p.item_id]
-        ratios[p.item_id] = out.outlier_ratio(value, others, out.reference_quantile(p.platform))
+        others = [v for item_id, v in by_source[(p.source_id, p.format)] if item_id != p.item_id]
+        ratios[p.item_id] = out.outlier_ratio(value, others, out.reference_quantile(p.source_kind))
     return ratios
 
 

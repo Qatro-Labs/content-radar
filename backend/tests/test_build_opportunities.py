@@ -17,7 +17,7 @@ from app.intelligence.replicas import (
     topic_pairs,
 )
 from app.schemas.opportunity import Collection, Confidence, GrowthStatus, Lifecycle
-from app.schemas.signal import Metrics, Platform, Segment, SourceKind
+from app.schemas.signal import ContentFormat, Metrics, Platform, Segment, SourceKind
 
 AS_OF = datetime(2026, 10, 17, 12, tzinfo=UTC)
 STARTED = datetime(2026, 10, 16, tzinfo=UTC)
@@ -94,6 +94,27 @@ def test_youtube_reference_needs_two_days():
 
     videos = [video(i, 72) for i in range(4)] + [video(10 + i, 24) for i in range(3)]
     assert set(outlier_ratios(videos, AS_OF).values()) == {None}  # referencia de 4 < 5
+
+
+def channel_video(i, views_per_day, fmt):
+    # 4 días de vida: views acumuladas = views/día × 4.
+    p = piece(i, hours_ago=24 * 4, platform=Platform.YOUTUBE, source="Canal")
+    return replace(p, metrics=Metrics(views=views_per_day * 4), format=fmt)
+
+
+def test_short_is_compared_with_shorts_of_its_channel():
+    longs = [channel_video(i, 1000, ContentFormat.LONG_VIDEO) for i in range(6)]
+    shorts = [channel_video(10 + i, 10000, ContentFormat.SHORT_VIDEO) for i in range(6)]
+    hit = channel_video(99, 30000, ContentFormat.SHORT_VIDEO)
+    # Frente a los Shorts (mediana 10.000/día) y no frente a los vídeos largos (1.000/día).
+    assert outlier_ratios([*longs, *shorts, hit], AS_OF)[99] == 3.0
+
+
+def test_channel_without_enough_shorts_has_no_short_ratio():
+    longs = [channel_video(i, 1000, ContentFormat.LONG_VIDEO) for i in range(10)]
+    shorts = [channel_video(10 + i, 10000, ContentFormat.SHORT_VIDEO) for i in range(3)]
+    ratios = outlier_ratios([*longs, *shorts], AS_OF)
+    assert all(ratios[s.item_id] is None for s in shorts)  # 2 Shorts de referencia < 5
 
 
 def test_tiktok_ratio_uses_views_per_day_against_same_search():
