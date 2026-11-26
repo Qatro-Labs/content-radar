@@ -294,11 +294,28 @@ def test_spanish_coverage_does_not_close_the_latam_gap():
 # --- cross source / saturation ---
 
 
-def test_search_queries_count_as_one_outlet():
-    assert outlet_key("hackernews", "HN · LLM") == outlet_key("hackernews", "HN · OpenAI")
-    assert outlet_key("tiktok", "TikTok · AI agents") == outlet_key("tiktok", "TikTok · agentes")
-    assert outlet_key("rss", "A") != outlet_key("rss", "B")
-    assert outlet_key("reddit", "r/OpenAI") != outlet_key("reddit", "r/ClaudeAI")
+@pytest.mark.parametrize(
+    ("platform", "name", "kind", "expected"),
+    [
+        ("hackernews", "HN · LLM", "query", "hackernews"),
+        ("tiktok", "TikTok · agentes", "query", "tiktok"),
+        ("youtube", "YouTube · búsqueda · agentes de IA", "query", "youtube"),
+        ("youtube", "Fireship", "channel", "youtube:Fireship"),
+        ("rss", "Xataka", "feed", "rss:Xataka"),
+    ],
+    ids=["hn", "tiktok", "yt-search", "yt-channel", "rss"],
+)
+def test_outlet_key_collapses_searches_per_platform(platform, name, kind, expected):
+    assert outlet_key(platform, name, kind) == expected
+
+
+def test_two_searches_of_one_platform_are_one_outlet():
+    assert outlet_key("google_news", "Google News · a", "query") == outlet_key(
+        "google_news", "Google News · b", "query"
+    )
+    assert outlet_key("reddit", "r/OpenAI", "channel") != outlet_key(
+        "reddit", "r/ClaudeAI", "channel"
+    )
 
 
 def test_cross_source_score():

@@ -244,7 +244,9 @@ def _topic_facts(
     originals = _originals(group, stories)
     replica_ids = frozenset(p.item_id for p in group) & stories.replica_ids
     return _TopicFacts(
-        outlets={outlet_key(p.platform.value, p.source_name) for p in originals},
+        outlets={
+            outlet_key(p.platform.value, p.source_name, p.source_kind.value) for p in originals
+        },
         original_platforms={p.platform for p in originals},
         ratios=ratios,
         outlier_count=sum(r >= out.OUTLIER_RATIO for r in flagged),

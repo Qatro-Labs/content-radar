@@ -23,6 +23,13 @@ AS_OF = datetime(2026, 10, 17, 12, tzinfo=UTC)
 STARTED = datetime(2026, 10, 16, tzinfo=UTC)
 
 
+def real_kind(platform):
+    # Como en seed_sources: HN y TikTok son búsquedas, RSS feeds y el resto canales.
+    if platform in (Platform.HACKERNEWS, Platform.TIKTOK):
+        return SourceKind.QUERY
+    return SourceKind.FEED if platform is Platform.RSS else SourceKind.CHANNEL
+
+
 def piece(
     i,
     *,
@@ -31,7 +38,7 @@ def piece(
     source="HN · LLM",
     points=10,
     seg=None,
-    kind=SourceKind.QUERY,
+    kind=None,
 ):
     published = AS_OF - timedelta(hours=hours_ago)
     metrics = Metrics(points=points) if platform is Platform.HACKERNEWS else Metrics()
@@ -50,7 +57,7 @@ def piece(
         published_at=published,
         observed_at=AS_OF,
         metrics=metrics,
-        source_kind=kind,
+        source_kind=kind or real_kind(platform),
         snapshots=snapshots if platform is Platform.HACKERNEWS else [],
     )
 

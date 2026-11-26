@@ -53,7 +53,7 @@ def piece(
         published_at=AS_OF - timedelta(hours=hours_ago),
         observed_at=AS_OF,
         metrics=Metrics(),
-        source_kind=SourceKind.FEED,
+        source_kind=SourceKind.QUERY if platform is Platform.HACKERNEWS else SourceKind.FEED,
         target_url=target_url,
     )
 
