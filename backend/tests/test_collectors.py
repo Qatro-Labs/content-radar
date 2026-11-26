@@ -681,3 +681,18 @@ async def test_gdelt_spaces_requests_from_one_collector(monkeypatch):
 
     assert len(waits) == 1
     assert waits[0] == pytest.approx(GDELT_MIN_INTERVAL_SECONDS, abs=0.5)
+
+
+@pytest.mark.parametrize("region", ["global", "latam"], ids=["global", "latam"])
+@respx.mock
+async def test_youtube_search_sends_no_region_code_for_non_country_regions(region):
+    search = respx.get(f"{API_BASE}/search").mock(
+        return_value=httpx.Response(200, json={"items": []})
+    )
+    respx.get(f"{API_BASE}/videos").mock(return_value=httpx.Response(200, json={"items": []}))
+    source = make_source("youtube", f"AI agents|{region}", query="AI agents", region=region)
+    source.kind = "query"
+    async with httpx.AsyncClient() as http:
+        await YouTubeCollector(YouTubeClient("k", http)).collect(source)
+
+    assert "regionCode" not in search.calls.last.request.url.params

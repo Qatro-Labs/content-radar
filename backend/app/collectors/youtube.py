@@ -30,6 +30,7 @@ QUOTA_COST = {"channels": 1, "playlistItems": 1, "videos": 1, "search": 100}
 # 20 búsquedas × 2 recolecciones al día × 100 unidades = 4.000 de las 10.000 unidades diarias.
 MAX_YOUTUBE_SEARCH_SOURCES = 20
 SEARCH_MAX_RESULTS = "50"
+ISO_COUNTRY_LENGTH = 2
 
 
 class YouTubeError(Exception):
@@ -115,7 +116,8 @@ class YouTubeClient:
             "publishedAfter": since.isoformat().replace("+00:00", "Z"),
             "maxResults": SEARCH_MAX_RESULTS,
         }
-        if region:
+        # `regionCode` solo admite países ISO 3166-1 alfa-2: "global" o "latam" darían un 400.
+        if region and len(region) == ISO_COUNTRY_LENGTH:
             params["regionCode"] = region.upper()
         if language:
             params["relevanceLanguage"] = language
