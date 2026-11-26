@@ -179,3 +179,37 @@ x:
   # Probados y descartados el 18/10: @AndrewYNg, @rowancheung y @DrJimFan (casi nada propio en las
   # últimas 2 semanas), @ylecun (solo respuestas), @andresbilbao (no devuelve tweets) y @crece30x
   # (sin publicar desde hace más de 3 meses).
+
+# --- Fuentes oficiales y abiertas, sin scraping (26/11) ---
+
+youtube_search:
+  # Búsquedas de Shorts por palabra clave con search.list (API oficial). Cubren el vídeo corto que
+  # antes venía solo de TikTok; el outlier se mide contra el p90 de la misma búsqueda.
+  # Cupo: 100 unidades por búsqueda; como máximo MAX_YOUTUBE_SEARCH_SOURCES = 20 activas.
+  - { query: "agentes de IA", segment: latam_es, language: es, region: mx }
+  - { query: "inteligencia artificial negocios", segment: latam_es, language: es, region: co }
+  - { query: "IA para empresas", segment: latam_es, language: es, region: ar }
+  - { query: "AI agents", segment: tech, language: en, region: global }
+  - { query: "AI for business", segment: business, language: en, region: global }
+  - { query: "generative AI", segment: tech, language: en, region: global }
+
+google_news:
+  # Búsquedas de Google News por RSS (hl = idioma, gl = país). Sin métricas: aportan cobertura.
+  # Inactivas hasta revisar los términos de uso de Google News (spec del radar configurable §10).
+  - { query: "inteligencia artificial empresas", hl: es-419, gl: CO, segment: latam_es, region: co, active: false }
+  - { query: "inteligencia artificial empresas", hl: es-419, gl: MX, segment: latam_es, region: mx, active: false }
+  - { query: "inteligencia artificial empresas", hl: es-419, gl: AR, segment: latam_es, region: ar, active: false }
+  - { query: "agentes de IA", hl: es-419, gl: CO, segment: latam_es, region: co, active: false }
+  - { query: "AI agents enterprise", hl: en-US, gl: US, segment: business, region: global, active: false }
+  - { query: "generative AI adoption", hl: en-US, gl: US, segment: business, region: global, active: false }
+
+gdelt:
+  # GDELT DOC 2.0 (abierta, sin clave): noticias por país (código FIPS) e idioma. Sin métricas.
+  # Una petición cada 5 s: el collector las espacia. GDELT rechaza palabras de menos de 3 letras
+  # ("AI", "IA"): las búsquedas usan el término completo.
+  # El 26/11, desde una IP local, GDELT devolvió 429 a casi todas las peticiones pese al
+  # espaciado: verificar desde el servidor de producción antes de contar con esta fuente.
+  - { query: "inteligencia artificial", source_country: CO, source_lang: spanish, segment: latam_es, language: es, region: co }
+  - { query: "inteligencia artificial", source_country: MX, source_lang: spanish, segment: latam_es, language: es, region: mx }
+  - { query: "inteligencia artificial", source_country: AR, source_lang: spanish, segment: latam_es, language: es, region: ar }
+  - { query: "artificial intelligence agents", source_lang: english, segment: tech, language: en, region: global }

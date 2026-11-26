@@ -345,7 +345,9 @@ async def main(path: Path, dry_run: bool) -> int:
     print(
         f"{path.name}: {len(data.youtube)} YouTube · {len(data.hackernews)} HN · "
         f"{len(data.rss)} RSS · {len(data.tiktok)} TikTok · {len(data.reddit)} Reddit · "
-        f"{len(data.instagram)} Instagram · {len(data.x)} X"
+        f"{len(data.instagram)} Instagram · {len(data.x)} X · "
+        f"{len(data.youtube_search)} búsquedas de Shorts · {len(data.google_news)} Google News · "
+        f"{len(data.gdelt)} GDELT"
     )
     if dry_run:
         return 0
