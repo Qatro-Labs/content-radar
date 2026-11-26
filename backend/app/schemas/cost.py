@@ -17,6 +17,7 @@ class Provider(StrEnum):
     BRAVE_SEARCH = "brave_search"
     SCRAPECREATORS = "scrapecreators"
     TWITTERAPI = "twitterapi"
+    GOOGLE_NEWS = "google_news"
     TYPESAFE_JEV = "typesafe_jev"
     LLM_TEXT = "llm_text"
 

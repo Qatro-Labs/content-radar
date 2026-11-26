@@ -135,3 +135,28 @@ async def test_seed_youtube_search_sources(session):
         "language": "es",
         "ai_filter": False,
     }
+
+
+async def test_seed_google_news_sources(session):
+    data = SeedFile.model_validate(
+        {
+            "google_news": [
+                {
+                    "query": "agentes de IA",
+                    "hl": "es-419",
+                    "gl": "CO",
+                    "segment": "latam_es",
+                    "region": "co",
+                    "active": False,
+                }
+            ]
+        }
+    )
+    await seed(session, data, youtube=None)
+
+    src = (await session.scalars(select(Source).where(Source.platform == "google_news"))).one()
+    assert (src.kind, src.external_id) == ("query", "agentes de IA|es-419|CO")
+    assert src.name == "Google News · agentes de IA (CO)"
+    assert src.active is False
+    assert src.language == "es"
+    assert src.config == {"query": "agentes de IA", "hl": "es-419", "gl": "CO", "ai_filter": False}

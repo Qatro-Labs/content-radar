@@ -5,6 +5,7 @@ import httpx
 import pytest
 import respx
 
+from app.collectors.google_news import GoogleNewsCollector, google_news_feed_url
 from app.collectors.hackernews import API_URL as HN_URL
 from app.collectors.hackernews import HackerNewsCollector
 from app.collectors.rss import RSSCollector
@@ -539,3 +540,68 @@ async def test_youtube_search_keeps_only_shorts_up_to_three_minutes():
     assert params["q"] == "agentes de IA"
     assert "relevanceLanguage" not in params
     assert sum(c.units for (p, _), c in usage.counts.items() if p is Provider.YOUTUBE) == 101
+
+
+# --- Google News RSS ---------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("hl", "gl", "expected_ceid"),
+    [("es-419", "CO", "CO%3Aes-419"), ("en-US", "US", "US%3Aen")],
+    ids=["latam-spanish", "us-english"],
+)
+def test_google_news_feed_url(hl, gl, expected_ceid):
+    assert google_news_feed_url("agentes de IA", hl=hl, gl=gl, days=14) == (
+        "https://news.google.com/rss/search?q=agentes+de+IA+when%3A14d"
+        f"&hl={hl}&gl={gl}&ceid={expected_ceid}"
+    )
+
+
+def google_news_feed(*items: tuple[str, str]) -> str:
+    published = format_datetime(NOW - timedelta(hours=3))
+    entries = "".join(
+        f"<item><title>{title}</title><link>https://news.google.com/rss/articles/{n}</link>"
+        f'<guid isPermaLink="false">{n}</guid><pubDate>{published}</pubDate>'
+        f'<source url="https://outlet.example">{outlet}</source></item>'
+        for n, (title, outlet) in enumerate(items)
+    )
+    return f'<?xml version="1.0"?><rss version="2.0"><channel>{entries}</channel></rss>'
+
+
+def google_news_source():
+    source = make_source(
+        "google_news", "agentes de IA|es-419|CO", query="agentes de IA", hl="es-419", gl="CO"
+    )
+    source.kind = "query"
+    return source
+
+
+@respx.mock
+async def test_google_news_strips_outlet_suffix_and_keeps_outlet_as_author():
+    respx.get(url__startswith="https://news.google.com/rss/search").mock(
+        return_value=httpx.Response(
+            200, text=google_news_feed(("Bancolombia lanza agente de IA - El Tiempo", "El Tiempo"))
+        )
+    )
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        [signal] = await GoogleNewsCollector(http, usage).collect(google_news_source())
+
+    assert signal.title == "Bancolombia lanza agente de IA"
+    assert signal.author_name == "El Tiempo"
+    assert str(signal.url) == "https://news.google.com/rss/articles/0"
+    assert signal.format is ContentFormat.ARTICLE
+    assert signal.language == "es"
+    assert signal.metrics.views is None
+    assert usage.counts[(Provider.GOOGLE_NEWS, "feed")].calls == 1
+
+
+@respx.mock
+async def test_google_news_keeps_title_when_suffix_is_not_the_outlet():
+    respx.get(url__startswith="https://news.google.com/rss/search").mock(
+        return_value=httpx.Response(200, text=google_news_feed(("IA - lo que viene", "Semana")))
+    )
+    async with httpx.AsyncClient() as http:
+        [signal] = await GoogleNewsCollector(http).collect(google_news_source())
+
+    assert signal.title == "IA - lo que viene"

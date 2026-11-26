@@ -19,6 +19,7 @@ from pydantic import BaseModel, HttpUrl, model_validator
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.collectors.google_news import google_news_feed_url
 from app.collectors.usage import UsageMeter
 from app.collectors.youtube import MAX_YOUTUBE_SEARCH_SOURCES, YouTubeClient, YouTubeError
 from app.core.config import get_settings
@@ -28,6 +29,8 @@ from app.schemas.signal import Platform, Segment, SourceKind
 from app.services.costs import record_meter
 
 DEFAULT_FILE = Path(__file__).resolve().parents[3] / "data" / "sources.yaml"
+# La URL de la fuente es solo para abrirla a mano; el collector usa su propia ventana.
+GOOGLE_NEWS_URL_DAYS = 7
 
 
 class _Common(BaseModel):
@@ -44,6 +47,12 @@ class YouTubeSeed(_Common):
 
 class YouTubeSearchSeed(_Common):
     query: str  # búsqueda de Shorts; `region` y `language` acotan la búsqueda
+
+
+class GoogleNewsSeed(_Common):
+    query: str
+    hl: str  # idioma de Google News, p. ej. es-419
+    gl: str  # país, p. ej. CO
 
 
 class HackerNewsSeed(_Common):
@@ -76,6 +85,7 @@ class XSeed(_Common):
 class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
     youtube_search: list[YouTubeSearchSeed] = []
+    google_news: list[GoogleNewsSeed] = []
     hackernews: list[HackerNewsSeed] = []
     rss: list[RSSSeed] = []
     tiktok: list[TikTokSeed] = []
@@ -212,6 +222,21 @@ async def _seed_x(session: AsyncSession, seeds: list[XSeed]) -> int:
     return len(seeds)
 
 
+async def _seed_google_news(session: AsyncSession, seeds: list[GoogleNewsSeed]) -> int:
+    for s in seeds:
+        await upsert_source(
+            session,
+            platform=Platform.GOOGLE_NEWS.value,
+            kind=SourceKind.QUERY.value,
+            external_id=f"{s.query}|{s.hl}|{s.gl}",
+            name=f"Google News · {s.query} ({s.gl})",
+            url=google_news_feed_url(s.query, hl=s.hl, gl=s.gl, days=GOOGLE_NEWS_URL_DAYS),
+            config={"query": s.query, "hl": s.hl, "gl": s.gl, "ai_filter": s.ai_filter},
+            **{**_common(s), "language": s.language or s.hl[:2]},
+        )
+    return len(seeds)
+
+
 async def _seed_youtube_search(session: AsyncSession, seeds: list[YouTubeSearchSeed]) -> int:
     for s in seeds:
         place = s.region or "global"
@@ -269,6 +294,7 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
         "instagram": await _seed_instagram(session, data.instagram),
         "x": await _seed_x(session, data.x),
         "youtube_search": await _seed_youtube_search(session, data.youtube_search),
+        "google_news": await _seed_google_news(session, data.google_news),
         "youtube": 0,
         "youtube_unresolved": [],
     }

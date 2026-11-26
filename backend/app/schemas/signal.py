@@ -19,6 +19,7 @@ class Platform(StrEnum):
     TIKTOK = "tiktok"  # vía ScrapeCreators
     REDDIT = "reddit"  # vía ScrapeCreators
     X = "x"  # vía twitterapi.io
+    GOOGLE_NEWS = "google_news"  # búsquedas por RSS
 
 
 class Segment(StrEnum):

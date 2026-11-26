@@ -19,6 +19,11 @@ variable:
   rss:
     unit: requests
     price_per_unit: 0
+  google_news:
+    unit: requests
+    price_per_unit: 0
+    note: "RSS público de búsqueda, sin clave."
+    source: https://news.google.com/rss
   brave_search:
     unit: requests
     price_per_unit: 0.005 # 5 $ por 1.000 consultas
