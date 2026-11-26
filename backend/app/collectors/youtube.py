@@ -28,6 +28,7 @@ FILTER_DESCRIPTION_CHARS = 200
 # https://developers.google.com/youtube/v3/determine_quota_cost
 QUOTA_COST = {"channels": 1, "playlistItems": 1, "videos": 1, "search": 100}
 # 20 búsquedas × 2 recolecciones al día × 100 unidades = 4.000 de las 10.000 unidades diarias.
+# Las 2 al día las impone collect.yml (`--exclude youtube:query` fuera de las 00 y 12 UTC).
 MAX_YOUTUBE_SEARCH_SOURCES = 20
 SEARCH_MAX_RESULTS = "50"
 ISO_COUNTRY_LENGTH = 2
