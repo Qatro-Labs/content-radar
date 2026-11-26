@@ -15,12 +15,12 @@ from typing import Any
 
 import httpx
 import yaml
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, model_validator
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.collectors.usage import UsageMeter
-from app.collectors.youtube import YouTubeClient, YouTubeError
+from app.collectors.youtube import MAX_YOUTUBE_SEARCH_SOURCES, YouTubeClient, YouTubeError
 from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import Source
@@ -40,6 +40,10 @@ class _Common(BaseModel):
 
 class YouTubeSeed(_Common):
     handle: str
+
+
+class YouTubeSearchSeed(_Common):
+    query: str  # búsqueda de Shorts; `region` y `language` acotan la búsqueda
 
 
 class HackerNewsSeed(_Common):
@@ -71,12 +75,23 @@ class XSeed(_Common):
 
 class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
+    youtube_search: list[YouTubeSearchSeed] = []
     hackernews: list[HackerNewsSeed] = []
     rss: list[RSSSeed] = []
     tiktok: list[TikTokSeed] = []
     reddit: list[RedditSeed] = []
     instagram: list[InstagramSeed] = []
     x: list[XSeed] = []
+
+    @model_validator(mode="after")
+    def _within_youtube_search_budget(self) -> "SeedFile":
+        active = sum(s.active for s in self.youtube_search)
+        if active > MAX_YOUTUBE_SEARCH_SOURCES:
+            raise ValueError(
+                f"{active} búsquedas de YouTube activas: el máximo es "
+                f"MAX_YOUTUBE_SEARCH_SOURCES = {MAX_YOUTUBE_SEARCH_SOURCES} (cupo diario)"
+            )
+        return self
 
 
 def load_seed_file(path: Path) -> SeedFile:
@@ -197,6 +212,27 @@ async def _seed_x(session: AsyncSession, seeds: list[XSeed]) -> int:
     return len(seeds)
 
 
+async def _seed_youtube_search(session: AsyncSession, seeds: list[YouTubeSearchSeed]) -> int:
+    for s in seeds:
+        place = s.region or "global"
+        await upsert_source(
+            session,
+            platform=Platform.YOUTUBE.value,
+            kind=SourceKind.QUERY.value,
+            external_id=f"{s.query}|{place}",
+            name=f"YouTube Shorts · {s.query} ({place})",
+            url=f"https://www.youtube.com/results?search_query={s.query.replace(' ', '+')}",
+            config={
+                "query": s.query,
+                "region": s.region,
+                "language": s.language,
+                "ai_filter": s.ai_filter,
+            },
+            **_common(s),
+        )
+    return len(seeds)
+
+
 async def _seed_youtube(
     session: AsyncSession, seeds: list[YouTubeSeed], youtube: YouTubeClient
 ) -> tuple[int, list[str]]:
@@ -232,6 +268,7 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
         "reddit": await _seed_reddit(session, data.reddit),
         "instagram": await _seed_instagram(session, data.instagram),
         "x": await _seed_x(session, data.x),
+        "youtube_search": await _seed_youtube_search(session, data.youtube_search),
         "youtube": 0,
         "youtube_unresolved": [],
     }
