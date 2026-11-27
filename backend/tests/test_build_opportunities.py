@@ -17,10 +17,17 @@ from app.intelligence.replicas import (
     topic_pairs,
 )
 from app.schemas.opportunity import Collection, Confidence, GrowthStatus, Lifecycle
-from app.schemas.signal import Metrics, Platform, Segment, SourceKind
+from app.schemas.signal import ContentFormat, Metrics, Platform, Segment, SourceKind
 
 AS_OF = datetime(2026, 10, 17, 12, tzinfo=UTC)
 STARTED = datetime(2026, 10, 16, tzinfo=UTC)
+
+
+def real_kind(platform):
+    # Como en seed_sources: HN y TikTok son búsquedas, RSS feeds y el resto canales.
+    if platform in (Platform.HACKERNEWS, Platform.TIKTOK):
+        return SourceKind.QUERY
+    return SourceKind.FEED if platform is Platform.RSS else SourceKind.CHANNEL
 
 
 def piece(
@@ -31,7 +38,7 @@ def piece(
     source="HN · LLM",
     points=10,
     seg=None,
-    kind=SourceKind.QUERY,
+    kind=None,
 ):
     published = AS_OF - timedelta(hours=hours_ago)
     metrics = Metrics(points=points) if platform is Platform.HACKERNEWS else Metrics()
@@ -50,7 +57,7 @@ def piece(
         published_at=published,
         observed_at=AS_OF,
         metrics=metrics,
-        source_kind=kind,
+        source_kind=kind or real_kind(platform),
         snapshots=snapshots if platform is Platform.HACKERNEWS else [],
     )
 
@@ -87,6 +94,27 @@ def test_youtube_reference_needs_two_days():
 
     videos = [video(i, 72) for i in range(4)] + [video(10 + i, 24) for i in range(3)]
     assert set(outlier_ratios(videos, AS_OF).values()) == {None}  # referencia de 4 < 5
+
+
+def channel_video(i, views_per_day, fmt):
+    # 4 días de vida: views acumuladas = views/día × 4.
+    p = piece(i, hours_ago=24 * 4, platform=Platform.YOUTUBE, source="Canal")
+    return replace(p, metrics=Metrics(views=views_per_day * 4), format=fmt)
+
+
+def test_short_is_compared_with_shorts_of_its_channel():
+    longs = [channel_video(i, 1000, ContentFormat.LONG_VIDEO) for i in range(6)]
+    shorts = [channel_video(10 + i, 10000, ContentFormat.SHORT_VIDEO) for i in range(6)]
+    hit = channel_video(99, 30000, ContentFormat.SHORT_VIDEO)
+    # Frente a los Shorts (mediana 10.000/día) y no frente a los vídeos largos (1.000/día).
+    assert outlier_ratios([*longs, *shorts, hit], AS_OF)[99] == 3.0
+
+
+def test_channel_without_enough_shorts_has_no_short_ratio():
+    longs = [channel_video(i, 1000, ContentFormat.LONG_VIDEO) for i in range(10)]
+    shorts = [channel_video(10 + i, 10000, ContentFormat.SHORT_VIDEO) for i in range(3)]
+    ratios = outlier_ratios([*longs, *shorts], AS_OF)
+    assert all(ratios[s.item_id] is None for s in shorts)  # 2 Shorts de referencia < 5
 
 
 def test_tiktok_ratio_uses_views_per_day_against_same_search():
@@ -538,3 +566,64 @@ def test_jev_business_use_opens_the_latam_gap_without_business_sources():
     assert with_jev.description.endswith(
         "3 de 3 piezas clasificadas tratan del uso de la IA en organizaciones."
     )
+
+
+def _built(topic, background, *, started=STARTED, business_use=None):
+    [r] = build_opportunities(
+        topic + background, [list(range(len(topic)))], [0], as_of=AS_OF,
+        monitoring_started_at=started, business_use=business_use,
+    )  # fmt: skip
+    return r.opportunity
+
+
+def test_source_added_recently_does_not_count_for_acceleration():
+    # Una fuente dada de alta hace una hora trae sobre todo lo reciente (una búsqueda devuelve
+    # pocos resultados viejos): su ventana anterior está vacía y simularía una subida.
+    topic, background = _rising_topic()
+    joined = [replace(p, source_since=AS_OF - timedelta(hours=1)) for p in topic]
+    o = _built(joined, background)
+    assert o.lifecycle is not Lifecycle.ACCELERATING
+    assert o.acceleration == 0
+    assert any("historial" in note for note in o.limitations)
+
+
+def test_sources_from_the_start_of_monitoring_count_for_acceleration():
+    topic, background = _rising_topic()
+    joined = [replace(p, source_since=STARTED) for p in topic]
+    assert _built(joined, background).lifecycle is Lifecycle.ACCELERATING
+
+
+def test_source_with_six_days_of_history_counts_for_acceleration():
+    topic, background = _rising_topic()
+    joined = [replace(p, source_since=AS_OF - timedelta(days=6)) for p in topic]
+    started = AS_OF - timedelta(days=30)
+    assert _built(joined, background, started=started).lifecycle is Lifecycle.ACCELERATING
+
+
+def test_search_region_does_not_prove_latam_coverage():
+    # El país de una búsqueda de Shorts es el mercado de la búsqueda, no el del canal: no
+    # demuestra que el tema ya esté cubierto en LATAM.
+    topic, background = _rising_topic()
+    shorts = [
+        replace(
+            piece(200 + i, hours_ago=6 + i, platform=Platform.YOUTUBE,
+                  source="YouTube Shorts · IA negocios (co)", kind=SourceKind.QUERY),
+            region="co",
+        )
+        for i in range(9)
+    ]  # fmt: skip
+    business = {p.item_id: True for p in topic + shorts}
+    assert _built(topic + shorts, background, business_use=business).latam_gap is True
+
+
+def test_latam_channel_still_proves_latam_coverage():
+    topic, background = _rising_topic()
+    latam = [
+        replace(
+            piece(200 + i, hours_ago=6 + i, platform=Platform.YOUTUBE, source="Canal CO"),
+            region="co",
+        )
+        for i in range(9)
+    ]  # fmt: skip
+    business = {p.item_id: True for p in topic + latam}
+    assert _built(topic + latam, background, business_use=business).latam_gap is False

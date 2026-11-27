@@ -501,3 +501,56 @@ async def test_x_reports_provider_error_without_charging():
             await collector.collect(make_source("x", "nadie"))
 
     assert not usage.counts
+
+
+@respx.mock
+async def test_youtube_search_keeps_only_shorts_up_to_three_minutes():
+    recent = (NOW - timedelta(days=2)).isoformat().replace("+00:00", "Z")
+    search = respx.get(f"{API_BASE}/search").mock(
+        return_value=httpx.Response(
+            200, json={"items": [{"id": {"videoId": "a"}}, {"id": {"videoId": "b"}}]}
+        )
+    )
+
+    def video(video_id: str, duration: str) -> dict:
+        return {
+            "id": video_id,
+            "snippet": {"title": f"Agentes de IA {video_id}", "publishedAt": recent},
+            "statistics": {"viewCount": "900"},
+            "contentDetails": {"duration": duration},
+        }
+
+    respx.get(f"{API_BASE}/videos").mock(
+        return_value=httpx.Response(
+            200, json={"items": [video("a", "PT45S"), video("b", "PT3M30S")]}
+        )
+    )
+    source = make_source("youtube", "agentes de IA|MX", query="agentes de IA", region="MX")
+    source.kind = "query"
+    usage = UsageMeter()
+    async with httpx.AsyncClient() as http:
+        signals = await YouTubeCollector(YouTubeClient("k", http, usage)).collect(source)
+
+    assert [s.external_id for s in signals] == ["a"]
+    assert signals[0].format is ContentFormat.SHORT_VIDEO
+    params = search.calls.last.request.url.params
+    assert params["regionCode"] == "MX"
+    assert params["videoDuration"] == "short"
+    assert params["q"] == "agentes de IA"
+    assert "relevanceLanguage" not in params
+    assert sum(c.units for (p, _), c in usage.counts.items() if p is Provider.YOUTUBE) == 101
+
+
+@pytest.mark.parametrize("region", ["global", "latam"], ids=["global", "latam"])
+@respx.mock
+async def test_youtube_search_sends_no_region_code_for_non_country_regions(region):
+    search = respx.get(f"{API_BASE}/search").mock(
+        return_value=httpx.Response(200, json={"items": []})
+    )
+    respx.get(f"{API_BASE}/videos").mock(return_value=httpx.Response(200, json={"items": []}))
+    source = make_source("youtube", f"AI agents|{region}", query="AI agents", region=region)
+    source.kind = "query"
+    async with httpx.AsyncClient() as http:
+        await YouTubeCollector(YouTubeClient("k", http)).collect(source)
+
+    assert "regionCode" not in search.calls.last.request.url.params

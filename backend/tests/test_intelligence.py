@@ -48,7 +48,7 @@ from app.schemas.opportunity import (
     ScoreComponentName,
     ScorePenaltyName,
 )
-from app.schemas.signal import Platform, Segment
+from app.schemas.signal import Segment, SourceKind
 
 NOW = datetime(2026, 10, 17, 12, tzinfo=UTC)
 
@@ -142,17 +142,12 @@ def test_outlier_ratio_with_quantile_reference():
 
 
 @pytest.mark.parametrize(
-    ("platform", "quantile"),
-    [
-        (Platform.HACKERNEWS, 0.9),
-        (Platform.TIKTOK, 0.9),
-        (Platform.REDDIT, MEDIAN),
-        (Platform.YOUTUBE, MEDIAN),
-        (Platform.INSTAGRAM, MEDIAN),
-    ],
+    ("kind", "quantile"),
+    [(SourceKind.QUERY, 0.9), (SourceKind.CHANNEL, MEDIAN), (SourceKind.FEED, MEDIAN)],
+    ids=["query-p90", "channel-median", "feed-median"],
 )
-def test_reference_quantile_per_platform(platform, quantile):
-    assert reference_quantile(platform) == quantile
+def test_reference_quantile_per_kind(kind, quantile):
+    assert reference_quantile(kind) == quantile
 
 
 def test_outlier_ratio_without_reference():
@@ -294,11 +289,28 @@ def test_spanish_coverage_does_not_close_the_latam_gap():
 # --- cross source / saturation ---
 
 
-def test_search_queries_count_as_one_outlet():
-    assert outlet_key("hackernews", "HN · LLM") == outlet_key("hackernews", "HN · OpenAI")
-    assert outlet_key("tiktok", "TikTok · AI agents") == outlet_key("tiktok", "TikTok · agentes")
-    assert outlet_key("rss", "A") != outlet_key("rss", "B")
-    assert outlet_key("reddit", "r/OpenAI") != outlet_key("reddit", "r/ClaudeAI")
+@pytest.mark.parametrize(
+    ("platform", "name", "kind", "expected"),
+    [
+        ("hackernews", "HN · LLM", "query", "hackernews"),
+        ("tiktok", "TikTok · agentes", "query", "tiktok"),
+        ("youtube", "YouTube · búsqueda · agentes de IA", "query", "youtube"),
+        ("youtube", "Fireship", "channel", "youtube:Fireship"),
+        ("rss", "Xataka", "feed", "rss:Xataka"),
+    ],
+    ids=["hn", "tiktok", "yt-search", "yt-channel", "rss"],
+)
+def test_outlet_key_collapses_searches_per_platform(platform, name, kind, expected):
+    assert outlet_key(platform, name, kind) == expected
+
+
+def test_two_searches_of_one_platform_are_one_outlet():
+    assert outlet_key("youtube", "Shorts · a", "query") == outlet_key(
+        "youtube", "Shorts · b", "query"
+    )
+    assert outlet_key("reddit", "r/OpenAI", "channel") != outlet_key(
+        "reddit", "r/ClaudeAI", "channel"
+    )
 
 
 def test_cross_source_score():

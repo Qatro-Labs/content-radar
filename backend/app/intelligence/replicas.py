@@ -84,7 +84,7 @@ class ReplicaEdge:
 
 
 def _outlet(p: Piece) -> str:
-    return outlet_key(p.platform.value, p.source_name)
+    return outlet_key(p.platform.value, p.source_name, p.source_kind.value)
 
 
 def _cluster_pairs(

@@ -3,6 +3,7 @@
     uv run python -m app.jobs.collect                       # backfill de 14 días (primera carga)
     uv run python -m app.jobs.collect --days 7              # ciclo periódico: refresca métricas
     uv run python -m app.jobs.collect --platform hackernews --platform rss
+    uv run python -m app.jobs.collect --exclude youtube:query  # sin búsquedas de Shorts (cupo)
 
 Cada ejecución es un snapshot: las piezas que siguen dentro de la ventana vuelven a leerse con
 sus métricas actuales. Así se construye el historial de velocidad.
@@ -69,6 +70,17 @@ def build_collectors(http: httpx.AsyncClient, usage: UsageMeter) -> dict[str, Si
     return collectors
 
 
+def parse_exclusions(values: list[str] | None) -> set[tuple[str, str]]:
+    """`platform:kind` → pares a omitir. Las búsquedas de Shorts gastan 100 unidades de cupo de
+    YouTube cada una: el cron solo las incluye dos veces al día (ver collect.yml)."""
+    pairs = (value.split(":", 1) for value in values or [])
+    return {(platform, kind) for platform, kind in pairs}
+
+
+def without_excluded(sources: list[Source], excluded: set[tuple[str, str]]) -> list[Source]:
+    return [s for s in sources if (s.platform, s.kind) not in excluded]
+
+
 async def collect_source(
     source: Source, collector: SignalCollector, days: int, sem: asyncio.Semaphore
 ) -> dict[str, Any]:
@@ -86,12 +98,18 @@ async def collect_source(
         return stat
 
 
-async def run(days: int, platforms: list[str] | None, run_id: int | None = None) -> dict[str, Any]:
+async def run(
+    days: int,
+    platforms: list[str] | None,
+    run_id: int | None = None,
+    *,
+    excluded: set[tuple[str, str]] | None = None,
+) -> dict[str, Any]:
     async with SessionLocal() as session:
         stmt = select(Source).where(Source.active.is_(True)).order_by(Source.id)
         if platforms:
             stmt = stmt.where(Source.platform.in_(platforms))
-        sources = list((await session.scalars(stmt)).all())
+        sources = without_excluded(list((await session.scalars(stmt)).all()), excluded or set())
 
     usage = UsageMeter()
     async with httpx.AsyncClient(timeout=30) as http:
@@ -121,7 +139,7 @@ async def run(days: int, platforms: list[str] | None, run_id: int | None = None)
     }
 
 
-async def main(days: int, platforms: list[str] | None) -> int:
+async def main(days: int, platforms: list[str] | None, excluded: set[tuple[str, str]]) -> int:
     # Lock a nivel de conexión: impide dos ejecuciones simultáneas del job (CLAUDE.md §4).
     async with engine.connect() as lock_conn:
         got_lock = await lock_conn.scalar(text("select pg_try_advisory_lock(:k)"), {"k": LOCK_KEY})
@@ -135,7 +153,7 @@ async def main(days: int, platforms: list[str] | None) -> int:
             await session.commit()
 
             try:
-                summary = await run(days, platforms, run_row.id)
+                summary = await run(days, platforms, run_row.id, excluded=excluded)
                 run_row.status = "success" if summary["failed"] < summary["sources"] else "failed"
                 run_row.stats = summary
             except Exception as e:
@@ -160,5 +178,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--days", type=int, default=14, help="ventana de backfill/refresco")
     parser.add_argument("--platform", action="append", choices=[p.value for p in Platform])
+    parser.add_argument(
+        "--exclude", action="append", metavar="PLATFORM:KIND", help="p. ej. youtube:query"
+    )
     args = parser.parse_args()
-    sys.exit(asyncio.run(main(args.days, args.platform)))
+    sys.exit(asyncio.run(main(args.days, args.platform, parse_exclusions(args.exclude))))

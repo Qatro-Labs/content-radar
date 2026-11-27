@@ -110,6 +110,7 @@ uv run uvicorn app.main:app --reload           # API en :8000, docs en /docs
 | Google Trends | RSS público | Demanda de búsqueda | P2 |
 | TikTok · Reddit · Instagram | **ScrapeCreators** (pago por crédito: 1 crédito por fuente y ejecución, ~1,9 $/1.000; el cron solo lo consulta dos veces al día). TikTok: búsqueda por palabra clave de la semana, por región. Reddit: top de la semana por subreddit. Instagram: últimos reels de perfiles elegidos a mano (no descubre temas, sirve para outliers) | Vídeos cortos (views, likes, comentarios, shares) y conversación (score, comentarios) | P1 (17/10) |
 | X | **twitterapi.io** (desde el 18/10): últimos tweets de perfiles elegidos a mano, como Instagram (no descubre temas, sirve para outliers). 0,15 $ por 1.000 tweets | Tweets propios (views, likes, respuestas, retweets) | P1 (18/10) |
+| YouTube Shorts (búsqueda) | **Sin scraping** (desde el 26/11): búsquedas de Shorts por palabra clave con la API oficial de YouTube (máx. 20 activas por cupo; solo en las recolecciones de las 00 y las 12 UTC). Toda búsqueda cuenta como un único medio por plataforma | Vídeo corto con métricas (views, likes, comentarios) | P1 (26/11) |
 | LinkedIn | **Fuera del MVP.** ScrapeCreators lo cubre, pero su búsqueda depende de lo que indexa Google (incompleta y con poco de lo reciente). Roadmap: API de portabilidad DMA | — | Roadmap |
 
 **Límites de cada fuente y vías oficiales para el roadmap:** [`docs/sources.md`](docs/sources.md) (estrategia, alternativas descartadas y por qué).
@@ -204,7 +205,8 @@ GET  /health
     **Con p-valor:** con pocas piezas, pasar de 1 a 2 ya es +100 %. `acceleration_p_value` (test exacto de razón de tasas de Poisson sobre notas originales, sin réplicas) dice si la subida se explica por azar frente al ritmo del corpus. Lo usa la etapa (abajo).
   - `momentum_score` = combinación normalizada de velocidad del tema, aceleración y outliers. La aceleración entra como `log2((actual + 1) / (esperado + 1))`, acotado a ±3, para que 2 frente a 1 no pese como 70 frente a 5. Pesos en `intelligence/ranking.py`.
 - **Outliers (por pieza, estilo 1of10).** `outlier_ratio = rendimiento ajustado por edad / mediana de su referencia`. La referencia usa todas las piezas de la cuenta, también las que Jev quita por fuera de tema; esas no son evidencia ni entran en el clustering.
-  - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal (`playlistItems` + `videos.list`).
+  - YouTube: `views / días desde la publicación` vs. la mediana de los últimos 20 vídeos del mismo canal y del mismo formato (un Short contra Shorts, un vídeo largo contra vídeos largos) (`playlistItems` + `videos.list`).
+  - Búsquedas de Shorts: `views / días desde la publicación` vs. el **p90** de la misma búsqueda, como TikTok y HN (toda fuente de búsqueda usa el p90).
   - TikTok: `views / días desde la publicación` vs. el **p90** de los vídeos de la misma búsqueda. Una búsqueda mezcla muchos autores, como HN: con la mediana un 33 % de los vídeos salía como outlier; con el p90, un 6 % (n = 72, 17/10).
   - Reddit: score vs. la mediana de los posts del mismo subreddit.
   - Instagram: `views / días desde la publicación` vs. la mediana de los reels del mismo perfil (sin colaboraciones de otras cuentas).

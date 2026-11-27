@@ -1,15 +1,14 @@
 """Validación cruzada y saturación, siempre dentro de las fuentes monitoreadas.
 
-Una fuente independiente es un medio o canal, no una fila de `sources`: las 7 queries de HN son
-una sola fuente (Hacker News), y lo mismo las búsquedas de TikTok. Así una búsqueda amplia no
-infla el conteo.
+Una fuente independiente es un medio o canal, no una fila de `sources`: todas las búsquedas de
+una plataforma (HN, TikTok, YouTube Shorts) cuentan como una sola fuente. Así
+una búsqueda amplia no infla el conteo.
 """
 
 from collections.abc import Sequence
 
-from app.schemas.signal import Platform
+from app.schemas.signal import SourceKind
 
-SEARCH_PLATFORMS = {Platform.HACKERNEWS, Platform.TIKTOK}
 POINTS_PER_EXTRA_SOURCE = 20
 POINTS_PER_EXTRA_PLATFORM = 15
 # Saturación absoluta: cuota del tema en las notas originales del corpus de las dos ventanas
@@ -19,10 +18,10 @@ POINTS_PER_EXTRA_PLATFORM = 15
 SATURATION_FULL_SHARE = 0.02
 
 
-def outlet_key(platform: str, source_name: str) -> str:
-    """Clave de independencia: HN y TikTok (fuentes por búsqueda) cuentan como un único medio;
-    el resto, por fuente."""
-    return platform if platform in SEARCH_PLATFORMS else f"{platform}:{source_name}"
+def outlet_key(platform: str, source_name: str, source_kind: str) -> str:
+    """Clave de independencia: las búsquedas de una plataforma cuentan como un único medio; el
+    resto, por fuente."""
+    return platform if source_kind == SourceKind.QUERY else f"{platform}:{source_name}"
 
 
 def cross_source_score(outlets: set[str], platforms: set[str]) -> float:

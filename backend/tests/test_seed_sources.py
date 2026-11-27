@@ -1,4 +1,5 @@
 import httpx
+import pytest
 import respx
 from sqlalchemy import select
 
@@ -98,3 +99,39 @@ async def test_seed_without_youtube_key_skips_channels(session):
     report = await seed(session, SEED, youtube=None)
     assert report["youtube_skipped"] == 2
     assert report["rss"] == 1 and report["hackernews"] == 1
+
+
+def youtube_search_seed(n: int) -> dict:
+    return {"query": f"búsqueda {n}", "segment": "latam_es", "region": "mx"}
+
+
+def test_seed_rejects_more_youtube_searches_than_the_budget():
+    with pytest.raises(ValueError, match="MAX_YOUTUBE_SEARCH_SOURCES"):
+        SeedFile.model_validate({"youtube_search": [youtube_search_seed(n) for n in range(21)]})
+
+
+def test_inactive_youtube_searches_do_not_count_against_the_budget():
+    extra = {**youtube_search_seed(99), "active": False}
+    seeds = [youtube_search_seed(n) for n in range(20)] + [extra]
+    assert len(SeedFile.model_validate({"youtube_search": seeds}).youtube_search) == 21
+
+
+async def test_seed_youtube_search_sources(session):
+    data = SeedFile.model_validate(
+        {
+            "youtube_search": [
+                {"query": "agentes de IA", "segment": "latam_es", "language": "es", "region": "mx"}
+            ]
+        }
+    )
+    await seed(session, data, youtube=None)
+
+    src = (await session.scalars(select(Source).where(Source.platform == "youtube"))).one()
+    assert (src.kind, src.external_id) == ("query", "agentes de IA|mx")
+    assert src.name == "YouTube Shorts · agentes de IA (mx)"
+    assert src.config == {
+        "query": "agentes de IA",
+        "region": "mx",
+        "language": "es",
+        "ai_filter": False,
+    }

@@ -2,7 +2,8 @@
 
 Coste de cuota (cuota diaria por defecto: 10.000 unidades):
 - channels.list, playlistItems.list, videos.list = 1 unidad por llamada.
-- search.list = 100 unidades → no se usa; leemos el playlist de subidas de cada canal.
+- search.list = 100 unidades. Los canales se leen por su playlist de subidas; search.list solo
+  lo usan las búsquedas de Shorts, con un tope de fuentes (MAX_YOUTUBE_SEARCH_SOURCES).
 """
 
 import re
@@ -17,7 +18,7 @@ from app.collectors.text import clean_html, is_ai_related
 from app.collectors.usage import UsageMeter
 from app.models import Source
 from app.schemas.cost import Provider
-from app.schemas.signal import ContentFormat, ContentSignal, Metrics, Platform
+from app.schemas.signal import ContentFormat, ContentSignal, Metrics, Platform, SourceKind
 
 API_BASE = "https://www.googleapis.com/youtube/v3"
 SHORT_MAX_SECONDS = 180  # los Shorts pueden durar hasta 3 min
@@ -26,6 +27,11 @@ FILTER_DESCRIPTION_CHARS = 200
 # Unidades de cuota por llamada, según la tabla oficial (cuenta también si la llamada falla):
 # https://developers.google.com/youtube/v3/determine_quota_cost
 QUOTA_COST = {"channels": 1, "playlistItems": 1, "videos": 1, "search": 100}
+# 20 búsquedas × 2 recolecciones al día × 100 unidades = 4.000 de las 10.000 unidades diarias.
+# Las 2 al día las impone collect.yml (`--exclude youtube:query` fuera de las 00 y 12 UTC).
+MAX_YOUTUBE_SEARCH_SOURCES = 20
+SEARCH_MAX_RESULTS = "50"
+ISO_COUNTRY_LENGTH = 2
 
 
 class YouTubeError(Exception):
@@ -98,6 +104,27 @@ class YouTubeClient:
                 break
         return ids
 
+    async def search_short_video_ids(
+        self, query: str, *, since: datetime, region: str | None, language: str | None
+    ) -> list[str]:
+        """Una página de search.list (100 unidades). `videoDuration=short` admite hasta 4 min:
+        el collector descarta después lo que pase de SHORT_MAX_SECONDS."""
+        params = {
+            "part": "id",
+            "type": "video",
+            "videoDuration": "short",
+            "q": query,
+            "publishedAfter": since.isoformat().replace("+00:00", "Z"),
+            "maxResults": SEARCH_MAX_RESULTS,
+        }
+        # `regionCode` solo admite países ISO 3166-1 alfa-2: "global" o "latam" darían un 400.
+        if region and len(region) == ISO_COUNTRY_LENGTH:
+            params["regionCode"] = region.upper()
+        if language:
+            params["relevanceLanguage"] = language
+        data = await self._get("search", **params)
+        return [item["id"]["videoId"] for item in data.get("items", []) if "videoId" in item["id"]]
+
     async def videos(self, video_ids: list[str]) -> list[dict]:
         out: list[dict] = []
         for batch in _chunks(video_ids, 50):
@@ -134,56 +161,72 @@ def _int(value: str | None) -> int | None:
 
 
 class YouTubeCollector:
+    """Canales (`channel`, por su playlist de subidas) y búsquedas de Shorts (`query`)."""
+
     def __init__(self, client: YouTubeClient):
         self._yt = client
 
     async def collect(self, source: Source, *, backfill_days: int = 14) -> list[ContentSignal]:
         observed_at = datetime.now(UTC)
+        since = observed_at - timedelta(days=backfill_days)
+        is_search = source.kind == SourceKind.QUERY
+        ids = await (
+            self._search_ids(source, since) if is_search else self._upload_ids(source, since)
+        )
+        signals = [_video_signal(v, source, observed_at) for v in await self._yt.videos(ids)]
+        if is_search:
+            return [s for s in signals if s and s.format is ContentFormat.SHORT_VIDEO]
+        return [s for s in signals if s]
+
+    async def _upload_ids(self, source: Source, since: datetime) -> list[str]:
         playlist_id = source.config.get("uploads_playlist_id")
         if not playlist_id:
             raise YouTubeError(f"La fuente {source.name} no tiene uploads_playlist_id")
-        ai_filter = source.config.get("ai_filter", False)
+        return await self._yt.recent_upload_ids(playlist_id, since)
 
-        ids = await self._yt.recent_upload_ids(
-            playlist_id, observed_at - timedelta(days=backfill_days)
+    async def _search_ids(self, source: Source, since: datetime) -> list[str]:
+        return await self._yt.search_short_video_ids(
+            source.config["query"],
+            since=since,
+            region=source.config.get("region"),
+            language=source.config.get("language"),
         )
-        signals: list[ContentSignal] = []
-        for video in await self._yt.videos(ids):
-            snippet, stats = video["snippet"], video.get("statistics", {})
-            if snippet.get("liveBroadcastContent") in ("live", "upcoming"):
-                continue
-            title, description = snippet["title"], snippet.get("description")
-            # Solo el inicio de la descripción: el resto suele ser patrocinios y enlaces que
-            # mencionan IA aunque el vídeo no trate de IA.
-            intro = (description or "")[:FILTER_DESCRIPTION_CHARS]
-            tags = " ".join(snippet.get("tags", []))
-            if ai_filter and not is_ai_related(title, intro, tags):
-                continue
-            duration = parse_duration(video.get("contentDetails", {}).get("duration"))
-            language = snippet.get("defaultAudioLanguage") or snippet.get("defaultLanguage")
-            signals.append(
-                ContentSignal(
-                    platform=Platform.YOUTUBE,
-                    external_id=video["id"],
-                    url=f"https://www.youtube.com/watch?v={video['id']}",
-                    title=title,
-                    description=clean_html(description),
-                    author_name=snippet.get("channelTitle"),
-                    published_at=_parse_dt(snippet["publishedAt"]),
-                    observed_at=observed_at,
-                    format=(
-                        ContentFormat.SHORT_VIDEO
-                        if duration is not None and duration <= SHORT_MAX_SECONDS
-                        else ContentFormat.LONG_VIDEO
-                    ),
-                    language=(language or source.language or "")[:2] or None,
-                    duration_seconds=duration,
-                    # Las métricas ocultas por el canal llegan ausentes → None, no 0.
-                    metrics=Metrics(
-                        views=_int(stats.get("viewCount")),
-                        likes=_int(stats.get("likeCount")),
-                        comments=_int(stats.get("commentCount")),
-                    ),
-                )
-            )
-        return signals
+
+
+def _video_signal(video: dict, source: Source, observed_at: datetime) -> ContentSignal | None:
+    """None para directos y para lo que descarta el filtro de IA de la fuente."""
+    snippet, stats = video["snippet"], video.get("statistics", {})
+    if snippet.get("liveBroadcastContent") in ("live", "upcoming"):
+        return None
+    title, description = snippet["title"], snippet.get("description")
+    # Solo el inicio de la descripción: el resto suele ser patrocinios y enlaces que mencionan IA
+    # aunque el vídeo no trate de IA.
+    intro = (description or "")[:FILTER_DESCRIPTION_CHARS]
+    tags = " ".join(snippet.get("tags", []))
+    if source.config.get("ai_filter", False) and not is_ai_related(title, intro, tags):
+        return None
+    duration = parse_duration(video.get("contentDetails", {}).get("duration"))
+    language = snippet.get("defaultAudioLanguage") or snippet.get("defaultLanguage")
+    return ContentSignal(
+        platform=Platform.YOUTUBE,
+        external_id=video["id"],
+        url=f"https://www.youtube.com/watch?v={video['id']}",
+        title=title,
+        description=clean_html(description),
+        author_name=snippet.get("channelTitle"),
+        published_at=_parse_dt(snippet["publishedAt"]),
+        observed_at=observed_at,
+        format=(
+            ContentFormat.SHORT_VIDEO
+            if duration is not None and duration <= SHORT_MAX_SECONDS
+            else ContentFormat.LONG_VIDEO
+        ),
+        language=(language or source.language or "")[:2] or None,
+        duration_seconds=duration,
+        # Las métricas ocultas por el canal llegan ausentes → None, no 0.
+        metrics=Metrics(
+            views=_int(stats.get("viewCount")),
+            likes=_int(stats.get("likeCount")),
+            comments=_int(stats.get("commentCount")),
+        ),
+    )

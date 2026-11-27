@@ -12,6 +12,7 @@ tema sin ninguna respaldada conserva los datos medidos con una nota), y el job s
 LLM_API_KEY, o si el LLM falla en un tema, su audience fit queda en null (CLAUDE.md §2, regla 3).
 """
 
+import argparse
 import asyncio
 import sys
 from collections import Counter
@@ -126,8 +127,20 @@ def _stats(as_of: datetime, e: _Evaluated) -> dict[str, Any]:
     }
 
 
-async def _run(session: AsyncSession, run_row: PipelineRun) -> tuple[_Evaluated, dict[str, Any]]:
-    as_of = datetime.now(UTC)
+def parse_as_of(value: str | None, *, now: datetime) -> datetime:
+    if value is None:
+        return now
+    as_of = datetime.fromisoformat(value)
+    if as_of.tzinfo is None:
+        raise ValueError("--as-of necesita zona horaria (p. ej. 2026-10-17T20:35:51Z)")
+    if as_of > now:
+        raise ValueError("--as-of no puede estar en el futuro")
+    return as_of
+
+
+async def _run(
+    session: AsyncSession, run_row: PipelineRun, as_of: datetime
+) -> tuple[_Evaluated, dict[str, Any]]:
     evaluated = await _evaluate(session, run_row.id, as_of)
     await save_opportunities(session, run_row.id, evaluated.results)
     stats = _stats(as_of, evaluated)
@@ -190,7 +203,7 @@ def _print_replicas(r: ReplicaStats) -> None:
         print(f"  pares omitidos: {r.skipped_reason}")
 
 
-async def main() -> int:
+async def main(as_of: datetime) -> int:
     async with engine.connect() as lock_conn:
         got_lock = await lock_conn.scalar(text("select pg_try_advisory_lock(:k)"), {"k": LOCK_KEY})
         if not got_lock:
@@ -203,7 +216,7 @@ async def main() -> int:
             await session.commit()
 
             try:
-                evaluated, stats = await _run(session, run_row)
+                evaluated, stats = await _run(session, run_row, as_of)
             except Exception as e:
                 await session.rollback()
                 run_row.status, run_row.error = "failed", f"{type(e).__name__}: {e}"
@@ -220,4 +233,8 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
+    parser = argparse.ArgumentParser(description=__doc__)
+    # Recalcula como si fuera ese instante: sirve para comparar variantes sobre la misma ventana.
+    parser.add_argument("--as-of", help="instante ISO-8601 con zona; por defecto, ahora")
+    args = parser.parse_args()
+    sys.exit(asyncio.run(main(parse_as_of(args.as_of, now=datetime.now(UTC)))))
