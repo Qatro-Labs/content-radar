@@ -200,6 +200,24 @@ describe('CreateView · Briefs del equipo', () => {
     expect(requestedPaths(fetchMock)).toContain('/api/v1/editorial/briefs')
   })
 
+  it('opens a team brief to a visitor without session', async () => {
+    stubApi({ savedBriefs: [SUMMARY], role: null })
+
+    await renderCreateAt(`/create?brief=${LATEST_VERSION.id}`)
+
+    expect(await screen.findByText(`«${BRIEF.hook}»`)).toBeTruthy()
+    expect(screen.getByText('Versión 2 · guardada el 17/10, 19:00 UTC')).toBeTruthy()
+    expect(screen.queryByText(/Inicia sesión/)).toBeNull()
+  })
+
+  it('says a missing brief does not exist or is not from this team', async () => {
+    stubApi({ savedBriefs: [SUMMARY], role: null })
+
+    await renderCreateAt('/create?brief=999')
+
+    expect(await screen.findByText('Este brief no existe o no es de este equipo.')).toBeTruthy()
+  })
+
   it('lists the team briefs even when Supabase is not configured', async () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
     stubApi({ savedBriefs: [SUMMARY], role: null })
