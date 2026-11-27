@@ -57,8 +57,8 @@ const counters = computed<Counter[]>(() => [
   },
   {
     filter: 'emerging',
-    // En plural: cuenta temas, y el chip de etapa dice «Emergente».
-    label: 'Emergentes',
+    // En plural: cuenta temas, y el chip de etapa dice «Empieza a crecer».
+    label: 'Empiezan a crecer',
     count: view.counts.emerging,
     swatch: 'emerging',
     agentTarget: COUNTER_ANCHOR.emerging,

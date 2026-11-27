@@ -195,12 +195,13 @@ def user_if_signed_in(
     settings: Annotated[Settings, Depends(get_settings)],
     keys: Annotated[SigningKeySource | None, Depends(get_signing_keys)],
 ) -> CurrentUser | None:
-    """Como `require_user_if_enabled`, pero con AUTH_REQUIRED apagado un token válido sigue dando
-    usuario. Uno inválido se ignora: sin el flag, una sesión caducada no bloquea la petición."""
-    if settings.auth_required:
-        return _verify(credentials, settings, keys)
+    """Usuario si hay un token válido; sin token, None también con AUTH_REQUIRED: el flag frena el
+    gasto en LLM, no las lecturas públicas. Un token inválido da 401 con el flag y se ignora sin
+    él, para que una sesión caducada no bloquee la petición."""
     if credentials is None:
         return None
+    if settings.auth_required:
+        return _verify(credentials, settings, keys)
     try:
         return _verify(credentials, settings, keys)
     except HTTPException:

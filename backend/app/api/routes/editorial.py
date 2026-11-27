@@ -8,8 +8,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.limits import GLOBAL_PER_DAY, PER_IP_PER_HOUR, LimitResult, RateLimiter
-from app.api.auth import CurrentUser, require_user, user_if_signed_in
+from app.api.auth import require_user_if_enabled
 from app.api.routes.agent import client_ip
+from app.api.workspace_access import (
+    WorkspaceAccess,
+    require_editor,
+    workspace_access,
+    workspace_access_if_exists,
+)
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.editorial.briefs import Briefer, build_briefer
@@ -78,8 +84,13 @@ async def admit_brief(
         code: {"description": ERROR_DESCRIPTION}
         for code in [*ERROR_STATUS.values(), status.HTTP_429_TOO_MANY_REQUESTS]
     },
-    # En este orden: un 401 no gasta el cupo de la IP.
-    dependencies=[Depends(user_if_signed_in), Depends(admit_brief)],
+    # En este orden: un 401 o un 404 no gastan el cupo de la IP. AUTH_REQUIRED frena aquí el gasto
+    # en LLM; las lecturas del workspace siguen abiertas.
+    dependencies=[
+        Depends(require_user_if_enabled),
+        Depends(workspace_access_if_exists),
+        Depends(admit_brief),
+    ],
 )
 async def create_brief(
     # Mismo nombre que en `admit_brief`: con otro, FastAPI esperaría dos cuerpos anidados.
@@ -87,18 +98,23 @@ async def create_brief(
     session: Annotated[AsyncSession, Depends(get_session)],
     briefer: Annotated[Briefer | None, Depends(get_briefer)],
     # La misma dependencia que en `dependencies`: FastAPI la resuelve una vez y en ese orden.
-    user: Annotated[CurrentUser | None, Depends(user_if_signed_in)],
+    access: Annotated[WorkspaceAccess | None, Depends(workspace_access_if_exists)],
 ):
     """Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
-    petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Con un
-    token válido de Supabase se guarda como versión, esté o no activo AUTH_REQUIRED: con
-    `parent_brief_id`, en la cadena de ese brief (404 si no es del usuario). Si ya hay una versión
-    con la misma petición, se devuelve esa. Sin usuario, `id` y `version` son null."""
+    petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Si lo pide
+    un miembro del workspace se guarda como versión del equipo, esté o no activo AUTH_REQUIRED: con
+    `parent_brief_id`, en la cadena de ese brief (404 si no es del workspace). Si ya hay una versión
+    con la misma petición, se devuelve esa. Sin sesión o fuera del equipo, `id` y `version` son
+    null."""
+    # Fuera del equipo se devuelve sin guardar: el servicio solo guarda con los dos valores.
+    # Sin la fila del workspace (deploy sin seed) tampoco hay equipo: el brief sale sin guardar.
+    editor = access.user if access and access.can_edit else None
     try:
         return await user_briefs.create_brief(
             session,
             BriefRequest.model_validate(body.model_dump(exclude={"parent_brief_id"})),
-            user_id=user.user_id if user else None,
+            workspace_id=access.workspace.id if access and editor else None,
+            created_by=editor.user_id if editor else None,
             parent_brief_id=body.parent_brief_id,
             briefer=briefer,
             now=datetime.now(UTC),
@@ -107,16 +123,16 @@ async def create_brief(
         raise HTTPException(ERROR_STATUS[type(e)], str(e)) from e
 
 
-# Siempre con token, esté o no activo AUTH_REQUIRED, como `/me`. El brief de otro usuario es un 404
-# y no un 403: así los ids no dicen qué briefs existen.
+# En un workspace público se leen sin sesión. El brief de otro workspace es un 404 y no un 403:
+# así los ids no dicen qué briefs existen.
 @router.get("/briefs", response_model=list[SavedBriefSummary])
 async def list_saved_briefs(
-    user: Annotated[CurrentUser, Depends(require_user)],
+    access: Annotated[WorkspaceAccess, Depends(workspace_access)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    """Una fila por cadena de versiones del usuario del token, con su última versión; más
-    recientes primero (máximo 50)."""
-    return await user_briefs.list_briefs(session, user.user_id)
+    """Una fila por cadena de versiones del workspace, con su última versión; más recientes
+    primero (máximo 50)."""
+    return await user_briefs.list_briefs(session, access.workspace.id)
 
 
 @router.get(
@@ -126,10 +142,10 @@ async def list_saved_briefs(
 )
 async def read_saved_brief(
     brief_id: int,
-    user: Annotated[CurrentUser, Depends(require_user)],
+    access: Annotated[WorkspaceAccess, Depends(workspace_access)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    saved = await user_briefs.get_brief(session, user.user_id, brief_id)
+    saved = await user_briefs.get_brief(session, access.workspace.id, brief_id)
     if saved is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, BRIEF_NOT_FOUND)
     return saved
@@ -138,14 +154,21 @@ async def read_saved_brief(
 @router.delete(
     "/briefs/{brief_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    responses={status.HTTP_404_NOT_FOUND: {"description": ERROR_DESCRIPTION}},
+    responses={
+        code: {"description": ERROR_DESCRIPTION}
+        for code in [
+            status.HTTP_401_UNAUTHORIZED,
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_404_NOT_FOUND,
+        ]
+    },
 )
 async def delete_saved_brief(
     brief_id: int,
-    user: Annotated[CurrentUser, Depends(require_user)],
+    access: Annotated[WorkspaceAccess, Depends(require_editor)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Response:
-    """Borra la cadena entera de versiones a la que pertenece el brief."""
-    if not await user_briefs.delete_brief(session, user.user_id, brief_id):
+    """Borra la cadena entera de versiones a la que pertenece el brief. Solo el equipo."""
+    if not await user_briefs.delete_brief(session, access.workspace.id, brief_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, BRIEF_NOT_FOUND)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

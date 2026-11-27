@@ -6,15 +6,12 @@ import CreateStudio from '@/components/editorial/CreateStudio.vue'
 import CreateTopicPicker from '@/components/editorial/CreateTopicPicker.vue'
 import MyBriefs from '@/components/editorial/MyBriefs.vue'
 import SavedBriefStudio from '@/components/editorial/SavedBriefStudio.vue'
-import { useAuth } from '@/composables/useAuth'
 import { parseBriefQuery } from '@/lib/briefView'
 import { parseSavedBriefId } from '@/lib/savedBriefs'
 
 const route = useRoute()
-const { isConfigured } = useAuth()
 const opportunityId = computed(() => parseBriefQuery(route.query).opportunityId)
-// Sin cuentas no hay briefs guardados: `?brief=` se ignora y la vista sigue como siempre.
-const savedBriefId = computed(() => (isConfigured ? parseSavedBriefId(route.query) : null))
+const savedBriefId = computed(() => parseSavedBriefId(route.query))
 // El estudio y el brief guardado van en una columna de 880 px; el selector de temas, a lo ancho.
 const isSingleColumn = computed(() => savedBriefId.value !== null || opportunityId.value !== null)
 </script>
@@ -30,8 +27,7 @@ const isSingleColumn = computed(() => savedBriefId.value !== null || opportunity
     <!-- Por tema: otro tema empieza en blanco, sin el brief del anterior. -->
     <CreateStudio v-else :key="opportunityId" :opportunity-id="opportunityId" />
 
-    <!-- Sin Supabase no hay cuentas: la vista queda exactamente como sin login. -->
-    <div v-if="isConfigured" :class="isSingleColumn ? 'mx-auto w-full max-w-[880px]' : 'w-full'">
+    <div :class="isSingleColumn ? 'mx-auto w-full max-w-[880px]' : 'w-full'">
       <MyBriefs />
     </div>
   </div>

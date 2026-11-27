@@ -95,7 +95,9 @@ class FiltersInput(ToolInput):
     recommendation: Recommendation | None = None
     confidence: Confidence | None = None
     topic: TopicArg | None = None
-    gap: bool | None = Field(default=None, description="true = solo «Hueco en LATAM»")
+    gap: bool | None = Field(
+        default=None, description="true = solo «Poca cobertura en Latinoamérica»"
+    )
     sort: RadarSort | None = None
 
 
@@ -230,7 +232,7 @@ def _reset_patch() -> RadarPatch:
 def _counter_patch(counter: labels.Counter, sort: RadarSort | None) -> RadarPatch:
     # Como `counterPatch` del front: pulsar un contador sustituye los filtros que hubiera. Si solo
     # viajaran los campos del modelo, el front los mezclaría con los de antes (p. ej. «Publicar
-    # ya» y «Acelerando» a la vez) y ningún contador quedaría pulsado.
+    # ya» y «Crece rápido» a la vez) y ningún contador quedaría pulsado.
     patch = _reset_patch()
     if isinstance(counter, Recommendation):
         patch.recommendation = counter
@@ -314,9 +316,9 @@ TOOLS: dict[str, Tool] = {
     "list_opportunities": Tool(
         StepKind.DATA,
         "Lista las oportunidades editoriales de la ejecución servida, con sus scores (como "
-        f"mucho {MAX_LISTED}). Filtra por etapa, recomendación, confianza, tema o hueco en LATAM "
-        "y ordena por oportunidad o aceleración. Para contar o enumerar las de una recomendación, "
-        "filtra por ella: sin filtro solo ves las primeras.",
+        f"mucho {MAX_LISTED}). Filtra por etapa, recomendación, confianza, tema o «Poca "
+        "cobertura en Latinoamérica» y ordena por oportunidad o aceleración. Para contar o "
+        "enumerar las de una recomendación, filtra por ella: sin filtro solo ves las primeras.",
         ListInput,
         labels.LIST_LABEL,
         _list,
@@ -346,9 +348,9 @@ TOOLS: dict[str, Tool] = {
     "set_filters": Tool(
         StepKind.VIEW,
         "Cambia los filtros del Radar que ve el usuario. Solo cambian los campos que envíes; "
-        "null quita ese filtro. gap=true activa «Hueco en LATAM». recommendation=publish_now, o "
-        "una sola etapa (accelerating, emerging o unknown), pulsa ese contador como una persona: "
-        "sustituye los demás filtros y quita los resaltados.",
+        "null quita ese filtro. gap=true activa «Poca cobertura en Latinoamérica». "
+        "recommendation=publish_now, o una sola etapa (accelerating, emerging o unknown), pulsa "
+        "ese contador como una persona: sustituye los demás filtros y quita los resaltados.",
         FiltersInput,
         labels.FILTERS_FALLBACK_LABEL,
         _set_filters,
@@ -369,7 +371,8 @@ TOOLS: dict[str, Tool] = {
     ),
     "reset_view": Tool(
         StepKind.VIEW,
-        "Quita filtros (etapa, recomendación, confianza, tema y hueco en LATAM) y resaltados. "
+        "Quita filtros (etapa, recomendación, confianza, tema y «Poca cobertura en "
+        "Latinoamérica») y resaltados. "
         "Conserva la selección y el orden.",
         NoInput,
         labels.RESET_LABEL,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChartLine, PenLine, Radar } from '@lucide/vue'
+import { ChartLine, Palette, PenLine, Radar } from '@lucide/vue'
 import { useRoute } from 'vue-router'
 
 import { USING_FIXTURES } from '@/api/opportunities'
@@ -32,7 +32,7 @@ const views = [
     agentTarget: AGENT_ANCHOR.navExplore,
     help: HELP.navExplore,
   },
-  // Rad no actúa en Crear: no necesita ancla.
+  // Rad no actúa en Crear ni en Tu marca: no necesitan ancla.
   {
     name: RouteName.Create,
     label: 'Crear',
@@ -40,6 +40,14 @@ const views = [
     routes: [RouteName.Create],
     agentTarget: undefined,
     help: HELP.navCreate,
+  },
+  {
+    name: RouteName.Brand,
+    label: 'Tu marca',
+    icon: Palette,
+    routes: [RouteName.Brand],
+    agentTarget: undefined,
+    help: HELP.navBrand,
   },
 ] as const
 

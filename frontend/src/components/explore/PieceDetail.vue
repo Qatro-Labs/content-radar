@@ -25,7 +25,7 @@ const emit = defineEmits<{ clear: [] }>()
 const META_SEPARATOR = ' · '
 // Sin ratio no hay rótulo: PerformanceBar ya dice por qué falta (D10 del plan fe-dashboard-v2).
 const RATIO_CAPTION: Record<RatioLabel, string> = {
-  Outlier: 'rinde 3× o más que su canal',
+  'Rinde 3× o más': 'rinde 3× o más que su canal',
   Destacada: 'rinde 2× o más que su canal',
 }
 

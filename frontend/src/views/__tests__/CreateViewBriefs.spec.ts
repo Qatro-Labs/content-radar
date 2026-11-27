@@ -98,6 +98,7 @@ const SAVED_BRIEF_PATH = /^\/api\/v1\/editorial\/briefs\/(\d+)$/
 interface ApiStub {
   savedBriefs?: Schemas['SavedBriefSummary'][]
   postedBrief?: Schemas['EditorialBrief']
+  role?: Schemas['WorkspaceRead']['role']
 }
 
 function json(body: unknown): Response {
@@ -106,6 +107,9 @@ function json(body: unknown): Response {
 
 function respond(request: Request, stub: ApiStub): Response {
   const path = new URL(request.url).pathname
+  if (path === '/api/v1/workspace') {
+    return json({ slug: '30x', name: '30X', public_demo: true, role: stub.role ?? null })
+  }
   if (path === '/api/v1/editorial/briefs') return json(stub.savedBriefs ?? [])
   const savedId = Number(SAVED_BRIEF_PATH.exec(path)?.[1])
   if (savedId && request.method === 'DELETE') {
@@ -124,7 +128,8 @@ function respond(request: Request, stub: ApiStub): Response {
 }
 
 // openapi-fetch guarda `fetch` al crear el cliente: el stub va antes de importar la vista.
-function stubApi(stub: ApiStub = {}) {
+function stubApi(input: ApiStub = {}) {
+  const stub: ApiStub = { role: 'member', ...input }
   const fetchMock = vi.fn<typeof fetch>(async (input) => {
     if (!(input instanceof Request)) throw new Error('openapi-fetch no envió un Request')
     return respond(input, stub)
@@ -167,7 +172,7 @@ async function renderCreateAt(url: string) {
   return router
 }
 
-describe('CreateView · Mis briefs', () => {
+describe('CreateView · Briefs del equipo', () => {
   beforeEach(() => {
     vi.resetModules()
     supabaseJs.createClient.mockClear()
@@ -183,25 +188,44 @@ describe('CreateView · Mis briefs', () => {
     vi.unstubAllGlobals()
   })
 
-  it('hides the list and invites to sign in when signed out', async () => {
-    const fetchMock = stubApi({ savedBriefs: [SUMMARY] })
+  it('lists the team briefs to a visitor without session, with no delete button', async () => {
+    const fetchMock = stubApi({ savedBriefs: [SUMMARY], role: null })
 
     await renderCreateAt('/create')
 
-    const link = await screen.findByRole('link', { name: 'Inicia sesión para guardar tus briefs' })
-    expect(link.getAttribute('href')).toBe('/login?redirect=/create')
-    expect(screen.queryByText(SUMMARY.topic)).toBeNull()
-    expect(requestedPaths(fetchMock)).not.toContain('/api/v1/editorial/briefs')
+    expect(await screen.findByRole('heading', { name: 'Briefs del equipo' })).toBeTruthy()
+    expect(await screen.findByRole('link', { name: /Evaluación de agentes de IA/ })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Borrar el brief/ })).toBeNull()
+    expect(screen.queryByText(/Inicia sesión/)).toBeNull()
+    expect(requestedPaths(fetchMock)).toContain('/api/v1/editorial/briefs')
   })
 
-  it('renders nothing of the history when Supabase is not configured', async () => {
+  it('opens a team brief to a visitor without session', async () => {
+    stubApi({ savedBriefs: [SUMMARY], role: null })
+
+    await renderCreateAt(`/create?brief=${LATEST_VERSION.id}`)
+
+    expect(await screen.findByText(`«${BRIEF.hook}»`)).toBeTruthy()
+    expect(screen.getByText('Versión 2 · guardada el 17/10, 19:00 UTC')).toBeTruthy()
+    expect(screen.queryByText(/Inicia sesión/)).toBeNull()
+  })
+
+  it('says a missing brief does not exist or is not from this team', async () => {
+    stubApi({ savedBriefs: [SUMMARY], role: null })
+
+    await renderCreateAt('/create?brief=999')
+
+    expect(await screen.findByText('Este brief no existe o no es de este equipo.')).toBeTruthy()
+  })
+
+  it('lists the team briefs even when Supabase is not configured', async () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
-    stubApi({ savedBriefs: [SUMMARY] })
+    stubApi({ savedBriefs: [SUMMARY], role: null })
 
     await renderCreateAt('/create')
 
-    expect(await screen.findByText('Todavía no hay temas analizados.')).toBeTruthy()
-    expect(screen.queryByRole('region', { name: 'Mis briefs' })).toBeNull()
+    expect(await screen.findByRole('link', { name: /Evaluación de agentes de IA/ })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Borrar el brief/ })).toBeNull()
   })
 
   describe('signed in', () => {
@@ -222,7 +246,7 @@ describe('CreateView · Mis briefs', () => {
       expect(screen.getByText('Versión 2 · guardada el 17/10, 19:00 UTC')).toBeTruthy()
     })
 
-    it('never invites to sign in while a signed-in session is still loading', async () => {
+    it('never shows a sign-in invite while the session is still loading', async () => {
       let resolveSession: (value: unknown) => void = () => {}
       auth.getSession.mockReturnValue(new Promise((done) => (resolveSession = done)))
       stubApi({ savedBriefs: [SUMMARY] })
@@ -289,7 +313,7 @@ describe('CreateView · Mis briefs', () => {
       expect(screen.getByText('Se borrarán las 3 versiones de este brief.')).toBeTruthy()
       await fireEvent.click(screen.getByRole('button', { name: 'Borrar' }))
 
-      expect(await screen.findByText('Todavía no has creado briefs.')).toBeTruthy()
+      expect(await screen.findByText('Todavía no hay briefs del equipo.')).toBeTruthy()
       await vi.waitFor(() => expect(router.currentRoute.value.query.brief).toBeUndefined())
       const deletions = fetchMock.mock.calls.filter(
         ([input]) => input instanceof Request && input.method === 'DELETE',
@@ -302,7 +326,7 @@ describe('CreateView · Mis briefs', () => {
 
       await renderCreateAt('/create')
 
-      expect(await screen.findByText('Todavía no has creado briefs.')).toBeTruthy()
+      expect(await screen.findByText('Todavía no hay briefs del equipo.')).toBeTruthy()
     })
 
     it('marks a new brief as saved when the API returns its id', async () => {
@@ -312,7 +336,7 @@ describe('CreateView · Mis briefs', () => {
         `/create?opportunity=${OPPORTUNITY.id}&platform=linkedin&goal=educate&format=carousel`,
       )
 
-      expect(await screen.findByText('Guardado en Mis briefs')).toBeTruthy()
+      expect(await screen.findByText('Guardado en Briefs del equipo')).toBeTruthy()
       // La lista se pide otra vez para que el brief nuevo aparezca sin recargar.
       await vi.waitFor(() =>
         expect(
@@ -339,7 +363,7 @@ describe('CreateView · Mis briefs', () => {
       )
 
       expect(await screen.findByText(`«${BRIEF.hook}»`)).toBeTruthy()
-      expect(screen.queryByText('Guardado en Mis briefs')).toBeNull()
+      expect(screen.queryByText('Guardado en Briefs del equipo')).toBeNull()
     })
   })
 })

@@ -5,6 +5,7 @@ from app.models.jev import JevJudgment
 from app.models.llm import LlmEvaluation
 from app.models.opportunities import OpportunityRecord
 from app.models.signals import ContentItem, MetricSnapshot, PipelineRun, Source
+from app.models.workspaces import RadarProfileRecord, WorkspaceMemberRecord, WorkspaceRecord
 
 __all__ = [
     "Base",
@@ -15,6 +16,9 @@ __all__ = [
     "MetricSnapshot",
     "OpportunityRecord",
     "PipelineRun",
+    "RadarProfileRecord",
     "Source",
     "UsageEvent",
+    "WorkspaceMemberRecord",
+    "WorkspaceRecord",
 ]

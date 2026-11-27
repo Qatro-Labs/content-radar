@@ -40,6 +40,11 @@ export const router = createRouter({
       component: () => import('@/views/CreateView.vue'),
     },
     {
+      path: '/marca',
+      name: RouteName.Brand,
+      component: () => import('@/views/BrandView.vue'),
+    },
+    {
       path: '/login',
       name: RouteName.Login,
       component: () => import('@/views/LoginView.vue'),

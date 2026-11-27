@@ -23,7 +23,8 @@ const note = computed(() => unclassifiedNote(hooks))
       </h2>
       <!-- CLAUDE.md §1: se presenta como hipótesis, nunca como causalidad. -->
       <span class="text-sm text-muted-foreground">
-        El gancho del título en los outliers frente al resto del tema. Es una pista, no una causa.
+        El gancho del título en las piezas que rinden 3× o más frente al resto del tema. Es una
+        pista, no una causa.
       </span>
     </div>
 

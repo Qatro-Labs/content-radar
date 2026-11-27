@@ -1,4 +1,4 @@
-"""Briefs guardados por usuario: tokens de Supabase firmados aquí y un JWKS falso, sin red."""
+"""Briefs del equipo del workspace: tokens de Supabase firmados aquí y un JWKS falso, sin red."""
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -9,14 +9,24 @@ from app.api.auth import SupabaseJwks, get_signing_keys
 from app.api.routes.editorial import get_brief_limiter, get_briefer
 from app.core.config import Settings, get_settings
 from app.db.session import get_session
+from app.jobs.seed_workspace import seed_thirty_x
 from app.main import app
 from app.models import EditorialBriefRecord
+from app.models.workspaces import WorkspaceRecord
 from app.schemas.editorial import BriefFormat
+from app.services.workspaces import add_member
 from tests.test_auth import SUPABASE_URL, USER_ID, FakeFetcher, bearer, token
 from tests.test_editorial_brief import FakeBriefer, body, seed
 
-OTHER_USER_ID = "8f1c2d3e-0000-4000-8000-000000000002"
+OTHER_MEMBER_ID = "8f1c2d3e-0000-4000-8000-000000000002"
+STRANGER_ID = "8f1c2d3e-0000-4000-8000-000000000003"
 BRIEF = "/api/v1/editorial/brief"
+BRIEFS = "/api/v1/editorial/briefs"
+FOREIGN_BRIEF_ID = 987654
+
+MEMBER = bearer(token())
+OTHER_MEMBER = bearer(token(sub=OTHER_MEMBER_ID))
+STRANGER = bearer(token(sub=STRANGER_ID))
 
 
 @pytest.fixture
@@ -24,7 +34,7 @@ def configure(session):
     async def override():
         yield session
 
-    def apply(*, auth_required: bool = True) -> None:
+    def apply(*, auth_required: bool = False) -> None:
         settings = Settings(auth_required=auth_required, supabase_url=SUPABASE_URL)
         keys = SupabaseJwks(FakeFetcher())
         limiter = RateLimiter(per_ip_per_hour=20, global_per_day=300)
@@ -46,155 +56,168 @@ async def client():
         yield c
 
 
+@pytest.fixture
+async def workspace(session):
+    workspace = await seed_thirty_x(session)
+    await add_member(session, workspace.id, USER_ID, "owner")
+    await add_member(session, workspace.id, OTHER_MEMBER_ID, "member")
+    return workspace
+
+
 async def saved_count(session) -> int:
     return await session.scalar(select(func.count()).select_from(EditorialBriefRecord)) or 0
 
 
-async def test_post_with_a_user_saves_the_brief_and_returns_its_id(session, configure, client):
+async def brief_in_other_workspace(session, opportunity_id: str) -> int:
+    other = WorkspaceRecord(slug="otro", name="Otro", public_demo=True)
+    session.add(other)
+    await session.flush()
+    session.add(
+        EditorialBriefRecord(
+            id=FOREIGN_BRIEF_ID,
+            root_id=FOREIGN_BRIEF_ID,
+            version=1,
+            workspace_id=other.id,
+            created_by=STRANGER_ID,
+            opportunity_id=opportunity_id,
+            run_id=None,
+            request=body(opportunity_id),
+            brief={"topic": "Ajeno"},
+        )
+    )
+    await session.commit()
+    return FOREIGN_BRIEF_ID
+
+
+async def test_member_post_saves_the_brief_in_the_workspace(session, configure, client, workspace):
     configure()
     opportunity_id = await seed(session)
 
-    response = await client.post(
-        "/api/v1/editorial/brief", json=body(opportunity_id), headers=bearer(token())
-    )
+    response = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
 
     assert response.status_code == 200
-    brief_id = response.json()["id"]
-    record = await session.get(EditorialBriefRecord, brief_id)
-    assert record is not None and record.user_id == USER_ID
+    record = await session.get(EditorialBriefRecord, response.json()["id"])
+    assert record is not None
+    assert (record.workspace_id, record.created_by) == (workspace.id, USER_ID)
     assert record.opportunity_id == opportunity_id and record.run_id is not None
-
-
-async def test_flag_off_with_a_valid_token_still_saves(session, configure, client):
-    configure(auth_required=False)
-    opportunity_id = await seed(session)
-
-    response = await client.post(
-        "/api/v1/editorial/brief", json=body(opportunity_id), headers=bearer(token())
-    )
-
-    assert response.status_code == 200 and response.json()["id"] is not None
 
 
 @pytest.mark.parametrize(
     ("auth_required", "headers"),
-    [(False, None), (False, bearer(token(aud="anon")))],
-    ids=["no-token", "flag-off-invalid-token"],
+    [(False, None), (False, bearer(token(aud="anon"))), (False, STRANGER), (True, STRANGER)],
+    ids=["no-token", "invalid-token", "stranger", "stranger-flag-on"],
 )
-async def test_post_without_a_user_saves_nothing(
-    session, configure, client, auth_required, headers
+async def test_non_member_post_returns_brief_without_saving(
+    session, configure, client, workspace, auth_required, headers
 ):
     configure(auth_required=auth_required)
     opportunity_id = await seed(session)
 
-    response = await client.post(
-        "/api/v1/editorial/brief", json=body(opportunity_id), headers=headers
-    )
+    response = await client.post(BRIEF, json=body(opportunity_id), headers=headers)
 
     assert response.status_code == 200
-    assert response.json()["id"] is None
+    assert response.json()["id"] is None and response.json()["version"] is None
     assert await saved_count(session) == 0
 
 
-async def test_each_user_gets_a_row_even_when_the_brief_comes_from_the_cache(
-    session, configure, client
+async def test_anonymous_lists_team_briefs_of_public_workspace(
+    session, configure, client, workspace
 ):
     configure()
     opportunity_id = await seed(session)
-
-    for sub in (USER_ID, OTHER_USER_ID):
-        await client.post(
-            "/api/v1/editorial/brief", json=body(opportunity_id), headers=bearer(token(sub=sub))
-        )
-
-    assert await saved_count(session) == 2
-
-
-async def test_list_shows_only_own_briefs_newest_first(session, configure, client):
-    configure()
-    opportunity_id = await seed(session)
-    mine = bearer(token())
-    first = await client.post("/api/v1/editorial/brief", json=body(opportunity_id), headers=mine)
+    first = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
     article = {**body(opportunity_id), "format": BriefFormat.ARTICLE.value}
-    second = await client.post("/api/v1/editorial/brief", json=article, headers=mine)
-    await client.post(
-        "/api/v1/editorial/brief",
-        json=body(opportunity_id),
-        headers=bearer(token(sub=OTHER_USER_ID)),
-    )
+    second = await client.post(BRIEF, json=article, headers=OTHER_MEMBER)
 
-    response = await client.get("/api/v1/editorial/briefs", headers=mine)
+    listed = await client.get(BRIEFS)
+    detail = await client.get(f"{BRIEFS}/{first.json()['id']}")
 
-    assert response.status_code == 200
-    items = response.json()
+    assert listed.status_code == 200
+    items = listed.json()
     assert [i["id"] for i in items] == [second.json()["id"], first.json()["id"]]
     assert items[0]["format"] == "article" and items[0]["topic"] == first.json()["topic"]
+    assert detail.status_code == 200
+    assert detail.json()["request"] == body(opportunity_id)
+    assert detail.json()["brief"] == first.json()
 
 
-async def test_detail_returns_the_request_and_the_brief(session, configure, client):
+async def test_any_member_sees_briefs_created_by_another_member(
+    session, configure, client, workspace
+):
     configure()
     opportunity_id = await seed(session)
-    created = await client.post(
-        "/api/v1/editorial/brief", json=body(opportunity_id), headers=bearer(token())
-    )
-    brief_id = created.json()["id"]
+    created = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
 
-    response = await client.get(f"/api/v1/editorial/briefs/{brief_id}", headers=bearer(token()))
+    listed = await client.get(BRIEFS, headers=OTHER_MEMBER)
+    detail = await client.get(f"{BRIEFS}/{created.json()['id']}", headers=OTHER_MEMBER)
 
-    assert response.status_code == 200
-    saved = response.json()
-    assert saved["request"] == body(opportunity_id)
-    assert saved["brief"] == created.json()
+    assert [i["id"] for i in listed.json()] == [created.json()["id"]]
+    assert detail.status_code == 200
 
 
-async def test_another_users_brief_is_404(session, configure, client):
+async def test_brief_of_another_workspace_is_404(session, configure, client, workspace):
     configure()
     opportunity_id = await seed(session)
-    created = await client.post(
-        "/api/v1/editorial/brief", json=body(opportunity_id), headers=bearer(token())
-    )
-    path = f"/api/v1/editorial/briefs/{created.json()['id']}"
-    other = bearer(token(sub=OTHER_USER_ID))
+    foreign = await brief_in_other_workspace(session, opportunity_id)
 
-    read = await client.get(path, headers=other)
-    deleted = await client.delete(path, headers=other)
-    missing = await client.get("/api/v1/editorial/briefs/999999", headers=bearer(token()))
+    read = await client.get(f"{BRIEFS}/{foreign}", headers=MEMBER)
+    deleted = await client.delete(f"{BRIEFS}/{foreign}", headers=MEMBER)
+    listed = await client.get(BRIEFS, headers=MEMBER)
+    missing = await client.get(f"{BRIEFS}/999999", headers=MEMBER)
 
     assert (read.status_code, deleted.status_code, missing.status_code) == (404, 404, 404)
+    assert listed.json() == []
     assert await saved_count(session) == 1
 
 
-async def test_owner_deletes_the_brief(session, configure, client):
+async def test_member_deletes_a_brief_created_by_another_member(
+    session, configure, client, workspace
+):
     configure()
     opportunity_id = await seed(session)
-    created = await client.post(
-        "/api/v1/editorial/brief", json=body(opportunity_id), headers=bearer(token())
-    )
+    created = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
 
-    response = await client.delete(
-        f"/api/v1/editorial/briefs/{created.json()['id']}", headers=bearer(token())
-    )
+    response = await client.delete(f"{BRIEFS}/{created.json()['id']}", headers=OTHER_MEMBER)
 
     assert response.status_code == 204
     assert await saved_count(session) == 0
 
 
-@pytest.mark.parametrize("auth_required", [False, True], ids=["flag-off", "flag-on"])
-@pytest.mark.parametrize(
-    ("method", "path"),
-    [
-        ("GET", "/api/v1/editorial/briefs"),
-        ("GET", "/api/v1/editorial/briefs/1"),
-        ("DELETE", "/api/v1/editorial/briefs/1"),
-    ],
-    ids=["list", "detail", "delete"],
-)
-async def test_saved_briefs_without_token_are_401(configure, client, auth_required, method, path):
-    configure(auth_required=auth_required)
+async def test_non_member_delete_is_403_and_keeps_the_brief(session, configure, client, workspace):
+    configure()
+    opportunity_id = await seed(session)
+    created = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
 
-    response = await client.request(method, path)
+    response = await client.delete(f"{BRIEFS}/{created.json()['id']}", headers=STRANGER)
+
+    assert response.status_code == 403
+    assert await saved_count(session) == 1
+
+
+@pytest.mark.parametrize("auth_required", [False, True], ids=["flag-off", "flag-on"])
+async def test_anonymous_delete_is_401(session, configure, client, workspace, auth_required):
+    configure(auth_required=auth_required)
+    opportunity_id = await seed(session)
+    created = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
+
+    response = await client.delete(f"{BRIEFS}/{created.json()['id']}")
 
     assert response.status_code == 401
+    assert await saved_count(session) == 1
+
+
+async def test_private_workspace_briefs_are_404_without_membership(
+    session, configure, client, workspace
+):
+    configure()
+    workspace.public_demo = False
+    await session.commit()
+
+    anonymous = await client.get(BRIEFS)
+    stranger = await client.get(BRIEFS, headers=STRANGER)
+    member = await client.get(BRIEFS, headers=MEMBER)
+
+    assert (anonymous.status_code, stranger.status_code, member.status_code) == (404, 404, 200)
 
 
 # --- versiones ----------------------------------------------------------------------------
@@ -204,47 +227,51 @@ def with_format(opportunity_id: str, fmt: BriefFormat, parent: int | None = None
     return {**body(opportunity_id), "format": fmt.value, "parent_brief_id": parent}
 
 
-async def test_regenerating_from_a_parent_adds_version_2_to_its_chain(session, configure, client):
+async def test_regenerating_from_a_parent_adds_version_2_to_its_chain(
+    session, configure, client, workspace
+):
     configure()
     opportunity_id = await seed(session)
-    first = (await client.post(BRIEF, json=body(opportunity_id), headers=bearer(token()))).json()
+    first = (await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)).json()
 
+    # Otro miembro regenera: la cadena es del equipo, no de quien la empezó.
     second = await client.post(
         BRIEF,
         json=with_format(opportunity_id, BriefFormat.ARTICLE, parent=first["id"]),
-        headers=bearer(token()),
+        headers=OTHER_MEMBER,
     )
 
     assert second.status_code == 200
     assert (first["version"], second.json()["version"]) == (1, 2)
     record = await session.get(EditorialBriefRecord, second.json()["id"])
     assert record is not None and record.root_id == first["id"]
+    assert record.created_by == OTHER_MEMBER_ID
 
 
 @pytest.mark.parametrize("with_parent", [True, False], ids=["with-parent", "without-parent"])
 async def test_the_same_request_again_returns_the_existing_version(
-    session, configure, client, with_parent
+    session, configure, client, workspace, with_parent
 ):
     configure()
     opportunity_id = await seed(session)
-    first = (await client.post(BRIEF, json=body(opportunity_id), headers=bearer(token()))).json()
+    first = (await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)).json()
     again = {**body(opportunity_id), "parent_brief_id": first["id"] if with_parent else None}
 
-    response = await client.post(BRIEF, json=again, headers=bearer(token()))
+    response = await client.post(BRIEF, json=again, headers=MEMBER)
 
     assert (response.json()["id"], response.json()["version"]) == (first["id"], 1)
     assert await saved_count(session) == 1
 
 
-async def test_another_users_parent_is_404_and_saves_nothing(session, configure, client):
+async def test_parent_from_another_workspace_is_404(session, configure, client, workspace):
     configure()
     opportunity_id = await seed(session)
-    theirs = (await client.post(BRIEF, json=body(opportunity_id), headers=bearer(token()))).json()
+    foreign = await brief_in_other_workspace(session, opportunity_id)
 
     response = await client.post(
         BRIEF,
-        json=with_format(opportunity_id, BriefFormat.ARTICLE, parent=theirs["id"]),
-        headers=bearer(token(sub=OTHER_USER_ID)),
+        json=with_format(opportunity_id, BriefFormat.ARTICLE, parent=foreign),
+        headers=MEMBER,
     )
 
     assert response.status_code == 404
@@ -252,21 +279,23 @@ async def test_another_users_parent_is_404_and_saves_nothing(session, configure,
 
 
 async def chain_of_two(client, opportunity_id: str) -> tuple[dict, dict]:
-    first = (await client.post(BRIEF, json=body(opportunity_id), headers=bearer(token()))).json()
+    first = (await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)).json()
     second = await client.post(
         BRIEF,
         json=with_format(opportunity_id, BriefFormat.ARTICLE, parent=first["id"]),
-        headers=bearer(token()),
+        headers=MEMBER,
     )
     return first, second.json()
 
 
-async def test_list_shows_one_row_per_chain_with_its_latest_version(session, configure, client):
+async def test_list_shows_one_row_per_chain_with_its_latest_version(
+    session, configure, client, workspace
+):
     configure()
     opportunity_id = await seed(session)
     first, second = await chain_of_two(client, opportunity_id)
 
-    items = (await client.get("/api/v1/editorial/briefs", headers=bearer(token()))).json()
+    items = (await client.get(BRIEFS, headers=MEMBER)).json()
 
     assert len(items) == 1
     item = items[0]
@@ -279,12 +308,12 @@ async def test_list_shows_one_row_per_chain_with_its_latest_version(session, con
     assert item["format"] == "article"
 
 
-async def test_detail_lists_every_version_in_order(session, configure, client):
+async def test_detail_lists_every_version_in_order(session, configure, client, workspace):
     configure()
     opportunity_id = await seed(session)
     first, second = await chain_of_two(client, opportunity_id)
 
-    response = await client.get(f"/api/v1/editorial/briefs/{first['id']}", headers=bearer(token()))
+    response = await client.get(f"{BRIEFS}/{first['id']}", headers=MEMBER)
 
     saved = response.json()
     assert (saved["id"], saved["version"], saved["root_id"]) == (first["id"], 1, first["id"])
@@ -294,14 +323,49 @@ async def test_detail_lists_every_version_in_order(session, configure, client):
     ]
 
 
-async def test_delete_removes_the_whole_chain(session, configure, client):
+async def test_delete_removes_the_whole_chain(session, configure, client, workspace):
     configure()
     opportunity_id = await seed(session)
     _, second = await chain_of_two(client, opportunity_id)
 
-    response = await client.delete(
-        f"/api/v1/editorial/briefs/{second['id']}", headers=bearer(token())
-    )
+    response = await client.delete(f"{BRIEFS}/{second['id']}", headers=MEMBER)
 
     assert response.status_code == 204
+    assert await saved_count(session) == 0
+
+
+# --- AUTH_REQUIRED y workspace ausente -------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "path", ["/api/v1/profile", "/api/v1/workspace", BRIEFS], ids=["profile", "workspace", "briefs"]
+)
+async def test_flag_on_keeps_public_reads_open_without_token(configure, client, workspace, path):
+    configure(auth_required=True)
+
+    response = await client.get(path)
+
+    assert response.status_code == 200
+
+
+async def test_flag_on_still_requires_a_token_to_generate_a_brief(
+    session, configure, client, workspace
+):
+    configure(auth_required=True)
+    opportunity_id = await seed(session)
+
+    response = await client.post(BRIEF, json=body(opportunity_id))
+
+    assert response.status_code == 401
+    assert await saved_count(session) == 0
+
+
+async def test_post_without_workspace_returns_the_brief_unsaved(session, configure, client):
+    configure()
+    opportunity_id = await seed(session)
+
+    response = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
+
+    assert response.status_code == 200
+    assert response.json()["id"] is None and response.json()["version"] is None
     assert await saved_count(session) == 0

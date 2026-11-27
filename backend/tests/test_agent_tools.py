@@ -47,7 +47,7 @@ async def test_view_tool_rejects_unknown_id(session, seeded):
 async def test_set_filters_label_and_patch(session, seeded):
     outcome = await execute_tool("set_filters", {"gap": True}, session, Seen())
 
-    assert outcome.label == "Pulsando «Hueco en LATAM»"
+    assert outcome.label == "Pulsando «Poca cobertura en Latinoamérica»"
     assert outcome.patch is not None
     assert outcome.patch.model_dump(mode="json", exclude_unset=True) == {"gap": True}
 
@@ -68,12 +68,12 @@ COUNTER_CLEARS = {"gap": False, "highlight": [], "confidence": None, "topic": No
         # puestas y ningún contador pulsado: el rótulo mentía.
         (
             {"lifecycle": ["accelerating"]},
-            "Pulsando «Acelerando»",
+            "Pulsando «Crece rápido»",
             {**COUNTER_CLEARS, "lifecycle": ["accelerating"], "recommendation": None},
         ),
         (
             {"lifecycle": ["peaking", "saturated"]},
-            "Filtrando por En pico, Saturado",
+            "Filtrando por En su punto alto, Ya muy cubierto",
             {"lifecycle": ["peaking", "saturated"]},
         ),
         # Ordenar por oportunidad es el orden por defecto: el contador sigue siendo lo que pulsa.

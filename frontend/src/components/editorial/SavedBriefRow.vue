@@ -12,10 +12,11 @@ import {
 import { RouteName } from '@/router/routeNames'
 import type { components } from '@/types/api'
 
-const { saved, isOpen, isDeleting } = defineProps<{
+const { saved, isOpen, isDeleting, canDelete } = defineProps<{
   saved: components['schemas']['SavedBriefSummary']
   isOpen: boolean
   isDeleting: boolean
+  canDelete: boolean
 }>()
 
 const emit = defineEmits<{ delete: [] }>()
@@ -56,6 +57,7 @@ function confirmDelete() {
         />
       </RouterLink>
       <button
+        v-if="canDelete"
         type="button"
         :aria-label="`Borrar el brief «${saved.topic}»`"
         :disabled="isDeleting"
@@ -67,7 +69,7 @@ function confirmDelete() {
     </div>
 
     <div
-      v-if="isConfirming"
+      v-if="canDelete && isConfirming"
       role="alertdialog"
       :aria-label="`Borrar el brief «${saved.topic}»`"
       class="mb-2 flex flex-wrap items-center gap-2 rounded-tile bg-sunken px-3 py-2.5"

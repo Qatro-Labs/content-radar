@@ -1,5 +1,5 @@
-"""Briefs guardados de cada usuario, en cadenas de versiones: `POST /editorial/brief` con sesión
-guarda una versión, y `GET /editorial/briefs` lista una fila por cadena del usuario del token.
+"""Briefs guardados del equipo de cada workspace, en cadenas de versiones: `POST /editorial/brief`
+de un miembro guarda una versión, y `GET /editorial/briefs` lista una fila por cadena del workspace.
 """
 
 from dataclasses import dataclass
@@ -25,9 +25,9 @@ from app.services.opportunities import served_run_id
 MAX_LISTED_BRIEFS = 50
 FIRST_VERSION = 1
 NEXT_ID = text("select nextval(pg_get_serial_sequence('editorial_briefs', 'id'))")
-# Serializa los guardados de un mismo usuario: sin esto, dos peticiones iguales a la vez crearían
+# Serializa los guardados de un mismo workspace: sin esto, dos peticiones iguales a la vez crearían
 # dos cadenas o la misma versión dos veces. Se libera al hacer commit.
-USER_LOCK = text("select pg_advisory_xact_lock(hashtext(:key))")
+WORKSPACE_LOCK = text("select pg_advisory_xact_lock(hashtext(:key))")
 
 
 PARENT_NOT_FOUND = "Brief no encontrado"
@@ -50,20 +50,29 @@ async def create_brief(
     session: AsyncSession,
     request: BriefRequest,
     *,
-    user_id: str | None,
+    workspace_id: int | None,
+    created_by: str | None,
     parent_brief_id: int | None,
     briefer: Briefer | None,
     now: datetime,
 ) -> EditorialBrief:
-    """El brief, guardado como versión a nombre de `user_id` si lo hay; sin usuario no se guarda
-    (`id` y `version` None). `ParentBriefNotFound` si el padre no es un brief del usuario."""
+    """El brief, guardado como versión del workspace solo si llegan `workspace_id` y `created_by`;
+    si falta alguno no se guarda (`id` y `version` None). `ParentBriefNotFound` si el padre no es un
+    brief del workspace."""
     # Antes del LLM: un padre ajeno no gasta una llamada.
-    if user_id is not None and parent_brief_id is not None:
-        await _parent_root(session, user_id, parent_brief_id)
+    if workspace_id is not None and created_by is not None and parent_brief_id is not None:
+        await _parent_root(session, workspace_id, parent_brief_id)
     brief = await generate_metered_brief(session, request, briefer=briefer, now=now)
-    if user_id is None:
+    if workspace_id is None or created_by is None:
         return brief
-    saved = await _save(session, request, brief, user_id=user_id, parent_brief_id=parent_brief_id)
+    saved = await _save(
+        session,
+        request,
+        brief,
+        workspace_id=workspace_id,
+        created_by=created_by,
+        parent_brief_id=parent_brief_id,
+    )
     return brief.model_copy(update={"id": saved.id, "version": saved.version})
 
 
@@ -72,24 +81,27 @@ async def _save(
     request: BriefRequest,
     brief: EditorialBrief,
     *,
-    user_id: str,
+    workspace_id: int,
+    created_by: str,
     parent_brief_id: int | None,
 ) -> _SavedVersion:
-    await session.execute(USER_LOCK, {"key": f"editorial_briefs:{user_id}"})
+    await session.execute(WORKSPACE_LOCK, {"key": f"editorial_briefs:{workspace_id}"})
     request_json = request.model_dump(mode="json")
     run_id = await served_run_id(session)
     if parent_brief_id is None:
         same = Record.run_id.is_not_distinct_from(run_id)
         root_id = None
     else:
-        root_id = await _parent_root(session, user_id, parent_brief_id)
+        root_id = await _parent_root(session, workspace_id, parent_brief_id)
         same = Record.root_id == root_id
-    # Pedir lo mismo otra vez (p. ej. "Cambiar enfoque" sin cambios) devuelve la versión que ya hay.
-    if existing := await _same_request(session, user_id, request_json, same):
+    # Pedir lo mismo otra vez (p. ej. "Cambiar enfoque" sin cambios) devuelve la versión que ya hay,
+    # la haya pedido quien la haya pedido del equipo.
+    if existing := await _same_request(session, workspace_id, request_json, same):
         await session.commit()
         return existing
     record = await _new_version(session, root_id)
-    record.user_id = user_id
+    record.workspace_id = workspace_id
+    record.created_by = created_by
     record.opportunity_id = request.opportunity_id
     record.run_id = run_id
     record.request = request_json
@@ -101,9 +113,11 @@ async def _save(
     return saved
 
 
-async def _parent_root(session: AsyncSession, user_id: str, parent_brief_id: int) -> int:
+async def _parent_root(session: AsyncSession, workspace_id: int, parent_brief_id: int) -> int:
     root_id = await session.scalar(
-        select(Record.root_id).where(Record.id == parent_brief_id, Record.user_id == user_id)
+        select(Record.root_id).where(
+            Record.id == parent_brief_id, Record.workspace_id == workspace_id
+        )
     )
     if root_id is None:
         raise ParentBriefNotFound(PARENT_NOT_FOUND)
@@ -111,12 +125,15 @@ async def _parent_root(session: AsyncSession, user_id: str, parent_brief_id: int
 
 
 async def _same_request(
-    session: AsyncSession, user_id: str, request_json: dict[str, Any], scope: ColumnElement[bool]
+    session: AsyncSession,
+    workspace_id: int,
+    request_json: dict[str, Any],
+    scope: ColumnElement[bool],
 ) -> _SavedVersion | None:
     row = (
         await session.execute(
             select(Record.id, Record.version)
-            .where(Record.user_id == user_id, Record.request == request_json, scope)
+            .where(Record.workspace_id == workspace_id, Record.request == request_json, scope)
             .order_by(Record.created_at.desc(), Record.id.desc())
             .limit(1)
         )
@@ -133,7 +150,7 @@ async def _new_version(session: AsyncSession, root_id: int | None) -> EditorialB
     return Record(root_id=root_id, version=(latest or 0) + 1)
 
 
-async def list_briefs(session: AsyncSession, user_id: str) -> list[SavedBriefSummary]:
+async def list_briefs(session: AsyncSession, workspace_id: int) -> list[SavedBriefSummary]:
     chain = Record.root_id
     ranked = (
         select(
@@ -143,7 +160,7 @@ async def list_briefs(session: AsyncSession, user_id: str) -> list[SavedBriefSum
             .label("rank"),
             func.count().over(partition_by=chain).label("version_count"),
         )
-        .where(Record.user_id == user_id)
+        .where(Record.workspace_id == workspace_id)
         .subquery()
     )
     latest = aliased(Record, ranked)
@@ -157,17 +174,17 @@ async def list_briefs(session: AsyncSession, user_id: str) -> list[SavedBriefSum
     return [_summary(r, count) for r, count in rows]
 
 
-async def get_brief(session: AsyncSession, user_id: str, brief_id: int) -> SavedBrief | None:
-    """None si no existe o es de otro usuario: quien llama no puede distinguir los dos casos."""
-    # El usuario va en la misma consulta: nunca se lee la fila de otro para compararla después.
+async def get_brief(session: AsyncSession, workspace_id: int, brief_id: int) -> SavedBrief | None:
+    """None si no existe o es de otro workspace: quien llama no puede distinguir los dos casos."""
+    # El workspace va en la misma consulta: nunca se lee la fila de otro para compararla después.
     record = await session.scalar(
-        select(Record).where(Record.id == brief_id, Record.user_id == user_id)
+        select(Record).where(Record.id == brief_id, Record.workspace_id == workspace_id)
     )
     if record is None:
         return None
     chain = await session.scalars(
         select(Record)
-        .where(Record.root_id == record.root_id, Record.user_id == user_id)
+        .where(Record.root_id == record.root_id, Record.workspace_id == workspace_id)
         .order_by(Record.version)
     )
     return SavedBrief(
@@ -183,15 +200,15 @@ async def get_brief(session: AsyncSession, user_id: str, brief_id: int) -> Saved
     )
 
 
-async def delete_brief(session: AsyncSession, user_id: str, brief_id: int) -> bool:
-    """Borra la cadena entera del brief. False si no existe o es de otro usuario."""
+async def delete_brief(session: AsyncSession, workspace_id: int, brief_id: int) -> bool:
+    """Borra la cadena entera del brief. False si no existe o es de otro workspace."""
     root_id = await session.scalar(
-        select(Record.root_id).where(Record.id == brief_id, Record.user_id == user_id)
+        select(Record.root_id).where(Record.id == brief_id, Record.workspace_id == workspace_id)
     )
     if root_id is None:
         return False
     await session.execute(
-        delete(Record).where(Record.root_id == root_id, Record.user_id == user_id)
+        delete(Record).where(Record.root_id == root_id, Record.workspace_id == workspace_id)
     )
     await session.commit()
     return True

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes import agent, bulk, costs, editorial, me, opportunities, sources
+from app.api.routes import agent, bulk, costs, editorial, me, opportunities, sources, workspace
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.mcp.server import build_mcp_app, build_mcp_server, production_deps
@@ -43,6 +43,7 @@ api_v1.include_router(costs.router)
 api_v1.include_router(agent.router)
 api_v1.include_router(editorial.router)
 api_v1.include_router(me.router)
+api_v1.include_router(workspace.router)
 app.include_router(api_v1)
 
 

@@ -90,7 +90,7 @@ describe('ratios', () => {
   })
 
   it.each([
-    ['an outlier', piece({ outlier_ratio: 5.1, is_outlier: true }), 'Outlier'],
+    ['an outlier', piece({ outlier_ratio: 5.1, is_outlier: true }), 'Rinde 3× o más'],
     ['a highlighted piece', piece({ outlier_ratio: 2.4, is_outlier: false }), 'Destacada'],
     ['an ordinary piece', piece({ outlier_ratio: 1.2, is_outlier: false }), null],
   ])('labels %s', (_, evidence, label) => {

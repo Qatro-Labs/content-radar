@@ -23,6 +23,7 @@ from app.intelligence.briefs import (
 )
 from app.intelligence.explanation import VERIFICATION_INCOMPLETE_NOTE, ClaimDraft
 from app.intelligence.jev import JudgeResult
+from app.jobs.seed_workspace import seed_thirty_x
 from app.main import app
 from app.models import ContentItem, LlmEvaluation, Source, UsageEvent
 from app.schemas.cost import Provider
@@ -377,6 +378,8 @@ async def client(session):
     async def override():
         yield session
 
+    # La ruta lee el workspace por defecto; en producción lo crea la migración de los briefs.
+    await seed_thirty_x(session)
     limiter = RateLimiter(per_ip_per_hour=20, global_per_day=300)
     app.dependency_overrides[get_session] = override
     app.dependency_overrides[get_brief_limiter] = lambda: limiter

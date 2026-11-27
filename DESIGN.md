@@ -71,17 +71,17 @@ Una sola familia de grises fríos (sin mezclar con grises cálidos). Nunca negro
 
 | Etapa      | Relleno (burbuja) | Trazo (ping, latido) | Fondo del chip | Texto del chip |
 | ---------- | ----------------- | -------------------- | -------------- | -------------- |
-| Emergente  | #3D7BFF           | #3D7BFF              | #E8F0FF        | #1D4FC4        |
-| Acelerando | #B5E61D           | #6E8F00              | #EEF9CC        | #3C5A00        |
-| En pico    | #FF9A3C           | #E07A14              | #FFF0E0        | #9A4A00        |
-| Saturado   | #F0565C           | #F0565C              | #FDE8E9        | #B0262C        |
+| Empieza a crecer | #3D7BFF           | #3D7BFF              | #E8F0FF        | #1D4FC4        |
+| Crece rápido | #B5E61D           | #6E8F00              | #EEF9CC        | #3C5A00        |
+| En su punto alto | #FF9A3C           | #E07A14              | #FFF0E0        | #9A4A00        |
+| Ya muy cubierto | #F0565C           | #F0565C              | #FDE8E9        | #B0262C        |
 | Sin etapa  | hueco (blanco)    | #8A919C discontinuo  | #F0F1F3        | #50565F        |
 
 **Otros roles**
 
 - **Aviso** (#FFF4E5, texto #8A4B00) — avisos y chip "Datos de ejemplo": #FFF0DC / #8A4B00.
 - **Negativo** (#B0262C) — aceleración negativa, "Descartar" (fondo #FDE8E9).
-- **Neutro de acción** (#F0F1F3, texto #22262C) — "Buscar ángulo" y "Esperar caso".
+- **Neutro de acción** (#F0F1F3, texto #22262C) — "Buscar ángulo" y "Esperar un caso real".
 - **Saturación** (#FF9A3C) — barra de saturación (es una alerta suave, no un logro).
 - **Audiencia** — Tech #121418 · Negocio #8A919C · En español = Lima señal.
 
@@ -130,7 +130,7 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
   una baldosa #F2F3F5. Abre una paleta de comandos (temas, piezas y fuentes).
 - **Chip de etapa:** píldora, fondo y texto según §2, punto de 8px con el relleno (o trazo discontinuo en "Sin
   etapa"). Siempre con texto, nunca solo color.
-- **Chip de recomendación:** radio 8–10px, peso 600. "Publicar ya" en Lima señal; "Buscar ángulo" y "Esperar caso" en
+- **Chip de recomendación:** radio 8–10px, peso 600. "Publicar ya" en Lima señal; "Buscar ángulo" y "Esperar un caso real" en
   neutro; "Descartar" en negativo.
 - **Badge de outlier:** "6,1×" en Lima señal con texto Tinta (Explorar, lista de evidencias; outliers primero).
 - **Badge de evidencia:** "Observado" · "Estimado" · "Preliminar" en neutro, siempre visible junto al dato.
@@ -140,9 +140,9 @@ Base: **shadcn-vue** (sobre Reka UI), restyled con los tokens de §11. Iconos: `
 - **Barra apilada "Para quién importa":** alto 12px, radio completo, 3px entre segmentos; debajo, tres cifras
   grandes con su leyenda y una frase de lectura.
 - **"Qué no sabemos":** retirado de toda la UI el 18/10 (Radar, Explorar, expediente, brief y Rad). Un dato
-  ausente se sigue diciendo donde está ("no disponible"), p. ej. el hueco en LATAM en la cabecera del expediente.
+  ausente se sigue diciendo donde está ("no disponible"), p. ej. la cobertura en Latinoamérica en la cabecera del expediente.
 - **Contador-filtro:** baldosa blanca radio 16px, cifra Bricolage 32px y debajo la etiqueta con su muestra de color
-  ("Todos", "Publicar ya", "Acelerando", "Emergentes"). El grupo es de selección **única** (`role="radiogroup"`,
+  ("Todos", "Publicar ya", "Crece rápido", "Empiezan a crecer"). El grupo es de selección **única** (`role="radiogroup"`,
   «Filtrar por»; cada baldosa `role="radio"` con `aria-checked`) y escribe el mismo estado de la URL que el resto de
   filtros. La primera baldosa, **«Todos»**, cuenta todos los temas de la ejecución y su muestra es un círculo hueco
   (anillo interior de 1,5px en Apagado); está marcada cuando no hay filtros ni resaltados, y pulsarla quita filtros y
@@ -184,11 +184,11 @@ El agente se llama **Rad** y vive en Radar, Explorar y el expediente. En Crear n
 aparece para firmar el brief y mientras lo redacta (§7, «Crear: Rad redactando»). Sus pantallas y su movimiento se
 decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
 
-- **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Acelerando» y
-  «Emergentes» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`; «Todos» los quita. La leyenda de etapas pasa
+- **Filtros:** los contadores-filtro de la cabecera sustituyen a la fila de filtros de D. «Crece rápido» y
+  «Empiezan a crecer» escriben `lifecycle`; «Publicar ya» escribe `recommendation=publish_now`; «Todos» los quita. La leyenda de etapas pasa
   a la cabecera de la tarjeta del radar y también filtra (18/10): cada chip es un botón (`aria-pressed`) que escribe
   `lifecycle` con la misma selección única que los contadores, activo con el anillo de Tinta de 2px. Es la vía para
-  las etapas sin contador (En pico, Saturado, Sin tendencia clara). "Hueco en LATAM" sale de la vista mientras
+  las etapas sin contador (En su punto alto, Ya muy cubierto, Sin tendencia clara). "Poca cobertura en Latinoamérica" sale de la vista mientras
   `latam_gap` venga `null` en casi todos los temas; el agente puede seguir aplicándolo (`RadarPatch.gap`). Con algún
   filtro activo, el H1 dice "3 de 38 temas" y la baldosa «Todos» se desmarca: pulsarla restablece la vista (también
   la usa Rad: lleva el ancla `reset`). Si la vista es justo la que dejó Rad, junto a las baldosas va la frase
@@ -234,7 +234,7 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   - una conversación: los turnos anteriores quedan plegados encima del actual y "Nueva conversación" los borra.
 - **Respuesta plegada** (A, 18/10): la barra abierta tapaba lo que Rad acababa de señalar. Al terminar bien una
   respuesta, la transcripción se pliega en una fila encima del campo (#F6F7F8, radio 14px, 10px 12px): punto Lima de
-  9px con el trazo de Acelerando, «Rad respondió» (600), la pregunta en Apagado cortada a una línea y «· 3 temas
+  9px con el trazo de «Crece rápido», «Rad respondió» (600), la pregunta en Apagado cortada a una línea y «· 3 temas
   citados» si cita alguno. A la derecha, «Ver respuesta» ⌃ (blanco, radio 10px, alto 36px), que la abre y pasa a
   «Ocultar respuesta» ⌄. Mientras Rad trabaja la transcripción va abierta; tras un error o «Detener» no se pliega.
   Elegir un tema citado también la pliega. Al plegar, la barra se encoge sin animación y la fila entra con fundido y
@@ -246,7 +246,7 @@ decidieron en los artboards E y «Rad» del canvas (plan `fe-radar-agent`).
   y su fila se resaltan como con el hover, sin tocar la URL ni la selección. Termina al salir del chip, con Escape o al
   pulsarlo.
 - **Presencia del agente:** un punto Lima de 16px con anillo de Tinta de 2px y la sombra flotante, más un rótulo en
-  píldora Tinta (radio 10px, texto blanco 13px/600) con el paso en curso ("Pulsando «Hueco en LATAM»"). Al actuar
+  píldora Tinta (radio 10px, texto blanco 13px/600) con el paso en curso ("Pulsando «Poca cobertura en Latinoamérica»"). Al actuar
   sobre una sección o un control, la rodea un **anillo de foco** de 2px en Tinta, separado 5–6px y con el radio del
   objetivo más 6px. Sobre una burbuja no hay anillo de foco: basta la selección. Al pulsar algo deja una onda de
   Tinta. Para cambiar de pantalla, la presencia pulsa el control que lleva allí ("Ver expediente →" de la vista
@@ -445,10 +445,10 @@ el agente actúa, el efecto es su presencia, y el barrido solo vuelve a pasar cu
 - UI en español; código en inglés. Frase corta y concreta, sin clichés ("potencia", "revoluciona", "sin fricción").
 - Formato: decimales con coma ("6,1×"), espacio antes de % ("+80 %"), flechas ↑ ↓ → para la aceleración, fechas
   "17/10, 02:50 UTC".
-- **Etiquetas fijas:** Emergente · Acelerando · En pico · Saturado · Sin etapa | Publicar ya · Buscar ángulo ·
-  Esperar caso · Descartar | Observado · Estimado · Preliminar | confianza alta · media · baja | Datos · Vista (pasos
+- **Etiquetas fijas:** Empieza a crecer · Crece rápido · En su punto alto · Ya muy cubierto · Sin tendencia clara | Publicar ya ·
+  Buscar ángulo · Esperar un caso real · Descartar | Observado · Estimado · Preliminar | confianza alta · media · baja | Datos · Vista (pasos
   del agente).
-- **Texto del agente:** cada paso dice qué hace con un verbo ("Pulsando «Hueco en LATAM»", "Mostrando la
+- **Texto del agente:** cada paso dice qué hace con un verbo ("Pulsando «Poca cobertura en Latinoamérica»", "Mostrando la
   evidencia de…"). La respuesta nombra el tema primero, da las cifras con su formato (↑ +80 %, "Alto · 82") y cita las
   oportunidades en las que se apoya. Si un dato falta, dice "no disponible".
   Una ejecución grabada o guionizada lleva el chip "Ejecución de ejemplo", igual que los datos de ejemplo.
@@ -535,7 +535,7 @@ no el acento de marca; el acento de marca es `--signal`.
   --secondary-hover: #e8eaed; /* Hover del botón secundario */
   --primary-hover: #2a2e35; /* Hover del botón primario */
   --ink-read: #22262c; /* Tinta de lectura */
-  --neutral-action: #f0f1f3; /* "Buscar ángulo" y "Esperar caso" */
+  --neutral-action: #f0f1f3; /* "Buscar ángulo" y "Esperar un caso real" */
   --negative-bg: #fde8e9; /* "Descartar" */
   --audience-business: #8a919c; /* Segmento Negocio de "Para quién importa" */
   --saturation: #ff9a3c; /* Barra de saturación */

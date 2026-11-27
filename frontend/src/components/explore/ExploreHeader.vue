@@ -5,7 +5,12 @@ import InfoTip from '@/components/layout/InfoTip.vue'
 import ViewHeader from '@/components/layout/ViewHeader.vue'
 import { HELP } from '@/lib/helpText'
 import { formatCount, PLATFORM_LABEL } from '@/lib/evidenceFormat'
-import { exploreSummary, type ExploreFilter, type ExploreViewModel } from '@/lib/exploreView'
+import {
+  EXPLORE_FILTER_LABEL,
+  exploreSummary,
+  type ExploreFilter,
+  type ExploreViewModel,
+} from '@/lib/exploreView'
 
 const { view, filter } = defineProps<{ view: ExploreViewModel; filter: ExploreFilter | null }>()
 
@@ -20,7 +25,7 @@ interface Counter {
 // Totales fijos y selección única, como los contadores-filtro del Radar (D2 del plan
 // fe-dashboard-v2): cuentan todas las piezas, no lo filtrado.
 const counters = computed<Counter[]>(() => [
-  { filter: 'outliers', label: 'Outliers', value: view.counts.outliers },
+  { filter: 'outliers', label: EXPLORE_FILTER_LABEL.outliers, value: view.counts.outliers },
   ...view.counts.platforms.map(({ platform, count }) => ({
     filter: platform,
     label: PLATFORM_LABEL[platform],

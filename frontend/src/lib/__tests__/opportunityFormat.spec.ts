@@ -198,9 +198,9 @@ describe('audienceReading', () => {
 
 describe('latamGapLabel', () => {
   it.each([
-    { name: 'a gap', gap: true, expected: 'hueco en LATAM' },
-    { name: 'coverage', gap: false, expected: 'ya cubierto en LATAM' },
-    { name: 'a missing decision', gap: null, expected: 'hueco en LATAM no disponible' },
+    { name: 'a gap', gap: true, expected: 'casi nadie lo cuenta en Latinoamérica' },
+    { name: 'coverage', gap: false, expected: 'ya se cuenta mucho en Latinoamérica' },
+    { name: 'a missing decision', gap: null, expected: 'cobertura en Latinoamérica no disponible' },
   ])('labels $name', ({ gap, expected }) => {
     expect(latamGapLabel(gap)).toBe(expected)
   })

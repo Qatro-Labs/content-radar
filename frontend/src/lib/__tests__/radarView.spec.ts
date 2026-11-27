@@ -388,7 +388,7 @@ describe('radar texts', () => {
     {
       case: 'stages only',
       filter: { lifecycle: ['peaking', 'saturated'] },
-      text: 'Filtro: etapa en pico o saturado. El resto queda atenuado en el radar.',
+      text: 'Filtro: etapa en su punto alto o ya muy cubierto. El resto queda atenuado en el radar.',
     },
     {
       case: 'publish now',
@@ -398,7 +398,7 @@ describe('radar texts', () => {
     {
       case: 'stages and LATAM gap',
       filter: { lifecycle: ['peaking', 'saturated'], gap: true },
-      text: 'Filtro: etapa en pico o saturado · con hueco en LATAM. El resto queda atenuado en el radar.',
+      text: 'Filtro: etapa en su punto alto o ya muy cubierto · con poca cobertura en Latinoamérica. El resto queda atenuado en el radar.',
     },
     {
       case: 'confidence and topic',

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 import { useSavedBrief } from '@/api/editorial'
 import { CARD_CLASS, SECONDARY_BUTTON_CLASS } from '@/components/dossier/dossierClasses'
@@ -11,23 +11,18 @@ import { PARENT_BRIEF_PARAM } from '@/lib/savedBriefs'
 import { formatUtcTimestamp } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { RouteName } from '@/router/routeNames'
-import { REDIRECT_PARAM } from '@/router/authGuard'
 
 import BriefResult from './BriefResult.vue'
 import BriefVersionSwitcher from './BriefVersionSwitcher.vue'
 
 const { briefId } = defineProps<{ briefId: number }>()
 
-const route = useRoute()
 const router = useRouter()
-const { isReady, isSignedIn } = useAuth()
+// En un workspace público el brief se lee sin sesión; solo se espera a saber si hay una.
+const { isReady } = useAuth()
 const savedQuery = useSavedBrief(() => briefId)
 
 const saved = computed(() => savedQuery.data.value ?? null)
-const loginLink = computed(() => ({
-  name: RouteName.Login,
-  query: { [REDIRECT_PARAM]: route.fullPath },
-}))
 
 // Cambiar el enfoque vuelve al estudio del tema con las opciones de este brief, y lo que se genere
 // allí será una versión nueva de este.
@@ -44,21 +39,7 @@ function editBrief() {
 </script>
 
 <template>
-  <section
-    v-if="isReady && !isSignedIn"
-    aria-label="Brief guardado"
-    :class="cn(CARD_CLASS, 'flex-col items-start')"
-  >
-    <RouterLink :to="loginLink" class="text-[15px] font-semibold underline underline-offset-4">
-      Inicia sesión para ver este brief
-    </RouterLink>
-  </section>
-
-  <div
-    v-else-if="!isReady || savedQuery.isPending.value"
-    class="flex flex-col gap-4"
-    aria-busy="true"
-  >
+  <div v-if="!isReady || savedQuery.isPending.value" class="flex flex-col gap-4" aria-busy="true">
     <SkeletonBone class="h-[72px] rounded-card" />
     <SkeletonBone class="h-[420px] rounded-card" />
   </div>
@@ -75,7 +56,7 @@ function editBrief() {
   </section>
 
   <section v-else-if="saved === null" aria-label="Brief guardado" :class="CARD_CLASS">
-    <p class="text-[15px] text-ink-soft">Este brief no existe o es de otra cuenta.</p>
+    <p class="text-[15px] text-ink-soft">Este brief no existe o no es de este equipo.</p>
   </section>
 
   <div v-else class="flex flex-col gap-2">

@@ -12,7 +12,7 @@ const { lifecycle, descending = false } = defineProps<{
 
 const style = computed(() => (descending ? DESCENDING_STYLE : LIFECYCLE_STYLE[lifecycle]))
 
-// DESIGN.md §2: con el trazo de la etapa, el punto Acelerando se distingue sobre blanco; "Sin
+// DESIGN.md §2: con el trazo de la etapa, el punto «Crece rápido» se distingue sobre blanco; "Sin
 // etapa" va hueco y con trazo discontinuo.
 const dotStyle = computed(() => ({
   border: `1.5px ${style.value.dashed ? 'dashed' : 'solid'} var(${style.value.cssVar.stroke})`,

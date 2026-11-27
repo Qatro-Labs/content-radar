@@ -21,7 +21,7 @@ const statusLine = computed(() =>
       : `Oportunidad ${formatScore(opportunity.opportunity_score)} de ${SCORE_MAX}`,
     GROWTH_LABEL[opportunity.growth_status],
     `confianza ${CONFIDENCE_LABEL[opportunity.confidence]}`,
-    countLabel(opportunity.source_count, 'fuente independiente', 'fuentes independientes'),
+    countLabel(opportunity.source_count, 'fuente distinta', 'fuentes distintas'),
   ].join(' · '),
 )
 </script>

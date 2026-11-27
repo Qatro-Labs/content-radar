@@ -98,7 +98,8 @@ function filterTarget(patch: RadarPatch, { query, hasAnchor }: PatchContext): Ag
   const counter = activeCounterOf(next)
   if (counter !== null && hasAnchor(COUNTER_ANCHOR[counter]))
     return control(COUNTER_ANCHOR[counter])
-  // Las etapas sin contador en la cabecera (En pico, Saturado, Sin tendencia clara) se pulsan en
+  // Las etapas sin contador en la cabecera (En su punto alto, Ya muy
+  // cubierto, Sin tendencia clara) se pulsan en
   // la leyenda del radar, que solo está en su pestaña.
   const stage = activeStageOf(next)
   if (stage !== null && hasAnchor(stageAnchor(stage))) return control(stageAnchor(stage))

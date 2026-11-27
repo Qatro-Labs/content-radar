@@ -113,7 +113,7 @@ describe('BriefComposer', () => {
       },
     })
 
-    expect(screen.getByText('Esperar caso')).toBeTruthy()
+    expect(screen.getByText('Esperar un caso real')).toBeTruthy()
     expect(screen.getByText('Ninguna pieza muestra un caso real.')).toBeTruthy()
   })
 })

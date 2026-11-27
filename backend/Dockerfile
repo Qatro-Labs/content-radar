@@ -18,5 +18,6 @@ RUN uv sync --frozen --no-default-groups --no-install-project
 COPY backend/ ./
 COPY data/ /app/data/
 
-# Una sola réplica: migrar al arrancar es seguro y evita un paso manual en cada deploy.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+# Una sola réplica: migrar al arrancar es seguro y evita un paso manual en cada deploy. El seed del
+# workspace es idempotente: sin él, el perfil de marca y los briefs del equipo darían 404.
+CMD ["sh", "-c", "alembic upgrade head && python -m app.jobs.seed_workspace && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
