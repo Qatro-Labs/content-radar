@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue'
 
+import { useAuth } from '@/composables/useAuth'
+
 import { api, type Schemas } from './client'
 
 type WorkspaceRead = Schemas['WorkspaceRead']
@@ -46,12 +48,24 @@ async function putProfile(update: ProfileUpdate): Promise<ProfileRead> {
   throw new ProfileSaveError(response.status, detailOf(error) ?? SAVE_FALLBACK_MESSAGE)
 }
 
+// `role` y `can_edit` dependen de quién está dentro y el inicio o cierre de sesión no recarga la
+// página: la clave lleva el correo, y no se pide hasta saber si hay sesión para no hacerlo dos veces.
 export function useWorkspace() {
-  return useQuery({ queryKey: WORKSPACE_KEY, queryFn: fetchWorkspace })
+  const { email, isReady } = useAuth()
+  return useQuery({
+    queryKey: computed(() => [...WORKSPACE_KEY, email.value]),
+    queryFn: fetchWorkspace,
+    enabled: isReady,
+  })
 }
 
 export function useProfile() {
-  return useQuery({ queryKey: PROFILE_KEY, queryFn: fetchProfile })
+  const { email, isReady } = useAuth()
+  return useQuery({
+    queryKey: computed(() => [...PROFILE_KEY, email.value]),
+    queryFn: fetchProfile,
+    enabled: isReady,
+  })
 }
 
 // Sin reintentos: un 409 significa que alguien guardó antes, y repetir el mismo PUT lo pisaría.

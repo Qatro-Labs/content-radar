@@ -63,7 +63,7 @@ export function useBrief() {
 }
 
 // Los briefs son del equipo del workspace y se leen también sin sesión. La clave lleva el correo
-// porque el rol (y lo que la API devuelve) cambia al cambiar de cuenta.
+// porque lo que la API devuelve cambia con la cuenta. No se pide hasta saber si hay sesión.
 const SAVED_BRIEFS_KEY = ['saved-briefs'] as const
 
 async function fetchSavedBriefs(): Promise<SavedBriefSummary[]> {
@@ -83,18 +83,20 @@ async function fetchSavedBrief(id: number): Promise<SavedBrief | null> {
 }
 
 export function useSavedBriefs() {
-  const { email } = useAuth()
+  const { email, isReady } = useAuth()
   return useQuery({
     queryKey: computed(() => [...SAVED_BRIEFS_KEY, email.value]),
     queryFn: fetchSavedBriefs,
+    enabled: isReady,
   })
 }
 
 export function useSavedBrief(id: MaybeRefOrGetter<number>) {
-  const { email } = useAuth()
+  const { email, isReady } = useAuth()
   return useQuery({
     queryKey: computed(() => [...SAVED_BRIEFS_KEY, email.value, toValue(id)]),
     queryFn: () => fetchSavedBrief(toValue(id)),
+    enabled: isReady,
   })
 }
 

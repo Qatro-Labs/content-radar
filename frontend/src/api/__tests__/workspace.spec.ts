@@ -6,6 +6,15 @@ import type { components } from '@/types/api'
 
 type Schemas = components['schemas']
 
+const auth = vi.hoisted(() => ({
+  getSession: vi.fn(),
+  onAuthStateChange: vi.fn(),
+  signInWithPassword: vi.fn(),
+  signOut: vi.fn(),
+}))
+
+vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn(() => ({ auth })) }))
+
 const API_BASE = 'http://api.test'
 const CONFLICT_DETAIL =
   'Alguien del equipo guardó cambios mientras editabas. Recarga para ver la última versión.'
@@ -32,6 +41,10 @@ function stubFetch(putStatus: number) {
       return putStatus === 409 ? json({ detail: CONFLICT_DETAIL }, 409) : json(PROFILE)
     }
     if (path === '/api/v1/profile') return json(PROFILE)
+    if (path === '/api/v1/workspace') {
+      const signedIn = input.headers.get('Authorization') !== null
+      return json({ slug: '30x', name: '30X', public_demo: true, role: signedIn ? 'member' : null })
+    }
     return json({}, 404)
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -96,6 +109,26 @@ describe('workspace api', () => {
     await vi.waitFor(() => expect(save.conflict.value).toBe(true))
     expect(countOf(fetchMock, 'PUT')).toBe(1)
     expect(save.error.value?.message).toBe(CONFLICT_DETAIL)
+  })
+
+  it('refetches the workspace role when the account changes', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.test')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+    const session = { access_token: 'token', user: { email: 'ana@example.com' } }
+    auth.getSession.mockResolvedValue({ data: { session: null }, error: null })
+    auth.signInWithPassword.mockImplementation(async () => {
+      auth.getSession.mockResolvedValue({ data: { session }, error: null })
+      return { data: { session }, error: null }
+    })
+    stubFetch(200)
+    const { useWorkspace } = await import('../workspace')
+    const { useAuth } = await import('@/composables/useAuth')
+    const result = setup(() => ({ workspace: useWorkspace(), auth: useAuth() }))
+    await vi.waitFor(() => expect(result.workspace.data.value?.role).toBeNull())
+
+    await result.auth.signIn('ana@example.com', 'secret')
+
+    await vi.waitFor(() => expect(result.workspace.data.value?.role).toBe('member'))
   })
 
   it('canEdit is true only for owners and members', async () => {

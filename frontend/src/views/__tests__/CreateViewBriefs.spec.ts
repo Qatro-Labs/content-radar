@@ -319,12 +319,11 @@ describe('CreateView · Briefs del equipo', () => {
       )
 
       expect(await screen.findByText('Guardado en Briefs del equipo')).toBeTruthy()
-      // La lista se pide otra vez para que el brief nuevo aparezca sin recargar. La primera carga
-      // es sin sesión y se repite al conocerse el correo, de ahí que sean más de dos.
+      // La lista se pide otra vez para que el brief nuevo aparezca sin recargar.
       await vi.waitFor(() =>
         expect(
-          requestedPaths(fetchMock).filter((path) => path === '/api/v1/editorial/briefs').length,
-        ).toBeGreaterThanOrEqual(2),
+          requestedPaths(fetchMock).filter((path) => path === '/api/v1/editorial/briefs'),
+        ).toHaveLength(2),
       )
     })
 
