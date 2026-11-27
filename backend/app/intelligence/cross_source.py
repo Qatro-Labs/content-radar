@@ -1,7 +1,7 @@
 """Validación cruzada y saturación, siempre dentro de las fuentes monitoreadas.
 
 Una fuente independiente es un medio o canal, no una fila de `sources`: todas las búsquedas de
-una plataforma (HN, TikTok, YouTube Shorts, Google News, GDELT) cuentan como una sola fuente. Así
+una plataforma (HN, TikTok, YouTube Shorts) cuentan como una sola fuente. Así
 una búsqueda amplia no infla el conteo.
 """
 

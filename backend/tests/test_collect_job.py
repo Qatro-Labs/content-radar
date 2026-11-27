@@ -17,5 +17,5 @@ def test_excluding_youtube_searches_keeps_youtube_channels():
 
 
 def test_no_exclusions_keeps_everything():
-    sources = [source("youtube", "query", "Shorts"), source("gdelt", "query", "GDELT")]
+    sources = [source("youtube", "query", "Shorts"), source("hackernews", "query", "HN · LLM")]
     assert without_excluded(sources, parse_exclusions(None)) == sources

@@ -88,14 +88,13 @@ async def test_load_pieces_carries_format(session):
         platform="youtube", kind="channel", external_id="UC1", name="Canal", segment="tech"
     )
     short = item(src, 1, published_at=AS_OF - timedelta(hours=5), last_observed_at=AS_OF)
-    short.platform, short.format, short.author_name = "youtube", "short_video", "Canal"
+    short.platform, short.format = "youtube", "short_video"
     session.add_all([src, short])
     await session.commit()
 
     [piece] = await load_pieces(session, AS_OF)
 
     assert piece.format is ContentFormat.SHORT_VIDEO
-    assert piece.author == "Canal"
 
 
 async def test_load_pieces_carries_when_the_source_was_added(session):

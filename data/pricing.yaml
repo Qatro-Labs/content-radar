@@ -19,16 +19,6 @@ variable:
   rss:
     unit: requests
     price_per_unit: 0
-  google_news:
-    unit: requests
-    price_per_unit: 0
-    note: "RSS público de búsqueda, sin clave."
-    source: https://news.google.com/rss
-  gdelt:
-    unit: requests
-    price_per_unit: 0
-    note: "DOC 2.0 API abierta, sin clave; una petición cada 5 s."
-    source: https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/
   brave_search:
     unit: requests
     price_per_unit: 0.005 # 5 $ por 1.000 consultas

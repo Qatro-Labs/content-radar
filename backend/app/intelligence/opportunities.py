@@ -73,9 +73,9 @@ MIN_RECENT_ITEMS = 3  # piezas en las dos últimas ventanas para considerar el t
 # simularía una subida. Las del arranque son el backfill inicial (CLAUDE.md §5).
 ACCELERATION_HISTORY = 2 * WINDOW
 INITIAL_SOURCES_GRACE = timedelta(days=1)
-# En estas búsquedas la región es el mercado de la búsqueda, no el origen del canal o del medio:
-# no demuestra cobertura en LATAM. En GDELT `sourcecountry` sí es el país del medio.
-SEARCH_MARKET_REGION = frozenset({Platform.YOUTUBE, Platform.TIKTOK, Platform.GOOGLE_NEWS})
+# En estas búsquedas la región es el mercado de la búsqueda, no el origen del canal:
+# no demuestra cobertura en LATAM.
+SEARCH_MARKET_REGION = frozenset({Platform.YOUTUBE, Platform.TIKTOK})
 MIX_WEIGHT_MIN, MIX_WEIGHT_MAX = 0.5, 3.0
 LLM_PENDING_NOTE = "Audience fit y análisis editorial pendientes (sin LLM todavía)."
 BROAD_TOPIC_NOTE = (
@@ -103,7 +103,6 @@ class Piece:
     region: str | None = None  # de la fuente; decide si cuenta para el LATAM Gap
     target_url: str | None = None  # enlace externo de HN y Reddit: delata republicaciones
     format: ContentFormat = ContentFormat.UNKNOWN
-    author: str | None = None  # el medio en Google News y GDELT; el canal en YouTube
     source_since: datetime | None = None  # alta de la fuente (ACCELERATION_HISTORY)
 
 

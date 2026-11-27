@@ -305,8 +305,8 @@ def test_outlet_key_collapses_searches_per_platform(platform, name, kind, expect
 
 
 def test_two_searches_of_one_platform_are_one_outlet():
-    assert outlet_key("google_news", "Google News · a", "query") == outlet_key(
-        "google_news", "Google News · b", "query"
+    assert outlet_key("youtube", "Shorts · a", "query") == outlet_key(
+        "youtube", "Shorts · b", "query"
     )
     assert outlet_key("reddit", "r/OpenAI", "channel") != outlet_key(
         "reddit", "r/ClaudeAI", "channel"

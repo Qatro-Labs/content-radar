@@ -940,8 +940,6 @@ export interface components {
       | 'tiktok'
       | 'reddit'
       | 'x'
-      | 'google_news'
-      | 'gdelt'
     /**
      * Provider
      * @description APIs externas con consumo medido. Cada valor es una clave de `variable` en pricing.yaml.
@@ -954,8 +952,6 @@ export interface components {
       | 'brave_search'
       | 'scrapecreators'
       | 'twitterapi'
-      | 'google_news'
-      | 'gdelt'
       | 'typesafe_jev'
       | 'llm_text'
     /** ProviderCost */

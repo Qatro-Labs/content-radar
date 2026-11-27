@@ -38,7 +38,6 @@ def piece(
     url=None,
     target_url=None,
     hours_ago=10,
-    author=None,
 ):
     return Piece(
         item_id=i,
@@ -54,10 +53,7 @@ def piece(
         published_at=AS_OF - timedelta(hours=hours_ago),
         observed_at=AS_OF,
         metrics=Metrics(),
-        source_kind=SourceKind.QUERY
-        if platform in (Platform.HACKERNEWS, Platform.GDELT, Platform.GOOGLE_NEWS)
-        else SourceKind.FEED,
-        author=author,
+        source_kind=SourceKind.QUERY if platform is Platform.HACKERNEWS else SourceKind.FEED,
         target_url=target_url,
     )
 
@@ -282,19 +278,3 @@ def test_replica_notes():
     assert len(notes) == 2
     assert notes[0].startswith("3 piezas son republicaciones")
     assert "sin verificar con Jev" in notes[1]
-
-
-@pytest.mark.parametrize("platform", [Platform.GDELT, Platform.GOOGLE_NEWS], ids=["gdelt", "gnews"])
-def test_news_search_compares_pieces_from_different_publishers(platform):
-    # Un mismo teletipo republicado por dos medios dentro de una búsqueda de noticias.
-    src = "búsqueda · inteligencia artificial"
-    a = piece(1, platform=platform, source=src, title=LONG_TITLE, author="eltiempo.com")
-    b = piece(2, platform=platform, source=src, title=LONG_TITLE, author="semana.com")
-    assert topic_pairs([a, b], [[0, 1]], vectors(1.0, 1.0)) != ([], [])
-
-
-def test_news_search_skips_pieces_from_the_same_publisher():
-    src = "GDELT · inteligencia artificial (CO)"
-    a = piece(1, platform=Platform.GDELT, source=src, title=LONG_TITLE, author="eltiempo.com")
-    b = piece(2, platform=Platform.GDELT, source=src, title=LONG_TITLE, author="eltiempo.com")
-    assert topic_pairs([a, b], [[0, 1]], vectors(1.0, 1.0)) == ([], [])

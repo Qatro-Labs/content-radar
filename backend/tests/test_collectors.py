@@ -1,4 +1,3 @@
-import asyncio
 from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
 
@@ -6,9 +5,6 @@ import httpx
 import pytest
 import respx
 
-from app.collectors.gdelt import API_URL as GDELT_URL
-from app.collectors.gdelt import GDELT_MIN_INTERVAL_SECONDS, GDELTCollector, GDELTError
-from app.collectors.google_news import GoogleNewsCollector, google_news_feed_url
 from app.collectors.hackernews import API_URL as HN_URL
 from app.collectors.hackernews import HackerNewsCollector
 from app.collectors.rss import RSSCollector
@@ -543,144 +539,6 @@ async def test_youtube_search_keeps_only_shorts_up_to_three_minutes():
     assert params["q"] == "agentes de IA"
     assert "relevanceLanguage" not in params
     assert sum(c.units for (p, _), c in usage.counts.items() if p is Provider.YOUTUBE) == 101
-
-
-# --- Google News RSS ---------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("hl", "gl", "expected_ceid"),
-    [("es-419", "CO", "CO%3Aes-419"), ("en-US", "US", "US%3Aen")],
-    ids=["latam-spanish", "us-english"],
-)
-def test_google_news_feed_url(hl, gl, expected_ceid):
-    assert google_news_feed_url("agentes de IA", hl=hl, gl=gl, days=14) == (
-        "https://news.google.com/rss/search?q=agentes+de+IA+when%3A14d"
-        f"&hl={hl}&gl={gl}&ceid={expected_ceid}"
-    )
-
-
-def google_news_feed(*items: tuple[str, str]) -> str:
-    published = format_datetime(NOW - timedelta(hours=3))
-    entries = "".join(
-        f"<item><title>{title}</title><link>https://news.google.com/rss/articles/{n}</link>"
-        f'<guid isPermaLink="false">{n}</guid><pubDate>{published}</pubDate>'
-        f'<source url="https://outlet.example">{outlet}</source></item>'
-        for n, (title, outlet) in enumerate(items)
-    )
-    return f'<?xml version="1.0"?><rss version="2.0"><channel>{entries}</channel></rss>'
-
-
-def google_news_source():
-    source = make_source(
-        "google_news", "agentes de IA|es-419|CO", query="agentes de IA", hl="es-419", gl="CO"
-    )
-    source.kind = "query"
-    return source
-
-
-@respx.mock
-async def test_google_news_strips_outlet_suffix_and_keeps_outlet_as_author():
-    respx.get(url__startswith="https://news.google.com/rss/search").mock(
-        return_value=httpx.Response(
-            200, text=google_news_feed(("Bancolombia lanza agente de IA - El Tiempo", "El Tiempo"))
-        )
-    )
-    usage = UsageMeter()
-    async with httpx.AsyncClient() as http:
-        [signal] = await GoogleNewsCollector(http, usage).collect(google_news_source())
-
-    assert signal.title == "Bancolombia lanza agente de IA"
-    assert signal.author_name == "El Tiempo"
-    assert str(signal.url) == "https://news.google.com/rss/articles/0"
-    assert signal.format is ContentFormat.ARTICLE
-    assert signal.language == "es"
-    assert signal.metrics.views is None
-    assert usage.counts[(Provider.GOOGLE_NEWS, "feed")].calls == 1
-
-
-@respx.mock
-async def test_google_news_keeps_title_when_suffix_is_not_the_outlet():
-    respx.get(url__startswith="https://news.google.com/rss/search").mock(
-        return_value=httpx.Response(200, text=google_news_feed(("IA - lo que viene", "Semana")))
-    )
-    async with httpx.AsyncClient() as http:
-        [signal] = await GoogleNewsCollector(http).collect(google_news_source())
-
-    assert signal.title == "IA - lo que viene"
-
-
-# --- GDELT -------------------------------------------------------------------------------
-
-
-def gdelt_source(**config):
-    source = make_source("gdelt", "agentes de IA|CO|spanish", query="agentes de IA", **config)
-    source.kind = "query"
-    return source
-
-
-@respx.mock
-async def test_gdelt_maps_articles_without_metrics():
-    seen = (NOW - timedelta(hours=5)).strftime("%Y%m%dT%H%M%SZ")
-    article = {
-        "url": "https://www.eltiempo.com/tecnologia/agentes-ia",
-        "title": "Bancos colombianos prueban agentes de IA",
-        "seendate": seen,
-        "domain": "eltiempo.com",
-        "language": "Spanish",
-        "sourcecountry": "Colombia",
-    }
-    route = respx.get(GDELT_URL).mock(
-        return_value=httpx.Response(200, json={"articles": [article]})
-    )
-    usage = UsageMeter()
-    async with httpx.AsyncClient() as http:
-        source = gdelt_source(source_country="CO", source_lang="spanish")
-        [s] = await GDELTCollector(http, usage).collect(source, backfill_days=3)
-
-    assert s.published_at == datetime.strptime(seen, "%Y%m%dT%H%M%SZ").replace(tzinfo=UTC)
-    assert s.author_name == "eltiempo.com"
-    assert s.language == "es"
-    assert s.format is ContentFormat.ARTICLE
-    assert s.metrics.views is None
-    params = route.calls.last.request.url.params
-    assert params["query"] == "agentes de IA sourcecountry:CO sourcelang:spanish"
-    assert params["timespan"] == "3d"
-    assert usage.counts[(Provider.GDELT, "doc")].calls == 1
-
-
-@respx.mock
-async def test_gdelt_without_articles_returns_empty():
-    respx.get(GDELT_URL).mock(return_value=httpx.Response(200, json={}))
-    async with httpx.AsyncClient() as http:
-        assert await GDELTCollector(http).collect(gdelt_source()) == []
-
-
-@respx.mock
-async def test_gdelt_plain_text_error_raises_readable_error():
-    respx.get(GDELT_URL).mock(
-        return_value=httpx.Response(200, text="Please limit requests to one every 5 seconds")
-    )
-    async with httpx.AsyncClient() as http:
-        with pytest.raises(GDELTError, match="one every 5 seconds"):
-            await GDELTCollector(http).collect(gdelt_source())
-
-
-@respx.mock
-async def test_gdelt_spaces_requests_from_one_collector(monkeypatch):
-    respx.get(GDELT_URL).mock(return_value=httpx.Response(200, json={}))
-    waits: list[float] = []
-
-    async def fake_sleep(seconds: float) -> None:
-        waits.append(seconds)
-
-    monkeypatch.setattr("app.collectors.gdelt.asyncio.sleep", fake_sleep)
-    async with httpx.AsyncClient() as http:
-        collector = GDELTCollector(http)
-        await asyncio.gather(collector.collect(gdelt_source()), collector.collect(gdelt_source()))
-
-    assert len(waits) == 1
-    assert waits[0] == pytest.approx(GDELT_MIN_INTERVAL_SECONDS, abs=0.5)
 
 
 @pytest.mark.parametrize("region", ["global", "latam"], ids=["global", "latam"])

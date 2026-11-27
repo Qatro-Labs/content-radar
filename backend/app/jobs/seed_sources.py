@@ -19,7 +19,6 @@ from pydantic import BaseModel, HttpUrl, model_validator
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.collectors.google_news import google_news_feed_url
 from app.collectors.usage import UsageMeter
 from app.collectors.youtube import MAX_YOUTUBE_SEARCH_SOURCES, YouTubeClient, YouTubeError
 from app.core.config import get_settings
@@ -29,8 +28,6 @@ from app.schemas.signal import Platform, Segment, SourceKind
 from app.services.costs import record_meter
 
 DEFAULT_FILE = Path(__file__).resolve().parents[3] / "data" / "sources.yaml"
-# La URL de la fuente es solo para abrirla a mano; el collector usa su propia ventana.
-GOOGLE_NEWS_URL_DAYS = 7
 
 
 class _Common(BaseModel):
@@ -47,18 +44,6 @@ class YouTubeSeed(_Common):
 
 class YouTubeSearchSeed(_Common):
     query: str  # búsqueda de Shorts; `region` y `language` acotan la búsqueda
-
-
-class GDELTSeed(_Common):
-    query: str
-    source_country: str | None = None  # código FIPS de GDELT, p. ej. CO
-    source_lang: str | None = None  # nombre en inglés, p. ej. spanish
-
-
-class GoogleNewsSeed(_Common):
-    query: str
-    hl: str  # idioma de Google News, p. ej. es-419
-    gl: str  # país, p. ej. CO
 
 
 class HackerNewsSeed(_Common):
@@ -91,8 +76,6 @@ class XSeed(_Common):
 class SeedFile(BaseModel):
     youtube: list[YouTubeSeed] = []
     youtube_search: list[YouTubeSearchSeed] = []
-    google_news: list[GoogleNewsSeed] = []
-    gdelt: list[GDELTSeed] = []
     hackernews: list[HackerNewsSeed] = []
     rss: list[RSSSeed] = []
     tiktok: list[TikTokSeed] = []
@@ -229,42 +212,6 @@ async def _seed_x(session: AsyncSession, seeds: list[XSeed]) -> int:
     return len(seeds)
 
 
-async def _seed_gdelt(session: AsyncSession, seeds: list[GDELTSeed]) -> int:
-    for s in seeds:
-        place = s.source_country or "global"
-        await upsert_source(
-            session,
-            platform=Platform.GDELT.value,
-            kind=SourceKind.QUERY.value,
-            external_id=f"{s.query}|{place}|{s.source_lang or 'any'}",
-            name=f"GDELT · {s.query} ({place})",
-            url="https://api.gdeltproject.org/api/v2/doc/doc",
-            config={
-                "query": s.query,
-                "source_country": s.source_country,
-                "source_lang": s.source_lang,
-                "ai_filter": s.ai_filter,
-            },
-            **_common(s),
-        )
-    return len(seeds)
-
-
-async def _seed_google_news(session: AsyncSession, seeds: list[GoogleNewsSeed]) -> int:
-    for s in seeds:
-        await upsert_source(
-            session,
-            platform=Platform.GOOGLE_NEWS.value,
-            kind=SourceKind.QUERY.value,
-            external_id=f"{s.query}|{s.hl}|{s.gl}",
-            name=f"Google News · {s.query} ({s.gl})",
-            url=google_news_feed_url(s.query, hl=s.hl, gl=s.gl, days=GOOGLE_NEWS_URL_DAYS),
-            config={"query": s.query, "hl": s.hl, "gl": s.gl, "ai_filter": s.ai_filter},
-            **{**_common(s), "language": s.language or s.hl[:2]},
-        )
-    return len(seeds)
-
-
 async def _seed_youtube_search(session: AsyncSession, seeds: list[YouTubeSearchSeed]) -> int:
     for s in seeds:
         place = s.region or "global"
@@ -322,8 +269,6 @@ async def seed(session: AsyncSession, data: SeedFile, youtube: YouTubeClient | N
         "instagram": await _seed_instagram(session, data.instagram),
         "x": await _seed_x(session, data.x),
         "youtube_search": await _seed_youtube_search(session, data.youtube_search),
-        "google_news": await _seed_google_news(session, data.google_news),
-        "gdelt": await _seed_gdelt(session, data.gdelt),
         "youtube": 0,
         "youtube_unresolved": [],
     }
@@ -346,8 +291,7 @@ async def main(path: Path, dry_run: bool) -> int:
         f"{path.name}: {len(data.youtube)} YouTube · {len(data.hackernews)} HN · "
         f"{len(data.rss)} RSS · {len(data.tiktok)} TikTok · {len(data.reddit)} Reddit · "
         f"{len(data.instagram)} Instagram · {len(data.x)} X · "
-        f"{len(data.youtube_search)} búsquedas de Shorts · {len(data.google_news)} Google News · "
-        f"{len(data.gdelt)} GDELT"
+        f"{len(data.youtube_search)} búsquedas de Shorts"
     )
     if dry_run:
         return 0
