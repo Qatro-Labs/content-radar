@@ -566,3 +566,64 @@ def test_jev_business_use_opens_the_latam_gap_without_business_sources():
     assert with_jev.description.endswith(
         "3 de 3 piezas clasificadas tratan del uso de la IA en organizaciones."
     )
+
+
+def _built(topic, background, *, started=STARTED, business_use=None):
+    [r] = build_opportunities(
+        topic + background, [list(range(len(topic)))], [0], as_of=AS_OF,
+        monitoring_started_at=started, business_use=business_use,
+    )  # fmt: skip
+    return r.opportunity
+
+
+def test_source_added_recently_does_not_count_for_acceleration():
+    # Una fuente dada de alta hace una hora trae sobre todo lo reciente (una búsqueda devuelve
+    # pocos resultados viejos): su ventana anterior está vacía y simularía una subida.
+    topic, background = _rising_topic()
+    joined = [replace(p, source_since=AS_OF - timedelta(hours=1)) for p in topic]
+    o = _built(joined, background)
+    assert o.lifecycle is not Lifecycle.ACCELERATING
+    assert o.acceleration == 0
+    assert any("historial" in note for note in o.limitations)
+
+
+def test_sources_from_the_start_of_monitoring_count_for_acceleration():
+    topic, background = _rising_topic()
+    joined = [replace(p, source_since=STARTED) for p in topic]
+    assert _built(joined, background).lifecycle is Lifecycle.ACCELERATING
+
+
+def test_source_with_six_days_of_history_counts_for_acceleration():
+    topic, background = _rising_topic()
+    joined = [replace(p, source_since=AS_OF - timedelta(days=6)) for p in topic]
+    started = AS_OF - timedelta(days=30)
+    assert _built(joined, background, started=started).lifecycle is Lifecycle.ACCELERATING
+
+
+def test_search_region_does_not_prove_latam_coverage():
+    # El país de una búsqueda de Shorts es el mercado de la búsqueda, no el del canal: no
+    # demuestra que el tema ya esté cubierto en LATAM.
+    topic, background = _rising_topic()
+    shorts = [
+        replace(
+            piece(200 + i, hours_ago=6 + i, platform=Platform.YOUTUBE,
+                  source="YouTube Shorts · IA negocios (co)", kind=SourceKind.QUERY),
+            region="co",
+        )
+        for i in range(9)
+    ]  # fmt: skip
+    business = {p.item_id: True for p in topic + shorts}
+    assert _built(topic + shorts, background, business_use=business).latam_gap is True
+
+
+def test_latam_channel_still_proves_latam_coverage():
+    topic, background = _rising_topic()
+    latam = [
+        replace(
+            piece(200 + i, hours_ago=6 + i, platform=Platform.YOUTUBE, source="Canal CO"),
+            region="co",
+        )
+        for i in range(9)
+    ]  # fmt: skip
+    business = {p.item_id: True for p in topic + latam}
+    assert _built(topic + latam, background, business_use=business).latam_gap is False

@@ -45,6 +45,7 @@ from app.intelligence.replicas import (
     replica_notes,
 )
 from app.intelligence.velocity import (
+    WINDOW,
     TopicVelocity,
     WindowCounts,
     acceleration_p_value,
@@ -67,6 +68,14 @@ from app.schemas.signal import ContentFormat, Metrics, Platform, Segment, Source
 # Plataformas cuyas views se acumulan con los días: su rendimiento se ajusta por edad.
 CUMULATIVE_VIEWS = {Platform.YOUTUBE, Platform.TIKTOK, Platform.INSTAGRAM, Platform.X}
 MIN_RECENT_ITEMS = 3  # piezas en las dos últimas ventanas para considerar el tema activo
+# Una fuente dada de alta con el monitoreo ya en marcha trae sobre todo lo reciente (una búsqueda
+# devuelve pocos resultados viejos): hasta cubrir las dos ventanas, su anterior está vacía y
+# simularía una subida. Las del arranque son el backfill inicial (CLAUDE.md §5).
+ACCELERATION_HISTORY = 2 * WINDOW
+INITIAL_SOURCES_GRACE = timedelta(days=1)
+# En estas búsquedas la región es el mercado de la búsqueda, no el origen del canal o del medio:
+# no demuestra cobertura en LATAM. En GDELT `sourcecountry` sí es el país del medio.
+SEARCH_MARKET_REGION = frozenset({Platform.YOUTUBE, Platform.TIKTOK, Platform.GOOGLE_NEWS})
 MIX_WEIGHT_MIN, MIX_WEIGHT_MAX = 0.5, 3.0
 LLM_PENDING_NOTE = "Audience fit y análisis editorial pendientes (sin LLM todavía)."
 BROAD_TOPIC_NOTE = (
@@ -95,6 +104,7 @@ class Piece:
     target_url: str | None = None  # enlace externo de HN y Reddit: delata republicaciones
     format: ContentFormat = ContentFormat.UNKNOWN
     author: str | None = None  # el medio en Google News y GDELT; el canal en YouTube
+    source_since: datetime | None = None  # alta de la fuente (ACCELERATION_HISTORY)
 
 
 @dataclass
@@ -107,6 +117,7 @@ class _ActiveTopic:
     story_counts: WindowCounts  # solo notas originales: son las muestras independientes
     p_value: float  # de la aceleración, sobre las notas originales
     saturation: float  # cuota de las notas originales del corpus en las dos ventanas
+    without_history: int = 0  # piezas fuera de la aceleración (ACCELERATION_HISTORY)
 
 
 @dataclass
@@ -178,28 +189,54 @@ def _active_topics(
     broad: Sequence[bool],
     as_of: datetime,
     stories: StoryAssignment,
+    monitoring_started_at: datetime,
 ) -> list[_ActiveTopic]:
-    corpus = window_counts([p.published_at for p in pieces], as_of)
+    def with_history(group: Sequence[Piece]) -> list[Piece]:
+        return [p for p in group if _has_acceleration_history(p, as_of, monitoring_started_at)]
+
+    def published(group: Sequence[Piece]) -> WindowCounts:
+        return window_counts([p.published_at for p in group], as_of)
+
+    corpus = published(with_history(pieces))
     # Una republicación no es una observación independiente: el test de la aceleración cuenta
     # notas, en el tema y en el corpus (CLAUDE.md §7, "Cross-source").
-    story_corpus = window_counts([p.published_at for p in _originals(pieces, stories)], as_of)
-    corpus_stories = story_corpus.current + story_corpus.previous
+    story_corpus = published(with_history(_originals(pieces, stories)))
+    all_stories = published(_originals(pieces, stories))
     topics = []
     for members, rep, is_broad in zip(clusters, representatives, broad, strict=True):
         group = [pieces[i] for i in members]
-        counts = window_counts([p.published_at for p in group], as_of)
-        if counts.current + counts.previous < MIN_RECENT_ITEMS:
+        everything = published(group)
+        if everything.current + everything.previous < MIN_RECENT_ITEMS:
             continue
-        velocity = topic_velocity(counts, corpus)
-        story_counts = window_counts([p.published_at for p in _originals(group, stories)], as_of)
-        p_value = acceleration_p_value(story_counts, story_corpus)
-        saturation = saturation_score(story_counts.current + story_counts.previous, corpus_stories)
+        measured = with_history(group)
+        counts = published(measured)
+        story_counts = published(with_history(_originals(group, stories)))
+        # La saturación es volumen, no crecimiento: cuenta también las fuentes nuevas.
+        topic_stories = published(_originals(group, stories))
+        saturation = saturation_score(
+            topic_stories.current + topic_stories.previous,
+            all_stories.current + all_stories.previous,
+        )
         topics.append(
             _ActiveTopic(
-                group, pieces[rep], counts, velocity, is_broad, story_counts, p_value, saturation
+                group,
+                pieces[rep],
+                counts,
+                topic_velocity(counts, corpus),
+                is_broad,
+                story_counts,
+                acceleration_p_value(story_counts, story_corpus),
+                saturation,
+                without_history=len(group) - len(measured),
             )
         )
     return topics
+
+
+def _has_acceleration_history(p: Piece, as_of: datetime, monitoring_started_at: datetime) -> bool:
+    if p.source_since is None or p.source_since <= monitoring_started_at + INITIAL_SOURCES_GRACE:
+        return True
+    return as_of - p.source_since >= ACCELERATION_HISTORY
 
 
 def _audience(
@@ -207,9 +244,15 @@ def _audience(
 ) -> tuple[AudienceMix, bool | None]:
     weights = [min(max(r or 1.0, MIX_WEIGHT_MIN), MIX_WEIGHT_MAX) for r in ratios]
     mix = audience_mix([(p.segment, w) for p, w in zip(group, weights, strict=True)])
-    latam = latam_share([(p.region, w) for p, w in zip(group, weights, strict=True)])
+    latam = latam_share(
+        [(p.region, w) for p, w in zip(group, weights, strict=True) if _region_is_origin(p)]
+    )
     assert mix is not None  # el grupo nunca está vacío
     return mix, latam_gap(has_business_conversation(mix, business_use), latam)
+
+
+def _region_is_origin(p: Piece) -> bool:
+    return not (p.source_kind is SourceKind.QUERY and p.platform in SEARCH_MARKET_REGION)
 
 
 def _why_it_matters(topic: _ActiveTopic, source_count: int, outlier_count: int) -> str:
@@ -267,7 +310,12 @@ def _originals(group: Sequence[Piece], stories: StoryAssignment) -> list[Piece]:
 
 
 def _limitations(
-    growth: GrowthStatus, facts: _TopicFacts, *, since: datetime, broad: bool
+    growth: GrowthStatus,
+    facts: _TopicFacts,
+    *,
+    since: datetime,
+    broad: bool,
+    without_history: int,
 ) -> list[str]:
     platforms, ratios = facts.original_platforms, facts.ratios
     notes = [
@@ -282,6 +330,13 @@ def _limitations(
         notes.append("Ninguna pieza tiene referencia para calcular outliers.")
     if broad:
         notes.append(BROAD_TOPIC_NOTE)
+    if without_history:
+        days = ACCELERATION_HISTORY.days
+        subject = "1 pieza viene" if without_history == 1 else f"{without_history} piezas vienen"
+        notes.append(
+            f"{subject} de fuentes con menos de {days} días de historial: "
+            "no cuentan para la aceleración."
+        )
     return notes + replica_notes(facts.replica_count, unverified=facts.unverified)
 
 
@@ -438,7 +493,11 @@ def _opportunity(
         **_score_fields(topic, facts, scores, saturation=saturation),
         why_it_matters=_why_it_matters(topic, len(facts.outlets), facts.outlier_count),
         limitations=_limitations(
-            scores.growth, facts, since=monitoring_started_at, broad=topic.broad
+            scores.growth,
+            facts,
+            since=monitoring_started_at,
+            broad=topic.broad,
+            without_history=topic.without_history,
         ),
         last_updated=as_of,
     )
@@ -502,7 +561,9 @@ def build_opportunities(
     """`business_use`: juicio de Jev por pieza (CLAUDE.md §7, LATAM Gap); sin él, el segmento."""
     stories = stories if stories is not None else NO_REPLICAS
     broad_flags = broad if broad is not None else [False] * len(clusters)
-    topics = _active_topics(pieces, clusters, representatives, broad_flags, as_of, stories)
+    topics = _active_topics(
+        pieces, clusters, representatives, broad_flags, as_of, stories, monitoring_started_at
+    )
     ratios = outlier_ratios(pieces, as_of, reference=reference)
     results = [
         _topic_result(
