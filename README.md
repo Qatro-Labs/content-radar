@@ -123,6 +123,7 @@ cp .env.example backend/.env         # completar las claves (tabla de abajo)
 cd backend
 uv sync                              # todo, incluido torch (grupo ml) para analyze
 uv run alembic upgrade head
+uv run python -m app.jobs.seed_workspace # workspace 30X y su perfil de marca (idempotente)
 uv run python -m app.jobs.seed_sources   # carga data/sources.yaml (idempotente; --dry-run para revisar)
 uv run python -m app.jobs.collect        # backfill de 14 días; --days 7 para refrescar, --platform youtube para una sola
 uv run python -m app.jobs.analyze        # Jev → embeddings → clustering → scores → LLM
@@ -160,7 +161,7 @@ Solo en el backend (`backend/.env`; plantilla en [`.env.example`](.env.example))
 | `CORS_ALLOWED_ORIGINS` | Orígenes del frontend, separados por coma | En producción |
 | `MCP_PUBLIC_URL` | URL pública exacta del MCP; con otro `Host`, responde 421 | En producción |
 | `APP_ENV` | `local`, `ci` o `production` | No |
-| `AUTH_REQUIRED` · `SUPABASE_URL` | Supabase Auth opcional: con `true`, el agente y los briefs piden token. Con sesión, los briefs se guardan por usuario aunque sea `false` | No |
+| `AUTH_REQUIRED` · `SUPABASE_URL` | Supabase Auth opcional: con `true`, el agente y generar un brief piden token (frena el gasto en LLM). Las lecturas (perfil de marca, workspace y briefs del equipo) siguen públicas. Con o sin el flag, un brief solo se guarda si lo pide un miembro del workspace, y se guarda para todo el equipo | No |
 | `DEMO_RUN_ID` | Ejecución de `analyze` fijada para la demo; vacía = la última correcta | No |
 | `BRAVE_API_KEY` | Reservada: Brave aún no tiene colector | No |
 
@@ -184,7 +185,8 @@ pnpm dev                 # http://localhost:5173 · proxy de /api a http://local
 
 - **Recolección:** `.github/workflows/collect.yml` corre cada 2 h contra Supabase, con los secrets `DATABASE_URL` (session pooler, puerto 5432), `YOUTUBE_API_KEY` y `SCRAPECREATORS_API_KEY`. ScrapeCreators solo se consulta a las 00 y a las 12 UTC. En local, `scripts/schedule-local.sh install` programa la recolección con launchd (macOS) contra el Docker local.
 - **Análisis:** `.github/workflows/analyze.yml` corre después de cada recolección correcta. Necesita además `TYPESAFE_API_KEY` y `LLM_API_KEY`; si falta alguna, no se ejecuta, para no publicar oportunidades sin filtro ni score. Las respuestas de Jev y del LLM se cachean en la DB.
-- **API y MCP (Railway):** una sola imagen sin torch (`backend/Dockerfile`, configurada en `railway.json`). Migra al arrancar y usa `/health` como healthcheck. Variables: `DATABASE_URL`, `APP_ENV=production`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `LLM_API_KEY` y `LLM_MODEL` (briefs y agente) y, si se fija, `DEMO_RUN_ID`. Jev solo corre en `analyze`. Railway inyecta `PORT`.
+- **API y MCP (Railway):** una sola imagen sin torch (`backend/Dockerfile`, configurada en `railway.json`). Migra al arrancar, crea el workspace 30X y su perfil de marca si no existen (`python -m app.jobs.seed_workspace`, idempotente) y usa `/health` como healthcheck. Variables: `DATABASE_URL`, `APP_ENV=production`, `CORS_ALLOWED_ORIGINS`, `MCP_PUBLIC_URL`, `LLM_API_KEY` y `LLM_MODEL` (briefs y agente) y, si se fija, `DEMO_RUN_ID`. Jev solo corre en `analyze`. Railway inyecta `PORT`.
+- **Miembros del workspace (paso de cada release nueva):** el seed no añade a nadie. Sin miembros, nadie puede editar el perfil de marca y los briefs se generan pero **no se guardan**, sin ningún error visible. Tras el primer deploy, añade al menos un dueño con el `sub` de su usuario de Supabase (Authentication → Users): `uv run python -m app.jobs.workspace_members add --user-id <sub> --role owner` (con `DATABASE_URL` de producción; `remove --user-id <sub>` lo quita).
 - **DB (Supabase):** activar la extensión `vector` y usar la URL del session pooler con `postgresql+asyncpg://`. Los datos locales se migran con `pg_dump -Fc` / `pg_restore --no-owner --no-acl`, que conserva el historial de snapshots.
 - **Imagen en local:** `docker build -f backend/Dockerfile -t radar-api . && docker run -p 8000:8000 --env-file backend/.env radar-api`. Dentro de Docker, la DB local está en `host.docker.internal:5433`.
 
