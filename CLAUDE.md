@@ -130,7 +130,7 @@ Grupos para el **LATAM Opportunity Gap** (decidido el 17/10: **target LATAM, det
 
 ## 6. Modelo de datos y contratos
 
-**Tablas:** `sources` (con `segment`), `content_items`, `metric_snapshots` (siempre tabla aparte), `topics`, `topic_content`, `embeddings`, `opportunities` (+ historial de scores), `opportunity_evidence`, `audience_profiles`, `editorial_briefs`, `editorial_feedback`, `pipeline_runs`, `usage_events` (consumo y coste por llamada externa, §4), `jev_judgments` (respuestas de Jev con probabilidades, confianza y versión, §7).
+**Tablas:** `sources` (con `segment`), `content_items`, `metric_snapshots` (siempre tabla aparte), `topics`, `topic_content`, `embeddings`, `opportunities` (+ historial de scores), `opportunity_evidence`, `audience_profiles`, `editorial_briefs`, `editorial_feedback`, `pipeline_runs`, `usage_events` (consumo y coste por llamada externa, §4), `jev_judgments` (respuestas de Jev con probabilidades, confianza y versión, §7), `workspaces`, `workspace_members` (rol `owner` | `member`), `radar_profiles` (perfil de marca versionado, una fila por versión).
 
 *Implementado (hackathon):* `opportunities` guarda una fila por oportunidad y por ejecución de `analyze`, con `payload`, `evidence` y `timeline` en JSONB ya validados contra el contrato. La API y el MCP leen la última ejecución correcta. `topics`, `topic_content`, `embeddings` y `opportunity_evidence` quedan para después: los embeddings se recalculan en cada ejecución (segundos en CPU).
 
@@ -185,6 +185,7 @@ GET  /topics · GET /signals · GET /sources/status
 POST /editorial/brief            {opportunity_id, platform, goal, format}
 POST /editorial/feedback
 POST /agent                      {question, history?, focus_ids?, view?} → SSE (step · action · answer · error · done; Rad, el agente del Radar)
+GET  /workspace · GET /profile · PUT /profile   {profile, expected_version}  (solo miembros; 409 si cambió la versión)
 GET  /health
 ```
 
