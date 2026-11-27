@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # URL del proyecto (https://<ref>.supabase.co): de ella salen el JWKS y el `iss` esperado.
     supabase_url: str = ""
 
+    # Un solo workspace por ahora (el de 30X); la selección por usuario llega más adelante.
+    default_workspace_slug: str = "30x"
+
     # Ejecución de `analyze` revisada a mano para la demo (CLAUDE.md §13). Sin valor, la API y el
     # MCP sirven la última ejecución correcta, que cambia con cada recolección.
     demo_run_id: int | None = None
