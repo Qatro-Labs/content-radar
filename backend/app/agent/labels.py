@@ -55,7 +55,7 @@ DEFAULT_SORT: RadarSort = "opportunity"
 GAP_LABEL = "Pulsando «Poca cobertura en Latinoamérica»"
 TOPIC_FILTER_LABEL = "tema"
 RESET_LABEL = "Restableciendo la vista"
-# Sin un filtro que nombrar (p. ej. solo quita el hueco en LATAM).
+# Sin un filtro que nombrar (p. ej. solo quita «Poca cobertura en Latinoamérica»).
 FILTERS_FALLBACK_LABEL = "Cambiando los filtros"
 
 LIST_LABEL = "Leyendo las oportunidades"

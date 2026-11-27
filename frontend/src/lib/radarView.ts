@@ -203,7 +203,7 @@ export function counterPatch(counter: CounterFilter, query: RadarQuery): Partial
 }
 
 // La leyenda del radar filtra por etapa con la misma selección única que los contadores: también
-// cubre las etapas sin contador (En pico, Saturado, Sin tendencia clara).
+// cubre las etapas sin contador (En su punto alto, Ya muy cubierto, Sin tendencia clara).
 export function activeStageOf(query: RadarQuery): Lifecycle | null {
   if (hasUnpressableFilters(query) || query.recommendation !== null) return null
   return query.lifecycle.length === 1 ? (query.lifecycle[0] ?? null) : null

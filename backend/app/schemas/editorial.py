@@ -49,7 +49,8 @@ class BriefPoint(BaseModel):
 
 class EditorialBrief(BaseModel):
     id: int | None = Field(
-        default=None, description="Id del brief guardado; None si la petición no vino de alguien del equipo"
+        default=None,
+        description="Id del brief guardado; None si la petición no vino de alguien del equipo",
     )
     version: int | None = Field(
         default=None, description="Versión dentro de su cadena; None si no se guardó"
