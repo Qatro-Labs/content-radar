@@ -119,7 +119,7 @@ describe('brandProfile', () => {
     expect(example.isExample).toBe(true)
     expect(example.topic).toBe(EXAMPLE_TOPIC)
     expect(example.hook).toBeNull()
-    expect(example.weeklyLine).toBe('Cada lunes verás 3 temas, con formatos para Instagram.')
+    expect(example.weeklyLine).toBe('3 piezas por semana, con formatos para Instagram.')
   })
 
   it('previewOf reflects the draft call to action and never_say immediately', () => {
@@ -143,7 +143,12 @@ describe('brandProfile', () => {
     expect(preview.audience).toBe('Equipos de marketing')
     expect(preview.region).toBe('México')
     expect(preview.weeklyLine).toBe(
-      'Cada lunes verás 2 temas, con formatos para LinkedIn y la newsletter.',
+      '2 piezas por semana, con formatos para LinkedIn y la newsletter.',
+    )
+
+    draft.publishing_days = [{ day: 'mon', channel: 'instagram', format: 'short_video' }]
+    expect(previewOf(draft, BRIEF).weeklyLine).toBe(
+      '1 pieza por semana, con formatos para Instagram.',
     )
   })
 

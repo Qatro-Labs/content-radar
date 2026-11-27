@@ -142,9 +142,7 @@ describe('BrandView', () => {
     expect(await screen.findByText('Estás viendo el perfil de 30X.')).toBeTruthy()
     expect(screen.getByText('Solo su equipo puede cambiarlo.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toBeTruthy()
-    expect(
-      screen.getByText('Así describe su marca el equipo. Cada brief que generes lo sigue.'),
-    ).toBeTruthy()
+    expect(screen.getByText('Así describe su marca el equipo.')).toBeTruthy()
     expect(screen.getByText('ASÍ SALEN SUS BRIEFS')).toBeTruthy()
     expect(screen.getAllByText('Dueños y líderes de empresas').length).toBeGreaterThan(0)
     expect(screen.queryByRole('button', { name: /Guardar cambios/ })).toBeNull()
@@ -165,7 +163,7 @@ describe('BrandView', () => {
 
       expect(
         await screen.findByText(
-          'Cambia algo a la izquierda y mira a la derecha cómo cambiaría tu próximo brief.',
+          'Cambia algo a la izquierda y mira a la derecha cómo se vería un brief con este perfil.',
         ),
       ).toBeTruthy()
       const save = await screen.findByRole('button', { name: /Guardar cambios/ })
@@ -182,7 +180,7 @@ describe('BrandView', () => {
       await fireEvent.click(save)
 
       expect(await screen.findByText('Guardado.')).toBeTruthy()
-      expect(screen.getByText('Tus próximos briefs usarán este perfil.')).toBeTruthy()
+      expect(screen.getByText('Este es ahora el perfil de marca del equipo.')).toBeTruthy()
       const [body] = await putBodies(fetchMock)
       expect(body?.expected_version).toBe(1)
       expect(body?.profile.never_say).toBe('Hablar de la competencia')

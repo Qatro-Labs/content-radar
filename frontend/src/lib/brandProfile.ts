@@ -161,10 +161,10 @@ function joinWithAnd(words: string[]): string {
 
 function weeklyLine(days: PublishingDay[]): string {
   const count = days.length
-  const topics = `Cada lunes verás ${count} ${count === 1 ? 'tema' : 'temas'}`
+  const pieces = `${count} ${count === 1 ? 'pieza' : 'piezas'} por semana`
   const channels = [...new Set(days.map((entry) => entry.channel))]
-  if (channels.length === 0) return `${topics}.`
-  return `${topics}, con formatos para ${joinWithAnd(channels.map((c) => BRIEF_PLATFORM_WORD[c]))}.`
+  if (channels.length === 0) return `${pieces}.`
+  return `${pieces}, con formatos para ${joinWithAnd(channels.map((c) => BRIEF_PLATFORM_WORD[c]))}.`
 }
 
 function textOrNull(value: string): string | null {
