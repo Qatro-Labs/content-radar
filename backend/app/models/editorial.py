@@ -1,5 +1,5 @@
-"""Briefs guardados por usuario (`/editorial/briefs`). Solo se guardan con un usuario de Supabase:
-sin sesión, o desde el MCP, el brief se devuelve y no queda fila.
+"""Briefs del equipo de cada workspace (`/editorial/briefs`). Solo se guardan si los pide un
+miembro: sin sesión, desde fuera del equipo o desde el MCP, el brief se devuelve y no queda fila.
 
 Cada brief pertenece a una cadena de versiones: la primera tiene `root_id = id` y `version = 1`, y
 regenerar a partir de un brief añade la siguiente versión a su cadena.
@@ -25,18 +25,21 @@ class EditorialBriefRecord(TimestampMixin, Base):
         BigInteger, ForeignKey("editorial_briefs.id", ondelete="CASCADE")
     )
     version: Mapped[int] = mapped_column(Integer)
-    # El `sub` del token de Supabase; no hay tabla de usuarios propia.
-    user_id: Mapped[str] = mapped_column(Text)
+    workspace_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("workspaces.id", ondelete="CASCADE")
+    )
+    # El `sub` del token de Supabase de quien lo pidió; no hay tabla de usuarios propia.
+    created_by: Mapped[str] = mapped_column(Text)
     opportunity_id: Mapped[str] = mapped_column(String(64))
-    # Sin FK: la ejecución de `analyze` puede borrarse sin perder los briefs del usuario.
+    # Sin FK: la ejecución de `analyze` puede borrarse sin perder los briefs del equipo.
     run_id: Mapped[int | None] = mapped_column(Integer)
     request: Mapped[dict[str, Any]] = mapped_column(JSONB)
     brief: Mapped[dict[str, Any]] = mapped_column(JSONB)
 
 
-# El listado agrupa por cadena los briefs de un usuario.
+# El listado agrupa por cadena los briefs de un workspace.
 Index(
-    "ix_editorial_briefs_user_id_root_id",
-    EditorialBriefRecord.user_id,
+    "ix_editorial_briefs_workspace_id_root_id",
+    EditorialBriefRecord.workspace_id,
     EditorialBriefRecord.root_id,
 )
