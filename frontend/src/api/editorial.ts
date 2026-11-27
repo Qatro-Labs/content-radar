@@ -55,15 +55,15 @@ export function useBrief() {
   return useMutation({
     mutationFn: postBrief,
     retry: false,
-    // Con sesión la API lo guarda y devuelve su id: «Mis briefs» lo enseña sin recargar.
+    // Si la petición es de alguien del equipo la API lo guarda y devuelve su id: «Briefs del equipo» lo enseña sin recargar.
     onSuccess: (brief) => {
       if (brief.id != null) void queryClient.invalidateQueries({ queryKey: SAVED_BRIEFS_KEY })
     },
   })
 }
 
-// Los briefs guardados son de quien inició sesión: la clave lleva su correo para que otra cuenta
-// no vea la lista de la anterior desde la caché.
+// Los briefs son del equipo del workspace y se leen también sin sesión. La clave lleva el correo
+// porque el rol (y lo que la API devuelve) cambia al cambiar de cuenta.
 const SAVED_BRIEFS_KEY = ['saved-briefs'] as const
 
 async function fetchSavedBriefs(): Promise<SavedBriefSummary[]> {
@@ -83,20 +83,18 @@ async function fetchSavedBrief(id: number): Promise<SavedBrief | null> {
 }
 
 export function useSavedBriefs() {
-  const { email, isSignedIn } = useAuth()
+  const { email } = useAuth()
   return useQuery({
     queryKey: computed(() => [...SAVED_BRIEFS_KEY, email.value]),
     queryFn: fetchSavedBriefs,
-    enabled: isSignedIn,
   })
 }
 
 export function useSavedBrief(id: MaybeRefOrGetter<number>) {
-  const { email, isSignedIn } = useAuth()
+  const { email } = useAuth()
   return useQuery({
     queryKey: computed(() => [...SAVED_BRIEFS_KEY, email.value, toValue(id)]),
     queryFn: () => fetchSavedBrief(toValue(id)),
-    enabled: isSignedIn,
   })
 }
 

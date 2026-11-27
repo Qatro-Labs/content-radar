@@ -57,11 +57,11 @@ export function versionLabel(version: BriefVersion): string {
   ].join(' · ')
 }
 
-// Sin id, la API no lo guardó (no hay sesión): no se dice nada.
+// Sin id, la API no lo guardó (la petición no es de alguien del equipo): no se dice nada.
 export function savedBriefNote(brief: EditorialBrief): string | null {
   if (brief.id == null) return null
   if (brief.version != null && brief.version > 1) return `Guardado como versión ${brief.version}`
-  return 'Guardado en Mis briefs'
+  return 'Guardado en Briefs del equipo'
 }
 
 // El DELETE borra la cadena entera, no solo la versión que se ve en la fila.

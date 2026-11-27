@@ -186,10 +186,11 @@ export interface paths {
     /**
      * Create Brief
      * @description Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
-     *     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Con un
-     *     token válido de Supabase se guarda como versión, esté o no activo AUTH_REQUIRED: con
-     *     `parent_brief_id`, en la cadena de ese brief (404 si no es del usuario). Si ya hay una versión
-     *     con la misma petición, se devuelve esa. Sin usuario, `id` y `version` son null.
+     *     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Si lo pide
+     *     un miembro del workspace se guarda como versión del equipo, esté o no activo AUTH_REQUIRED: con
+     *     `parent_brief_id`, en la cadena de ese brief (404 si no es del workspace). Si ya hay una versión
+     *     con la misma petición, se devuelve esa. Sin sesión o fuera del equipo, `id` y `version` son
+     *     null.
      */
     post: operations['create_brief_api_v1_editorial_brief_post']
     delete?: never
@@ -207,8 +208,8 @@ export interface paths {
     }
     /**
      * List Saved Briefs
-     * @description Una fila por cadena de versiones del usuario del token, con su última versión; más
-     *     recientes primero (máximo 50).
+     * @description Una fila por cadena de versiones del workspace, con su última versión; más recientes
+     *     primero (máximo 50).
      */
     get: operations['list_saved_briefs_api_v1_editorial_briefs_get']
     put?: never
@@ -232,7 +233,7 @@ export interface paths {
     post?: never
     /**
      * Delete Saved Brief
-     * @description Borra la cadena entera de versiones a la que pertenece el brief.
+     * @description Borra la cadena entera de versiones a la que pertenece el brief. Solo el equipo.
      */
     delete: operations['delete_saved_brief_api_v1_editorial_briefs__brief_id__delete']
     options?: never
@@ -253,6 +254,41 @@ export interface paths {
      */
     get: operations['read_me_api_v1_me_get']
     put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/workspace': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Read Workspace */
+    get: operations['read_workspace_api_v1_workspace_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/profile': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Read Profile */
+    get: operations['read_profile_api_v1_profile_get']
+    /** Update Profile */
+    put: operations['update_profile_api_v1_profile_put']
     post?: never
     delete?: never
     options?: never
@@ -500,7 +536,7 @@ export interface components {
     EditorialBrief: {
       /**
        * Id
-       * @description Id del brief guardado; None si no hay usuario y no se guardó
+       * @description Id del brief guardado; None si la petición no vino de alguien del equipo
        */
       id?: number | null
       /**
@@ -940,6 +976,25 @@ export interface components {
       | 'tiktok'
       | 'reddit'
       | 'x'
+    /** ProfileRead */
+    ProfileRead: {
+      profile: components['schemas']['RadarProfile']
+      /** Version */
+      version: number
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string
+      /** Can Edit */
+      can_edit: boolean
+    }
+    /** ProfileUpdate */
+    ProfileUpdate: {
+      profile: components['schemas']['RadarProfile']
+      /** Expected Version */
+      expected_version: number
+    }
     /**
      * Provider
      * @description APIs externas con consumo medido. Cada valor es una clave de `variable` en pricing.yaml.
@@ -977,6 +1032,12 @@ export interface components {
        */
       unknown_price_events: number
     }
+    /** PublishingDay */
+    PublishingDay: {
+      day: components['schemas']['Weekday']
+      channel: components['schemas']['BriefPlatform']
+      format: components['schemas']['BriefFormat']
+    }
     /**
      * RadarPatch
      * @description Parche del estado de la URL del Radar (`useRadarQuery`): solo cambian los campos presentes.
@@ -998,6 +1059,37 @@ export interface components {
       selected?: string | null
       /** Highlight */
       highlight?: string[] | null
+    }
+    /** RadarProfile */
+    RadarProfile: {
+      /** Creates About */
+      creates_about: string
+      /** Audience */
+      audience: string
+      goal: components['schemas']['BriefGoal']
+      /** Target Region */
+      target_region: string
+      /** Languages */
+      languages: string[]
+      /**
+       * Out Of Scope
+       * @default
+       */
+      out_of_scope: string
+      /** Tone */
+      tone: string[]
+      /**
+       * Call To Action
+       * @default
+       */
+      call_to_action: string
+      /**
+       * Never Say
+       * @default
+       */
+      never_say: string
+      /** Publishing Days */
+      publishing_days: components['schemas']['PublishingDay'][]
     }
     /**
      * Rate
@@ -1267,6 +1359,22 @@ export interface components {
       input?: unknown
       /** Context */
       ctx?: Record<string, never>
+    }
+    /**
+     * Weekday
+     * @enum {string}
+     */
+    Weekday: 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
+    /** WorkspaceRead */
+    WorkspaceRead: {
+      /** Slug */
+      slug: string
+      /** Name */
+      name: string
+      /** Public Demo */
+      public_demo: boolean
+      /** Role */
+      role: ('owner' | 'member') | null
     }
   }
   responses: never
@@ -1675,6 +1783,20 @@ export interface operations {
         content?: never
       }
       /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description `detail` explica el motivo, en un texto que se puede mostrar */
       404: {
         headers: {
           [name: string]: unknown
@@ -1708,6 +1830,79 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['CurrentUser']
+        }
+      }
+    }
+  }
+  read_workspace_api_v1_workspace_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceRead']
+        }
+      }
+    }
+  }
+  read_profile_api_v1_profile_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileRead']
+        }
+      }
+    }
+  }
+  update_profile_api_v1_profile_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfileUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileRead']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }
