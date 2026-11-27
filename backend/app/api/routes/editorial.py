@@ -8,8 +8,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.limits import GLOBAL_PER_DAY, PER_IP_PER_HOUR, LimitResult, RateLimiter
+from app.api.auth import require_user_if_enabled
 from app.api.routes.agent import client_ip
-from app.api.workspace_access import WorkspaceAccess, require_editor, workspace_access
+from app.api.workspace_access import (
+    WorkspaceAccess,
+    require_editor,
+    workspace_access,
+    workspace_access_if_exists,
+)
 from app.core.config import get_settings
 from app.db.session import get_session
 from app.editorial.briefs import Briefer, build_briefer
@@ -78,8 +84,13 @@ async def admit_brief(
         code: {"description": ERROR_DESCRIPTION}
         for code in [*ERROR_STATUS.values(), status.HTTP_429_TOO_MANY_REQUESTS]
     },
-    # En este orden: un 401 o un 404 no gastan el cupo de la IP.
-    dependencies=[Depends(workspace_access), Depends(admit_brief)],
+    # En este orden: un 401 o un 404 no gastan el cupo de la IP. AUTH_REQUIRED frena aquí el gasto
+    # en LLM; las lecturas del workspace siguen abiertas.
+    dependencies=[
+        Depends(require_user_if_enabled),
+        Depends(workspace_access_if_exists),
+        Depends(admit_brief),
+    ],
 )
 async def create_brief(
     # Mismo nombre que en `admit_brief`: con otro, FastAPI esperaría dos cuerpos anidados.
@@ -87,7 +98,7 @@ async def create_brief(
     session: Annotated[AsyncSession, Depends(get_session)],
     briefer: Annotated[Briefer | None, Depends(get_briefer)],
     # La misma dependencia que en `dependencies`: FastAPI la resuelve una vez y en ese orden.
-    access: Annotated[WorkspaceAccess, Depends(workspace_access)],
+    access: Annotated[WorkspaceAccess | None, Depends(workspace_access_if_exists)],
 ):
     """Brief de la oportunidad para una plataforma, un objetivo y un formato. Cacheado: la misma
     petición sobre la misma ejecución devuelve el mismo brief sin volver a llamar al LLM. Si lo pide
@@ -96,12 +107,13 @@ async def create_brief(
     con la misma petición, se devuelve esa. Sin sesión o fuera del equipo, `id` y `version` son
     null."""
     # Fuera del equipo se devuelve sin guardar: el servicio solo guarda con los dos valores.
-    editor = access.user if access.can_edit else None
+    # Sin la fila del workspace (deploy sin seed) tampoco hay equipo: el brief sale sin guardar.
+    editor = access.user if access and access.can_edit else None
     try:
         return await user_briefs.create_brief(
             session,
             BriefRequest.model_validate(body.model_dump(exclude={"parent_brief_id"})),
-            workspace_id=access.workspace.id if editor else None,
+            workspace_id=access.workspace.id if access and editor else None,
             created_by=editor.user_id if editor else None,
             parent_brief_id=body.parent_brief_id,
             briefer=briefer,

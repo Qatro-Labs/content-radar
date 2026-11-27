@@ -24,20 +24,38 @@ class WorkspaceAccess:
         return self.role is not None
 
 
-async def workspace_access(
-    session: Annotated[AsyncSession, Depends(get_session)],
-    settings: Annotated[Settings, Depends(get_settings)],
-    user: Annotated[CurrentUser | None, Depends(user_if_signed_in)],
-) -> WorkspaceAccess:
+async def _resolve_access(
+    session: AsyncSession, settings: Settings, user: CurrentUser | None
+) -> WorkspaceAccess | None:
     # Un solo workspace en esta entrega; elegirlo por usuario llega con el radar configurable.
     workspace = await get_workspace(session, settings.default_workspace_slug)
     if workspace is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, WORKSPACE_NOT_FOUND)
+        return None
     role = await member_role(session, workspace.id, user.user_id) if user else None
     # 404 y no 403: un workspace privado no revela que existe.
     if not workspace.public_demo and role is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, WORKSPACE_NOT_FOUND)
     return WorkspaceAccess(workspace=workspace, user=user, role=role)
+
+
+async def workspace_access(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    user: Annotated[CurrentUser | None, Depends(user_if_signed_in)],
+) -> WorkspaceAccess:
+    access = await _resolve_access(session, settings, user)
+    if access is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, WORKSPACE_NOT_FOUND)
+    return access
+
+
+# Para generar un brief: sin la fila del workspace se genera igual, sin guardarlo.
+async def workspace_access_if_exists(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    user: Annotated[CurrentUser | None, Depends(user_if_signed_in)],
+) -> WorkspaceAccess | None:
+    return await _resolve_access(session, settings, user)
 
 
 async def require_editor(

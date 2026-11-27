@@ -332,3 +332,40 @@ async def test_delete_removes_the_whole_chain(session, configure, client, worksp
 
     assert response.status_code == 204
     assert await saved_count(session) == 0
+
+
+# --- AUTH_REQUIRED y workspace ausente -------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "path", ["/api/v1/profile", "/api/v1/workspace", BRIEFS], ids=["profile", "workspace", "briefs"]
+)
+async def test_flag_on_keeps_public_reads_open_without_token(configure, client, workspace, path):
+    configure(auth_required=True)
+
+    response = await client.get(path)
+
+    assert response.status_code == 200
+
+
+async def test_flag_on_still_requires_a_token_to_generate_a_brief(
+    session, configure, client, workspace
+):
+    configure(auth_required=True)
+    opportunity_id = await seed(session)
+
+    response = await client.post(BRIEF, json=body(opportunity_id))
+
+    assert response.status_code == 401
+    assert await saved_count(session) == 0
+
+
+async def test_post_without_workspace_returns_the_brief_unsaved(session, configure, client):
+    configure()
+    opportunity_id = await seed(session)
+
+    response = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
+
+    assert response.status_code == 200
+    assert response.json()["id"] is None and response.json()["version"] is None
+    assert await saved_count(session) == 0
