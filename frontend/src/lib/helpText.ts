@@ -28,6 +28,7 @@ export const HELP = {
     'Todas las piezas de todos los temas, ordenadas por cuánto rinden frente a lo normal en su canal.',
   navCreate:
     'Prepara un brief para LinkedIn, Instagram, YouTube o una newsletter a partir de un tema.',
+  navBrand: 'A quién le hablas, con qué tono y qué nunca dices: el perfil de tu marca.',
   search: 'Busca un tema, una pieza o una fuente por su nombre (atajo ⌘K).',
   period: 'Ventana de tiempo que se analiza. Por ahora el Radar solo calcula los últimos 7 días.',
   lastCollection: 'Última vez que se recogieron piezas de las fuentes monitoreadas.',

@@ -5,5 +5,6 @@ export const RouteName = {
   Explore: 'explore',
   Dossier: 'dossier',
   Create: 'create',
+  Brand: 'brand',
   Login: 'login',
 } as const

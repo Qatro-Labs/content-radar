@@ -91,12 +91,13 @@ export function useSavedBriefs() {
   })
 }
 
-export function useSavedBrief(id: MaybeRefOrGetter<number>) {
+// Sin id no se pide nada: «Tu marca» busca el último brief del equipo y puede no haber ninguno.
+export function useSavedBrief(id: MaybeRefOrGetter<number | null>) {
   const { email, isReady } = useAuth()
   return useQuery({
     queryKey: computed(() => [...SAVED_BRIEFS_KEY, email.value, toValue(id)]),
-    queryFn: () => fetchSavedBrief(toValue(id)),
-    enabled: isReady,
+    queryFn: () => fetchSavedBrief(toValue(id) ?? 0),
+    enabled: computed(() => isReady.value && toValue(id) !== null),
   })
 }
 
