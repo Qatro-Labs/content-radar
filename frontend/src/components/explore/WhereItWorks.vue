@@ -19,7 +19,7 @@ const { topTopics, topSources } = defineProps<{
 const hasOutliers = computed(() => topTopics.length > 0 || topSources.length > 0)
 
 function outlierLabel(count: number): string {
-  return countLabel(count, 'outlier', 'outliers')
+  return countLabel(count, 'pieza', 'piezas')
 }
 </script>
 
@@ -32,11 +32,13 @@ function outlierLabel(count: number): string {
         Dónde está funcionando
         <InfoTip label="Dónde está funcionando" :text="HELP.whereItWorks" />
       </h2>
-      <p class="text-sm text-muted-foreground">Temas y fuentes con más outliers.</p>
+      <p class="text-sm text-muted-foreground">
+        Temas y fuentes con más piezas que rinden 3× o más.
+      </p>
     </div>
 
     <p v-if="!hasOutliers" class="text-[15px] text-ink-soft">
-      Todavía no hay outliers en las piezas servidas.
+      Todavía no hay piezas que rindan 3× o más.
     </p>
 
     <div v-if="topTopics.length > 0" class="flex flex-col gap-2">

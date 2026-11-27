@@ -39,7 +39,7 @@ function toRow(hook: HookLift): HookRow {
   return {
     hook: hook.hook,
     label: HOOK_LABEL[hook.hook] ?? hook.hook,
-    outliers: `${hook.outliers_with} de ${countLabel(hook.outliers_total, 'outlier', 'outliers')}`,
+    outliers: `${hook.outliers_with} de ${hook.outliers_total} que rinden 3× o más`,
     rest: hook.rest_total === 0 ? 'sin resto' : `${hook.rest_with} de ${hook.rest_total} del resto`,
     comparison: comparison(hook),
     // CLAUDE.md §7: lift ≥ 2 en ≥ 2 outliers es «patrón observado»; lo demás, anecdótico.
@@ -60,5 +60,5 @@ export function hookRows(hooks: OutlierHooks): HookRow[] {
 
 export function unclassifiedNote(hooks: OutlierHooks): string | null {
   if (hooks.outliers_unclassified === 0) return null
-  return `${countLabel(hooks.outliers_unclassified, 'outlier', 'outliers')} sin gancho clasificado.`
+  return `${countLabel(hooks.outliers_unclassified, 'pieza que rinde 3× o más', 'piezas que rinden 3× o más')} sin gancho clasificado.`
 }

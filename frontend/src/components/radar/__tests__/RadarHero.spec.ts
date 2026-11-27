@@ -64,12 +64,12 @@ describe('RadarHero counters', () => {
     const all = tile('Todos')
     expect(all.getAttribute('aria-checked')).toBe('true')
     expect(all.textContent).toContain(String(list.items.length))
-    expect(tile('Acelerando').getAttribute('aria-checked')).toBe('false')
+    expect(tile('Crece rápido').getAttribute('aria-checked')).toBe('false')
   })
 
   it('checks the active counter and unchecks «Todos»', () => {
     renderHero({ lifecycle: ['accelerating'] })
-    expect(tile('Acelerando').getAttribute('aria-checked')).toBe('true')
+    expect(tile('Crece rápido').getAttribute('aria-checked')).toBe('true')
     expect(tile('Todos').getAttribute('aria-checked')).toBe('false')
   })
 

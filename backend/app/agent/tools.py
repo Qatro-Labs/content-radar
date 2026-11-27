@@ -95,7 +95,7 @@ class FiltersInput(ToolInput):
     recommendation: Recommendation | None = None
     confidence: Confidence | None = None
     topic: TopicArg | None = None
-    gap: bool | None = Field(default=None, description="true = solo «Hueco en LATAM»")
+    gap: bool | None = Field(default=None, description="true = solo «Poca cobertura en Latinoamérica»")
     sort: RadarSort | None = None
 
 
@@ -346,7 +346,7 @@ TOOLS: dict[str, Tool] = {
     "set_filters": Tool(
         StepKind.VIEW,
         "Cambia los filtros del Radar que ve el usuario. Solo cambian los campos que envíes; "
-        "null quita ese filtro. gap=true activa «Hueco en LATAM». recommendation=publish_now, o "
+        "null quita ese filtro. gap=true activa «Poca cobertura en Latinoamérica». recommendation=publish_now, o "
         "una sola etapa (accelerating, emerging o unknown), pulsa ese contador como una persona: "
         "sustituye los demás filtros y quita los resaltados.",
         FiltersInput,

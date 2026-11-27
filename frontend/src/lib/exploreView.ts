@@ -27,6 +27,8 @@ export type FilterablePlatform = (typeof FILTERABLE_PLATFORMS)[number]
 // de las cientos que sí lo tienen. Filtradas, van de la más reciente a la más antigua.
 export const EXPLORE_FILTERS = ['outliers', ...FILTERABLE_PLATFORMS, 'rss'] as const
 export type ExploreFilter = (typeof EXPLORE_FILTERS)[number]
+// Lo único del filtro que lee la persona; la clave `outliers` es interna y va en la URL.
+export const EXPLORE_FILTER_LABEL = { outliers: 'Rinden 3× o más' } as const
 export const EXPLORE_FILTER_PARAM = 'filter'
 // El texto va en la URL para que la paleta ⌘K pueda abrir Explorar con una fuente ya filtrada.
 export const EXPLORE_TEXT_PARAM = 'q'

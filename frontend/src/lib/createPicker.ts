@@ -68,7 +68,7 @@ export function featuredTiles(opportunity: Opportunity): FeaturedTile[] {
       isNegative: isDeclining(opportunity.acceleration),
     },
     {
-      label: 'Fuentes independientes',
+      label: 'Fuentes distintas',
       value: formatCount(opportunity.source_count),
       isMissing: false,
       isNegative: false,

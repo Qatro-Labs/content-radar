@@ -86,7 +86,7 @@ watch(
             <InfoTip label="la evidencia" :text="HELP.evidence" />
           </h2>
           <span v-if="evidence.data" class="text-sm text-muted-foreground">
-            {{ countLabel(shown.length, 'pieza', 'piezas') }} · outliers primero
+            {{ countLabel(shown.length, 'pieza', 'piezas') }} · las que más rinden primero
           </span>
         </div>
         <div

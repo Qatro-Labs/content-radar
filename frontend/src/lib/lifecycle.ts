@@ -26,7 +26,7 @@ export interface LifecycleColors {
 
 export type LifecyclePalette = Record<Lifecycle, LifecycleColors>
 
-// Acelerando y En pico tienen un trazo propio, más oscuro que el relleno (DESIGN.md §2); el resto
+// «Crece rápido» y «En su punto alto» tienen un trazo propio, más oscuro que el relleno (DESIGN.md §2); el resto
 // traza con su relleno.
 type StrokeVar = `--lc-${Lifecycle}` | '--lc-accelerating-stroke' | '--lc-peaking-stroke'
 
@@ -43,25 +43,25 @@ function cssVars(name: Lifecycle, stroke: StrokeVar): LifecycleCssVars {
 // cubrir todas las etapas del contrato.
 export const LIFECYCLE_STYLE: Record<Lifecycle, LifecycleStyle> = {
   emerging: {
-    label: 'Emergente',
+    label: 'Empieza a crecer',
     meaning: 'empieza a crecer, en pocas fuentes y con poco contenido parecido.',
     cssVar: cssVars('emerging', '--lc-emerging'),
     dashed: false,
   },
   accelerating: {
-    label: 'Acelerando',
+    label: 'Crece rápido',
     meaning: 'crece más de un 50 % y aparece en 3 fuentes o más.',
     cssVar: cssVars('accelerating', '--lc-accelerating-stroke'),
     dashed: false,
   },
   peaking: {
-    label: 'En pico',
+    label: 'En su punto alto',
     meaning: 'ya hay mucho contenido parecido y casi no crece.',
     cssVar: cssVars('peaking', '--lc-peaking-stroke'),
     dashed: false,
   },
   saturated: {
-    label: 'Saturado',
+    label: 'Ya muy cubierto',
     meaning: 'hay mucho contenido parecido y empieza a bajar.',
     cssVar: cssVars('saturated', '--lc-saturated'),
     dashed: false,

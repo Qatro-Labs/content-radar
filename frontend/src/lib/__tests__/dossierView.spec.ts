@@ -40,13 +40,13 @@ describe('dossierStatusLine', () => {
   // CLAUDE.md §2.3: el dato ausente se dice, sin inventarle una causa.
   it('says the LATAM gap is not available when it was not computed', () => {
     expect(dossierStatusLine({ ...opportunity, latam_gap: null })).toContain(
-      'hueco en LATAM no disponible',
+      'cobertura en Latinoamérica no disponible',
     )
   })
 
   it('names a known gap', () => {
     expect(dossierStatusLine({ ...opportunity, latam_gap: false })).toContain(
-      'ya cubierto en LATAM',
+      'ya se cuenta mucho en Latinoamérica',
     )
   })
 })

@@ -11,16 +11,16 @@ from app.schemas.agent import DossierSection, RadarSort
 from app.schemas.opportunity import Confidence, Lifecycle, Recommendation
 
 LIFECYCLE_LABELS = {
-    Lifecycle.EMERGING: "Emergente",
-    Lifecycle.ACCELERATING: "Acelerando",
-    Lifecycle.PEAKING: "En pico",
-    Lifecycle.SATURATED: "Saturado",
+    Lifecycle.EMERGING: "Empieza a crecer",
+    Lifecycle.ACCELERATING: "Crece rápido",
+    Lifecycle.PEAKING: "En su punto alto",
+    Lifecycle.SATURATED: "Ya muy cubierto",
     Lifecycle.UNKNOWN: "Sin tendencia clara",
 }
 RECOMMENDATION_LABELS = {
     Recommendation.PUBLISH_NOW: "Publicar ya",
     Recommendation.FIND_ANGLE: "Buscar ángulo",
-    Recommendation.WAIT_FOR_CASE: "Esperar caso",
+    Recommendation.WAIT_FOR_CASE: "Esperar un caso real",
     Recommendation.DISCARD: "Descartar",
 }
 type Counter = Lifecycle | Recommendation
@@ -31,7 +31,7 @@ COUNTER_LABELS: dict[Counter, str] = {
     Recommendation.PUBLISH_NOW: RECOMMENDATION_LABELS[Recommendation.PUBLISH_NOW],
     Lifecycle.ACCELERATING: LIFECYCLE_LABELS[Lifecycle.ACCELERATING],
     # En plural, como el contador: cuenta temas.
-    Lifecycle.EMERGING: "Emergentes",
+    Lifecycle.EMERGING: "Empiezan a crecer",
     Lifecycle.UNKNOWN: LIFECYCLE_LABELS[Lifecycle.UNKNOWN],
 }
 CONFIDENCE_LABELS = {
@@ -52,7 +52,7 @@ SECTION_LABELS = {
     DossierSection.LIMITS: "Explicando por qué importa",
 }
 DEFAULT_SORT: RadarSort = "opportunity"
-GAP_LABEL = "Pulsando «Hueco en LATAM»"
+GAP_LABEL = "Pulsando «Poca cobertura en Latinoamérica»"
 TOPIC_FILTER_LABEL = "tema"
 RESET_LABEL = "Restableciendo la vista"
 # Sin un filtro que nombrar (p. ej. solo quita el hueco en LATAM).

@@ -135,16 +135,16 @@ export function audienceReading(signals: AudienceSignals): string {
 }
 
 export function latamGapLabel(latamGap: boolean | null): string {
-  if (latamGap === true) return 'hueco en LATAM'
-  if (latamGap === false) return 'ya cubierto en LATAM'
-  return `hueco en LATAM ${NOT_AVAILABLE}`
+  if (latamGap === true) return 'casi nadie lo cuenta en Latinoamérica'
+  if (latamGap === false) return 'ya se cuenta mucho en Latinoamérica'
+  return `cobertura en Latinoamérica ${NOT_AVAILABLE}`
 }
 
 // Etiquetas fijas de DESIGN.md §9.
 export const RECOMMENDATION_LABEL: Record<Recommendation, string> = {
   publish_now: 'Publicar ya',
   find_angle: 'Buscar ángulo',
-  wait_for_case: 'Esperar caso',
+  wait_for_case: 'Esperar un caso real',
   discard: 'Descartar',
 }
 

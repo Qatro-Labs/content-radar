@@ -106,10 +106,10 @@ export function compareRatios(a: Evidence, b: Evidence): number {
 // CLAUDE.md §7: ≥ 3× es outlier (lo decide la API con `is_outlier`) y ≥ 2× es destacada.
 export const HIGHLIGHT_RATIO_MIN = 2
 
-export type RatioLabel = 'Outlier' | 'Destacada'
+export type RatioLabel = 'Rinde 3× o más' | 'Destacada'
 
 export function ratioLabel(evidence: Evidence): RatioLabel | null {
-  if (evidence.is_outlier === true) return 'Outlier'
+  if (evidence.is_outlier === true) return 'Rinde 3× o más'
   if (evidence.outlier_ratio != null && evidence.outlier_ratio >= HIGHLIGHT_RATIO_MIN) {
     return 'Destacada'
   }
@@ -143,7 +143,7 @@ export function performanceFraction(ratio: number): number {
 // sin «mediana» ni «p90»: quien lee decide qué publicar, no audita el cálculo.
 export const PERFORMANCE_LEGEND =
   '1× es lo normal en su canal, según la edad de la pieza. En Hacker News y TikTok, lo normal es ' +
-  'una pieza fuerte de la misma búsqueda. 3× o más es un outlier.'
+  'una pieza fuerte de la misma búsqueda. 3× o más rinde muy por encima.'
 export const VELOCITY_NOTE = 'Velocidad entre la primera y la última medición.'
 
 // "Xataka · Inteligencia artificial" → "Xataka"; "The AI Daily Brief: Artificial…" → "The AI

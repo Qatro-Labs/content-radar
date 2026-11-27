@@ -284,7 +284,7 @@ function describeFilters(query: RadarQuery): string {
   if (query.recommendation) {
     parts.push(`para ${RECOMMENDATION_LABEL[query.recommendation].toLowerCase()}`)
   }
-  if (query.gap) parts.push('con hueco en LATAM')
+  if (query.gap) parts.push('con poca cobertura en Latinoamérica')
   if (query.confidence) parts.push(`confianza ${CONFIDENCE_LABEL[query.confidence]}`)
   if (query.topic) parts.push(`tema «${query.topic}»`)
   return parts.join(FILTER_SEPARATOR)

@@ -61,7 +61,7 @@ const tiles = computed<StatTile[]>(() => [
     help: HELP.tileFit,
   },
   {
-    label: 'Outliers',
+    label: 'Rinden 3× o más',
     value: String(opportunity.outlier_count),
     valueClass: '',
     help: HELP.outliers,

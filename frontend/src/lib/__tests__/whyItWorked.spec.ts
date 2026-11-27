@@ -20,7 +20,7 @@ function lift(overrides: Partial<HookLift> & Pick<HookLift, 'hook'>): HookLift {
 
 // Casos del run 46 (opp_1185, opp_1272, opp_911, opp_1335).
 describe('hookRows', () => {
-  it('pone primero el patrón observado y dice en cuántos outliers y piezas del resto aparece', () => {
+  it('pone primero el patrón observado y dice en cuántas piezas que rinden 3× o más y del resto del resto aparece', () => {
     const rows = hookRows({
       hooks: [
         lift({ hook: 'counterintuitive', outliers_total: 4, rest_with: 2, lift: 0.5 }),
@@ -37,7 +37,7 @@ describe('hookRows', () => {
 
     expect(rows.map((row) => row.label)).toEqual(['Noticia', 'Algo contraintuitivo'])
     expect(rows[0]).toMatchObject({
-      outliers: '3 de 4 outliers',
+      outliers: '3 de 4 que rinden 3× o más',
       rest: '0 de 4 del resto',
       comparison: 'ninguna pieza del resto lo usa',
       verdict: 'Patrón observado',
@@ -76,8 +76,8 @@ describe('hookRows', () => {
 describe('unclassifiedNote', () => {
   it.each([
     { count: 0, expected: null },
-    { count: 1, expected: '1 outlier sin gancho clasificado.' },
-    { count: 3, expected: '3 outliers sin gancho clasificado.' },
+    { count: 1, expected: '1 pieza que rinde 3× o más sin gancho clasificado.' },
+    { count: 3, expected: '3 piezas que rinden 3× o más sin gancho clasificado.' },
   ])('$count → $expected', ({ count, expected }) => {
     expect(unclassifiedNote({ hooks: [], outliers_unclassified: count })).toBe(expected)
   })

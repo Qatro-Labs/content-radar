@@ -11,7 +11,7 @@ export const RECOMMENDATION_HELP: Record<Schemas['Recommendation'], string> = {
   find_angle:
     'Interesa, pero hace falta un enfoque propio antes de publicar: ya hay cobertura o el encaje es medio.',
   wait_for_case: 'Aún no hay un caso real o datos suficientes: mejor esperar.',
-  discard: 'El tema está saturado: publicarlo ya no aporta.',
+  discard: 'El tema ya está muy cubierto: publicarlo ya no aporta.',
 }
 
 export const GROWTH_HELP: Record<Schemas['GrowthStatus'], string> = {
@@ -66,7 +66,7 @@ export const HELP = {
   colScore:
     'Oportunidad (0–100): combina crecimiento, encaje con 30X, número de fuentes, lo poco cubierto que está y lo fácil que es llevarlo a contenido.',
   outliers:
-    'Un outlier es una pieza que rinde 3× o más que lo normal en su canal. Señala qué está funcionando, no por qué.',
+    'Piezas que rinden 3× o más que lo normal en su canal. Señalan qué está funcionando, no por qué.',
   backToWeek: 'Vuelve a «Esta semana» sin quitar los filtros.',
   openDossier: 'Abre el expediente completo: evolución, encaje con 30X y toda la evidencia.',
   generateBrief: 'Prepara un brief de contenido a partir de este tema y su evidencia.',
@@ -76,13 +76,13 @@ export const HELP = {
 
   // Explorar
   exploreFilter:
-    'Filtra las piezas. «Outliers» muestra las que rinden 3× o más que lo normal; cada plataforma muestra solo sus piezas.',
+    'Filtra las piezas. «Rinden 3× o más» muestra las que rinden 3× o más que lo normal; cada plataforma muestra solo sus piezas.',
   piecesSearch: 'Filtra la tabla por palabras del título o por el nombre de la fuente.',
   colPiece: 'Título de la pieza, su plataforma, la fuente y la fecha de publicación.',
   colPieceTopic: 'Tema del radar al que pertenece la pieza. El punto de color es su etapa.',
   colRatio:
-    'Cuántas veces rinde la pieza frente a lo normal en su canal: 1× es lo normal y 3× o más es un outlier. En lima, los outliers.',
-  whereItWorks: 'Los temas y las fuentes que acumulan más outliers.',
+    'Cuántas veces rinde la pieza frente a lo normal en su canal: 1× es lo normal y a partir de 3× destaca. En lima, las que rinden 3× o más.',
+  whereItWorks: 'Los temas y las fuentes que acumulan más piezas que rinden 3× o más.',
 
   // Expediente
   opportunityRing:
@@ -92,7 +92,7 @@ export const HELP = {
     'Cuánto más rápido aparecen piezas en los últimos 3 días que en los 3 anteriores, ajustado por el volumen de las fuentes.',
   tileFit: 'Encaje con 30X: evaluación editorial de seis criterios, no una medición.',
   tileSources:
-    'Fuentes independientes en las que aparece el tema. Un medio o un canal cuenta una vez, y las republicaciones no suman.',
+    'Fuentes distintas en las que aparece el tema. Un medio o un canal cuenta una vez, y las republicaciones no suman.',
   whyItMatters:
     'Explicación redactada por IA a partir de la evidencia del tema. Es una lectura editorial, no una certeza.',
   evolution:
@@ -101,14 +101,14 @@ export const HELP = {
     'Cambio de ritmo frente a la ventana anterior, ajustado por el volumen de las fuentes: no es la resta directa de las barras.',
   fit: 'Seis criterios de 0 a 5 que evalúa la IA con la evidencia. Abre uno para ver la justificación y las piezas en que se apoya.',
   evidence:
-    'Las piezas que forman el tema, outliers primero. Pulsa el título para abrir la pieza original.',
+    'Las piezas que forman el tema, las que más rinden primero. Pulsa el título para abrir la pieza original.',
   audienceMix:
     'Qué tipo de fuentes impulsan el tema: tecnología, negocio o en español. Sirve para saber a quién le está llegando.',
   performance:
-    'Frente a lo normal en su canal: 1× es lo normal y 3× o más es un outlier. La barra llega hasta 6×.',
+    'Frente a lo normal en su canal: 1× es lo normal y a partir de 3× destaca. La barra llega hasta 6×.',
   scoreBreakdown: 'Cada componente con su valor y el peso con que entra en la oportunidad.',
   whyItWorked:
-    'Compara el tipo de gancho del título de los outliers con el del resto del tema, solo con notas originales. «Patrón observado»: el gancho sale al menos el doble que en el resto y en 2 outliers o más. Con tan pocas piezas es una pista para probar, no una causa.',
+    'Compara el tipo de gancho del título de las piezas que rinden 3× o más con el del resto del tema, solo con notas originales. «Patrón observado»: el gancho sale al menos el doble que en el resto y en 2 piezas que rinden 3× o más. Con tan pocas piezas es una pista para probar, no una causa.',
 
   // Crear
   briefPanel:
@@ -128,7 +128,7 @@ export const SCORE_COMPONENT_HELP: Record<Schemas['ScoreComponentName'], string>
   momentum:
     'Crecimiento: piezas nuevas, aceleración y piezas que rinden muy por encima de lo normal.',
   audience_fit: 'Encaje con 30X: evaluación editorial de seis criterios, de 0 a 100.',
-  cross_source: 'Fuentes: en cuántas fuentes independientes aparece el tema.',
+  cross_source: 'Fuentes: en cuántas fuentes distintas aparece el tema.',
   freshness: 'Poco cubierto todavía: cuanto menos contenido parecido hay, más alto.',
   actionability: 'Fácil de llevar a contenido: si el tema da para una pieza concreta y útil.',
 }

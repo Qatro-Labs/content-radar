@@ -77,7 +77,7 @@ describe('featuredTiles', () => {
     expect(featuredTiles(opportunity).map(({ label, value }) => [label, value])).toEqual([
       ['Oportunidad de 100', '58'],
       ['Aceleración · Observado', '↑ +69 %'],
-      ['Fuentes independientes', '7'],
+      ['Fuentes distintas', '7'],
     ])
   })
 
