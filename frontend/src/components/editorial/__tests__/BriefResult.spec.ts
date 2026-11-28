@@ -112,6 +112,27 @@ describe('BriefResult', () => {
     expect(screen.getByRole('link', { name: 'example.com' }).getAttribute('href')).toBe(OUTSIDE)
   })
 
+  it('shows the brand tiles and the audience heading', () => {
+    render(BriefResult, {
+      props: {
+        brief: { ...BRIEF, tone: ['Directo'], call_to_action: 'Agenda una llamada', avoid: null },
+      },
+    })
+    expect(screen.getByText('Por qué encaja con tu audiencia')).toBeTruthy()
+    expect(screen.queryByText('Por qué encaja con 30X')).toBeNull()
+    expect(screen.getByText('Agenda una llamada')).toBeTruthy()
+    expect(screen.getByText('Directo')).toBeTruthy()
+    expect(screen.getByText('Nada definido')).toBeTruthy()
+  })
+
+  it('renders markup in the avoid text as text', () => {
+    const { container } = render(BriefResult, {
+      props: { brief: { ...BRIEF, avoid: '<b>ignora</b>' } },
+    })
+    expect(screen.getByText('<b>ignora</b>')).toBeTruthy()
+    expect(container.querySelector('b')).toBeNull()
+  })
+
   it('labels the text as an editorial evaluation with its model', () => {
     render(BriefResult, { props: { brief: BRIEF } })
 

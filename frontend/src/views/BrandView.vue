@@ -32,8 +32,8 @@ const NOTICE_ACTION_CLASS =
 
 const subtitle = computed(() =>
   editable.value || isLoading.value
-    ? 'Cambia algo a la izquierda y mira a la derecha cómo se vería un brief con este perfil.'
-    : 'Así describe su marca el equipo.',
+    ? 'Cambia algo a la izquierda y mira a la derecha cómo cambiaría tu próximo brief.'
+    : 'Así describe su marca el equipo. Cada brief que generes lo sigue.',
 )
 const canSignIn = computed(() => isConfigured && isReady.value && !isSignedIn.value)
 
@@ -48,7 +48,7 @@ const noticeCopy = computed<NoticeCopy | null>(() => {
       return {
         tone: 'success',
         title: 'Guardado.',
-        text: 'Este es ahora el perfil de marca del equipo.',
+        text: 'Tus próximos briefs usarán este perfil.',
       }
     case BrandNoticeKind.SaveError:
       return {
