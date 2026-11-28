@@ -189,6 +189,8 @@ GET  /workspace · GET /profile · PUT /profile   {profile, expected_version}  (
 GET  /health
 ```
 
+**Brief (`EditorialBrief`):** se escribe con el perfil de marca vigente del workspace, que llega al LLM como dato delimitado. `tone`, `call_to_action` y `avoid` los copia Python del perfil (vacíos sin perfil) y `profile_version` dice con qué versión se escribió: con otra versión, la misma petición da un brief nuevo.
+
 **Herramientas MCP (solo lectura):** `get_trending_opportunities`, `analyze_opportunity`, `search_content_signals`, `compare_audience_fit`, `get_operating_cost`. P1 (subido desde P2 el 17/10): `generate_editorial_brief`, que comparte service con `POST /editorial/brief`. El MCP es la interfaz para que un usuario escriba una pregunta y decida qué publicar. Las respuestas son estructuradas y siempre incluyen evidencia (URLs). Nunca exponer SQL arbitrario ni el sistema de archivos.
 
 ---

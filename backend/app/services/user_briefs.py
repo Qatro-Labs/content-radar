@@ -95,7 +95,8 @@ async def _save(
         root_id = await _parent_root(session, workspace_id, parent_brief_id)
         same = Record.root_id == root_id
     # Pedir lo mismo otra vez (p. ej. "Cambiar enfoque" sin cambios) devuelve la versión que ya hay,
-    # la haya pedido quien la haya pedido del equipo.
+    # la haya pedido quien la haya pedido del equipo. Con otro perfil ya no es lo mismo.
+    same = same & Record.profile_version.is_not_distinct_from(brief.profile_version)
     if existing := await _same_request(session, workspace_id, request_json, same):
         await session.commit()
         return existing
@@ -105,6 +106,7 @@ async def _save(
     record.opportunity_id = request.opportunity_id
     record.run_id = run_id
     record.request = request_json
+    record.profile_version = brief.profile_version
     record.brief = brief.model_dump(mode="json", exclude={"id", "version"})
     session.add(record)
     await session.flush()

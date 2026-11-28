@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { components } from '@/types/api'
 
 import {
+  briefBrandTiles,
   briefPlainText,
   briefSentence,
   briefSummary,
@@ -57,6 +58,10 @@ function brief(overrides: Partial<EditorialBrief> = {}): EditorialBrief {
     evidence: [piece(HN, { platform: 'hackernews', source: 'HN · agents' }), piece(YT)],
     limitations: ['Solo hay dos fuentes.'],
     model: 'claude-haiku-5-5',
+    tone: ['Directo', 'Práctico'],
+    call_to_action: 'Agenda una llamada',
+    avoid: 'Prometer resultados',
+    profile_version: 2,
     ...overrides,
   }
 }
@@ -176,6 +181,33 @@ describe('briefSummary', () => {
   })
 })
 
+describe('briefBrandTiles', () => {
+  it('copies the profile values in the order of the sketch', () => {
+    expect(briefBrandTiles(brief())).toEqual([
+      { label: 'Cierre', text: 'Agenda una llamada' },
+      { label: 'Tono', text: 'Directo · Práctico' },
+      { label: 'Evita', text: 'Prometer resultados' },
+    ])
+  })
+
+  it('says when the profile has no value instead of leaving a gap', () => {
+    const tiles = briefBrandTiles(brief({ tone: [], call_to_action: null, avoid: null }))
+    expect(tiles.map((t) => t.text)).toEqual([
+      'Sin cierre definido',
+      'Sin tono definido',
+      'Nada definido',
+    ])
+  })
+
+  it('reads briefs saved before the profile fields existed', () => {
+    const old = brief()
+    delete old.tone
+    delete old.call_to_action
+    delete old.avoid
+    expect(briefBrandTiles(old)[1]).toEqual({ label: 'Tono', text: 'Sin tono definido' })
+  })
+})
+
 describe('briefPlainText', () => {
   it('carries every section, in screen order, and the source URLs of each key point', () => {
     expect(briefPlainText(brief())).toBe(
@@ -185,7 +217,10 @@ describe('briefPlainText', () => {
         'Ángulo\nMedir un agente es medir un proceso.',
         'Estructura\n1. El problema\n2. Tres cifras',
         `Puntos clave\n- Los equipos miden latencia, no resultados.\n  ${HN}\n  ${YT}`,
-        'Por qué encaja con 30X\nHabla de decisiones de negocio.',
+        'Cierre\nAgenda una llamada',
+        'Tono\nDirecto · Práctico',
+        'Evita\nPrometer resultados',
+        'Por qué encaja con tu audiencia\nHabla de decisiones de negocio.',
         'Redactado por claude-haiku-5-5 a partir de 2 piezas. Evaluación editorial, no una medición.',
       ].join('\n\n'),
     )

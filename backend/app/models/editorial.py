@@ -34,6 +34,8 @@ class EditorialBriefRecord(TimestampMixin, Base):
     # Sin FK: la ejecución de `analyze` puede borrarse sin perder los briefs del equipo.
     run_id: Mapped[int | None] = mapped_column(Integer)
     request: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    # Con otra versión del perfil, la misma petición es un brief distinto (no se deduplica).
+    profile_version: Mapped[int | None] = mapped_column(Integer)
     brief: Mapped[dict[str, Any]] = mapped_column(JSONB)
 
 

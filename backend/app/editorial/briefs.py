@@ -1,7 +1,8 @@
 """Entrada y salida del brief editorial (CLAUDE.md §6, `POST /editorial/brief`).
 
 Como en `explanation.py`, el texto externo va solo en el mensaje del usuario y escapado
-(regla 6). El system prompt lleva nuestras instrucciones y el perfil de 30X.
+(regla 6). El perfil de marca también: lo escribe una persona del equipo, así que va como dato
+delimitado en el mensaje del usuario y nunca en el system prompt.
 """
 
 import asyncio
@@ -16,13 +17,14 @@ from anthropic import AsyncAnthropic
 from pydantic import BaseModel
 
 from app.core.config import Settings
-from app.editorial.audience import EvidencePiece, escape, evidence_block, profile_text
+from app.editorial.audience import EvidencePiece, escape, evidence_block
 from app.editorial.evaluator import LLM_CONCURRENCY, LlmResult, StructuredLlm
 from app.editorial.explanation import Claim, FitNote, fit_lines
 from app.schemas.editorial import BriefFormat, BriefGoal, BriefPlatform
+from app.schemas.profile import RadarProfile
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 PROMPT_FILE = PROMPTS_DIR / f"editorial_brief.v{PROMPT_VERSION}.md"
 
 PLATFORM_TEXT = {
@@ -45,6 +47,7 @@ FORMAT_TEXT = {
 }
 
 NO_EXPLANATION = "(sin explicación comprobada)"
+UNDEFINED = "(sin definir)"
 
 
 class BriefDraft(BaseModel):
@@ -58,6 +61,33 @@ class BriefDraft(BaseModel):
 
 
 @dataclass(frozen=True)
+class BrandContext:
+    name: str
+    creates_about: str
+    audience: str
+    target_region: str
+    tone: tuple[str, ...]
+    call_to_action: str
+    never_say: str
+    out_of_scope: str
+    version: int  # en la clave de caché: un perfil nuevo da un brief nuevo
+
+
+def brand_context(name: str, profile: RadarProfile, version: int) -> BrandContext:
+    return BrandContext(
+        name=name,
+        creates_about=profile.creates_about,
+        audience=profile.audience,
+        target_region=profile.target_region,
+        tone=tuple(profile.tone),
+        call_to_action=profile.call_to_action,
+        never_say=profile.never_say,
+        out_of_scope=profile.out_of_scope,
+        version=version,
+    )
+
+
+@dataclass(frozen=True)
 class BriefInput:
     platform: str
     goal: str
@@ -67,6 +97,7 @@ class BriefInput:
     why_it_matters: str | None  # None si no hay una explicación comprobada
     fit: list[FitNote]
     pieces: list[EvidencePiece]
+    brand: BrandContext | None = None  # None si el workspace no tiene perfil
 
 
 def request_text(platform: BriefPlatform, goal: BriefGoal, fmt: BriefFormat) -> tuple[str, ...]:
@@ -75,7 +106,24 @@ def request_text(platform: BriefPlatform, goal: BriefGoal, fmt: BriefFormat) -> 
 
 @lru_cache
 def system_prompt() -> str:
-    return PROMPT_FILE.read_text(encoding="utf-8").replace("{{profile}}", profile_text())
+    return PROMPT_FILE.read_text(encoding="utf-8")
+
+
+def brand_block(brand: BrandContext | None) -> str:
+    if brand is None:
+        return ""
+    fields = [
+        ("Marca", brand.name),
+        ("Crea contenido sobre", brand.creates_about),
+        ("Su cliente", brand.audience),
+        ("Región", brand.target_region),
+        ("Tono", ", ".join(brand.tone)),
+        ("Cierre que busca", brand.call_to_action),
+        ("Nunca dice", brand.never_say),
+        ("Fuera de alcance", brand.out_of_scope),
+    ]
+    lines = "\n".join(f"{label}: {escape(text) if text else UNDEFINED}" for label, text in fields)
+    return f"<brand_profile>\n{lines}\n</brand_profile>\n"
 
 
 def user_message(brief: BriefInput) -> str:
@@ -84,6 +132,7 @@ def user_message(brief: BriefInput) -> str:
     return (
         f"<request>\nPlataforma: {brief.platform}\nObjetivo: {brief.goal}\n"
         f"Formato: {brief.format}\n</request>\n"
+        f"{brand_block(brief.brand)}"
         f"<topic_label>{escape(brief.label)}</topic_label>\n"
         f"<facts>\n{facts}\n</facts>\n"
         f"<why_it_matters>{escape(brief.why_it_matters or NO_EXPLANATION)}</why_it_matters>\n"

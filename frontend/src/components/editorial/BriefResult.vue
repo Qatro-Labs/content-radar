@@ -2,7 +2,14 @@
 import { ArrowUpRight } from '@lucide/vue'
 import { computed } from 'vue'
 
-import { briefFootnote, briefPoints, HOOK_MISSING, WHY_IT_FITS_MISSING } from '@/lib/briefView'
+import {
+  briefBrandTiles,
+  briefFootnote,
+  briefPoints,
+  HOOK_MISSING,
+  WHY_IT_FITS_HEADING,
+  WHY_IT_FITS_MISSING,
+} from '@/lib/briefView'
 import type { components } from '@/types/api'
 
 import BriefResultHeader from './BriefResultHeader.vue'
@@ -23,6 +30,7 @@ function enter(order: number) {
 }
 
 const points = computed(() => briefPoints(brief))
+const tiles = computed(() => briefBrandTiles(brief))
 </script>
 
 <template>
@@ -90,8 +98,26 @@ const points = computed(() => briefPoints(brief))
         </div>
       </div>
 
-      <div :class="BLOCK_ENTER_CLASS" :style="enter(4)" class="flex flex-col gap-2">
-        <h3 :class="SECTION_LABEL_CLASS">Por qué encaja con 30X</h3>
+      <!-- Boceto B: cierre, tono y evita en tres baldosas, tal cual del perfil de marca. -->
+      <div :class="BLOCK_ENTER_CLASS" :style="enter(4)" class="grid gap-2.5 sm:grid-cols-3">
+        <div
+          v-for="tile in tiles"
+          :key="tile.label"
+          :class="tile.label === 'Evita' ? 'bg-notice text-notice-foreground' : 'bg-sunken'"
+          class="flex flex-col gap-1.5 rounded-tile px-[18px] py-3.5"
+        >
+          <h3 :class="SECTION_LABEL_CLASS">{{ tile.label }}</h3>
+          <p
+            :class="tile.label === 'Evita' ? '' : 'text-ink-read'"
+            class="text-[15px] leading-[1.5]"
+          >
+            {{ tile.text }}
+          </p>
+        </div>
+      </div>
+
+      <div :class="BLOCK_ENTER_CLASS" :style="enter(5)" class="flex flex-col gap-2">
+        <h3 :class="SECTION_LABEL_CLASS">{{ WHY_IT_FITS_HEADING }}</h3>
         <p v-if="brief.why_it_fits" class="max-w-[720px] text-base leading-[1.55] text-ink-read">
           {{ brief.why_it_fits }}
         </p>
@@ -99,7 +125,7 @@ const points = computed(() => briefPoints(brief))
       </div>
 
       <!-- DESIGN.md §9: el texto del LLM se rotula como evaluación editorial, con su modelo. -->
-      <p :class="BLOCK_ENTER_CLASS" :style="enter(5)" class="text-[13.5px] text-muted-foreground">
+      <p :class="BLOCK_ENTER_CLASS" :style="enter(6)" class="text-[13.5px] text-muted-foreground">
         {{ briefFootnote(brief) }}
       </p>
     </div>

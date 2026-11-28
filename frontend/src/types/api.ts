@@ -557,7 +557,7 @@ export interface components {
       recommendation_reason?: string | null
       /**
        * Angle
-       * @description Ángulo propio de 30X para el tema
+       * @description Ángulo propio de la marca para el tema
        */
       angle: string
       /**
@@ -577,9 +577,29 @@ export interface components {
       key_points: components['schemas']['BriefPoint'][]
       /**
        * Why It Fits
-       * @description Por qué encaja con la audiencia de 30X; None si no se comprobó
+       * @description Por qué encaja con la audiencia; None si no se comprobó
        */
       why_it_fits?: string | null
+      /**
+       * Tone
+       * @description Tono del perfil; vacío sin perfil
+       */
+      tone?: string[]
+      /**
+       * Call To Action
+       * @description Cierre que busca la marca; None si no lo definió
+       */
+      call_to_action?: string | null
+      /**
+       * Avoid
+       * @description Lo que la marca nunca dice; None si no lo definió
+       */
+      avoid?: string | null
+      /**
+       * Profile Version
+       * @description Versión del perfil con la que se escribió; None sin perfil
+       */
+      profile_version?: number | null
       /**
        * Evidence
        * @description Las piezas que cita el brief

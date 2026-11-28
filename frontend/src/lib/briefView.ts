@@ -204,6 +204,24 @@ export function briefPoints(brief: EditorialBrief): BriefPointView[] {
   }))
 }
 
+export type BrandTileLabel = 'Cierre' | 'Tono' | 'Evita'
+export interface BrandTile {
+  label: BrandTileLabel
+  text: string
+}
+
+// Los copia el backend del perfil de marca. Los briefs guardados antes de existir no los traen.
+export function briefBrandTiles(brief: EditorialBrief): BrandTile[] {
+  const tone = brief.tone ?? []
+  return [
+    { label: 'Cierre', text: brief.call_to_action || 'Sin cierre definido' },
+    { label: 'Tono', text: tone.length ? tone.join(' · ') : 'Sin tono definido' },
+    { label: 'Evita', text: brief.avoid || 'Nada definido' },
+  ]
+}
+
+export const WHY_IT_FITS_HEADING = 'Por qué encaja con tu audiencia'
+
 // Texto plano para pegar en un documento o un chat, en el orden de la pantalla: lo copiado lleva
 // las fuentes.
 export function briefPlainText(brief: EditorialBrief): string {
@@ -220,7 +238,8 @@ export function briefPlainText(brief: EditorialBrief): string {
       brief.structure.map((step, index) => `${index + 1}. ${step}`),
     ),
     section('Puntos clave', points),
-    section('Por qué encaja con 30X', [brief.why_it_fits ?? WHY_IT_FITS_MISSING]),
+    ...briefBrandTiles(brief).map((tile) => section(tile.label, [tile.text])),
+    section(WHY_IT_FITS_HEADING, [brief.why_it_fits ?? WHY_IT_FITS_MISSING]),
     briefFootnote(brief),
   ].join('\n\n')
 }

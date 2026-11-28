@@ -266,8 +266,9 @@ class RadarTools:
         goal: Annotated[BriefGoal, Field(description="Qué busca la pieza")],
         format: Annotated[BriefFormat, Field(description="Formato de la pieza")],
     ) -> EditorialBrief:
-        """Genera (o devuelve cacheado) un brief editorial de 30X para una oportunidad: ángulo,
-        gancho, estructura, puntos clave con sus URLs de evidencia y por qué encaja. Solo usa
+        """Genera (o devuelve cacheado) un brief editorial para una oportunidad: ángulo, gancho,
+        estructura, puntos clave con sus URLs de evidencia y por qué encaja. Sigue el perfil de
+        marca del workspace (tono, cierre y lo que nunca dice, que devuelve tal cual). Solo usa
         piezas comprobadas y respeta la recomendación de la oportunidad. Llama a un LLM, así que
         tiene un límite por hora y por día. Puede fallar si el brief no supera la comprobación de
         evidencia: no lo reintentes en bucle."""
