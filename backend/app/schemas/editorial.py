@@ -62,12 +62,24 @@ class EditorialBrief(BaseModel):
     format: BriefFormat
     recommendation: Recommendation = Field(description="La de la oportunidad; el brief la respeta")
     recommendation_reason: str | None = None
-    angle: str = Field(description="Ángulo propio de 30X para el tema")
+    angle: str = Field(description="Ángulo propio de la marca para el tema")
     hook: str | None = Field(default=None, description="None si no superó la comprobación")
     structure: list[str] = Field(description="Pasos de la pieza, en orden")
     key_points: list[BriefPoint] = Field(min_length=1, description="Datos de la evidencia")
     why_it_fits: str | None = Field(
-        default=None, description="Por qué encaja con la audiencia de 30X; None si no se comprobó"
+        default=None, description="Por qué encaja con la audiencia; None si no se comprobó"
+    )
+    # Los copia Python del perfil de marca, no el LLM. Con valor por defecto para que los briefs
+    # guardados antes de existir se sigan leyendo.
+    tone: list[str] = Field(default_factory=list, description="Tono del perfil; vacío sin perfil")
+    call_to_action: str | None = Field(
+        default=None, description="Cierre que busca la marca; None si no lo definió"
+    )
+    avoid: str | None = Field(
+        default=None, description="Lo que la marca nunca dice; None si no lo definió"
+    )
+    profile_version: int | None = Field(
+        default=None, description="Versión del perfil con la que se escribió; None sin perfil"
     )
     evidence: list[Evidence] = Field(description="Las piezas que cita el brief")
     limitations: list[str]

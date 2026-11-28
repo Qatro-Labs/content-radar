@@ -18,10 +18,12 @@ from app.core.config import get_settings
 from app.editorial.audience import MAX_PIECES, evidence_piece, named_label
 from app.editorial.briefs import (
     PROMPT_VERSION,
+    BrandContext,
     BriefDraft,
     Briefer,
     BriefInput,
     BriefResult,
+    brand_context,
     brief_cache_key,
     request_text,
 )
@@ -42,16 +44,16 @@ from app.models import ContentItem
 from app.schemas.cost import Provider
 from app.schemas.editorial import BriefPoint, BriefRequest, EditorialBrief
 from app.schemas.opportunity import Evidence
+from app.schemas.profile import RadarProfile
 from app.services.classification import load_judgments
 from app.services.costs import record_meter
 from app.services.llm_cache import load_cached, save_results
 from app.services.opportunities import ServedOpportunity, get_served, load_evidence_pieces
+from app.services.workspaces import current_profile, get_workspace
 
 log = structlog.get_logger()
 
 EDITORIAL_BRIEF_OPERATION = "editorial_brief"
-# El prompt pide el ángulo "de 30X": el 30 de la marca no es una cifra inventada.
-BRAND_NAME = "30X"
 # `explain_opportunity` solo corre con audience fit; con fit y alguna de estas notas,
 # `why_it_matters` sigue siendo la plantilla y no un texto comprobado.
 UNCHECKED_EXPLANATION_NOTES = {
@@ -116,6 +118,18 @@ async def topic_label(
     return named_label(topic, titles, safe)
 
 
+async def load_brand(session: AsyncSession) -> BrandContext | None:
+    """El perfil vigente del workspace por defecto; None si falta el workspace o su perfil."""
+    workspace = await get_workspace(session, get_settings().default_workspace_slug)
+    if workspace is None:
+        return None
+    record = await current_profile(session, workspace.id)
+    if record is None:
+        return None
+    profile = RadarProfile.model_validate(record.profile)
+    return brand_context(workspace.name, profile, record.version)
+
+
 async def _prepare(session: AsyncSession, request: BriefRequest, now: datetime) -> _Prepared:
     served = await get_served(session, request.opportunity_id)
     if served is None:
@@ -137,6 +151,7 @@ async def _prepare(session: AsyncSession, request: BriefRequest, now: datetime) 
         why_it_matters=o.why_it_matters if checked_why else None,
         fit=fit_notes(o),
         pieces=[evidence_piece(p) for p, _ in safe],
+        brand=await load_brand(session),
     )
     return _Prepared(served, brief, {p.url: e for p, e in safe})
 
@@ -161,10 +176,26 @@ async def _draft(
     return key, result.output, result
 
 
+def brand_texts(brand: BrandContext) -> list[str]:
+    return [
+        brand.name,
+        brand.creates_about,
+        brand.audience,
+        brand.target_region,
+        *brand.tone,
+        brand.call_to_action,
+        brand.never_say,
+        brand.out_of_scope,
+    ]
+
+
 def _check(prepared: _Prepared, draft: BriefDraft) -> CheckedBrief | None:
     b = prepared.brief
-    texts = [*b.facts, b.why_it_matters or "", b.platform, b.goal, b.format, BRAND_NAME]
+    texts = [*b.facts, b.why_it_matters or "", b.platform, b.goal, b.format]
     texts += [f"{p.title} {p.description or ''}" for p in b.pieces]
+    # Las cifras del perfil (el 30 de "30X", "Agenda 3 visitas") no son inventadas.
+    if b.brand is not None:
+        texts += brand_texts(b.brand)
     parts = BriefDraftParts(
         angle=draft.angle,
         hook=draft.hook,
@@ -184,6 +215,7 @@ def _cited_evidence(checked: CheckedBrief, by_url: dict[str, Evidence]) -> list[
 
 def _to_brief(request: BriefRequest, prepared: _Prepared, checked: CheckedBrief) -> EditorialBrief:
     o = prepared.served.opportunity
+    brand = prepared.brief.brand
     points = [
         BriefPoint.model_validate({"text": p.text, "evidence_urls": p.cited_urls})
         for p in checked.key_points
@@ -204,6 +236,10 @@ def _to_brief(request: BriefRequest, prepared: _Prepared, checked: CheckedBrief)
         evidence=_cited_evidence(checked, prepared.evidence_by_url),
         limitations=checked.limitations,
         model=get_settings().llm_model,
+        tone=list(brand.tone) if brand else [],
+        call_to_action=(brand.call_to_action or None) if brand else None,
+        avoid=(brand.never_say or None) if brand else None,
+        profile_version=brand.version if brand else None,
     )
 
 

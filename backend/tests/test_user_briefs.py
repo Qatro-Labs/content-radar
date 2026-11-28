@@ -9,12 +9,12 @@ from app.api.auth import SupabaseJwks, get_signing_keys
 from app.api.routes.editorial import get_brief_limiter, get_briefer
 from app.core.config import Settings, get_settings
 from app.db.session import get_session
-from app.jobs.seed_workspace import seed_thirty_x
+from app.jobs.seed_workspace import THIRTY_X_PROFILE, seed_thirty_x
 from app.main import app
 from app.models import EditorialBriefRecord
 from app.models.workspaces import WorkspaceRecord
 from app.schemas.editorial import BriefFormat
-from app.services.workspaces import add_member
+from app.services.workspaces import add_member, save_profile
 from tests.test_auth import SUPABASE_URL, USER_ID, FakeFetcher, bearer, token
 from tests.test_editorial_brief import FakeBriefer, body, seed
 
@@ -261,6 +261,40 @@ async def test_the_same_request_again_returns_the_existing_version(
 
     assert (response.json()["id"], response.json()["version"]) == (first["id"], 1)
     assert await saved_count(session) == 1
+
+
+async def test_new_profile_version_gives_a_new_saved_version(session, configure, client, workspace):
+    configure()
+    opportunity_id = await seed(session)
+    first = (await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)).json()
+    profile = THIRTY_X_PROFILE.model_copy(update={"tone": ["Con humor"]})
+    await save_profile(session, workspace.id, profile, created_by=USER_ID, expected_version=1)
+
+    response = await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)
+
+    assert response.json()["id"] != first["id"]
+    assert response.json()["tone"] == ["Con humor"] and response.json()["profile_version"] == 2
+    assert await saved_count(session) == 2
+
+
+async def test_saved_brief_without_new_fields_still_loads(session, configure, client, workspace):
+    configure()
+    opportunity_id = await seed(session)
+    created = (await client.post(BRIEF, json=body(opportunity_id), headers=MEMBER)).json()
+    record = await session.get(EditorialBriefRecord, created["id"])
+    assert record is not None
+    old = {
+        k: v
+        for k, v in record.brief.items()
+        if k not in {"tone", "call_to_action", "avoid", "profile_version"}
+    }
+    record.brief = old
+    await session.commit()
+
+    response = await client.get(f"{BRIEFS}/{created['id']}")
+
+    assert response.status_code == 200
+    assert response.json()["brief"]["tone"] == []
 
 
 async def test_parent_from_another_workspace_is_404(session, configure, client, workspace):

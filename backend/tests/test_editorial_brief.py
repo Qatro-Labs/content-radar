@@ -47,6 +47,7 @@ from app.services.editorial import (
     generate_metered_brief,
 )
 from app.services.opportunities import load_evidence_pieces
+from app.services.workspaces import save_profile
 from tests.test_audience_fit_service import two_topics
 from tests.test_explanation import fitted_topics
 from tests.test_opportunity_routes import FINISHED_AT, add_run
@@ -215,6 +216,7 @@ def test_cache_key_changes_when_the_profile_changes():
 
 
 class FakeBriefer:
+    # Sin más parámetros: las rutas lo usan como dependencia y FastAPI leería cada uno.
     def __init__(
         self, *, angle: str = "Qué decidir antes de delegar en agentes.", fail: bool = False
     ) -> None:
@@ -222,6 +224,7 @@ class FakeBriefer:
         self.sent: list[BriefInput] = []
         self.angle = angle
         self.fail = fail
+        self.structure = ["El caso", "Qué cambia", "Qué preparar"]
 
     async def write(self, brief: BriefInput) -> BriefResult:
         self.calls += 1
@@ -234,7 +237,7 @@ class FakeBriefer:
             why_it_fits=Claim(text="Toca la operación.", evidence_urls=[url]),
             angle=self.angle,
             hook="Tu competencia ya delega en agentes.",
-            structure=["El caso", "Qué cambia", "Qué preparar"],
+            structure=self.structure,
             limitations=[],
         )
         return BriefResult(
@@ -339,8 +342,79 @@ async def test_text_of_pieces_jev_did_not_mark_safe_stays_out_of_the_prompt(sess
     assert unsafe not in user_message(sent)
 
 
+BRAND_PROFILE = THIRTY_X_PROFILE.model_copy(
+    update={
+        "tone": ["directo", "práctico"],
+        "call_to_action": "Agenda una llamada",
+        "never_say": "Prometer resultados",
+    }
+)
+
+
+async def with_profile(session, profile=BRAND_PROFILE) -> None:
+    workspace = await seed_thirty_x(session)
+    await save_profile(session, workspace.id, profile, created_by="test", expected_version=1)
+
+
+async def test_brief_copies_tone_cta_and_avoid_from_the_profile(session):
+    opportunity_id = await seed(session)
+    await with_profile(session)
+
+    brief = await brief_for(session, opportunity_id, FakeBriefer())
+
+    assert brief.tone == ["directo", "práctico"]
+    assert brief.call_to_action == "Agenda una llamada"
+    assert brief.avoid == "Prometer resultados"
+    assert brief.profile_version == 2
+
+
+async def test_brief_without_profile_has_empty_brand_fields(session):
+    opportunity_id = await seed(session)
+    briefer = FakeBriefer()
+
+    brief = await brief_for(session, opportunity_id, briefer)
+
+    assert (brief.tone, brief.call_to_action, brief.avoid) == ([], None, None)
+    assert brief.profile_version is None
+    assert briefer.sent[0].brand is None
+
+
+async def test_profile_reaches_the_briefer_input(session):
+    opportunity_id = await seed(session)
+    await with_profile(session)
+    briefer = FakeBriefer()
+
+    await brief_for(session, opportunity_id, briefer)
+
+    sent = briefer.sent[0].brand
+    assert sent is not None
+    assert sent.tone == ("directo", "práctico") and sent.name == "30X" and sent.version == 2
+
+
+async def test_empty_profile_text_is_none_in_the_brief(session):
+    opportunity_id = await seed(session)
+    await with_profile(session, BRAND_PROFILE.model_copy(update={"call_to_action": ""}))
+
+    brief = await brief_for(session, opportunity_id, FakeBriefer())
+
+    assert brief.call_to_action is None
+
+
+async def test_number_from_the_profile_passes_the_check(session):
+    opportunity_id = await seed(session)
+    profile = BRAND_PROFILE.model_copy(update={"call_to_action": "Agenda 7 visitas"})
+    await with_profile(session, profile)
+    briefer = FakeBriefer()
+    briefer.structure = ["El caso", "Qué cambia", "Agenda 7 visitas"]
+
+    brief = await brief_for(session, opportunity_id, briefer)
+
+    assert brief.structure[-1] == "Agenda 7 visitas"
+
+
 async def test_without_fit_the_brand_name_is_not_an_invented_number(session):
     opportunity_id = await seed(session, fitted=False)
+    await seed_thirty_x(session)
     briefer = FakeBriefer(angle="El ángulo de 30X: qué decidir antes de delegar.")
 
     brief = await brief_for(session, opportunity_id, briefer)
